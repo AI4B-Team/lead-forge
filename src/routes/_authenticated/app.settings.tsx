@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES } from "@/lib/mock-data";
 import { useState } from "react";
+import { useWorkspaceId } from "@/hooks/use-workspace";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   head: () => ({ meta: [{ title: "Settings — LeadTrace" }] }),
@@ -13,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/app/settings")({
 });
 
 function Settings() {
+  const { workspaceName } = useWorkspaceId();
   const [industry, setIndustry] = useState("real_estate");
   return (
     <div className="max-w-3xl">
@@ -23,7 +25,7 @@ function Settings() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="ws-name">Workspace Name</Label>
-              <Input id="ws-name" defaultValue="Acme Real Estate" className="mt-1" />
+              <Input id="ws-name" key={workspaceName ?? "ws"} defaultValue={workspaceName ?? ""} className="mt-1" />
             </div>
             <div>
               <Label>Industry Preset</Label>
