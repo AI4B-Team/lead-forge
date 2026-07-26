@@ -151,16 +151,6 @@ function ConsolidationBand() {
                 Start Your 14-Day Free Trial <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="rounded-full bg-transparent border-white/25 text-ink-foreground hover:bg-white/10 hover:text-ink-foreground"
-            >
-              <Link to="/how-it-works">
-                <Play className="mr-1 h-4 w-4" /> Watch Demo
-              </Link>
-            </Button>
           </div>
           <div className="mt-6 flex flex-wrap gap-6 text-sm text-ink-muted">
             <span className="flex items-center gap-2">
