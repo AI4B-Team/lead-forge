@@ -38,7 +38,6 @@ function Home() {
     <div className="min-h-screen flex flex-col bg-background">
       <MarketingNav />
       <PromptHero />
-      <TemplateTeaser />
       <ConsolidationBand />
       <HowItWorksSection />
       <FeaturesSection />
@@ -50,74 +49,6 @@ function Home() {
   );
 }
 
-function TemplateTeaser() {
-  const [offset, setOffset] = useState(0);
-  const [order, setOrder] = useState(() => TEMPLATES.map((_, i) => i));
-  const pageSize = 6;
-  const visible = useMemo(() => {
-    const arr: typeof TEMPLATES = [];
-    for (let i = 0; i < pageSize; i++) {
-      arr.push(TEMPLATES[order[(offset + i) % order.length]]);
-    }
-    return arr;
-  }, [offset, order]);
-
-  const shuffle = () => {
-    const next = [...order];
-    for (let i = next.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [next[i], next[j]] = [next[j], next[i]];
-    }
-    setOrder(next);
-    setOffset(0);
-  };
-
-  return (
-    <section className="bg-background pb-20">
-      <div className="mx-auto max-w-[1240px] px-6">
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">
-            Not Sure Where To Start? Try One Of These…
-          </h2>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={shuffle}
-              className="grid place-items-center h-9 w-9 rounded-full border border-border bg-surface hover:bg-surface-muted"
-              aria-label="Shuffle Templates"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setOffset((o) => (o - pageSize + order.length) % order.length)}
-              className="grid place-items-center h-9 w-9 rounded-full border border-border bg-surface hover:bg-surface-muted"
-              aria-label="Previous"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setOffset((o) => (o + pageSize) % order.length)}
-              className="grid place-items-center h-9 w-9 rounded-full border border-border bg-surface hover:bg-surface-muted"
-              aria-label="Next"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            <Link to="/templates" className="text-sm font-semibold text-primary hover:underline ml-2">
-              Browse Templates →
-            </Link>
-          </div>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {visible.map((t, i) => (
-            <TemplateCard key={`${t.id}-${i}`} template={t} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function ConsolidationBand() {
   return (
