@@ -1,5 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { BRAND_NAME } from "@/config/brand";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,6 +58,8 @@ export { ComplianceStrip, MarketingFooter };
 export function MarketingNav({ dark = false }: { dark?: boolean }) {
   const [lang, setLang] = useState<(typeof LANGUAGES)[number]["code"]>("EN");
   const current = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0];
+  const { session, loading } = useAuth();
+  const signedIn = !!session;
   return (
     <header
       className={
@@ -72,15 +76,35 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           {BRAND_NAME}
         </Link>
         <div className="flex items-center gap-2 sm:gap-4">
-          <Link
-            to="/sign-in"
-            className={`text-sm font-medium px-2 ${dark ? "text-ink-foreground" : "text-foreground"}`}
-          >
-            Log In
-          </Link>
-          <Button asChild className="rounded-full">
-            <Link to="/start">Start Free</Link>
-          </Button>
+          {!loading && signedIn ? (
+            <>
+              <button
+                type="button"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  window.location.assign("/");
+                }}
+                className={`text-sm font-medium px-2 ${dark ? "text-ink-foreground" : "text-foreground"}`}
+              >
+                Sign Out
+              </button>
+              <Button asChild className="rounded-full">
+                <Link to="/app/dashboard">Dashboard</Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/auth"
+                className={`text-sm font-medium px-2 ${dark ? "text-ink-foreground" : "text-foreground"}`}
+              >
+                Log In
+              </Link>
+              <Button asChild className="rounded-full">
+                <Link to="/auth">Start Free</Link>
+              </Button>
+            </>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label="Select language"

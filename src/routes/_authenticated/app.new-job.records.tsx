@@ -9,7 +9,7 @@ import { COUNTIES, RECORD_TYPES } from "@/lib/mock-data";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 
-export const Route = createFileRoute("/app/new-job/records")({
+export const Route = createFileRoute("/_authenticated/app/new-job/records")({
   head: () => ({ meta: [{ title: "Scrape Public Records — LeadTrace" }] }),
   component: Wizard,
 });

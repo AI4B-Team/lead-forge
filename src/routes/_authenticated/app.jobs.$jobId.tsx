@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { MOCK_JOBS, statusLabel } from "@/lib/mock-data";
 import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle } from "lucide-react";
 
-export const Route = createFileRoute("/app/jobs/$jobId")({
+export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
   head: () => ({ meta: [{ title: "Pipeline Review — LeadTrace" }] }),
   loader: ({ params }) => {
     const job = MOCK_JOBS.find((j) => j.id === params.jobId);

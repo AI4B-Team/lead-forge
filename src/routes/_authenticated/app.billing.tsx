@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_CREDITS } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/app/billing")({
+export const Route = createFileRoute("/_authenticated/app/billing")({
   head: () => ({ meta: [{ title: "Billing — LeadTrace" }] }),
   component: Billing,
 });

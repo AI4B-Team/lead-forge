@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { MOCK_JOBS, statusLabel } from "@/lib/mock-data";
 import { Plus } from "lucide-react";
 
-export const Route = createFileRoute("/app/lists")({
+export const Route = createFileRoute("/_authenticated/app/lists")({
   head: () => ({ meta: [{ title: "Lists — LeadTrace" }] }),
   component: Lists,
 });

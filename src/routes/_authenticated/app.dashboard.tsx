@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { MOCK_JOBS, MOCK_METRICS, MOCK_CREDITS, statusLabel } from "@/lib/mock-data";
 import { Users, ListChecks, MessageSquare, Activity, Plus, ArrowUpRight } from "lucide-react";
 
-export const Route = createFileRoute("/app/dashboard")({
+export const Route = createFileRoute("/_authenticated/app/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — LeadTrace" }] }),
   component: Dashboard,
 });
