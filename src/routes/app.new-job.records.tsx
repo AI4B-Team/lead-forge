@@ -1,0 +1,104 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { PageHeader } from "@/components/app/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { COUNTIES, RECORD_TYPES } from "@/lib/mock-data";
+import { useState } from "react";
+import { Plus } from "lucide-react";
+
+export const Route = createFileRoute("/app/new-job/records")({
+  head: () => ({ meta: [{ title: "Scrape Public Records — LeadForge" }] }),
+  component: Wizard,
+});
+
+function Wizard() {
+  const [record, setRecord] = useState<string>("Probate");
+  const [county, setCounty] = useState<string>("Hillsborough, FL");
+
+  return (
+    <div className="max-w-4xl">
+      <PageHeader title="Scrape Public Records" description="Door B · County + Record Type" />
+      <Card>
+        <CardContent className="pt-6 space-y-6">
+          <div>
+            <Label>Record Type</Label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {RECORD_TYPES.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setRecord(r)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium border ${
+                    record === r
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-surface text-foreground border-border"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label>County</Label>
+            <div className="mt-2 grid sm:grid-cols-2 gap-2">
+              {COUNTIES.map((c) => (
+                <button
+                  key={c.name}
+                  type="button"
+                  onClick={() => setCounty(c.name)}
+                  className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${
+                    county === c.name ? "border-primary bg-primary/5" : "border-border bg-surface"
+                  }`}
+                >
+                  <span className="text-foreground">{c.name}</span>
+                  <CoverageBadge coverage={c.coverage} />
+                </button>
+              ))}
+            </div>
+            <Button variant="ghost" size="sm" className="mt-3 text-primary">
+              <Plus className="h-4 w-4 mr-1" /> Request A County
+            </Button>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="from">From</Label>
+              <Input id="from" type="date" className="mt-1" />
+            </div>
+            <div>
+              <Label htmlFor="to">To</Label>
+              <Input id="to" type="date" className="mt-1" />
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <Button asChild variant="outline" className="rounded-full">
+              <Link to="/app/new-job">Back</Link>
+            </Button>
+            <Button asChild className="rounded-full">
+              <Link to="/app/jobs/$jobId" params={{ jobId: "job_02" }}>Run Job</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function CoverageBadge({ coverage }: { coverage: string }) {
+  const map: Record<string, string> = {
+    live: "bg-success/10 text-success border-success/20",
+    beta: "bg-warn/10 text-warn border-warn/20",
+    requested: "bg-muted text-muted-foreground border-border",
+  };
+  return (
+    <Badge variant="outline" className={`text-[10px] uppercase ${map[coverage]}`}>
+      {coverage}
+    </Badge>
+  );
+}

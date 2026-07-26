@@ -9,38 +9,388 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StartRouteImport } from './routes/start'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as IndustriesRouteImport } from './routes/industries'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as ComplianceRouteImport } from './routes/compliance'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppNumbersRouteImport } from './routes/app.numbers'
+import { Route as AppNewJobRouteImport } from './routes/app.new-job'
+import { Route as AppListsRouteImport } from './routes/app.lists'
+import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
+import { Route as AppComplianceRouteImport } from './routes/app.compliance'
+import { Route as AppCampaignsRouteImport } from './routes/app.campaigns'
+import { Route as AppBillingRouteImport } from './routes/app.billing'
+import { Route as AppNewJobUploadRouteImport } from './routes/app.new-job.upload'
+import { Route as AppNewJobRecordsRouteImport } from './routes/app.new-job.records'
+import { Route as AppNewJobBusinessRouteImport } from './routes/app.new-job.business'
+import { Route as AppJobsJobIdRouteImport } from './routes/app.jobs.$jobId'
+import { Route as AppCampaignsCampaignIdRouteImport } from './routes/app.campaigns.$campaignId'
 
+const StartRoute = StartRouteImport.update({
+  id: '/start',
+  path: '/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndustriesRoute = IndustriesRouteImport.update({
+  id: '/industries',
+  path: '/industries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComplianceRoute = ComplianceRouteImport.update({
+  id: '/compliance',
+  path: '/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNumbersRoute = AppNumbersRouteImport.update({
+  id: '/numbers',
+  path: '/numbers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNewJobRoute = AppNewJobRouteImport.update({
+  id: '/new-job',
+  path: '/new-job',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppListsRoute = AppListsRouteImport.update({
+  id: '/lists',
+  path: '/lists',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppComplianceRoute = AppComplianceRouteImport.update({
+  id: '/compliance',
+  path: '/compliance',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCampaignsRoute = AppCampaignsRouteImport.update({
+  id: '/campaigns',
+  path: '/campaigns',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBillingRoute = AppBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNewJobUploadRoute = AppNewJobUploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => AppNewJobRoute,
+} as any)
+const AppNewJobRecordsRoute = AppNewJobRecordsRouteImport.update({
+  id: '/records',
+  path: '/records',
+  getParentRoute: () => AppNewJobRoute,
+} as any)
+const AppNewJobBusinessRoute = AppNewJobBusinessRouteImport.update({
+  id: '/business',
+  path: '/business',
+  getParentRoute: () => AppNewJobRoute,
+} as any)
+const AppJobsJobIdRoute = AppJobsJobIdRouteImport.update({
+  id: '/jobs/$jobId',
+  path: '/jobs/$jobId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCampaignsCampaignIdRoute = AppCampaignsCampaignIdRouteImport.update({
+  id: '/$campaignId',
+  path: '/$campaignId',
+  getParentRoute: () => AppCampaignsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/compliance': typeof ComplianceRoute
+  '/features': typeof FeaturesRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/industries': typeof IndustriesRoute
+  '/pricing': typeof PricingRoute
+  '/sign-in': typeof SignInRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/start': typeof StartRoute
+  '/app/billing': typeof AppBillingRoute
+  '/app/campaigns': typeof AppCampaignsRouteWithChildren
+  '/app/compliance': typeof AppComplianceRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/lists': typeof AppListsRoute
+  '/app/new-job': typeof AppNewJobRouteWithChildren
+  '/app/numbers': typeof AppNumbersRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app/': typeof AppIndexRoute
+  '/app/campaigns/$campaignId': typeof AppCampaignsCampaignIdRoute
+  '/app/jobs/$jobId': typeof AppJobsJobIdRoute
+  '/app/new-job/business': typeof AppNewJobBusinessRoute
+  '/app/new-job/records': typeof AppNewJobRecordsRoute
+  '/app/new-job/upload': typeof AppNewJobUploadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/compliance': typeof ComplianceRoute
+  '/features': typeof FeaturesRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/industries': typeof IndustriesRoute
+  '/pricing': typeof PricingRoute
+  '/sign-in': typeof SignInRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/start': typeof StartRoute
+  '/app/billing': typeof AppBillingRoute
+  '/app/campaigns': typeof AppCampaignsRouteWithChildren
+  '/app/compliance': typeof AppComplianceRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/lists': typeof AppListsRoute
+  '/app/new-job': typeof AppNewJobRouteWithChildren
+  '/app/numbers': typeof AppNumbersRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app': typeof AppIndexRoute
+  '/app/campaigns/$campaignId': typeof AppCampaignsCampaignIdRoute
+  '/app/jobs/$jobId': typeof AppJobsJobIdRoute
+  '/app/new-job/business': typeof AppNewJobBusinessRoute
+  '/app/new-job/records': typeof AppNewJobRecordsRoute
+  '/app/new-job/upload': typeof AppNewJobUploadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/compliance': typeof ComplianceRoute
+  '/features': typeof FeaturesRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/industries': typeof IndustriesRoute
+  '/pricing': typeof PricingRoute
+  '/sign-in': typeof SignInRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/start': typeof StartRoute
+  '/app/billing': typeof AppBillingRoute
+  '/app/campaigns': typeof AppCampaignsRouteWithChildren
+  '/app/compliance': typeof AppComplianceRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/lists': typeof AppListsRoute
+  '/app/new-job': typeof AppNewJobRouteWithChildren
+  '/app/numbers': typeof AppNumbersRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app/': typeof AppIndexRoute
+  '/app/campaigns/$campaignId': typeof AppCampaignsCampaignIdRoute
+  '/app/jobs/$jobId': typeof AppJobsJobIdRoute
+  '/app/new-job/business': typeof AppNewJobBusinessRoute
+  '/app/new-job/records': typeof AppNewJobRecordsRoute
+  '/app/new-job/upload': typeof AppNewJobUploadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/compliance'
+    | '/features'
+    | '/how-it-works'
+    | '/industries'
+    | '/pricing'
+    | '/sign-in'
+    | '/sitemap.xml'
+    | '/start'
+    | '/app/billing'
+    | '/app/campaigns'
+    | '/app/compliance'
+    | '/app/dashboard'
+    | '/app/lists'
+    | '/app/new-job'
+    | '/app/numbers'
+    | '/app/settings'
+    | '/app/'
+    | '/app/campaigns/$campaignId'
+    | '/app/jobs/$jobId'
+    | '/app/new-job/business'
+    | '/app/new-job/records'
+    | '/app/new-job/upload'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/compliance'
+    | '/features'
+    | '/how-it-works'
+    | '/industries'
+    | '/pricing'
+    | '/sign-in'
+    | '/sitemap.xml'
+    | '/start'
+    | '/app/billing'
+    | '/app/campaigns'
+    | '/app/compliance'
+    | '/app/dashboard'
+    | '/app/lists'
+    | '/app/new-job'
+    | '/app/numbers'
+    | '/app/settings'
+    | '/app'
+    | '/app/campaigns/$campaignId'
+    | '/app/jobs/$jobId'
+    | '/app/new-job/business'
+    | '/app/new-job/records'
+    | '/app/new-job/upload'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/compliance'
+    | '/features'
+    | '/how-it-works'
+    | '/industries'
+    | '/pricing'
+    | '/sign-in'
+    | '/sitemap.xml'
+    | '/start'
+    | '/app/billing'
+    | '/app/campaigns'
+    | '/app/compliance'
+    | '/app/dashboard'
+    | '/app/lists'
+    | '/app/new-job'
+    | '/app/numbers'
+    | '/app/settings'
+    | '/app/'
+    | '/app/campaigns/$campaignId'
+    | '/app/jobs/$jobId'
+    | '/app/new-job/business'
+    | '/app/new-job/records'
+    | '/app/new-job/upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  ComplianceRoute: typeof ComplianceRoute
+  FeaturesRoute: typeof FeaturesRoute
+  HowItWorksRoute: typeof HowItWorksRoute
+  IndustriesRoute: typeof IndustriesRoute
+  PricingRoute: typeof PricingRoute
+  SignInRoute: typeof SignInRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StartRoute: typeof StartRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/start': {
+      id: '/start'
+      path: '/start'
+      fullPath: '/start'
+      preLoaderRoute: typeof StartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/industries': {
+      id: '/industries'
+      path: '/industries'
+      fullPath: '/industries'
+      preLoaderRoute: typeof IndustriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features': {
+      id: '/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compliance': {
+      id: '/compliance'
+      path: '/compliance'
+      fullPath: '/compliance'
+      preLoaderRoute: typeof ComplianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +398,175 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/numbers': {
+      id: '/app/numbers'
+      path: '/numbers'
+      fullPath: '/app/numbers'
+      preLoaderRoute: typeof AppNumbersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/new-job': {
+      id: '/app/new-job'
+      path: '/new-job'
+      fullPath: '/app/new-job'
+      preLoaderRoute: typeof AppNewJobRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/lists': {
+      id: '/app/lists'
+      path: '/lists'
+      fullPath: '/app/lists'
+      preLoaderRoute: typeof AppListsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/dashboard': {
+      id: '/app/dashboard'
+      path: '/dashboard'
+      fullPath: '/app/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/compliance': {
+      id: '/app/compliance'
+      path: '/compliance'
+      fullPath: '/app/compliance'
+      preLoaderRoute: typeof AppComplianceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/campaigns': {
+      id: '/app/campaigns'
+      path: '/campaigns'
+      fullPath: '/app/campaigns'
+      preLoaderRoute: typeof AppCampaignsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/billing': {
+      id: '/app/billing'
+      path: '/billing'
+      fullPath: '/app/billing'
+      preLoaderRoute: typeof AppBillingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/new-job/upload': {
+      id: '/app/new-job/upload'
+      path: '/upload'
+      fullPath: '/app/new-job/upload'
+      preLoaderRoute: typeof AppNewJobUploadRouteImport
+      parentRoute: typeof AppNewJobRoute
+    }
+    '/app/new-job/records': {
+      id: '/app/new-job/records'
+      path: '/records'
+      fullPath: '/app/new-job/records'
+      preLoaderRoute: typeof AppNewJobRecordsRouteImport
+      parentRoute: typeof AppNewJobRoute
+    }
+    '/app/new-job/business': {
+      id: '/app/new-job/business'
+      path: '/business'
+      fullPath: '/app/new-job/business'
+      preLoaderRoute: typeof AppNewJobBusinessRouteImport
+      parentRoute: typeof AppNewJobRoute
+    }
+    '/app/jobs/$jobId': {
+      id: '/app/jobs/$jobId'
+      path: '/jobs/$jobId'
+      fullPath: '/app/jobs/$jobId'
+      preLoaderRoute: typeof AppJobsJobIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/campaigns/$campaignId': {
+      id: '/app/campaigns/$campaignId'
+      path: '/$campaignId'
+      fullPath: '/app/campaigns/$campaignId'
+      preLoaderRoute: typeof AppCampaignsCampaignIdRouteImport
+      parentRoute: typeof AppCampaignsRoute
+    }
   }
 }
 
+interface AppCampaignsRouteChildren {
+  AppCampaignsCampaignIdRoute: typeof AppCampaignsCampaignIdRoute
+}
+
+const AppCampaignsRouteChildren: AppCampaignsRouteChildren = {
+  AppCampaignsCampaignIdRoute: AppCampaignsCampaignIdRoute,
+}
+
+const AppCampaignsRouteWithChildren = AppCampaignsRoute._addFileChildren(
+  AppCampaignsRouteChildren,
+)
+
+interface AppNewJobRouteChildren {
+  AppNewJobBusinessRoute: typeof AppNewJobBusinessRoute
+  AppNewJobRecordsRoute: typeof AppNewJobRecordsRoute
+  AppNewJobUploadRoute: typeof AppNewJobUploadRoute
+}
+
+const AppNewJobRouteChildren: AppNewJobRouteChildren = {
+  AppNewJobBusinessRoute: AppNewJobBusinessRoute,
+  AppNewJobRecordsRoute: AppNewJobRecordsRoute,
+  AppNewJobUploadRoute: AppNewJobUploadRoute,
+}
+
+const AppNewJobRouteWithChildren = AppNewJobRoute._addFileChildren(
+  AppNewJobRouteChildren,
+)
+
+interface AppRouteChildren {
+  AppBillingRoute: typeof AppBillingRoute
+  AppCampaignsRoute: typeof AppCampaignsRouteWithChildren
+  AppComplianceRoute: typeof AppComplianceRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppListsRoute: typeof AppListsRoute
+  AppNewJobRoute: typeof AppNewJobRouteWithChildren
+  AppNumbersRoute: typeof AppNumbersRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppJobsJobIdRoute: typeof AppJobsJobIdRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppBillingRoute: AppBillingRoute,
+  AppCampaignsRoute: AppCampaignsRouteWithChildren,
+  AppComplianceRoute: AppComplianceRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppListsRoute: AppListsRoute,
+  AppNewJobRoute: AppNewJobRouteWithChildren,
+  AppNumbersRoute: AppNumbersRoute,
+  AppSettingsRoute: AppSettingsRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppJobsJobIdRoute: AppJobsJobIdRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  ComplianceRoute: ComplianceRoute,
+  FeaturesRoute: FeaturesRoute,
+  HowItWorksRoute: HowItWorksRoute,
+  IndustriesRoute: IndustriesRoute,
+  PricingRoute: PricingRoute,
+  SignInRoute: SignInRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StartRoute: StartRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
