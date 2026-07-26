@@ -131,12 +131,9 @@ export function PromptHero() {
           }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
-          className="mx-auto mt-8 w-full max-w-[820px] rounded-t-[22px] bg-white text-left transition"
+          className="mx-auto mt-8 w-full max-w-[820px] rounded-[22px] bg-white text-left transition"
           style={{
-            borderTop: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
-            borderLeft: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
-            borderRight: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
-            borderBottom: "none",
+            border: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
             boxShadow: "0 20px 40px -20px rgba(204,0,0,0.25)",
           }}
         >
