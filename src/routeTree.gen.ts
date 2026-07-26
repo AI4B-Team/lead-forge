@@ -33,6 +33,7 @@ import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppComplianceRouteImport } from './routes/_authenticated/app.compliance'
 import { Route as AuthenticatedAppCampaignsRouteImport } from './routes/_authenticated/app.campaigns'
 import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
+import { Route as ApiPublicHooksInboundSmsRouteImport } from './routes/api/public/hooks/inbound-sms'
 import { Route as AuthenticatedAppNewJobUploadRouteImport } from './routes/_authenticated/app.new-job.upload'
 import { Route as AuthenticatedAppNewJobRecordsRouteImport } from './routes/_authenticated/app.new-job.records'
 import { Route as AuthenticatedAppNewJobBusinessRouteImport } from './routes/_authenticated/app.new-job.business'
@@ -164,6 +165,12 @@ const AuthenticatedAppBillingRoute = AuthenticatedAppBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const ApiPublicHooksInboundSmsRoute =
+  ApiPublicHooksInboundSmsRouteImport.update({
+    id: '/api/public/hooks/inbound-sms',
+    path: '/api/public/hooks/inbound-sms',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAppNewJobUploadRoute =
   AuthenticatedAppNewJobUploadRouteImport.update({
     id: '/upload',
@@ -231,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
   '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
   '/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
+  '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -261,6 +269,7 @@ export interface FileRoutesByTo {
   '/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
   '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
   '/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
+  '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -294,6 +303,7 @@ export interface FileRoutesById {
   '/_authenticated/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
   '/_authenticated/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
   '/_authenticated/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
+  '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/app/new-job/business'
     | '/app/new-job/records'
     | '/app/new-job/upload'
+    | '/api/public/hooks/inbound-sms'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -357,6 +368,7 @@ export interface FileRouteTypes {
     | '/app/new-job/business'
     | '/app/new-job/records'
     | '/app/new-job/upload'
+    | '/api/public/hooks/inbound-sms'
   id:
     | '__root__'
     | '/'
@@ -389,6 +401,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/new-job/business'
     | '/_authenticated/app/new-job/records'
     | '/_authenticated/app/new-job/upload'
+    | '/api/public/hooks/inbound-sms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -405,6 +418,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StartRoute: typeof StartRoute
   TemplatesRoute: typeof TemplatesRoute
+  ApiPublicHooksInboundSmsRoute: typeof ApiPublicHooksInboundSmsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -577,6 +591,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppBillingRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/api/public/hooks/inbound-sms': {
+      id: '/api/public/hooks/inbound-sms'
+      path: '/api/public/hooks/inbound-sms'
+      fullPath: '/api/public/hooks/inbound-sms'
+      preLoaderRoute: typeof ApiPublicHooksInboundSmsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app/new-job/upload': {
       id: '/_authenticated/app/new-job/upload'
       path: '/upload'
@@ -713,7 +734,18 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StartRoute: StartRoute,
   TemplatesRoute: TemplatesRoute,
+  ApiPublicHooksInboundSmsRoute: ApiPublicHooksInboundSmsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
