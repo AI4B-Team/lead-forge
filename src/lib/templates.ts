@@ -2,11 +2,20 @@ import {
   Building2, Search, MapPin, Scale, Hammer, FileWarning, Landmark, Home, Upload,
   Briefcase, ShoppingCart, Star, Users, Globe, Newspaper, Megaphone, GraduationCap,
   Car, Utensils, Stethoscope, Wrench, Camera, Music, Plane, Store,
-  Mail, LinkGoogle as _unused, Rocket, BadgeCheck, Network,
+  Mail, Rocket, BadgeCheck, Network,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type TemplateCategory = "business" | "records" | "social" | "ecommerce" | "jobs" | "reviews" | "realestate" | "upload";
+export type TemplateCategory =
+  | "business"
+  | "directories"
+  | "records"
+  | "social"
+  | "ecommerce"
+  | "jobs"
+  | "reviews"
+  | "realestate"
+  | "upload";
 
 export type Template = {
   id: string;
@@ -16,6 +25,8 @@ export type Template = {
   prompt: string;
   icon: LucideIcon;
   tint: string;
+  /** Marks the template as Beta in the UI. */
+  beta?: boolean;
   /** Domain used to fetch the real company logo (favicon). */
   logoDomain?: string;
 };
