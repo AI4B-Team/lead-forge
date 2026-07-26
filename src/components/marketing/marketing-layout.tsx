@@ -52,7 +52,7 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg">
           <span className="grid place-items-center h-8 w-8 rounded-lg bg-primary text-primary-foreground">
-            <Radar className="h-4 w-4" />
+            <Radar className="h-5 w-5" />
           </span>
           {BRAND_NAME}
         </Link>
@@ -121,7 +121,7 @@ function MarketingFooter() {
       <div className="mx-auto max-w-7xl px-6 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2 font-display font-bold text-base text-foreground">
           <span className="grid place-items-center h-7 w-7 rounded-md bg-primary text-primary-foreground">
-            <Radar className="h-3.5 w-3.5" />
+            <Radar className="h-4 w-4" />
           </span>
           {BRAND_NAME}
         </div>
