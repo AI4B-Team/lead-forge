@@ -68,7 +68,7 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           : "border-b border-border bg-background"
       }
     >
-      <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
+      <div className="w-full px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg">
           <span className="grid place-items-center h-8 w-8 rounded-lg bg-primary text-primary-foreground">
             <Radar className="h-5 w-5" />
@@ -163,19 +163,19 @@ function Item({ icon, label }: { icon: React.ReactNode; label: string }) {
 function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-surface-muted">
-      <div className="mx-auto max-w-7xl px-6 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-sm text-muted-foreground">
+      <div className="w-full px-6 py-10 grid grid-cols-1 md:grid-cols-3 items-center gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2 font-display font-bold text-base text-foreground">
           <span className="grid place-items-center h-7 w-7 rounded-md bg-primary text-primary-foreground">
             <Radar className="h-4 w-4" />
           </span>
           {BRAND_NAME}
         </div>
-        <div className="flex gap-6">
+        <div className="flex justify-center gap-6">
           <Link to="/pricing">Pricing</Link>
           <Link to="/compliance">Compliance</Link>
           <Link to="/sign-in">Sign In</Link>
         </div>
-        <div>© {new Date().getFullYear()} {BRAND_NAME}. All Rights Reserved.</div>
+        <div className="text-right">© {new Date().getFullYear()} {BRAND_NAME}. All Rights Reserved.</div>
       </div>
     </footer>
   );
