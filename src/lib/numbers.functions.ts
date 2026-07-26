@@ -32,27 +32,45 @@ export const buyNumbers = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    // Provisioning stub — real Twilio/Telnyx purchase plugs in here. Generates
-    // numbers with realistic area codes so the pool UI is exercised.
     const codes = REGION_AREA_CODES[data.region];
-    const rows = Array.from({ length: data.quantity }, (_, i) => {
+    const { isProviderConfigured, getProvider } = await import("@/lib/sms");
+    const useReal = isProviderConfigured();
+    const provider = useReal ? getProvider() : null;
+
+    const rows: Array<Record<string, unknown>> = [];
+    for (let i = 0; i < data.quantity; i++) {
       const area = codes[i % codes.length]!;
-      const mid = 200 + Math.floor(Math.random() * 799);
-      const last = 1000 + Math.floor(Math.random() * 8999);
-      return {
+      let phone: string;
+      let providerSid: string;
+      if (provider) {
+        try {
+          const bought = await provider.buyNumber(area);
+          phone = bought.phone;
+          providerSid = bought.providerSid;
+        } catch (e) {
+          throw new Error(`Number purchase failed: ${(e as Error).message}`);
+        }
+      } else {
+        // Stub fallback when Telnyx creds are absent — keeps the pool UI usable in dev.
+        const mid = 200 + Math.floor(Math.random() * 799);
+        const last = 1000 + Math.floor(Math.random() * 8999);
+        phone = `+1${area}${mid}${last}`;
+        providerSid = `stub_${crypto.randomUUID().slice(0, 12)}`;
+      }
+      rows.push({
         workspace_id: data.workspaceId,
-        phone: `+1${area}${mid}${last}`,
+        phone,
         area_code: area,
         region: data.region,
         health_score: 100,
         optout_rate: 0,
         status: "active" as const,
-        provider_sid: `stub_${crypto.randomUUID().slice(0, 12)}`,
-      };
-    });
+        provider_sid: providerSid,
+      });
+    }
     const { error } = await context.supabase.from("sending_numbers").insert(rows);
     if (error) throw error;
-    return { added: rows.length };
+    return { added: rows.length, mode: useReal ? "telnyx" : "stub" };
   });
 
 export const getRegistration = createServerFn({ method: "GET" })
