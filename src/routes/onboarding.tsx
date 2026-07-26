@@ -54,7 +54,9 @@ function Onboarding() {
         return;
       }
       const email = userRes.user.email ?? "";
-      setName(email ? email.split("@")[0] + "'s Workspace" : "My Workspace");
+      const handle = email.split("@")[0];
+      const displayHandle = handle ? handle.charAt(0).toUpperCase() + handle.slice(1).toLowerCase() : "";
+      setName(displayHandle ? `${displayHandle}'s Workspace` : "My Workspace");
       setReady(true);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
