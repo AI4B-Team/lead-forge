@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles,
-  Play,
   ShieldCheck,
   Check,
   Search,
@@ -150,16 +149,6 @@ function ConsolidationBand() {
             <Button asChild size="lg" className="rounded-full">
               <Link to="/start">
                 Start Your 14-Day Free Trial <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="rounded-full bg-transparent border-white/25 text-ink-foreground hover:bg-white/10 hover:text-ink-foreground"
-            >
-              <Link to="/how-it-works">
-                <Play className="mr-1 h-4 w-4" /> Watch Demo
               </Link>
             </Button>
           </div>
