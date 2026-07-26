@@ -33,6 +33,7 @@ import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppComplianceRouteImport } from './routes/_authenticated/app.compliance'
 import { Route as AuthenticatedAppCampaignsRouteImport } from './routes/_authenticated/app.campaigns'
 import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
+import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
 import { Route as ApiPublicHooksInboundSmsRouteImport } from './routes/api/public/hooks/inbound-sms'
 import { Route as AuthenticatedAppNewJobUploadRouteImport } from './routes/_authenticated/app.new-job.upload'
 import { Route as AuthenticatedAppNewJobRecordsRouteImport } from './routes/_authenticated/app.new-job.records'
@@ -165,6 +166,12 @@ const AuthenticatedAppBillingRoute = AuthenticatedAppBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const ApiPublicHooksTickCampaignsRoute =
+  ApiPublicHooksTickCampaignsRouteImport.update({
+    id: '/api/public/hooks/tick-campaigns',
+    path: '/api/public/hooks/tick-campaigns',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksInboundSmsRoute =
   ApiPublicHooksInboundSmsRouteImport.update({
     id: '/api/public/hooks/inbound-sms',
@@ -239,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
   '/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
+  '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -270,6 +278,7 @@ export interface FileRoutesByTo {
   '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
   '/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
+  '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -304,6 +313,7 @@ export interface FileRoutesById {
   '/_authenticated/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
   '/_authenticated/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
+  '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
     | '/app/new-job/records'
     | '/app/new-job/upload'
     | '/api/public/hooks/inbound-sms'
+    | '/api/public/hooks/tick-campaigns'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -369,6 +380,7 @@ export interface FileRouteTypes {
     | '/app/new-job/records'
     | '/app/new-job/upload'
     | '/api/public/hooks/inbound-sms'
+    | '/api/public/hooks/tick-campaigns'
   id:
     | '__root__'
     | '/'
@@ -402,6 +414,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/new-job/records'
     | '/_authenticated/app/new-job/upload'
     | '/api/public/hooks/inbound-sms'
+    | '/api/public/hooks/tick-campaigns'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -419,6 +432,7 @@ export interface RootRouteChildren {
   StartRoute: typeof StartRoute
   TemplatesRoute: typeof TemplatesRoute
   ApiPublicHooksInboundSmsRoute: typeof ApiPublicHooksInboundSmsRoute
+  ApiPublicHooksTickCampaignsRoute: typeof ApiPublicHooksTickCampaignsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -591,6 +605,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppBillingRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/api/public/hooks/tick-campaigns': {
+      id: '/api/public/hooks/tick-campaigns'
+      path: '/api/public/hooks/tick-campaigns'
+      fullPath: '/api/public/hooks/tick-campaigns'
+      preLoaderRoute: typeof ApiPublicHooksTickCampaignsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/inbound-sms': {
       id: '/api/public/hooks/inbound-sms'
       path: '/api/public/hooks/inbound-sms'
@@ -735,6 +756,7 @@ const rootRouteChildren: RootRouteChildren = {
   StartRoute: StartRoute,
   TemplatesRoute: TemplatesRoute,
   ApiPublicHooksInboundSmsRoute: ApiPublicHooksInboundSmsRoute,
+  ApiPublicHooksTickCampaignsRoute: ApiPublicHooksTickCampaignsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
