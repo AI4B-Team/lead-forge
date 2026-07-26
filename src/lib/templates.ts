@@ -3,6 +3,7 @@ import {
   Briefcase, ShoppingCart, Star, Users, Globe, Newspaper, Megaphone, GraduationCap,
   Car, Utensils, Stethoscope, Wrench, Camera, Music, Plane, Store,
   Mail, Rocket, BadgeCheck, Network,
+  DollarSign, BookOpen, Trophy, Film, Code, MessageSquare, Hotel, Bed,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -15,6 +16,12 @@ export type TemplateCategory =
   | "jobs"
   | "reviews"
   | "realestate"
+  | "travel"
+  | "finance"
+  | "education"
+  | "news"
+  | "sports"
+  | "search"
   | "upload";
 
 export type Template = {
