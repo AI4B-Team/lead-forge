@@ -213,16 +213,6 @@ export function PromptHero() {
           </div>
         </div>
 
-        <p className="mt-4 text-sm text-muted-foreground">
-          No credit card required.{" "}
-          <Link
-            to="/start"
-            className="font-semibold text-primary hover:text-primary-hover underline underline-offset-4"
-          >
-            Start Free
-          </Link>
-          {" "}and build your first list in minutes.
-        </p>
       </div>
     </section>
   );
