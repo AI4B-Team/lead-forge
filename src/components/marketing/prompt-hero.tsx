@@ -92,10 +92,7 @@ export function PromptHero() {
 
   return (
     <section
-      className="relative overflow-hidden"
-      style={{
-        background: "linear-gradient(180deg, #FFFFFF 0%, #FAFAFA 100%)",
-      }}
+      className="relative overflow-hidden bg-background"
     >
       {/* Dot grid texture */}
       <div
@@ -107,7 +104,7 @@ export function PromptHero() {
           maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
         }}
       />
-      <div className="relative mx-auto max-w-[1240px] px-6 pt-16 pb-8 md:pt-24 md:pb-10 text-center">
+      <div className="relative mx-auto max-w-[1240px] px-6 pt-16 pb-4 md:pt-24 md:pb-6 text-center">
         <div className="inline-flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-[0.18em]">
           <Sparkles className="h-3.5 w-3.5" />
           Leads To Deals, On Autopilot
@@ -134,9 +131,12 @@ export function PromptHero() {
           }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
-          className="mx-auto mt-8 w-full max-w-[820px] rounded-[22px] bg-white text-left transition"
+          className="mx-auto mt-8 w-full max-w-[820px] rounded-t-[22px] bg-white text-left transition"
           style={{
-            border: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
+            borderTop: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
+            borderLeft: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
+            borderRight: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
+            borderBottom: "none",
             boxShadow: "0 20px 40px -20px rgba(204,0,0,0.25)",
           }}
         >
