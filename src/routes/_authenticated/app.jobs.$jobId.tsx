@@ -61,17 +61,19 @@ function JobDetail() {
 
   const { job, counts, quality } = data;
   const isReady = job.status === "ready";
+  const params = (job.params ?? {}) as Record<string, unknown>;
+  const jobName = String(params.name ?? params.file_name ?? `${job.source_type} · ${job.id.slice(0, 8)}`);
 
   const onDownload = async (bucket: "clean" | "dnc" | "litigator") => {
     const res = await fetchBucket({ data: { jobId, bucket } });
     if (!res.rows.length) return toast.info("No Rows In This Bucket.");
-    downloadCsv(`${job.name.replace(/\s+/g, "_")}_${bucket}.csv`, toCsv(res.rows));
+    downloadCsv(`${jobName.replace(/\s+/g, "_")}_${bucket}.csv`, toCsv(res.rows));
   };
 
   const onLaunch = async () => {
     setLaunching(true);
     try {
-      const { campaignId } = await launch({ data: { jobId, name: `${job.name} — Campaign` } });
+      const { campaignId } = await launch({ data: { jobId, name: `${jobName} — Campaign` } });
       toast.success("Campaign Created With Clean File Only.");
       navigate({ to: "/app/campaigns/$campaignId", params: { campaignId } });
     } catch (e) {
@@ -84,7 +86,7 @@ function JobDetail() {
   return (
     <div>
       <PageHeader
-        title={job.name}
+        title={jobName}
         description="Pipeline Review · Every Row Passed Through De-Dupe, Enrich, Skip Trace, And Scrub."
         actions={
           <Badge variant="outline" className="text-sm">
