@@ -47,7 +47,7 @@ function NewCampaign() {
     queryFn: async () => {
       const { data } = await supabase
         .from("jobs")
-        .select("id, source, status, row_count_clean, created_at, params")
+        .select("id, source_type, status, rows_deduped, created_at, params")
         .eq("workspace_id", workspaceId!)
         .eq("status", "ready")
         .order("created_at", { ascending: false });
@@ -109,8 +109,8 @@ function NewCampaign() {
                     className={`text-left rounded-xl border p-4 transition ${active ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
                   >
                     <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="uppercase text-[10px]">{j.source}</Badge>
-                      <span className="text-xs text-muted-foreground">{j.row_count_clean ?? 0} Clean</span>
+                      <Badge variant="outline" className="uppercase text-[10px]">{j.source_type}</Badge>
+                      <span className="text-xs text-muted-foreground">{j.rows_deduped ?? 0} Rows</span>
                     </div>
                     <div className="font-display font-bold mt-2 text-foreground">{params.name ?? `Job ${j.id.slice(0, 8)}`}</div>
                     <div className="text-xs text-muted-foreground">{new Date(j.created_at).toLocaleString()}</div>
