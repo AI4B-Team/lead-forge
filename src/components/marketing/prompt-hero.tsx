@@ -113,18 +113,13 @@ export function PromptHero() {
           Leads To Deals, On Autopilot
         </div>
         <h1
-          className="mx-auto mt-6 font-body font-extrabold text-foreground leading-[1.05] tracking-tight"
-          style={{
-            fontSize: "clamp(34px, 5.4vw, 78px)",
-            whiteSpace: "nowrap",
-          }}
+          className="hero-headline mx-auto mt-6 font-body font-extrabold text-foreground leading-[1.05] tracking-tight"
         >
           Find Them. <MarkerHighlight>Reach</MarkerHighlight> Them. Close Them.
         </h1>
         <style>{`
-          @media (max-width: 760px) {
-            h1[data-hero] { white-space: normal !important; }
-          }
+          .hero-headline { font-size: clamp(34px, 5.4vw, 78px); white-space: nowrap; }
+          @media (max-width: 760px) { .hero-headline { white-space: normal; } }
         `}</style>
         <p className="mt-5 text-lg text-muted-foreground">
           Describe Who You Want To Reach And LeadTrace Builds The Whole Campaign.
