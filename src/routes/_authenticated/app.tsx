@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/app/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { Bell, Zap } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { ProfileDropdown } from "@/components/app/profile-dropdown";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -28,6 +29,7 @@ function AppLayout() {
               <Button size="icon" variant="ghost">
                 <Bell className="h-4 w-4" />
               </Button>
+              <ProfileDropdown />
             </div>
           </header>
           <main className="flex-1 p-6 md:p-8 overflow-auto">
