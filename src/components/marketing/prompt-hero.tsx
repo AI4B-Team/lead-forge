@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Sparkles, Plus, Upload, HardDrive, Send, X } from "lucide-react";
 import {
   DropdownMenu,
@@ -212,6 +212,17 @@ export function PromptHero() {
             </button>
           </div>
         </div>
+
+        <p className="mt-4 text-sm text-muted-foreground">
+          No credit card required.{" "}
+          <Link
+            to="/start"
+            className="font-semibold text-primary hover:text-primary-hover underline underline-offset-4"
+          >
+            Start Free
+          </Link>
+          {" "}and build your first list in minutes.
+        </p>
       </div>
     </section>
   );
