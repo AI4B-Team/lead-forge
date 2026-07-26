@@ -129,8 +129,7 @@ export function PromptHero() {
       />
       <div className="relative mx-auto max-w-[1240px] px-6 pt-10 pb-16 md:pt-14 md:pb-24 text-center">
         <div className="inline-flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-[0.18em]">
-          <Sparkles className="h-3.5 w-3.5" />
-          Leads To Deals, On Autopilot
+          Leads To Deals — On Autopilot
         </div>
 
         <div className="w-screen relative left-1/2 -translate-x-1/2">
