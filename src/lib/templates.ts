@@ -388,12 +388,13 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "tax",
-    title: "Tax Defaults (Beta)",
+    title: "Tax Defaults",
     subtitle: "Tax Delinquent Property Owners.",
     category: "records",
     prompt: "Pull tax delinquent property owners in Polk County FL",
     icon: Landmark,
     tint: "bg-indigo-500/10 text-indigo-600",
+    beta: true,
   },
   {
     id: "vacancy",
@@ -403,6 +404,7 @@ export const TEMPLATES: Template[] = [
     prompt: "Find vacancy and demolition notices in Hernando County FL and skip trace owners",
     icon: Home,
     tint: "bg-slate-500/10 text-slate-600",
+    beta: true,
   },
 
   // ---------- Upload ----------
