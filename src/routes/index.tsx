@@ -81,10 +81,15 @@ function TemplateTeaser() {
   return (
     <section className="bg-background pb-20">
       <div className="mx-auto max-w-[1240px] px-6">
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">
-            Not Sure Where To Start? Try One Of These…
-          </h2>
+        <div className="flex items-end justify-between gap-4 mb-6">
+          <div className="flex flex-col items-start gap-1">
+            <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">
+              Not Sure Where To Start? Try One Of These…
+            </h2>
+            <Link to="/templates" className="text-sm font-semibold text-primary hover:underline">
+              Browse Templates →
+            </Link>
+          </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -110,9 +115,6 @@ function TemplateTeaser() {
             >
               <ChevronRight className="h-4 w-4" />
             </button>
-            <Link to="/templates" className="text-sm font-semibold text-primary hover:underline ml-2">
-              Browse Templates →
-            </Link>
           </div>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
