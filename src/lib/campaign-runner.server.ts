@@ -77,11 +77,32 @@ async function tickOne(campaign: {
 
   const { data: numbers } = await supabaseAdmin
     .from("sending_numbers")
-    .select("id, phone, status, health_score")
+    .select("id, phone, status, health_score, activated_at")
     .eq("workspace_id", campaign.workspace_id)
     .in("status", ["active"])
     .order("health_score", { ascending: false });
   if (!numbers?.length) return { dispatched: 0, reason: "no_numbers" };
+
+  // Warmup-aware per-number daily cap (Section 2 of the Telnyx spec).
+  const { warmupCap, getProvider, isProviderConfigured } = await import("@/lib/sms");
+  const startOfDayIso = startOfDay.toISOString();
+  const numberState = new Map<
+    string,
+    { phone: string; sentToday: number; cap: number }
+  >();
+  for (const n of numbers) {
+    const { count } = await supabaseAdmin
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("sending_number_id", n.id)
+      .eq("direction", "outbound")
+      .gte("created_at", startOfDayIso);
+    numberState.set(n.id, {
+      phone: n.phone,
+      sentToday: count ?? 0,
+      cap: warmupCap(n.activated_at ?? new Date()),
+    });
+  }
 
   const { data: sup } = await supabaseAdmin
     .from("suppression").select("phone").eq("workspace_id", campaign.workspace_id);
@@ -107,33 +128,91 @@ async function tickOne(campaign: {
     .filter((l) => l.phone && !suppressed.has(l.phone) && !messaged.has(l.id))
     .slice(0, take);
 
-  const rows: Array<Record<string, unknown>> = [];
-  for (let i = 0; i < toSend.length; i++) {
-    const lead = toSend[i];
-    const num = numbers[i % numbers.length];
+  const provider = isProviderConfigured() ? getProvider() : null;
+  let dispatched = 0;
+
+  for (const lead of toSend) {
+    // Pick the healthiest number that still has warmup headroom.
+    const num = numbers.find((n) => {
+      const s = numberState.get(n.id)!;
+      return s.sentToday < s.cap;
+    });
+    if (!num) break; // whole pool capped for today
+    const state = numberState.get(num.id)!;
+
     const variants = step1.message_variants;
     const template = variants[Math.floor(Math.random() * variants.length)];
     const first_name = (lead.full_name ?? "").trim().split(/\s+/)[0] ?? "there";
     const body = renderTemplate(template, { ...lead, first_name });
-    rows.push({
+
+    let providerSid: string | null = null;
+    let status = "sent";
+    if (provider && lead.phone) {
+      try {
+        const r = await provider.send(state.phone, lead.phone, body);
+        providerSid = r.providerSid;
+        status = r.status || "sent";
+      } catch (e) {
+        status = "failed";
+        await supabaseAdmin.from("messages").insert({
+          workspace_id: campaign.workspace_id,
+          campaign_id: campaign.id,
+          lead_id: lead.id,
+          sending_number_id: num.id,
+          direction: "outbound",
+          status: "failed",
+          body,
+          error_code: (e as Error).message.slice(0, 200),
+        } as never);
+        continue;
+      }
+    } else {
+      // Stub mode — mark as delivered so demo UI progresses.
+      status = "delivered";
+    }
+
+    await supabaseAdmin.from("messages").insert({
       workspace_id: campaign.workspace_id,
       campaign_id: campaign.id,
       lead_id: lead.id,
       sending_number_id: num.id,
       direction: "outbound",
-      status: "delivered",
+      status,
       body,
-    });
-  }
-
-  if (rows.length) {
-    const { error } = await supabaseAdmin.from("messages").insert(rows as never);
-    if (error) throw error;
+      provider_sid: providerSid,
+    } as never);
+    state.sentToday += 1;
+    dispatched += 1;
   }
 
   if (toSend.length < take) {
     await supabaseAdmin.from("campaigns").update({ status: "completed" }).eq("id", campaign.id);
   }
 
-  return { dispatched: rows.length, reason: rows.length ? "ok" : "no_eligible_leads" };
+  // Health scoring: recompute opt-out rate per number and auto-cool/retire.
+  for (const n of numbers) {
+    const { count: sent } = await supabaseAdmin
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("sending_number_id", n.id)
+      .eq("direction", "outbound");
+    const { count: opts } = await supabaseAdmin
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("sending_number_id", n.id)
+      .eq("is_optout", true);
+    if (!sent) continue;
+    const rate = (opts ?? 0) / sent;
+    const nextStatus = rate >= 0.08 ? "retired" : rate >= 0.05 ? "cooling" : n.status;
+    await supabaseAdmin
+      .from("sending_numbers")
+      .update({
+        optout_rate: rate,
+        health_score: Math.max(0, Math.round(100 - rate * 1000)),
+        status: nextStatus,
+      })
+      .eq("id", n.id);
+  }
+
+  return { dispatched, reason: dispatched ? "ok" : "no_eligible_leads" };
 }

@@ -327,9 +327,11 @@ export type Database = {
           campaign_id: string | null
           created_at: string
           direction: string
+          error_code: string | null
           id: string
           is_optout: boolean | null
           lead_id: string | null
+          provider_sid: string | null
           sending_number_id: string | null
           status: string | null
           workspace_id: string
@@ -339,9 +341,11 @@ export type Database = {
           campaign_id?: string | null
           created_at?: string
           direction: string
+          error_code?: string | null
           id?: string
           is_optout?: boolean | null
           lead_id?: string | null
+          provider_sid?: string | null
           sending_number_id?: string | null
           status?: string | null
           workspace_id: string
@@ -351,9 +355,11 @@ export type Database = {
           campaign_id?: string | null
           created_at?: string
           direction?: string
+          error_code?: string | null
           id?: string
           is_optout?: boolean | null
           lead_id?: string | null
+          provider_sid?: string | null
           sending_number_id?: string | null
           status?: string | null
           workspace_id?: string
@@ -498,6 +504,7 @@ export type Database = {
       }
       sending_numbers: {
         Row: {
+          activated_at: string
           area_code: string | null
           created_at: string
           health_score: number | null
@@ -510,6 +517,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          activated_at?: string
           area_code?: string | null
           created_at?: string
           health_score?: number | null
@@ -522,6 +530,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          activated_at?: string
           area_code?: string | null
           created_at?: string
           health_score?: number | null
