@@ -33,10 +33,12 @@ import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppComplianceRouteImport } from './routes/_authenticated/app.compliance'
 import { Route as AuthenticatedAppCampaignsRouteImport } from './routes/_authenticated/app.campaigns'
 import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
+import { Route as ApiPublicHooksInboundSmsRouteImport } from './routes/api/public/hooks/inbound-sms'
 import { Route as AuthenticatedAppNewJobUploadRouteImport } from './routes/_authenticated/app.new-job.upload'
 import { Route as AuthenticatedAppNewJobRecordsRouteImport } from './routes/_authenticated/app.new-job.records'
 import { Route as AuthenticatedAppNewJobBusinessRouteImport } from './routes/_authenticated/app.new-job.business'
 import { Route as AuthenticatedAppJobsJobIdRouteImport } from './routes/_authenticated/app.jobs.$jobId'
+import { Route as AuthenticatedAppCampaignsNewRouteImport } from './routes/_authenticated/app.campaigns.new'
 import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
 
 const TemplatesRoute = TemplatesRouteImport.update({
@@ -163,6 +165,12 @@ const AuthenticatedAppBillingRoute = AuthenticatedAppBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const ApiPublicHooksInboundSmsRoute =
+  ApiPublicHooksInboundSmsRouteImport.update({
+    id: '/api/public/hooks/inbound-sms',
+    path: '/api/public/hooks/inbound-sms',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAppNewJobUploadRoute =
   AuthenticatedAppNewJobUploadRouteImport.update({
     id: '/upload',
@@ -186,6 +194,12 @@ const AuthenticatedAppJobsJobIdRoute =
     id: '/jobs/$jobId',
     path: '/jobs/$jobId',
     getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppCampaignsNewRoute =
+  AuthenticatedAppCampaignsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedAppCampaignsRoute,
   } as any)
 const AuthenticatedAppCampaignsCampaignIdRoute =
   AuthenticatedAppCampaignsCampaignIdRouteImport.update({
@@ -219,10 +233,12 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
+  '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
   '/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
   '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
   '/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
+  '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -248,10 +264,12 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
+  '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
   '/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
   '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
   '/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
+  '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -280,10 +298,12 @@ export interface FileRoutesById {
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
+  '/_authenticated/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/_authenticated/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
   '/_authenticated/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
   '/_authenticated/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
   '/_authenticated/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
+  '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -312,10 +332,12 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/'
     | '/app/campaigns/$campaignId'
+    | '/app/campaigns/new'
     | '/app/jobs/$jobId'
     | '/app/new-job/business'
     | '/app/new-job/records'
     | '/app/new-job/upload'
+    | '/api/public/hooks/inbound-sms'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -341,10 +363,12 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app'
     | '/app/campaigns/$campaignId'
+    | '/app/campaigns/new'
     | '/app/jobs/$jobId'
     | '/app/new-job/business'
     | '/app/new-job/records'
     | '/app/new-job/upload'
+    | '/api/public/hooks/inbound-sms'
   id:
     | '__root__'
     | '/'
@@ -372,10 +396,12 @@ export interface FileRouteTypes {
     | '/_authenticated/app/settings'
     | '/_authenticated/app/'
     | '/_authenticated/app/campaigns/$campaignId'
+    | '/_authenticated/app/campaigns/new'
     | '/_authenticated/app/jobs/$jobId'
     | '/_authenticated/app/new-job/business'
     | '/_authenticated/app/new-job/records'
     | '/_authenticated/app/new-job/upload'
+    | '/api/public/hooks/inbound-sms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -392,6 +418,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StartRoute: typeof StartRoute
   TemplatesRoute: typeof TemplatesRoute
+  ApiPublicHooksInboundSmsRoute: typeof ApiPublicHooksInboundSmsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -564,6 +591,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppBillingRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/api/public/hooks/inbound-sms': {
+      id: '/api/public/hooks/inbound-sms'
+      path: '/api/public/hooks/inbound-sms'
+      fullPath: '/api/public/hooks/inbound-sms'
+      preLoaderRoute: typeof ApiPublicHooksInboundSmsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app/new-job/upload': {
       id: '/_authenticated/app/new-job/upload'
       path: '/upload'
@@ -592,6 +626,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppJobsJobIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/campaigns/new': {
+      id: '/_authenticated/app/campaigns/new'
+      path: '/new'
+      fullPath: '/app/campaigns/new'
+      preLoaderRoute: typeof AuthenticatedAppCampaignsNewRouteImport
+      parentRoute: typeof AuthenticatedAppCampaignsRoute
+    }
     '/_authenticated/app/campaigns/$campaignId': {
       id: '/_authenticated/app/campaigns/$campaignId'
       path: '/$campaignId'
@@ -604,12 +645,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAppCampaignsRouteChildren {
   AuthenticatedAppCampaignsCampaignIdRoute: typeof AuthenticatedAppCampaignsCampaignIdRoute
+  AuthenticatedAppCampaignsNewRoute: typeof AuthenticatedAppCampaignsNewRoute
 }
 
 const AuthenticatedAppCampaignsRouteChildren: AuthenticatedAppCampaignsRouteChildren =
   {
     AuthenticatedAppCampaignsCampaignIdRoute:
       AuthenticatedAppCampaignsCampaignIdRoute,
+    AuthenticatedAppCampaignsNewRoute: AuthenticatedAppCampaignsNewRoute,
   }
 
 const AuthenticatedAppCampaignsRouteWithChildren =
@@ -691,6 +734,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StartRoute: StartRoute,
   TemplatesRoute: TemplatesRoute,
+  ApiPublicHooksInboundSmsRoute: ApiPublicHooksInboundSmsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
