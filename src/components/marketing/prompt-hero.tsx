@@ -112,11 +112,12 @@ export function PromptHero() {
           <Sparkles className="h-3.5 w-3.5" />
           Leads To Deals, On Autopilot
         </div>
-        <h1
-          className="hero-headline mx-auto mt-6 font-body font-extrabold text-foreground leading-[1.05] tracking-tight"
-        >
-          Find Them. <MarkerHighlight>Reach</MarkerHighlight> Them. Close Them.
-        </h1>
+
+        <div className="w-screen relative left-1/2 -translate-x-1/2">
+          <h1 className="hero-headline mx-auto mt-6 px-4 font-body font-extrabold text-foreground leading-[1.05] tracking-tight whitespace-nowrap">
+            Find Them. <MarkerHighlight>Reach</MarkerHighlight> Them. Close Them.
+          </h1>
+        </div>
         <style>{`
           .hero-headline { font-size: clamp(34px, 5.2vw, 72px); }
         `}</style>
