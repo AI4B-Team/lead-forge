@@ -142,7 +142,11 @@ export function PromptHero() {
               stopTyping();
               setValue(e.target.value);
             }}
-            placeholder={focused || value ? "Describe who you want to reach, paste a website, or upload a list…" : placeholder || "Describe who you want to reach, paste a website, or upload a list…"}
+            placeholder={
+              focused || value || stopTypingRef.current
+                ? "Describe who you want to reach, paste a website, or upload a list…"
+                : placeholder
+            }
             onBlur={() => setFocused(false)}
             onFocusCapture={() => setFocused(true)}
             rows={4}
