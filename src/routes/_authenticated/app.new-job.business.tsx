@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { NICHES } from "@/lib/mock-data";
 import { useState } from "react";
 
-export const Route = createFileRoute("/app/new-job/business")({
+export const Route = createFileRoute("/_authenticated/app/new-job/business")({
   head: () => ({ meta: [{ title: "Scrape A Niche — LeadTrace" }] }),
   component: Wizard,
 });

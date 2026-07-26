@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Circle, Download } from "lucide-react";
 
-export const Route = createFileRoute("/app/compliance")({
+export const Route = createFileRoute("/_authenticated/app/compliance")({
   head: () => ({ meta: [{ title: "Compliance — LeadTrace" }] }),
   component: Compliance,
 });

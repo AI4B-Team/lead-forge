@@ -18,22 +18,22 @@ import { Route as IndustriesRouteImport } from './routes/industries'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as ComplianceRouteImport } from './routes/compliance'
-import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as AppSettingsRouteImport } from './routes/app.settings'
-import { Route as AppNumbersRouteImport } from './routes/app.numbers'
-import { Route as AppNewJobRouteImport } from './routes/app.new-job'
-import { Route as AppListsRouteImport } from './routes/app.lists'
-import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
-import { Route as AppComplianceRouteImport } from './routes/app.compliance'
-import { Route as AppCampaignsRouteImport } from './routes/app.campaigns'
-import { Route as AppBillingRouteImport } from './routes/app.billing'
-import { Route as AppNewJobUploadRouteImport } from './routes/app.new-job.upload'
-import { Route as AppNewJobRecordsRouteImport } from './routes/app.new-job.records'
-import { Route as AppNewJobBusinessRouteImport } from './routes/app.new-job.business'
-import { Route as AppJobsJobIdRouteImport } from './routes/app.jobs.$jobId'
-import { Route as AppCampaignsCampaignIdRouteImport } from './routes/app.campaigns.$campaignId'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppNumbersRouteImport } from './routes/_authenticated/app.numbers'
+import { Route as AuthenticatedAppNewJobRouteImport } from './routes/_authenticated/app.new-job'
+import { Route as AuthenticatedAppListsRouteImport } from './routes/_authenticated/app.lists'
+import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
+import { Route as AuthenticatedAppComplianceRouteImport } from './routes/_authenticated/app.compliance'
+import { Route as AuthenticatedAppCampaignsRouteImport } from './routes/_authenticated/app.campaigns'
+import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
+import { Route as AuthenticatedAppNewJobUploadRouteImport } from './routes/_authenticated/app.new-job.upload'
+import { Route as AuthenticatedAppNewJobRecordsRouteImport } from './routes/_authenticated/app.new-job.records'
+import { Route as AuthenticatedAppNewJobBusinessRouteImport } from './routes/_authenticated/app.new-job.business'
+import { Route as AuthenticatedAppJobsJobIdRouteImport } from './routes/_authenticated/app.jobs.$jobId'
+import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
 
 const TemplatesRoute = TemplatesRouteImport.update({
   id: '/templates',
@@ -80,90 +80,98 @@ const ComplianceRoute = ComplianceRouteImport.update({
   path: '/compliance',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/_authenticated/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppNumbersRoute = AppNumbersRouteImport.update({
+const AuthenticatedAppSettingsRoute =
+  AuthenticatedAppSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppNumbersRoute = AuthenticatedAppNumbersRouteImport.update({
   id: '/numbers',
   path: '/numbers',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AppNewJobRoute = AppNewJobRouteImport.update({
+const AuthenticatedAppNewJobRoute = AuthenticatedAppNewJobRouteImport.update({
   id: '/new-job',
   path: '/new-job',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AppListsRoute = AppListsRouteImport.update({
+const AuthenticatedAppListsRoute = AuthenticatedAppListsRouteImport.update({
   id: '/lists',
   path: '/lists',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AppDashboardRoute = AppDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppComplianceRoute = AppComplianceRouteImport.update({
-  id: '/compliance',
-  path: '/compliance',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCampaignsRoute = AppCampaignsRouteImport.update({
-  id: '/campaigns',
-  path: '/campaigns',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppBillingRoute = AppBillingRouteImport.update({
+const AuthenticatedAppDashboardRoute =
+  AuthenticatedAppDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppComplianceRoute =
+  AuthenticatedAppComplianceRouteImport.update({
+    id: '/compliance',
+    path: '/compliance',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppCampaignsRoute =
+  AuthenticatedAppCampaignsRouteImport.update({
+    id: '/campaigns',
+    path: '/campaigns',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppBillingRoute = AuthenticatedAppBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AppNewJobUploadRoute = AppNewJobUploadRouteImport.update({
-  id: '/upload',
-  path: '/upload',
-  getParentRoute: () => AppNewJobRoute,
-} as any)
-const AppNewJobRecordsRoute = AppNewJobRecordsRouteImport.update({
-  id: '/records',
-  path: '/records',
-  getParentRoute: () => AppNewJobRoute,
-} as any)
-const AppNewJobBusinessRoute = AppNewJobBusinessRouteImport.update({
-  id: '/business',
-  path: '/business',
-  getParentRoute: () => AppNewJobRoute,
-} as any)
-const AppJobsJobIdRoute = AppJobsJobIdRouteImport.update({
-  id: '/jobs/$jobId',
-  path: '/jobs/$jobId',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCampaignsCampaignIdRoute = AppCampaignsCampaignIdRouteImport.update({
-  id: '/$campaignId',
-  path: '/$campaignId',
-  getParentRoute: () => AppCampaignsRoute,
-} as any)
+const AuthenticatedAppNewJobUploadRoute =
+  AuthenticatedAppNewJobUploadRouteImport.update({
+    id: '/upload',
+    path: '/upload',
+    getParentRoute: () => AuthenticatedAppNewJobRoute,
+  } as any)
+const AuthenticatedAppNewJobRecordsRoute =
+  AuthenticatedAppNewJobRecordsRouteImport.update({
+    id: '/records',
+    path: '/records',
+    getParentRoute: () => AuthenticatedAppNewJobRoute,
+  } as any)
+const AuthenticatedAppNewJobBusinessRoute =
+  AuthenticatedAppNewJobBusinessRouteImport.update({
+    id: '/business',
+    path: '/business',
+    getParentRoute: () => AuthenticatedAppNewJobRoute,
+  } as any)
+const AuthenticatedAppJobsJobIdRoute =
+  AuthenticatedAppJobsJobIdRouteImport.update({
+    id: '/jobs/$jobId',
+    path: '/jobs/$jobId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppCampaignsCampaignIdRoute =
+  AuthenticatedAppCampaignsCampaignIdRouteImport.update({
+    id: '/$campaignId',
+    path: '/$campaignId',
+    getParentRoute: () => AuthenticatedAppCampaignsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
   '/compliance': typeof ComplianceRoute
   '/features': typeof FeaturesRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -173,20 +181,21 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/templates': typeof TemplatesRoute
-  '/app/billing': typeof AppBillingRoute
-  '/app/campaigns': typeof AppCampaignsRouteWithChildren
-  '/app/compliance': typeof AppComplianceRoute
-  '/app/dashboard': typeof AppDashboardRoute
-  '/app/lists': typeof AppListsRoute
-  '/app/new-job': typeof AppNewJobRouteWithChildren
-  '/app/numbers': typeof AppNumbersRoute
-  '/app/settings': typeof AppSettingsRoute
-  '/app/': typeof AppIndexRoute
-  '/app/campaigns/$campaignId': typeof AppCampaignsCampaignIdRoute
-  '/app/jobs/$jobId': typeof AppJobsJobIdRoute
-  '/app/new-job/business': typeof AppNewJobBusinessRoute
-  '/app/new-job/records': typeof AppNewJobRecordsRoute
-  '/app/new-job/upload': typeof AppNewJobUploadRoute
+  '/app': typeof AuthenticatedAppRouteWithChildren
+  '/app/billing': typeof AuthenticatedAppBillingRoute
+  '/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
+  '/app/compliance': typeof AuthenticatedAppComplianceRoute
+  '/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/app/lists': typeof AuthenticatedAppListsRoute
+  '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
+  '/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/app/': typeof AuthenticatedAppIndexRoute
+  '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
+  '/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
+  '/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
+  '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
+  '/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -199,25 +208,24 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/templates': typeof TemplatesRoute
-  '/app/billing': typeof AppBillingRoute
-  '/app/campaigns': typeof AppCampaignsRouteWithChildren
-  '/app/compliance': typeof AppComplianceRoute
-  '/app/dashboard': typeof AppDashboardRoute
-  '/app/lists': typeof AppListsRoute
-  '/app/new-job': typeof AppNewJobRouteWithChildren
-  '/app/numbers': typeof AppNumbersRoute
-  '/app/settings': typeof AppSettingsRoute
-  '/app': typeof AppIndexRoute
-  '/app/campaigns/$campaignId': typeof AppCampaignsCampaignIdRoute
-  '/app/jobs/$jobId': typeof AppJobsJobIdRoute
-  '/app/new-job/business': typeof AppNewJobBusinessRoute
-  '/app/new-job/records': typeof AppNewJobRecordsRoute
-  '/app/new-job/upload': typeof AppNewJobUploadRoute
+  '/app/billing': typeof AuthenticatedAppBillingRoute
+  '/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
+  '/app/compliance': typeof AuthenticatedAppComplianceRoute
+  '/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/app/lists': typeof AuthenticatedAppListsRoute
+  '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
+  '/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/app': typeof AuthenticatedAppIndexRoute
+  '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
+  '/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
+  '/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
+  '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
+  '/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
   '/compliance': typeof ComplianceRoute
   '/features': typeof FeaturesRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -227,26 +235,26 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/templates': typeof TemplatesRoute
-  '/app/billing': typeof AppBillingRoute
-  '/app/campaigns': typeof AppCampaignsRouteWithChildren
-  '/app/compliance': typeof AppComplianceRoute
-  '/app/dashboard': typeof AppDashboardRoute
-  '/app/lists': typeof AppListsRoute
-  '/app/new-job': typeof AppNewJobRouteWithChildren
-  '/app/numbers': typeof AppNumbersRoute
-  '/app/settings': typeof AppSettingsRoute
-  '/app/': typeof AppIndexRoute
-  '/app/campaigns/$campaignId': typeof AppCampaignsCampaignIdRoute
-  '/app/jobs/$jobId': typeof AppJobsJobIdRoute
-  '/app/new-job/business': typeof AppNewJobBusinessRoute
-  '/app/new-job/records': typeof AppNewJobRecordsRoute
-  '/app/new-job/upload': typeof AppNewJobUploadRoute
+  '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/app/billing': typeof AuthenticatedAppBillingRoute
+  '/_authenticated/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
+  '/_authenticated/app/compliance': typeof AuthenticatedAppComplianceRoute
+  '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/_authenticated/app/lists': typeof AuthenticatedAppListsRoute
+  '/_authenticated/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
+  '/_authenticated/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
+  '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
+  '/_authenticated/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
+  '/_authenticated/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
+  '/_authenticated/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
+  '/_authenticated/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/app'
     | '/compliance'
     | '/features'
     | '/how-it-works'
@@ -256,6 +264,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/start'
     | '/templates'
+    | '/app'
     | '/app/billing'
     | '/app/campaigns'
     | '/app/compliance'
@@ -299,7 +308,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/app'
     | '/compliance'
     | '/features'
     | '/how-it-works'
@@ -309,25 +317,25 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/start'
     | '/templates'
-    | '/app/billing'
-    | '/app/campaigns'
-    | '/app/compliance'
-    | '/app/dashboard'
-    | '/app/lists'
-    | '/app/new-job'
-    | '/app/numbers'
-    | '/app/settings'
-    | '/app/'
-    | '/app/campaigns/$campaignId'
-    | '/app/jobs/$jobId'
-    | '/app/new-job/business'
-    | '/app/new-job/records'
-    | '/app/new-job/upload'
+    | '/_authenticated/app'
+    | '/_authenticated/app/billing'
+    | '/_authenticated/app/campaigns'
+    | '/_authenticated/app/compliance'
+    | '/_authenticated/app/dashboard'
+    | '/_authenticated/app/lists'
+    | '/_authenticated/app/new-job'
+    | '/_authenticated/app/numbers'
+    | '/_authenticated/app/settings'
+    | '/_authenticated/app/'
+    | '/_authenticated/app/campaigns/$campaignId'
+    | '/_authenticated/app/jobs/$jobId'
+    | '/_authenticated/app/new-job/business'
+    | '/_authenticated/app/new-job/records'
+    | '/_authenticated/app/new-job/upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AppRoute: typeof AppRouteWithChildren
   ComplianceRoute: typeof ComplianceRoute
   FeaturesRoute: typeof FeaturesRoute
   HowItWorksRoute: typeof HowItWorksRoute
@@ -337,6 +345,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StartRoute: typeof StartRoute
   TemplatesRoute: typeof TemplatesRoute
+  AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -404,13 +413,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComplianceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -418,166 +420,178 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/': {
-      id: '/app/'
+    '/_authenticated/app': {
+      id: '/_authenticated/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/app/': {
+      id: '/_authenticated/app/'
       path: '/'
       fullPath: '/app/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/settings': {
-      id: '/app/settings'
+    '/_authenticated/app/settings': {
+      id: '/_authenticated/app/settings'
       path: '/settings'
       fullPath: '/app/settings'
-      preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/numbers': {
-      id: '/app/numbers'
+    '/_authenticated/app/numbers': {
+      id: '/_authenticated/app/numbers'
       path: '/numbers'
       fullPath: '/app/numbers'
-      preLoaderRoute: typeof AppNumbersRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppNumbersRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/new-job': {
-      id: '/app/new-job'
+    '/_authenticated/app/new-job': {
+      id: '/_authenticated/app/new-job'
       path: '/new-job'
       fullPath: '/app/new-job'
-      preLoaderRoute: typeof AppNewJobRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppNewJobRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/lists': {
-      id: '/app/lists'
+    '/_authenticated/app/lists': {
+      id: '/_authenticated/app/lists'
       path: '/lists'
       fullPath: '/app/lists'
-      preLoaderRoute: typeof AppListsRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppListsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/dashboard': {
-      id: '/app/dashboard'
+    '/_authenticated/app/dashboard': {
+      id: '/_authenticated/app/dashboard'
       path: '/dashboard'
       fullPath: '/app/dashboard'
-      preLoaderRoute: typeof AppDashboardRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppDashboardRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/compliance': {
-      id: '/app/compliance'
+    '/_authenticated/app/compliance': {
+      id: '/_authenticated/app/compliance'
       path: '/compliance'
       fullPath: '/app/compliance'
-      preLoaderRoute: typeof AppComplianceRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppComplianceRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/campaigns': {
-      id: '/app/campaigns'
+    '/_authenticated/app/campaigns': {
+      id: '/_authenticated/app/campaigns'
       path: '/campaigns'
       fullPath: '/app/campaigns'
-      preLoaderRoute: typeof AppCampaignsRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppCampaignsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/billing': {
-      id: '/app/billing'
+    '/_authenticated/app/billing': {
+      id: '/_authenticated/app/billing'
       path: '/billing'
       fullPath: '/app/billing'
-      preLoaderRoute: typeof AppBillingRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppBillingRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/new-job/upload': {
-      id: '/app/new-job/upload'
+    '/_authenticated/app/new-job/upload': {
+      id: '/_authenticated/app/new-job/upload'
       path: '/upload'
       fullPath: '/app/new-job/upload'
-      preLoaderRoute: typeof AppNewJobUploadRouteImport
-      parentRoute: typeof AppNewJobRoute
+      preLoaderRoute: typeof AuthenticatedAppNewJobUploadRouteImport
+      parentRoute: typeof AuthenticatedAppNewJobRoute
     }
-    '/app/new-job/records': {
-      id: '/app/new-job/records'
+    '/_authenticated/app/new-job/records': {
+      id: '/_authenticated/app/new-job/records'
       path: '/records'
       fullPath: '/app/new-job/records'
-      preLoaderRoute: typeof AppNewJobRecordsRouteImport
-      parentRoute: typeof AppNewJobRoute
+      preLoaderRoute: typeof AuthenticatedAppNewJobRecordsRouteImport
+      parentRoute: typeof AuthenticatedAppNewJobRoute
     }
-    '/app/new-job/business': {
-      id: '/app/new-job/business'
+    '/_authenticated/app/new-job/business': {
+      id: '/_authenticated/app/new-job/business'
       path: '/business'
       fullPath: '/app/new-job/business'
-      preLoaderRoute: typeof AppNewJobBusinessRouteImport
-      parentRoute: typeof AppNewJobRoute
+      preLoaderRoute: typeof AuthenticatedAppNewJobBusinessRouteImport
+      parentRoute: typeof AuthenticatedAppNewJobRoute
     }
-    '/app/jobs/$jobId': {
-      id: '/app/jobs/$jobId'
+    '/_authenticated/app/jobs/$jobId': {
+      id: '/_authenticated/app/jobs/$jobId'
       path: '/jobs/$jobId'
       fullPath: '/app/jobs/$jobId'
-      preLoaderRoute: typeof AppJobsJobIdRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof AuthenticatedAppJobsJobIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
-    '/app/campaigns/$campaignId': {
-      id: '/app/campaigns/$campaignId'
+    '/_authenticated/app/campaigns/$campaignId': {
+      id: '/_authenticated/app/campaigns/$campaignId'
       path: '/$campaignId'
       fullPath: '/app/campaigns/$campaignId'
-      preLoaderRoute: typeof AppCampaignsCampaignIdRouteImport
-      parentRoute: typeof AppCampaignsRoute
+      preLoaderRoute: typeof AuthenticatedAppCampaignsCampaignIdRouteImport
+      parentRoute: typeof AuthenticatedAppCampaignsRoute
     }
   }
 }
 
-interface AppCampaignsRouteChildren {
-  AppCampaignsCampaignIdRoute: typeof AppCampaignsCampaignIdRoute
+interface AuthenticatedAppCampaignsRouteChildren {
+  AuthenticatedAppCampaignsCampaignIdRoute: typeof AuthenticatedAppCampaignsCampaignIdRoute
 }
 
-const AppCampaignsRouteChildren: AppCampaignsRouteChildren = {
-  AppCampaignsCampaignIdRoute: AppCampaignsCampaignIdRoute,
+const AuthenticatedAppCampaignsRouteChildren: AuthenticatedAppCampaignsRouteChildren =
+  {
+    AuthenticatedAppCampaignsCampaignIdRoute:
+      AuthenticatedAppCampaignsCampaignIdRoute,
+  }
+
+const AuthenticatedAppCampaignsRouteWithChildren =
+  AuthenticatedAppCampaignsRoute._addFileChildren(
+    AuthenticatedAppCampaignsRouteChildren,
+  )
+
+interface AuthenticatedAppNewJobRouteChildren {
+  AuthenticatedAppNewJobBusinessRoute: typeof AuthenticatedAppNewJobBusinessRoute
+  AuthenticatedAppNewJobRecordsRoute: typeof AuthenticatedAppNewJobRecordsRoute
+  AuthenticatedAppNewJobUploadRoute: typeof AuthenticatedAppNewJobUploadRoute
 }
 
-const AppCampaignsRouteWithChildren = AppCampaignsRoute._addFileChildren(
-  AppCampaignsRouteChildren,
-)
+const AuthenticatedAppNewJobRouteChildren: AuthenticatedAppNewJobRouteChildren =
+  {
+    AuthenticatedAppNewJobBusinessRoute: AuthenticatedAppNewJobBusinessRoute,
+    AuthenticatedAppNewJobRecordsRoute: AuthenticatedAppNewJobRecordsRoute,
+    AuthenticatedAppNewJobUploadRoute: AuthenticatedAppNewJobUploadRoute,
+  }
 
-interface AppNewJobRouteChildren {
-  AppNewJobBusinessRoute: typeof AppNewJobBusinessRoute
-  AppNewJobRecordsRoute: typeof AppNewJobRecordsRoute
-  AppNewJobUploadRoute: typeof AppNewJobUploadRoute
+const AuthenticatedAppNewJobRouteWithChildren =
+  AuthenticatedAppNewJobRoute._addFileChildren(
+    AuthenticatedAppNewJobRouteChildren,
+  )
+
+interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppBillingRoute: typeof AuthenticatedAppBillingRoute
+  AuthenticatedAppCampaignsRoute: typeof AuthenticatedAppCampaignsRouteWithChildren
+  AuthenticatedAppComplianceRoute: typeof AuthenticatedAppComplianceRoute
+  AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
+  AuthenticatedAppListsRoute: typeof AuthenticatedAppListsRoute
+  AuthenticatedAppNewJobRoute: typeof AuthenticatedAppNewJobRouteWithChildren
+  AuthenticatedAppNumbersRoute: typeof AuthenticatedAppNumbersRoute
+  AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
+  AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppJobsJobIdRoute: typeof AuthenticatedAppJobsJobIdRoute
 }
 
-const AppNewJobRouteChildren: AppNewJobRouteChildren = {
-  AppNewJobBusinessRoute: AppNewJobBusinessRoute,
-  AppNewJobRecordsRoute: AppNewJobRecordsRoute,
-  AppNewJobUploadRoute: AppNewJobUploadRoute,
+const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppBillingRoute: AuthenticatedAppBillingRoute,
+  AuthenticatedAppCampaignsRoute: AuthenticatedAppCampaignsRouteWithChildren,
+  AuthenticatedAppComplianceRoute: AuthenticatedAppComplianceRoute,
+  AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
+  AuthenticatedAppListsRoute: AuthenticatedAppListsRoute,
+  AuthenticatedAppNewJobRoute: AuthenticatedAppNewJobRouteWithChildren,
+  AuthenticatedAppNumbersRoute: AuthenticatedAppNumbersRoute,
+  AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
+  AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppJobsJobIdRoute: AuthenticatedAppJobsJobIdRoute,
 }
 
-const AppNewJobRouteWithChildren = AppNewJobRoute._addFileChildren(
-  AppNewJobRouteChildren,
-)
-
-interface AppRouteChildren {
-  AppBillingRoute: typeof AppBillingRoute
-  AppCampaignsRoute: typeof AppCampaignsRouteWithChildren
-  AppComplianceRoute: typeof AppComplianceRoute
-  AppDashboardRoute: typeof AppDashboardRoute
-  AppListsRoute: typeof AppListsRoute
-  AppNewJobRoute: typeof AppNewJobRouteWithChildren
-  AppNumbersRoute: typeof AppNumbersRoute
-  AppSettingsRoute: typeof AppSettingsRoute
-  AppIndexRoute: typeof AppIndexRoute
-  AppJobsJobIdRoute: typeof AppJobsJobIdRoute
-}
-
-const AppRouteChildren: AppRouteChildren = {
-  AppBillingRoute: AppBillingRoute,
-  AppCampaignsRoute: AppCampaignsRouteWithChildren,
-  AppComplianceRoute: AppComplianceRoute,
-  AppDashboardRoute: AppDashboardRoute,
-  AppListsRoute: AppListsRoute,
-  AppNewJobRoute: AppNewJobRouteWithChildren,
-  AppNumbersRoute: AppNumbersRoute,
-  AppSettingsRoute: AppSettingsRoute,
-  AppIndexRoute: AppIndexRoute,
-  AppJobsJobIdRoute: AppJobsJobIdRoute,
-}
-
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+const AuthenticatedAppRouteWithChildren =
+  AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AppRoute: AppRouteWithChildren,
   ComplianceRoute: ComplianceRoute,
   FeaturesRoute: FeaturesRoute,
   HowItWorksRoute: HowItWorksRoute,
@@ -587,6 +601,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StartRoute: StartRoute,
   TemplatesRoute: TemplatesRoute,
+  AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

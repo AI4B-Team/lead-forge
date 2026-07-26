@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { INDUSTRIES } from "@/lib/mock-data";
 import { useState } from "react";
 
-export const Route = createFileRoute("/app/settings")({
+export const Route = createFileRoute("/_authenticated/app/settings")({
   head: () => ({ meta: [{ title: "Settings — LeadTrace" }] }),
   component: Settings,
 });
