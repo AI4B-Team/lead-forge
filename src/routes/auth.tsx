@@ -70,17 +70,9 @@ function AuthPage() {
     <div className="min-h-screen flex flex-col bg-background">
       <MarketingNav />
       <main className="flex-1">
-        <section className="mx-auto grid max-w-[1240px] grid-cols-1 gap-10 px-6 py-16 lg:grid-cols-2 lg:gap-16">
+        <section className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100vh-4rem)]">
           {/* Left panel — brand / value */}
-          <aside className="relative hidden lg:flex flex-col justify-between rounded-3xl bg-foreground text-background p-10 overflow-hidden">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/30 blur-3xl"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-primary/20 blur-3xl"
-            />
+          <aside className="relative hidden lg:flex flex-col justify-between bg-foreground text-background p-12 xl:p-16 overflow-hidden">
             <div className="relative">
               <div className="inline-flex items-center gap-2">
                 <span className="grid place-items-center h-10 w-10 rounded-xl bg-primary text-primary-foreground">
@@ -112,7 +104,8 @@ function AuthPage() {
           </aside>
 
           {/* Right panel — auth form */}
-          <div className="mx-auto w-full max-w-md lg:mx-0 lg:max-w-none lg:pl-4">
+          <div className="flex items-center justify-center px-6 py-16">
+          <div className="w-full max-w-md">
           <h1 className="font-display text-4xl font-black text-foreground">
             {mode === "signup" ? "Start Free." : mode === "magic" ? "Magic Link Sign In." : "Welcome Back."}
           </h1>
@@ -166,6 +159,7 @@ function AuthPage() {
           <p className="text-sm text-muted-foreground mt-6 text-center">
             By Continuing You Agree To Our <Link to="/compliance" className="text-primary font-medium">Compliance Terms</Link>.
           </p>
+          </div>
           </div>
         </section>
       </main>
