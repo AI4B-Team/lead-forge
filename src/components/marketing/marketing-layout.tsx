@@ -141,7 +141,7 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
 function ComplianceStrip() {
   return (
     <section className="bg-ink text-ink-foreground py-10">
-      <div className="mx-auto max-w-7xl px-6 grid grid-cols-4 gap-4 text-sm">
+      <div className="mx-auto max-w-7xl px-6 flex items-center justify-around gap-4 text-sm">
         <Item icon={<ShieldCheck className="h-4 w-4 shrink-0" />} label="DNC + Litigator Scrubbing On Every List" />
         <Item icon={<MessageCircleOff className="h-4 w-4 shrink-0" />} label="Automatic STOP Handling" />
         <Item icon={<FileCheck className="h-4 w-4 shrink-0" />} label="Timestamped Audit Logs" />
