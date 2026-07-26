@@ -92,6 +92,27 @@ export function PromptHero() {
     navigate({ to: "/start" });
   };
 
+  const [offset, setOffset] = useState(0);
+  const [order, setOrder] = useState(() => TEMPLATES.map((_, i) => i));
+  const pageSize = 6;
+  const visible = useMemo(() => {
+    const arr: typeof TEMPLATES = [];
+    for (let i = 0; i < pageSize; i++) {
+      arr.push(TEMPLATES[order[(offset + i) % order.length]]);
+    }
+    return arr;
+  }, [offset, order]);
+
+  const shuffle = () => {
+    const next = [...order];
+    for (let i = next.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [next[i], next[j]] = [next[j], next[i]];
+    }
+    setOrder(next);
+    setOffset(0);
+  };
+
   return (
     <section
       className="relative overflow-hidden bg-background"
@@ -106,7 +127,7 @@ export function PromptHero() {
           maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
         }}
       />
-      <div className="relative mx-auto max-w-[1240px] px-6 pt-10 pb-4 md:pt-14 md:pb-6 text-center">
+      <div className="relative mx-auto max-w-[1240px] px-6 pt-10 pb-16 md:pt-14 md:pb-24 text-center">
         <div className="inline-flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-[0.18em]">
           <Sparkles className="h-3.5 w-3.5" />
           Leads To Deals, On Autopilot
@@ -124,7 +145,7 @@ export function PromptHero() {
           Describe Who You Want To Reach And LeadTrace Builds The Whole Campaign.
         </p>
 
-        {/* Smart prompt box */}
+        {/* Unified prompt + template card */}
         <div
           id="prompt-hero-box"
           onDragOver={(e) => {
@@ -133,10 +154,10 @@ export function PromptHero() {
           }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
-          className="mx-auto mt-8 w-full max-w-[820px] rounded-[22px] bg-white text-left transition"
+          className="mx-auto mt-8 w-full max-w-[900px] rounded-[22px] bg-white text-left overflow-hidden transition"
           style={{
             border: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
-            boxShadow: "0 20px 40px -20px rgba(204,0,0,0.25)",
+            boxShadow: "0 24px 60px -24px rgba(204,0,0,0.22)",
           }}
         >
           <textarea
@@ -150,7 +171,7 @@ export function PromptHero() {
             onBlur={() => setFocused(false)}
             onFocusCapture={() => setFocused(true)}
             rows={4}
-            className="w-full resize-none rounded-t-[20px] bg-transparent px-5 pt-4 pb-2 text-base text-foreground placeholder:text-muted-foreground/70 outline-none"
+            className="w-full resize-none bg-transparent px-5 pt-4 pb-2 text-base text-foreground placeholder:text-muted-foreground/70 outline-none"
           />
           {files.length > 0 && (
             <div className="flex flex-wrap gap-2 px-5 pb-2">
@@ -209,6 +230,57 @@ export function PromptHero() {
               <Send className="h-4 w-4" />
               Build My List Free
             </button>
+          </div>
+
+          {/* Soft gradient fade into template section */}
+          <div
+            className="h-6 w-full pointer-events-none"
+            style={{
+              background: "linear-gradient(to bottom, rgba(204,0,0,0.05), transparent)",
+            }}
+          />
+
+          {/* Template section inside the unified card */}
+          <div className="px-4 md:px-5 py-5 bg-surface/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+              <h2 className="font-display text-lg md:text-xl font-bold text-foreground">
+                Not Sure Where To Start? Try One Of These…
+              </h2>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={shuffle}
+                  className="grid place-items-center h-9 w-9 rounded-full border border-border bg-surface hover:bg-surface-muted"
+                  aria-label="Shuffle Templates"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOffset((o) => (o - pageSize + order.length) % order.length)}
+                  className="grid place-items-center h-9 w-9 rounded-full border border-border bg-surface hover:bg-surface-muted"
+                  aria-label="Previous"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOffset((o) => (o + pageSize) % order.length)}
+                  className="grid place-items-center h-9 w-9 rounded-full border border-border bg-surface hover:bg-surface-muted"
+                  aria-label="Next"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                <Link to="/templates" className="text-sm font-semibold text-primary hover:underline ml-2">
+                  Browse Templates →
+                </Link>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {visible.map((t, i) => (
+                <TemplateCard key={`${t.id}-${i}`} template={t} />
+              ))}
+            </div>
           </div>
         </div>
 
