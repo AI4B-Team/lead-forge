@@ -162,7 +162,7 @@ export const updateCampaignConfig = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = {};
+    const patch: { daily_cap?: number; send_window?: { quiet_start: string; quiet_end: string } } = {};
     if (typeof data.daily_cap === "number") patch.daily_cap = data.daily_cap;
     if (data.quiet_start || data.quiet_end) {
       patch.send_window = { quiet_start: data.quiet_start ?? "21:00", quiet_end: data.quiet_end ?? "09:00" };
