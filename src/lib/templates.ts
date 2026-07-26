@@ -424,4 +424,90 @@ export const TEMPLATES: Template[] = [
     icon: Upload,
     tint: "bg-yellow-500/10 text-yellow-700",
   },
+
+  // ---------- E-Commerce (expanded) ----------
+  { id: "amazon-products", title: "Amazon Products", subtitle: "Titles, Prices, Ratings, Reviews, ASINs, And Images.", category: "ecommerce", prompt: "Scrape Amazon products by keyword with price, ratings, and reviews", icon: ShoppingCart, tint: "bg-orange-500/10 text-orange-600", logoDomain: "amazon.com" },
+  { id: "aliexpress", title: "AliExpress Products", subtitle: "Product Listings + Seller Info By Category.", category: "ecommerce", prompt: "Scrape AliExpress products in electronics with seller info", icon: ShoppingCart, tint: "bg-red-500/10 text-red-600", logoDomain: "aliexpress.com" },
+  { id: "alibaba", title: "Alibaba Suppliers", subtitle: "Wholesale Suppliers By Product + Country.", category: "ecommerce", prompt: "Find Alibaba suppliers for kitchen appliances in China", icon: Store, tint: "bg-orange-500/10 text-orange-700", logoDomain: "alibaba.com" },
+  { id: "target", title: "Target Products", subtitle: "Product Listings, Prices, And Availability.", category: "ecommerce", prompt: "Scrape Target products by category with pricing", icon: ShoppingCart, tint: "bg-red-500/10 text-red-600", logoDomain: "target.com" },
+  { id: "bestbuy", title: "Best Buy Products", subtitle: "Electronics With Prices, Specs, And Ratings.", category: "ecommerce", prompt: "Scrape Best Buy laptops with prices and specifications", icon: ShoppingCart, tint: "bg-blue-500/10 text-blue-700", logoDomain: "bestbuy.com" },
+  { id: "homedepot", title: "Home Depot Products", subtitle: "Building Products By Category + Store.", category: "ecommerce", prompt: "Scrape Home Depot products in flooring with prices", icon: Wrench, tint: "bg-orange-500/10 text-orange-700", logoDomain: "homedepot.com" },
+  { id: "wayfair", title: "Wayfair Furniture", subtitle: "Home Furniture Listings + Prices.", category: "ecommerce", prompt: "Scrape Wayfair sofas with prices and dimensions", icon: Home, tint: "bg-emerald-500/10 text-emerald-700", logoDomain: "wayfair.com" },
+  { id: "newegg", title: "Newegg Products", subtitle: "Tech Products With Prices + Ratings.", category: "ecommerce", prompt: "Scrape Newegg GPUs by model with prices and reviews", icon: ShoppingCart, tint: "bg-orange-500/10 text-orange-600", logoDomain: "newegg.com" },
+  { id: "costco", title: "Costco Products", subtitle: "Warehouse Deals + Bulk Pricing.", category: "ecommerce", prompt: "Scrape Costco electronics with member pricing", icon: Store, tint: "bg-red-500/10 text-red-700", logoDomain: "costco.com" },
+  { id: "shein", title: "SHEIN Products", subtitle: "Fashion Listings By Category.", category: "ecommerce", prompt: "Scrape SHEIN womenswear with prices and images", icon: ShoppingCart, tint: "bg-slate-800/10 text-slate-900", logoDomain: "shein.com" },
+  { id: "temu", title: "Temu Products", subtitle: "Marketplace Listings + Seller Data.", category: "ecommerce", prompt: "Scrape Temu products in home goods with prices", icon: ShoppingCart, tint: "bg-orange-500/10 text-orange-600", logoDomain: "temu.com" },
+  { id: "mercadolibre", title: "Mercado Libre", subtitle: "Latin America Marketplace Listings.", category: "ecommerce", prompt: "Scrape Mercado Libre listings in Mexico by category", icon: ShoppingCart, tint: "bg-yellow-500/10 text-yellow-700", logoDomain: "mercadolibre.com" },
+  { id: "flipkart", title: "Flipkart Products", subtitle: "India Marketplace Listings.", category: "ecommerce", prompt: "Scrape Flipkart smartphones with prices and specs", icon: ShoppingCart, tint: "bg-blue-500/10 text-blue-600", logoDomain: "flipkart.com" },
+
+  // ---------- Social Media (expanded) ----------
+  { id: "reddit", title: "Reddit Posts", subtitle: "Threads, Comments, And Users By Subreddit.", category: "social", prompt: "Scrape r/realestate posts from the last 30 days with comments", icon: MessageSquare, tint: "bg-orange-500/10 text-orange-600", logoDomain: "reddit.com" },
+  { id: "pinterest", title: "Pinterest Pins", subtitle: "Pins, Boards, And Creators By Keyword.", category: "social", prompt: "Scrape Pinterest pins for home decor with saves and creators", icon: Camera, tint: "bg-red-500/10 text-red-600", logoDomain: "pinterest.com" },
+  { id: "quora", title: "Quora Answers", subtitle: "Questions, Answers, And Authors By Topic.", category: "social", prompt: "Scrape Quora answers in real estate investing", icon: MessageSquare, tint: "bg-red-500/10 text-red-700", logoDomain: "quora.com" },
+  { id: "threads", title: "Threads Posts", subtitle: "Posts And Authors By Keyword.", category: "social", prompt: "Scrape Threads posts about SaaS founders", icon: MessageSquare, tint: "bg-slate-800/10 text-slate-900", logoDomain: "threads.net" },
+  { id: "tiktok-hashtag", title: "TikTok By Hashtag", subtitle: "Videos, Creators, Views, And Engagement.", category: "social", prompt: "Scrape TikTok videos under #realestate with engagement metrics", icon: Music, tint: "bg-slate-800/10 text-slate-900", logoDomain: "tiktok.com" },
+  { id: "instagram-hashtag", title: "Instagram Hashtag", subtitle: "Posts, Creators, And Contact Info By Hashtag.", category: "social", prompt: "Scrape Instagram posts under #fitnesscoach with creator emails", icon: Camera, tint: "bg-pink-500/10 text-pink-600", logoDomain: "instagram.com" },
+  { id: "youtube-search", title: "YouTube Search", subtitle: "Videos, Channels, And Metadata By Keyword.", category: "social", prompt: "Scrape YouTube videos about home renovation with channel info", icon: Film, tint: "bg-red-500/10 text-red-600", logoDomain: "youtube.com" },
+
+  // ---------- Real Estate (expanded) ----------
+  { id: "trulia", title: "Trulia Listings", subtitle: "For-Sale Listings + Local Insights.", category: "realestate", prompt: "Scrape Trulia listings in Denver with agent contacts", icon: Home, tint: "bg-emerald-500/10 text-emerald-600", logoDomain: "trulia.com" },
+  { id: "apartments", title: "Apartments.com", subtitle: "Rentals By City + Amenities.", category: "realestate", prompt: "Scrape Apartments.com rentals in Miami with pricing and amenities", icon: Home, tint: "bg-blue-500/10 text-blue-700", logoDomain: "apartments.com" },
+  { id: "loopnet", title: "LoopNet CRE", subtitle: "Commercial Listings + Broker Info.", category: "realestate", prompt: "Scrape LoopNet retail properties in Texas with broker contacts", icon: Building2, tint: "bg-slate-500/10 text-slate-700", logoDomain: "loopnet.com" },
+  { id: "rightmove", title: "Rightmove (UK)", subtitle: "UK Property Listings + Agents.", category: "realestate", prompt: "Scrape Rightmove listings in London with agent contacts", icon: Home, tint: "bg-emerald-500/10 text-emerald-700", logoDomain: "rightmove.co.uk" },
+  { id: "zoopla", title: "Zoopla (UK)", subtitle: "UK Property Sales + Rentals.", category: "realestate", prompt: "Scrape Zoopla rentals in Manchester with landlord info", icon: Home, tint: "bg-indigo-500/10 text-indigo-600", logoDomain: "zoopla.co.uk" },
+  { id: "idealista", title: "Idealista (EU)", subtitle: "Spanish + Italian Property Portals.", category: "realestate", prompt: "Scrape Idealista listings in Madrid with agent details", icon: Home, tint: "bg-emerald-500/10 text-emerald-600", logoDomain: "idealista.com" },
+
+  // ---------- Jobs (expanded) ----------
+  { id: "linkedin-jobs", title: "LinkedIn Jobs", subtitle: "Job Posts By Role, Company, And Location.", category: "jobs", prompt: "Scrape LinkedIn jobs for VP of Sales roles at SaaS companies in NYC", icon: Briefcase, tint: "bg-sky-500/10 text-sky-700", logoDomain: "linkedin.com", beta: true },
+  { id: "monster", title: "Monster Jobs", subtitle: "Job Listings And Hiring Companies.", category: "jobs", prompt: "Scrape Monster job posts for engineering roles in Seattle", icon: Briefcase, tint: "bg-indigo-500/10 text-indigo-700", logoDomain: "monster.com" },
+  { id: "simplyhired", title: "SimplyHired", subtitle: "Aggregated Job Listings By Region.", category: "jobs", prompt: "Scrape SimplyHired warehouse jobs in Ohio", icon: Briefcase, tint: "bg-emerald-500/10 text-emerald-600", logoDomain: "simplyhired.com" },
+  { id: "dice", title: "Dice Tech Jobs", subtitle: "Tech Job Listings + Employers.", category: "jobs", prompt: "Scrape Dice.com listings for senior React developers", icon: Code, tint: "bg-red-500/10 text-red-600", logoDomain: "dice.com" },
+
+  // ---------- Reviews (expanded) ----------
+  { id: "capterra", title: "Capterra Software", subtitle: "SaaS Reviews + Vendor Contacts.", category: "reviews", prompt: "Scrape Capterra CRM software with review counts and vendor info", icon: Star, tint: "bg-primary/10 text-primary", logoDomain: "capterra.com" },
+  { id: "google-reviews", title: "Google Reviews", subtitle: "Reviews For Any Business On Google Maps.", category: "reviews", prompt: "Scrape Google reviews for HVAC companies in Tampa", icon: Star, tint: "bg-yellow-500/10 text-yellow-700", logoDomain: "google.com" },
+  { id: "trustradius", title: "TrustRadius", subtitle: "B2B Software Reviews By Category.", category: "reviews", prompt: "Scrape TrustRadius marketing automation software with reviews", icon: Star, tint: "bg-emerald-500/10 text-emerald-700", logoDomain: "trustradius.com" },
+  { id: "appstore", title: "App Store Reviews", subtitle: "iOS App Reviews And Ratings.", category: "reviews", prompt: "Scrape App Store reviews for fintech apps in the US", icon: Star, tint: "bg-slate-500/10 text-slate-700", logoDomain: "apple.com" },
+  { id: "playstore", title: "Play Store Reviews", subtitle: "Android App Reviews And Ratings.", category: "reviews", prompt: "Scrape Google Play reviews for productivity apps", icon: Star, tint: "bg-emerald-500/10 text-emerald-600", logoDomain: "play.google.com" },
+
+  // ---------- Travel ----------
+  { id: "booking", title: "Booking.com Hotels", subtitle: "Hotel Listings, Prices, And Reviews.", category: "travel", prompt: "Scrape Booking.com hotels in Orlando with prices and reviews", icon: Hotel, tint: "bg-blue-500/10 text-blue-700", logoDomain: "booking.com" },
+  { id: "airbnb", title: "Airbnb Listings", subtitle: "Short-Term Rentals + Host Info.", category: "travel", prompt: "Scrape Airbnb listings in Nashville with host details", icon: Bed, tint: "bg-red-500/10 text-red-600", logoDomain: "airbnb.com" },
+  { id: "expedia", title: "Expedia Hotels", subtitle: "Hotel Listings And Availability.", category: "travel", prompt: "Scrape Expedia hotels in Las Vegas with rates", icon: Hotel, tint: "bg-yellow-500/10 text-yellow-700", logoDomain: "expedia.com" },
+  { id: "hotels", title: "Hotels.com", subtitle: "Global Hotel Inventory + Pricing.", category: "travel", prompt: "Scrape Hotels.com listings in Chicago with pricing", icon: Hotel, tint: "bg-red-500/10 text-red-700", logoDomain: "hotels.com" },
+  { id: "kayak", title: "Kayak Flights", subtitle: "Flight Deals + Aggregated Fares.", category: "travel", prompt: "Scrape Kayak flights from NYC to LA next month", icon: Plane, tint: "bg-orange-500/10 text-orange-600", logoDomain: "kayak.com" },
+  { id: "skyscanner", title: "Skyscanner Flights", subtitle: "Global Flight Search + Prices.", category: "travel", prompt: "Scrape Skyscanner flights from London to Paris", icon: Plane, tint: "bg-blue-500/10 text-blue-600", logoDomain: "skyscanner.com" },
+  { id: "agoda", title: "Agoda Hotels", subtitle: "APAC Hotel Bookings + Prices.", category: "travel", prompt: "Scrape Agoda hotels in Tokyo with pricing", icon: Hotel, tint: "bg-red-500/10 text-red-600", logoDomain: "agoda.com" },
+
+  // ---------- Directories (expanded) ----------
+  { id: "manta", title: "Manta", subtitle: "Small Business Directory By Category + State.", category: "directories", prompt: "Scrape Manta businesses in Georgia in the trades", icon: Building2, tint: "bg-blue-500/10 text-blue-600", logoDomain: "manta.com" },
+  { id: "foursquare", title: "Foursquare", subtitle: "Local Business Data + Categories.", category: "directories", prompt: "Scrape Foursquare restaurants in Austin with contact info", icon: MapPin, tint: "bg-pink-500/10 text-pink-600", logoDomain: "foursquare.com" },
+  { id: "yelp-directory", title: "Yellowbook", subtitle: "Local Business Directory Listings.", category: "directories", prompt: "Scrape Yellowbook listings for auto repair in Ohio", icon: Wrench, tint: "bg-yellow-500/10 text-yellow-700", logoDomain: "yellowbook.com" },
+  { id: "cylex", title: "Cylex", subtitle: "European Business Directory.", category: "directories", prompt: "Scrape Cylex businesses in Germany in construction", icon: Building2, tint: "bg-blue-500/10 text-blue-700", logoDomain: "cylex.de", beta: true },
+  { id: "hotfrog", title: "Hotfrog", subtitle: "Global SMB Directory.", category: "directories", prompt: "Scrape Hotfrog listings for cleaning companies in the UK", icon: Building2, tint: "bg-emerald-500/10 text-emerald-600", logoDomain: "hotfrog.com" },
+
+  // ---------- Search Engine ----------
+  { id: "bing-search", title: "Bing Search", subtitle: "SERP Titles, URLs, And Snippets.", category: "search", prompt: "Scrape Bing SERP results for solar installer near me across Florida metros", icon: Search, tint: "bg-blue-500/10 text-blue-700", logoDomain: "bing.com" },
+  { id: "duckduckgo", title: "DuckDuckGo Search", subtitle: "Privacy-Focused SERP Data.", category: "search", prompt: "Scrape DuckDuckGo results for privacy-focused SaaS tools", icon: Search, tint: "bg-orange-500/10 text-orange-600", logoDomain: "duckduckgo.com" },
+  { id: "google-scholar", title: "Google Scholar", subtitle: "Academic Papers, Authors, And Citations.", category: "search", prompt: "Scrape Google Scholar papers about lead generation from 2024", icon: BookOpen, tint: "bg-blue-500/10 text-blue-700", logoDomain: "scholar.google.com" },
+
+  // ---------- Finance ----------
+  { id: "yahoo-finance", title: "Yahoo Finance", subtitle: "Stock Prices, Fundamentals, And News.", category: "finance", prompt: "Scrape Yahoo Finance top gainers with fundamentals", icon: DollarSign, tint: "bg-emerald-500/10 text-emerald-700", logoDomain: "finance.yahoo.com" },
+  { id: "google-finance", title: "Google Finance", subtitle: "Market Data + Company Snapshots.", category: "finance", prompt: "Scrape Google Finance data for S&P 500 companies", icon: DollarSign, tint: "bg-blue-500/10 text-blue-700", logoDomain: "google.com/finance" },
+  { id: "sec-edgar", title: "SEC EDGAR", subtitle: "Public Filings + Company Financials.", category: "finance", prompt: "Scrape SEC EDGAR 10-K filings from technology companies", icon: Landmark, tint: "bg-slate-500/10 text-slate-700", logoDomain: "sec.gov" },
+
+  // ---------- Education ----------
+  { id: "coursera", title: "Coursera Courses", subtitle: "Course Catalogs, Instructors, And Ratings.", category: "education", prompt: "Scrape Coursera data science courses with instructors and ratings", icon: GraduationCap, tint: "bg-blue-500/10 text-blue-700", logoDomain: "coursera.org" },
+  { id: "udemy", title: "Udemy Courses", subtitle: "Course Catalogs + Instructor Contacts.", category: "education", prompt: "Scrape Udemy marketing courses with instructor profiles", icon: GraduationCap, tint: "bg-purple-500/10 text-purple-700", logoDomain: "udemy.com" },
+  { id: "edx", title: "edX Programs", subtitle: "Programs From Universities Worldwide.", category: "education", prompt: "Scrape edX programs from Harvard and MIT", icon: GraduationCap, tint: "bg-slate-500/10 text-slate-700", logoDomain: "edx.org" },
+
+  // ---------- News ----------
+  { id: "google-news", title: "Google News", subtitle: "Headlines + Sources By Keyword.", category: "news", prompt: "Scrape Google News for AI startup funding this month", icon: Newspaper, tint: "bg-blue-500/10 text-blue-700", logoDomain: "news.google.com" },
+  { id: "bing-news", title: "Bing News", subtitle: "News Aggregation By Topic + Region.", category: "news", prompt: "Scrape Bing News for real estate market news in Florida", icon: Newspaper, tint: "bg-blue-500/10 text-blue-600", logoDomain: "bing.com" },
+  { id: "reuters", title: "Reuters", subtitle: "Global Business + Political News.", category: "news", prompt: "Scrape Reuters technology headlines from the past week", icon: Newspaper, tint: "bg-orange-500/10 text-orange-700", logoDomain: "reuters.com" },
+
+  // ---------- Sports ----------
+  { id: "espn", title: "ESPN Scores", subtitle: "Scores, Standings, And Team Data.", category: "sports", prompt: "Scrape ESPN NBA team standings and stats", icon: Trophy, tint: "bg-red-500/10 text-red-700", logoDomain: "espn.com" },
+  { id: "sofascore", title: "Sofascore", subtitle: "Live Scores And Player Stats.", category: "sports", prompt: "Scrape Sofascore Premier League match results and player stats", icon: Trophy, tint: "bg-emerald-500/10 text-emerald-700", logoDomain: "sofascore.com" },
+  { id: "flashscore", title: "Flashscore", subtitle: "Live Scores Across All Sports.", category: "sports", prompt: "Scrape Flashscore results for soccer leagues this weekend", icon: Trophy, tint: "bg-red-500/10 text-red-600", logoDomain: "flashscore.com" },
 ];
