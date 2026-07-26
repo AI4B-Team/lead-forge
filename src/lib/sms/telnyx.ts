@@ -37,11 +37,12 @@ async function tx(path: string, init: RequestInit = {}): Promise<unknown> {
   return res.status === 204 ? null : res.json();
 }
 
-function b64ToBytes(b64: string): Uint8Array {
+function b64ToBuf(b64: string): ArrayBuffer {
   const bin = atob(b64.replace(/-/g, "+").replace(/_/g, "/"));
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
+  const buf = new ArrayBuffer(bin.length);
+  const view = new Uint8Array(buf);
+  for (let i = 0; i < bin.length; i++) view[i] = bin.charCodeAt(i);
+  return buf;
 }
 
 export const telnyxProvider: SmsProvider = {
@@ -146,13 +147,13 @@ export const telnyxProvider: SmsProvider = {
     try {
       const key = await crypto.subtle.importKey(
         "raw",
-        b64ToBytes(pub),
+        b64ToBuf(pub),
         { name: "Ed25519" },
         false,
         ["verify"],
       );
-      const signed = new TextEncoder().encode(`${ts}|${rawBody}`);
-      return await crypto.subtle.verify("Ed25519", key, b64ToBytes(sig), signed);
+      const signedBuf = new TextEncoder().encode(`${ts}|${rawBody}`).slice().buffer;
+      return await crypto.subtle.verify("Ed25519", key, b64ToBuf(sig), signedBuf);
     } catch {
       return false;
     }
