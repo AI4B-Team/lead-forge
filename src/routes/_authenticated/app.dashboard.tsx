@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_JOBS, MOCK_METRICS, MOCK_CREDITS, statusLabel } from "@/lib/mock-data";
+import { statusLabel, type JobStatus } from "@/lib/mock-data";
+import { supabase } from "@/integrations/supabase/client";
+import { useWorkspaceId } from "@/hooks/use-workspace";
 import { Users, ListChecks, MessageSquare, Activity, Plus, ArrowUpRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/dashboard")({
@@ -11,7 +14,78 @@ export const Route = createFileRoute("/_authenticated/app/dashboard")({
   component: Dashboard,
 });
 
+type JobRow = {
+  id: string;
+  name: string | null;
+  source_type: string;
+  status: JobStatus;
+  rows_in: number | null;
+  created_at: string;
+};
+
+type Credits = { scrape: number; skip_trace: number; sms: number };
+
 function Dashboard() {
+  const { workspaceId } = useWorkspaceId();
+  const [jobs, setJobs] = useState<JobRow[]>([]);
+  const [metrics, setMetrics] = useState({ leads: 0, lists: 0, activeCampaigns: 0, deliverability: 0 });
+  const [credits, setCredits] = useState<Credits>({ scrape: 0, skip_trace: 0, sms: 0 });
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    (async () => {
+      const [jobsRes, leadsRes, listsRes, campRes, numRes, credRes] = await Promise.all([
+        supabase
+          .from("jobs")
+          .select("id, params, source_type, status, rows_in, created_at")
+          .eq("workspace_id", workspaceId)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase.from("leads").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+        supabase.from("jobs").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+        supabase
+          .from("campaigns")
+          .select("id", { count: "exact", head: true })
+          .eq("workspace_id", workspaceId)
+          .in("status", ["scheduled", "sending"]),
+        supabase.from("sending_numbers").select("health_score").eq("workspace_id", workspaceId),
+        supabase.from("credit_balances").select("kind, balance").eq("workspace_id", workspaceId),
+      ]);
+
+      const rawJobs = (jobsRes.data ?? []) as Array<JobRow & { params: { name?: string } | null }>;
+      setJobs(
+        rawJobs.map((j) => ({
+          id: j.id,
+          name: (j.params?.name as string | undefined) ?? "Untitled Job",
+          source_type: j.source_type,
+          status: j.status,
+          rows_in: j.rows_in,
+          created_at: j.created_at,
+        })),
+      );
+
+      const nums = (numRes.data ?? []) as Array<{ health_score: number | null }>;
+      const deliverability = nums.length
+        ? Math.round(nums.reduce((s, n) => s + Number(n.health_score ?? 0), 0) / nums.length)
+        : 0;
+
+      setMetrics({
+        leads: leadsRes.count ?? 0,
+        lists: listsRes.count ?? 0,
+        activeCampaigns: campRes.count ?? 0,
+        deliverability,
+      });
+
+      const bal: Credits = { scrape: 0, skip_trace: 0, sms: 0 };
+      for (const row of (credRes.data ?? []) as Array<{ kind: keyof Credits; balance: number }>) {
+        if (row.kind in bal) bal[row.kind] = row.balance;
+      }
+      setCredits(bal);
+    })();
+  }, [workspaceId]);
+
+  const hasJobs = jobs.length > 0;
+
   return (
     <div>
       <PageHeader
@@ -24,10 +98,10 @@ function Dashboard() {
         }
       />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Metric icon={<Users className="h-4 w-4" />} label="Leads" value={MOCK_METRICS.leads.toLocaleString()} />
-        <Metric icon={<ListChecks className="h-4 w-4" />} label="Lists" value={MOCK_METRICS.lists.toString()} />
-        <Metric icon={<MessageSquare className="h-4 w-4" />} label="Active Campaigns" value={MOCK_METRICS.activeCampaigns.toString()} />
-        <Metric icon={<Activity className="h-4 w-4" />} label="Deliverability" value={`${MOCK_METRICS.deliverability}%`} tone="success" />
+        <Metric icon={<Users className="h-4 w-4" />} label="Leads" value={metrics.leads.toLocaleString()} />
+        <Metric icon={<ListChecks className="h-4 w-4" />} label="Lists" value={metrics.lists.toString()} />
+        <Metric icon={<MessageSquare className="h-4 w-4" />} label="Active Campaigns" value={metrics.activeCampaigns.toString()} />
+        <Metric icon={<Activity className="h-4 w-4" />} label="Deliverability" value={metrics.deliverability ? `${metrics.deliverability}%` : "—"} tone="success" />
       </div>
 
       <div className="grid md:grid-cols-3 gap-4 mt-6">
@@ -39,24 +113,33 @@ function Dashboard() {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="divide-y divide-border">
-              {MOCK_JOBS.map((j) => (
-                <Link
-                  key={j.id}
-                  to="/app/jobs/$jobId"
-                  params={{ jobId: j.id }}
-                  className="flex items-center justify-between py-3 hover:bg-surface-muted -mx-2 px-2 rounded-lg"
-                >
-                  <div>
-                    <div className="font-medium text-sm text-foreground">{j.name}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {j.rowsIn.toLocaleString()} Rows · {j.createdAt}
+            {hasJobs ? (
+              <div className="divide-y divide-border">
+                {jobs.map((j) => (
+                  <Link
+                    key={j.id}
+                    to="/app/jobs/$jobId"
+                    params={{ jobId: j.id }}
+                    className="flex items-center justify-between py-3 hover:bg-surface-muted -mx-2 px-2 rounded-lg"
+                  >
+                    <div>
+                      <div className="font-medium text-sm text-foreground">{j.name}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {(j.rows_in ?? 0).toLocaleString()} Rows · {new Date(j.created_at).toLocaleDateString()}
+                      </div>
                     </div>
-                  </div>
-                  <StatusBadge status={j.status} />
-                </Link>
-              ))}
-            </div>
+                    <StatusBadge status={j.status} />
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="py-10 text-center">
+                <div className="text-sm text-muted-foreground">No Jobs Yet.</div>
+                <Button asChild className="mt-4 rounded-full">
+                  <Link to="/app/new-job"><Plus className="mr-1 h-4 w-4" /> Run Your First Job</Link>
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -65,9 +148,9 @@ function Dashboard() {
             <CardTitle className="text-base font-display">Credit Balance</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <CreditRow label="Scrape" value={MOCK_CREDITS.scrape} />
-            <CreditRow label="Skip Trace" value={MOCK_CREDITS.skipTrace} />
-            <CreditRow label="SMS" value={MOCK_CREDITS.sms} />
+            <CreditRow label="Scrape" value={credits.scrape} />
+            <CreditRow label="Skip Trace" value={credits.skip_trace} />
+            <CreditRow label="SMS" value={credits.sms} />
             <Button asChild className="w-full rounded-full mt-2">
               <Link to="/app/billing">Top Up</Link>
             </Button>
@@ -102,7 +185,7 @@ function CreditRow({ label, value }: { label: string; value: number }) {
   );
 }
 
-function StatusBadge({ status }: { status: (typeof MOCK_JOBS)[number]["status"] }) {
+function StatusBadge({ status }: { status: JobStatus }) {
   const map: Record<string, string> = {
     ready: "bg-success/10 text-success border-success/20",
     scrubbing: "bg-warn/10 text-warn border-warn/20",
