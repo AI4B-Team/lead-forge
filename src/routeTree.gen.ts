@@ -25,6 +25,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppRegistrationRouteImport } from './routes/_authenticated/app.registration'
 import { Route as AuthenticatedAppNumbersRouteImport } from './routes/_authenticated/app.numbers'
 import { Route as AuthenticatedAppNewJobRouteImport } from './routes/_authenticated/app.new-job'
 import { Route as AuthenticatedAppListsRouteImport } from './routes/_authenticated/app.lists'
@@ -118,6 +119,12 @@ const AuthenticatedAppSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppRegistrationRoute =
+  AuthenticatedAppRegistrationRouteImport.update({
+    id: '/registration',
+    path: '/registration',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppNumbersRoute = AuthenticatedAppNumbersRouteImport.update({
   id: '/numbers',
   path: '/numbers',
@@ -208,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/app/lists': typeof AuthenticatedAppListsRoute
   '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
@@ -236,6 +244,7 @@ export interface FileRoutesByTo {
   '/app/lists': typeof AuthenticatedAppListsRoute
   '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
@@ -267,6 +276,7 @@ export interface FileRoutesById {
   '/_authenticated/app/lists': typeof AuthenticatedAppListsRoute
   '/_authenticated/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/_authenticated/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/_authenticated/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/app/lists'
     | '/app/new-job'
     | '/app/numbers'
+    | '/app/registration'
     | '/app/settings'
     | '/app/'
     | '/app/campaigns/$campaignId'
@@ -326,6 +337,7 @@ export interface FileRouteTypes {
     | '/app/lists'
     | '/app/new-job'
     | '/app/numbers'
+    | '/app/registration'
     | '/app/settings'
     | '/app'
     | '/app/campaigns/$campaignId'
@@ -356,6 +368,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/lists'
     | '/_authenticated/app/new-job'
     | '/_authenticated/app/numbers'
+    | '/_authenticated/app/registration'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/'
     | '/_authenticated/app/campaigns/$campaignId'
@@ -495,6 +508,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/registration': {
+      id: '/_authenticated/app/registration'
+      path: '/registration'
+      fullPath: '/app/registration'
+      preLoaderRoute: typeof AuthenticatedAppRegistrationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/numbers': {
       id: '/_authenticated/app/numbers'
       path: '/numbers'
@@ -623,6 +643,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppListsRoute: typeof AuthenticatedAppListsRoute
   AuthenticatedAppNewJobRoute: typeof AuthenticatedAppNewJobRouteWithChildren
   AuthenticatedAppNumbersRoute: typeof AuthenticatedAppNumbersRoute
+  AuthenticatedAppRegistrationRoute: typeof AuthenticatedAppRegistrationRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppJobsJobIdRoute: typeof AuthenticatedAppJobsJobIdRoute
@@ -636,6 +657,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppListsRoute: AuthenticatedAppListsRoute,
   AuthenticatedAppNewJobRoute: AuthenticatedAppNewJobRouteWithChildren,
   AuthenticatedAppNumbersRoute: AuthenticatedAppNumbersRoute,
+  AuthenticatedAppRegistrationRoute: AuthenticatedAppRegistrationRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppJobsJobIdRoute: AuthenticatedAppJobsJobIdRoute,
