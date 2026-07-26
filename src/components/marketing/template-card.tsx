@@ -29,7 +29,14 @@ export function TemplateCard({ template }: { template: Template }) {
         <Icon className={`h-5 w-5 ${logoUrl ? "hidden" : ""}`} />
       </span>
       <span className="min-w-0">
-        <span className="block font-display font-bold text-foreground truncate">{template.title}</span>
+        <span className="flex items-center gap-2">
+          <span className="font-display font-bold text-foreground truncate">{template.title}</span>
+          {template.beta ? (
+            <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Beta
+            </span>
+          ) : null}
+        </span>
         <span className="block text-xs text-muted-foreground mt-0.5 truncate">{template.subtitle}</span>
       </span>
     </Link>
