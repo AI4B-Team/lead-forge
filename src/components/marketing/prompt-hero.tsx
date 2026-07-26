@@ -92,10 +92,7 @@ export function PromptHero() {
 
   return (
     <section
-      className="relative overflow-hidden"
-      style={{
-        background: "linear-gradient(180deg, #FFFFFF 0%, #FAFAFA 100%)",
-      }}
+      className="relative overflow-hidden bg-background"
     >
       {/* Dot grid texture */}
       <div
