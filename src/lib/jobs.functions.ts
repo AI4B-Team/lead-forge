@@ -99,11 +99,11 @@ export const launchCampaignFromJob = createServerFn({ method: "POST" })
       .from("campaigns")
       .insert({
         workspace_id: job.workspace_id,
-        source_job_id: data.jobId,
+        list_job_id: data.jobId,
         name: data.name,
         status: "draft",
         daily_cap: 500,
-        quiet_hours: { start: "21:00", end: "09:00" },
+        send_window: { quiet_start: "21:00", quiet_end: "09:00" } as never,
       })
       .select("id")
       .single();
@@ -111,10 +111,10 @@ export const launchCampaignFromJob = createServerFn({ method: "POST" })
 
     // Default 4-touch drip with a single starter variant per step.
     const steps = [
-      { step_order: 1, delay_minutes: 0, variants: ["Hi {{first_name}} — quick question about your {{niche}} in {{city}}?"] },
-      { step_order: 2, delay_minutes: 2, variants: ["Following up — got a minute today?"] },
-      { step_order: 3, delay_minutes: 180, variants: ["Still looking for {{niche}} help in {{city}}? Happy to send info."] },
-      { step_order: 4, delay_minutes: 2880, variants: ["Last check-in — want me to close this out?"] },
+      { step_order: 1, delay_minutes: 0, message_variants: ["Hi {{first_name}} — quick question about your {{niche}} in {{city}}?"] },
+      { step_order: 2, delay_minutes: 2, message_variants: ["Following up — got a minute today?"] },
+      { step_order: 3, delay_minutes: 180, message_variants: ["Still looking for {{niche}} help in {{city}}? Happy to send info."] },
+      { step_order: 4, delay_minutes: 2880, message_variants: ["Last check-in — want me to close this out?"] },
     ];
     await supabase.from("campaign_steps").insert(
       steps.map((s) => ({ campaign_id: campaign.id, ...s })),
