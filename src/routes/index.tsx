@@ -22,9 +22,9 @@ import { INDUSTRIES } from "@/lib/mock-data";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "LeadForge — Leads To Deals, On Autopilot" },
+      { title: "LeadTrace — Leads To Deals, On Autopilot" },
       { name: "description", content: "Scrape, skip trace, DNC scrub, and text your leads from one compliant platform. Built for insurance, real estate, solar, and home services." },
-      { property: "og:title", content: "LeadForge — Leads To Deals, On Autopilot" },
+      { property: "og:title", content: "LeadTrace — Leads To Deals, On Autopilot" },
       { property: "og:description", content: "One platform replaces your scraper, skip tracer, DNC service, and texting tool." },
     ],
   }),
@@ -51,7 +51,7 @@ function Home() {
               Close Them.
             </h1>
             <p className="mt-6 text-lg text-ink-muted max-w-lg">
-              LeadForge scrapes your leads, verifies their contact info, scrubs them clean, and
+              LeadTrace scrapes your leads, verifies their contact info, scrubs them clean, and
               launches your campaign. One platform replaces your scraper, your skip tracer, your DNC
               service, and your texting tool.
             </p>

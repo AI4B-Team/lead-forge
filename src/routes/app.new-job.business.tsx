@@ -9,7 +9,7 @@ import { NICHES } from "@/lib/mock-data";
 import { useState } from "react";
 
 export const Route = createFileRoute("/app/new-job/business")({
-  head: () => ({ meta: [{ title: "Scrape A Niche — LeadForge" }] }),
+  head: () => ({ meta: [{ title: "Scrape A Niche — LeadTrace" }] }),
   component: Wizard,
 });
 

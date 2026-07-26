@@ -7,7 +7,7 @@ import { MOCK_CAMPAIGNS } from "@/lib/mock-data";
 import { Plus } from "lucide-react";
 
 export const Route = createFileRoute("/app/campaigns")({
-  head: () => ({ meta: [{ title: "Campaigns — LeadForge" }] }),
+  head: () => ({ meta: [{ title: "Campaigns — LeadTrace" }] }),
   component: Campaigns,
 });
 

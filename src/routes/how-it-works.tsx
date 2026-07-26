@@ -6,9 +6,9 @@ import { ArrowRight, Search, Landmark, Upload, ShieldCheck, MessageSquare } from
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
-      { title: "How LeadForge Works — From Source To Send" },
-      { name: "description", content: "Three doors in, one compliant pipeline out. See how LeadForge scrapes, skip traces, scrubs, and launches your campaigns." },
-      { property: "og:title", content: "How LeadForge Works" },
+      { title: "How LeadTrace Works — From Source To Send" },
+      { name: "description", content: "Three doors in, one compliant pipeline out. See how LeadTrace scrapes, skip traces, scrubs, and launches your campaigns." },
+      { property: "og:title", content: "How LeadTrace Works" },
       { property: "og:description", content: "Three doors in, one compliant pipeline out." },
     ],
   }),

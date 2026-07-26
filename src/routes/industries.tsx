@@ -15,9 +15,9 @@ const PRESETS: Record<string, { source: string; sample: string }> = {
 export const Route = createFileRoute("/industries")({
   head: () => ({
     meta: [
-      { title: "Industries — Same Engine. Your Playbook. — LeadForge" },
-      { name: "description", content: "Insurance, real estate, solar, home services, and agencies all run on the same LeadForge pipeline, tuned to their playbook." },
-      { property: "og:title", content: "LeadForge For Every Industry" },
+      { title: "Industries — Same Engine. Your Playbook. — LeadTrace" },
+      { name: "description", content: "Insurance, real estate, solar, home services, and agencies all run on the same LeadTrace pipeline, tuned to their playbook." },
+      { property: "og:title", content: "LeadTrace For Every Industry" },
       { property: "og:description", content: "Same engine. Your playbook." },
     ],
   }),

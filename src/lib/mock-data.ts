@@ -1,4 +1,4 @@
-// Mock data for the LeadForge frontend scaffold. All strings follow the
+// Mock data for the LeadTrace frontend scaffold. All strings follow the
 // house style: Title Case, no em-dashes, no emojis as icons.
 
 export type SourceType = "business" | "records" | "upload";

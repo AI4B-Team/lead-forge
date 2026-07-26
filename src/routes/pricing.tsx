@@ -6,9 +6,9 @@ import { Check } from "lucide-react";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — LeadForge" },
+      { title: "Pricing — LeadTrace" },
       { name: "description", content: "Starter, Growth, and Scale plans. All include DNC scrubbing, STOP handling, and audit logs. 14-day free trial. No credit card required." },
-      { property: "og:title", content: "LeadForge Pricing" },
+      { property: "og:title", content: "LeadTrace Pricing" },
       { property: "og:description", content: "Plans that scale with you. All compliant by default." },
     ],
   }),

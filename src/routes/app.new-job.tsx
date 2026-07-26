@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { Search, Landmark, Upload, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/app/new-job")({
-  head: () => ({ meta: [{ title: "New Job — LeadForge" }] }),
+  head: () => ({ meta: [{ title: "New Job — LeadTrace" }] }),
   component: NewJob,
 });
 

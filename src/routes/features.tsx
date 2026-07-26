@@ -7,9 +7,9 @@ import {
 export const Route = createFileRoute("/features")({
   head: () => ({
     meta: [
-      { title: "Features — LeadForge" },
+      { title: "Features — LeadTrace" },
       { name: "description", content: "Niche scraper, public records, skip trace, DNC scrub, smart campaigns, list quality score, and compliance built in." },
-      { property: "og:title", content: "LeadForge Features" },
+      { property: "og:title", content: "LeadTrace Features" },
       { property: "og:description", content: "Everything the pipeline needs. Nothing it doesn't." },
     ],
   }),
