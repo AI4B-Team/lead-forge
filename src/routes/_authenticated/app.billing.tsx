@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useWorkspace } from "@/hooks/use-workspace";
+import { useWorkspaceId } from "@/hooks/use-workspace";
 import { getBilling, topUpCredits } from "@/lib/billing.functions";
 
 type CreditKind = "scrape" | "skip_trace" | "sms";
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/app/billing")({
 });
 
 function Billing() {
-  const { workspaceId } = useWorkspace();
+  const workspaceId = useWorkspaceId();
   const fetchBilling = useServerFn(getBilling);
   const runTopUp = useServerFn(topUpCredits);
   const qc = useQueryClient();
