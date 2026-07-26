@@ -45,7 +45,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border">
         <Link to="/app/dashboard" className="flex items-center gap-2 px-2 py-2 font-display font-bold text-base text-sidebar-foreground">
           <span className="grid place-items-center h-7 w-7 rounded-md bg-primary text-primary-foreground shrink-0">
-            <Radar className="h-3.5 w-3.5" />
+            <Radar className="h-4 w-4" />
           </span>
           {!collapsed && BRAND_NAME}
         </Link>
