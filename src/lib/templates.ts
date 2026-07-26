@@ -2,6 +2,7 @@ import {
   Building2, Search, MapPin, Scale, Hammer, FileWarning, Landmark, Home, Upload,
   Briefcase, ShoppingCart, Star, Users, Globe, Newspaper, Megaphone, GraduationCap,
   Car, Utensils, Stethoscope, Wrench, Camera, Music, Plane, Store,
+  Mail, LinkGoogle as _unused, Rocket, BadgeCheck, Network,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
