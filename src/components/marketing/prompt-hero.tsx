@@ -107,7 +107,7 @@ export function PromptHero() {
           maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
         }}
       />
-      <div className="relative mx-auto max-w-[1240px] px-6 pt-16 pb-14 md:pt-24 md:pb-20 text-center">
+      <div className="relative mx-auto max-w-[1240px] px-6 pt-16 pb-8 md:pt-24 md:pb-10 text-center">
         <div className="inline-flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-[0.18em]">
           <Sparkles className="h-3.5 w-3.5" />
           Leads To Deals, On Autopilot
