@@ -3,12 +3,14 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { Bell, Zap } from "lucide-react";
+import { useWorkspaceId } from "@/hooks/use-workspace";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
 });
 
 function AppLayout() {
+  const { workspaceName } = useWorkspaceId();
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-surface-muted">
@@ -17,7 +19,7 @@ function AppLayout() {
           <header className="h-14 flex items-center justify-between border-b border-border bg-background px-4">
             <div className="flex items-center gap-2">
               <SidebarTrigger />
-              <div className="text-sm text-muted-foreground hidden md:block">Acme Real Estate Workspace</div>
+              <div className="text-sm text-muted-foreground hidden md:block">{workspaceName ?? "Workspace"}</div>
             </div>
             <div className="flex items-center gap-2">
               <Button asChild size="sm" variant="outline" className="rounded-full">
