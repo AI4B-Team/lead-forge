@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { MarketingNav, MarketingFooter } from "@/components/marketing/marketing-layout";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { Radar, ShieldCheck, Sparkles, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: z.object({ mode: z.enum(["signin", "signup"]).optional() }),
   head: () => ({
     meta: [
       { title: "Sign In or Start Free — LeadTrace" },
@@ -25,7 +27,8 @@ type Mode = "signin" | "signup";
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>("signin");
+  const search = Route.useSearch();
+  const [mode, setMode] = useState<Mode>(search.mode === "signup" ? "signup" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
