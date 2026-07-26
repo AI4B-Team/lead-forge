@@ -68,7 +68,7 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           : "border-b border-border bg-background"
       }
     >
-      <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
+      <div className="w-full px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg">
           <span className="grid place-items-center h-8 w-8 rounded-lg bg-primary text-primary-foreground">
             <Radar className="h-5 w-5" />
