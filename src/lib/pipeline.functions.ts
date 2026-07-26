@@ -227,7 +227,7 @@ export const runJob = createServerFn({ method: "POST" })
       city: r.city ?? null,
       state: r.state ?? null,
       zip: r.zip ?? null,
-      source_meta: r.source_meta ?? {},
+      source_meta: (r.source_meta ?? {}) as never,
       scrub_status: "unscrubbed" as const,
     }));
     // Insert in chunks of 500 to stay under PostgREST limits.
