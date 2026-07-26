@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles,
@@ -14,14 +13,9 @@ import {
   Activity,
   Lock,
   ArrowRight,
-  RefreshCw,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { MarketingNav, ComplianceStrip, MarketingFooter } from "@/components/marketing/marketing-layout";
 import { PromptHero } from "@/components/marketing/prompt-hero";
-import { TemplateCard } from "@/components/marketing/template-card";
-import { TEMPLATES } from "@/lib/templates";
 import { INDUSTRIES } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/")({
