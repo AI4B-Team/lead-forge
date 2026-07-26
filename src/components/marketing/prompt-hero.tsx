@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Sparkles, Plus, Upload, HardDrive, Send, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { Sparkles, Plus, Upload, HardDrive, Send, X, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,6 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MarkerHighlight } from "@/components/marketing/marker-highlight";
+import { TemplateCard } from "@/components/marketing/template-card";
+import { TEMPLATES } from "@/lib/templates";
 
 const ROTATING = [
   "HVAC contractors in Georgia, remove franchises…",
