@@ -2,10 +2,20 @@ import {
   Building2, Search, MapPin, Scale, Hammer, FileWarning, Landmark, Home, Upload,
   Briefcase, ShoppingCart, Star, Users, Globe, Newspaper, Megaphone, GraduationCap,
   Car, Utensils, Stethoscope, Wrench, Camera, Music, Plane, Store,
+  Mail, Rocket, BadgeCheck, Network,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type TemplateCategory = "business" | "records" | "social" | "ecommerce" | "jobs" | "reviews" | "realestate" | "upload";
+export type TemplateCategory =
+  | "business"
+  | "directories"
+  | "records"
+  | "social"
+  | "ecommerce"
+  | "jobs"
+  | "reviews"
+  | "realestate"
+  | "upload";
 
 export type Template = {
   id: string;
@@ -15,6 +25,8 @@ export type Template = {
   prompt: string;
   icon: LucideIcon;
   tint: string;
+  /** Marks the template as Beta in the UI. */
+  beta?: boolean;
   /** Domain used to fetch the real company logo (favicon). */
   logoDomain?: string;
 };
@@ -34,38 +46,78 @@ export const TEMPLATES: Template[] = [
   {
     id: "gserp",
     title: "Google Search Scraper",
-    subtitle: "Businesses By SERP Results And Keyword.",
+    subtitle: "Websites, Emails, And Socials From Google Results By Keyword.",
     category: "business",
-    prompt: "Find all roofing companies ranking on Google for roof repair in Texas metros",
+    prompt: "Scrape websites, emails, and social profiles from Google search results for a keyword and location",
     icon: Search,
     tint: "bg-blue-500/10 text-blue-600",
     logoDomain: "google.com",
   },
   {
+    id: "glocal",
+    title: "Google Local Services",
+    subtitle: "Local Service Providers With Name, Phone, Website, And Address.",
+    category: "business",
+    prompt: "Scrape local service providers from Google Local Services by keyword and location",
+    icon: BadgeCheck,
+    tint: "bg-emerald-500/10 text-emerald-600",
+    logoDomain: "google.com",
+  },
+  {
+    id: "contact-details",
+    title: "Contact Details Scraper (Any Site)",
+    subtitle: "Pull Emails, Phones, And Social Profiles From Any Webpage.",
+    category: "business",
+    prompt: "Extract emails, phone numbers, and social media profiles from these websites",
+    icon: Mail,
+    tint: "bg-primary/10 text-primary",
+  },
+  {
+    id: "universal-crawl",
+    title: "Universal Site + Subpage Scraper",
+    subtitle: "Crawl A Site And Its Subpages For All Contact Details.",
+    category: "business",
+    prompt: "Crawl this website and its subpages and extract all contact details",
+    icon: Network,
+    tint: "bg-indigo-500/10 text-indigo-600",
+  },
+  {
     id: "yelp",
     title: "Yelp Businesses",
     subtitle: "Local Businesses With Reviews + Contact Info.",
-    category: "business",
+    category: "directories",
     prompt: "Scrape all Yelp restaurants in Chicago with 4+ stars and export owner contacts",
     icon: Utensils,
     tint: "bg-rose-500/10 text-rose-600",
     logoDomain: "yelp.com",
+    beta: true,
   },
   {
     id: "yellowpages",
     title: "Yellow Pages",
-    subtitle: "Trades + Services From The Directory.",
-    category: "business",
-    prompt: "Pull electricians and general contractors from Yellow Pages in Ohio",
+    subtitle: "Business Name, Address, Phone, Website, And Email By Keyword.",
+    category: "directories",
+    prompt: "Scrape business name, address, phone, website, and email from Yellow Pages by keyword and location",
     icon: Wrench,
     tint: "bg-yellow-500/10 text-yellow-700",
     logoDomain: "yellowpages.com",
   },
   {
+    id: "superpages",
+    title: "Superpages",
+    subtitle: "Business Contacts And Socials By Keyword And Zip Code.",
+    category: "directories",
+    prompt: "Scrape business name, address, phone, website, and social links from Superpages by keyword and zip code",
+    icon: Building2,
+    tint: "bg-orange-500/10 text-orange-700",
+    logoDomain: "superpages.com",
+    beta: true,
+  },
+  {
     id: "bbb",
     title: "Better Business Bureau",
     subtitle: "Accredited Businesses By Industry + State.",
-    category: "business",
+    category: "directories",
     prompt: "Pull BBB-accredited HVAC businesses in Georgia with A+ rating",
     icon: Building2,
     tint: "bg-blue-500/10 text-blue-700",
@@ -75,7 +127,7 @@ export const TEMPLATES: Template[] = [
     id: "tripadvisor",
     title: "TripAdvisor Listings",
     subtitle: "Hotels, Restaurants + Attractions.",
-    category: "business",
+    category: "directories",
     prompt: "Scrape TripAdvisor hotels in Miami with owner contact details",
     icon: Plane,
     tint: "bg-emerald-500/10 text-emerald-600",
@@ -85,13 +137,14 @@ export const TEMPLATES: Template[] = [
   // ---------- Social & Creators ----------
   {
     id: "linkedin",
-    title: "LinkedIn Profiles",
-    subtitle: "Decision Makers By Title + Company Size.",
-    category: "social",
-    prompt: "Find LinkedIn CFOs at SaaS companies with 50–500 employees in the US",
+    title: "LinkedIn Company / People",
+    subtitle: "Company And Decision-Maker Profiles By Industry.",
+    category: "directories",
+    prompt: "Find companies and decision-makers on LinkedIn by industry and location",
     icon: Users,
     tint: "bg-sky-500/10 text-sky-700",
     logoDomain: "linkedin.com",
+    beta: true,
   },
   {
     id: "instagram",
@@ -136,12 +189,13 @@ export const TEMPLATES: Template[] = [
   {
     id: "facebook",
     title: "Facebook Pages",
-    subtitle: "Business Pages By Category + Region.",
-    category: "social",
-    prompt: "Pull Facebook pages for auto dealers in Texas with contact emails",
+    subtitle: "Business Pages With Contact Info And Category.",
+    category: "directories",
+    prompt: "Scrape business pages on Facebook by category and location for contact info",
     icon: Users,
     tint: "bg-blue-500/10 text-blue-600",
     logoDomain: "facebook.com",
+    beta: true,
   },
 
   // ---------- E-commerce ----------
@@ -208,6 +262,17 @@ export const TEMPLATES: Template[] = [
     logoDomain: "indeed.com",
   },
   {
+    id: "googlejobs",
+    title: "Google Jobs Scraper",
+    subtitle: "Employers Hiring, With Company, Emails, And Apply Links.",
+    category: "jobs",
+    prompt: "Scrape employers hiring on Google Jobs by keyword and location for company and contact details",
+    icon: Briefcase,
+    tint: "bg-blue-500/10 text-blue-600",
+    logoDomain: "google.com",
+    beta: true,
+  },
+  {
     id: "glassdoor",
     title: "Glassdoor Companies",
     subtitle: "Growing Companies By Size + Rating.",
@@ -226,6 +291,17 @@ export const TEMPLATES: Template[] = [
     icon: Briefcase,
     tint: "bg-emerald-500/10 text-emerald-600",
     logoDomain: "ziprecruiter.com",
+  },
+  {
+    id: "crunchbase",
+    title: "Crunchbase Companies",
+    subtitle: "Funded Companies With Site, Industry, And Location.",
+    category: "directories",
+    prompt: "Find funded companies on Crunchbase by industry and location",
+    icon: Rocket,
+    tint: "bg-blue-500/10 text-blue-700",
+    logoDomain: "crunchbase.com",
+    beta: true,
   },
 
   // ---------- Reviews ----------
@@ -312,12 +388,13 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "tax",
-    title: "Tax Defaults (Beta)",
+    title: "Tax Defaults",
     subtitle: "Tax Delinquent Property Owners.",
     category: "records",
     prompt: "Pull tax delinquent property owners in Polk County FL",
     icon: Landmark,
     tint: "bg-indigo-500/10 text-indigo-600",
+    beta: true,
   },
   {
     id: "vacancy",
@@ -327,6 +404,7 @@ export const TEMPLATES: Template[] = [
     prompt: "Find vacancy and demolition notices in Hernando County FL and skip trace owners",
     icon: Home,
     tint: "bg-slate-500/10 text-slate-600",
+    beta: true,
   },
 
   // ---------- Upload ----------
