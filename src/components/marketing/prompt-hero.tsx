@@ -118,8 +118,7 @@ export function PromptHero() {
           Find Them. <MarkerHighlight>Reach</MarkerHighlight> Them. Close Them.
         </h1>
         <style>{`
-          .hero-headline { font-size: clamp(34px, 5.4vw, 78px); white-space: nowrap; }
-          @media (max-width: 760px) { .hero-headline { white-space: normal; } }
+          .hero-headline { font-size: clamp(34px, 5.2vw, 72px); }
         `}</style>
         <p className="mt-5 text-lg text-muted-foreground">
           Describe Who You Want To Reach And LeadTrace Builds The Whole Campaign.
