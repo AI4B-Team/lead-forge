@@ -208,7 +208,7 @@ export function PromptHero() {
               className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground font-semibold px-5 h-10 text-sm shadow-sm"
             >
               <Send className="h-4 w-4" />
-              Build My List
+              Build My List Free
             </button>
           </div>
         </div>
