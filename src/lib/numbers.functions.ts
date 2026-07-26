@@ -37,7 +37,17 @@ export const buyNumbers = createServerFn({ method: "POST" })
     const useReal = isProviderConfigured();
     const provider = useReal ? getProvider() : null;
 
-    const rows: Array<Record<string, unknown>> = [];
+    type Row = {
+      workspace_id: string;
+      phone: string;
+      area_code: string;
+      region: "east" | "central" | "mountain" | "west";
+      health_score: number;
+      optout_rate: number;
+      status: "active";
+      provider_sid: string;
+    };
+    const rows: Row[] = [];
     for (let i = 0; i < data.quantity; i++) {
       const area = codes[i % codes.length]!;
       let phone: string;
