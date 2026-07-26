@@ -64,7 +64,7 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
             Log In
           </Link>
           <Button asChild className="rounded-full">
-            <Link to="/start">Sign Up</Link>
+            <Link to="/start">Start Free</Link>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger
