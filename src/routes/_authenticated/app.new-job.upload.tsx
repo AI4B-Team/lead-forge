@@ -10,6 +10,8 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { runJob } from "@/lib/pipeline.functions";
 
 export const Route = createFileRoute("/_authenticated/app/new-job/upload")({
   head: () => ({ meta: [{ title: "Upload My List — LeadTrace" }] }),
