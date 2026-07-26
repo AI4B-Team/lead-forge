@@ -189,12 +189,13 @@ export const TEMPLATES: Template[] = [
   {
     id: "facebook",
     title: "Facebook Pages",
-    subtitle: "Business Pages By Category + Region.",
-    category: "social",
-    prompt: "Pull Facebook pages for auto dealers in Texas with contact emails",
+    subtitle: "Business Pages With Contact Info And Category.",
+    category: "directories",
+    prompt: "Scrape business pages on Facebook by category and location for contact info",
     icon: Users,
     tint: "bg-blue-500/10 text-blue-600",
     logoDomain: "facebook.com",
+    beta: true,
   },
 
   // ---------- E-commerce ----------
@@ -261,6 +262,17 @@ export const TEMPLATES: Template[] = [
     logoDomain: "indeed.com",
   },
   {
+    id: "googlejobs",
+    title: "Google Jobs Scraper",
+    subtitle: "Employers Hiring, With Company, Emails, And Apply Links.",
+    category: "jobs",
+    prompt: "Scrape employers hiring on Google Jobs by keyword and location for company and contact details",
+    icon: Briefcase,
+    tint: "bg-blue-500/10 text-blue-600",
+    logoDomain: "google.com",
+    beta: true,
+  },
+  {
     id: "glassdoor",
     title: "Glassdoor Companies",
     subtitle: "Growing Companies By Size + Rating.",
@@ -279,6 +291,17 @@ export const TEMPLATES: Template[] = [
     icon: Briefcase,
     tint: "bg-emerald-500/10 text-emerald-600",
     logoDomain: "ziprecruiter.com",
+  },
+  {
+    id: "crunchbase",
+    title: "Crunchbase Companies",
+    subtitle: "Funded Companies With Site, Industry, And Location.",
+    category: "directories",
+    prompt: "Find funded companies on Crunchbase by industry and location",
+    icon: Rocket,
+    tint: "bg-blue-500/10 text-blue-700",
+    logoDomain: "crunchbase.com",
+    beta: true,
   },
 
   // ---------- Reviews ----------
