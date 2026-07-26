@@ -87,7 +87,7 @@ function TemplateTeaser() {
               Not Sure Where To Start? Try One Of These…
             </h2>
             <Link to="/templates" className="text-sm font-semibold text-primary hover:underline">
-              Browse Templates →
+              View All Templates →
             </Link>
           </div>
           <div className="flex items-center gap-2">
