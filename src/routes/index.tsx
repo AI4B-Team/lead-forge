@@ -59,7 +59,7 @@ function Home() {
 function TemplateTeaser() {
   const [offset, setOffset] = useState(0);
   const [order, setOrder] = useState(() => TEMPLATES.map((_, i) => i));
-  const pageSize = 6;
+  const pageSize = 12;
   const visible = useMemo(() => {
     const arr: typeof TEMPLATES = [];
     for (let i = 0; i < pageSize; i++) {
