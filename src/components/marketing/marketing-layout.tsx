@@ -101,7 +101,7 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
                 Log In
               </Link>
               <Button asChild className="rounded-full">
-                <Link to="/auth">Start Free</Link>
+                <Link to="/auth" search={{ mode: "signup" }}>Start Free</Link>
               </Button>
             </>
           )}
