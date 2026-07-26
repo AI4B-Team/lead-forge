@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Radar, ShieldCheck, Sparkles, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -69,7 +70,49 @@ function AuthPage() {
     <div className="min-h-screen flex flex-col bg-background">
       <MarketingNav />
       <main className="flex-1">
-        <section className="mx-auto max-w-md px-6 py-16">
+        <section className="mx-auto grid max-w-[1240px] grid-cols-1 gap-10 px-6 py-16 lg:grid-cols-2 lg:gap-16">
+          {/* Left panel — brand / value */}
+          <aside className="relative hidden lg:flex flex-col justify-between rounded-3xl bg-foreground text-background p-10 overflow-hidden">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/30 blur-3xl"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-primary/20 blur-3xl"
+            />
+            <div className="relative">
+              <div className="inline-flex items-center gap-2">
+                <span className="grid place-items-center h-10 w-10 rounded-xl bg-primary text-primary-foreground">
+                  <Radar className="h-5 w-5" />
+                </span>
+                <span className="font-display text-xl font-black tracking-tight">LeadTrace</span>
+              </div>
+              <h2 className="mt-10 font-display text-4xl xl:text-5xl font-black leading-[1.02] tracking-tight">
+                Find Them.<br />Reach Them.<br />Close Them.
+              </h2>
+              <p className="mt-4 max-w-sm text-background/70">
+                One Pipeline For Scraping, Skip Tracing, Scrubbing, And SMS — Compliance Baked In.
+              </p>
+            </div>
+            <ul className="relative mt-10 space-y-4 text-sm">
+              <li className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <span>DNC + Litigator Scrubbing On Every List.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Zap className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <span>Regional Numbers, Rotation, And Daily Caps Built In.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <span>Business Scrapes + Public Records In One Place.</span>
+              </li>
+            </ul>
+          </aside>
+
+          {/* Right panel — auth form */}
+          <div className="mx-auto w-full max-w-md lg:mx-0 lg:max-w-none lg:pl-4">
           <h1 className="font-display text-4xl font-black text-foreground">
             {mode === "signup" ? "Start Free." : mode === "magic" ? "Magic Link Sign In." : "Welcome Back."}
           </h1>
@@ -123,6 +166,7 @@ function AuthPage() {
           <p className="text-sm text-muted-foreground mt-6 text-center">
             By Continuing You Agree To Our <Link to="/compliance" className="text-primary font-medium">Compliance Terms</Link>.
           </p>
+          </div>
         </section>
       </main>
       <MarketingFooter />
