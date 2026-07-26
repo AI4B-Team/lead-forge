@@ -134,7 +134,6 @@ export function PromptHero() {
           className="mx-auto mt-8 w-full max-w-[820px] rounded-[22px] bg-white text-left transition"
           style={{
             border: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
-            boxShadow: "0 20px 40px -20px rgba(204,0,0,0.25)",
           }}
         >
           <textarea
