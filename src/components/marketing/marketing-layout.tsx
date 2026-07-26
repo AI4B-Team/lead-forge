@@ -8,7 +8,6 @@ import {
   FileCheck,
   MessageCircleOff,
   BadgeCheck,
-  Globe,
   ChevronDown,
 } from "lucide-react";
 import {
@@ -19,11 +18,26 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const LANGUAGES = [
-  { code: "EN", label: "English" },
-  { code: "ES", label: "Español" },
-  { code: "PT", label: "Português" },
-  { code: "FR", label: "Français" },
-  { code: "DE", label: "Deutsch" },
+  { code: "EN", label: "English", flag: "🇺🇸" },
+  { code: "ES", label: "Español", flag: "🇪🇸" },
+  { code: "PT", label: "Português", flag: "🇧🇷" },
+  { code: "FR", label: "Français", flag: "🇫🇷" },
+  { code: "DE", label: "Deutsch", flag: "🇩🇪" },
+  { code: "IT", label: "Italiano", flag: "🇮🇹" },
+  { code: "NL", label: "Nederlands", flag: "🇳🇱" },
+  { code: "PL", label: "Polski", flag: "🇵🇱" },
+  { code: "SV", label: "Svenska", flag: "🇸🇪" },
+  { code: "TR", label: "Türkçe", flag: "🇹🇷" },
+  { code: "AR", label: "العربية", flag: "🇸🇦" },
+  { code: "HE", label: "עברית", flag: "🇮🇱" },
+  { code: "RU", label: "Русский", flag: "🇷🇺" },
+  { code: "ZH", label: "中文", flag: "🇨🇳" },
+  { code: "JA", label: "日本語", flag: "🇯🇵" },
+  { code: "KO", label: "한국어", flag: "🇰🇷" },
+  { code: "HI", label: "हिन्दी", flag: "🇮🇳" },
+  { code: "VI", label: "Tiếng Việt", flag: "🇻🇳" },
+  { code: "TH", label: "ไทย", flag: "🇹🇭" },
+  { code: "ID", label: "Bahasa Indonesia", flag: "🇮🇩" },
 ] as const;
 
 export function MarketingLayout({ children }: { children: ReactNode }) {
@@ -41,6 +55,7 @@ export { ComplianceStrip, MarketingFooter };
 
 export function MarketingNav({ dark = false }: { dark?: boolean }) {
   const [lang, setLang] = useState<(typeof LANGUAGES)[number]["code"]>("EN");
+  const current = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0];
   return (
     <header
       className={
@@ -68,20 +83,26 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger
-              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium ${
+              aria-label="Select language"
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 dark
                   ? "border-white/20 text-ink-foreground hover:bg-white/10"
                   : "border-border text-foreground hover:bg-surface-muted"
               }`}
             >
-              <Globe className="h-4 w-4" />
-              {lang}
+              <span className="text-base leading-none">{current.flag}</span>
+              <span>{current.code}</span>
               <ChevronDown className="h-3.5 w-3.5 opacity-70" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto w-56">
               {LANGUAGES.map((l) => (
-                <DropdownMenuItem key={l.code} onSelect={() => setLang(l.code)}>
-                  <span className="font-medium mr-2">{l.code}</span>
+                <DropdownMenuItem
+                  key={l.code}
+                  onSelect={() => setLang(l.code)}
+                  className="cursor-pointer gap-2"
+                >
+                  <span className="text-base leading-none">{l.flag}</span>
+                  <span className="font-medium w-8">{l.code}</span>
                   <span className="text-muted-foreground">{l.label}</span>
                 </DropdownMenuItem>
               ))}
