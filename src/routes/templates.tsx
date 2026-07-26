@@ -10,7 +10,12 @@ type Filter = "all" | TemplateCategory;
 const FILTERS: { key: Filter; label: string }[] = [
   { key: "all", label: "All" },
   { key: "business", label: "Business" },
-  { key: "records", label: "Real Estate Records" },
+  { key: "social", label: "Social" },
+  { key: "ecommerce", label: "E-commerce" },
+  { key: "jobs", label: "Jobs" },
+  { key: "reviews", label: "Reviews" },
+  { key: "realestate", label: "Real Estate" },
+  { key: "records", label: "Public Records" },
   { key: "upload", label: "Upload" },
 ];
 
