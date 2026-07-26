@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Sparkles, Plus, Upload, HardDrive, Send, X } from "lucide-react";
 import {
   DropdownMenu,
