@@ -22,6 +22,7 @@ export const Route = createFileRoute("/_authenticated/app/new-job/records")({
 function Wizard() {
   const navigate = useNavigate();
   const { workspaceId } = useWorkspaceId();
+  const runJobFn = useServerFn(runJob);
   const [record, setRecord] = useState<string>("Probate");
   const [county, setCounty] = useState<string>("Hillsborough, FL");
   const [from, setFrom] = useState("");
@@ -66,8 +67,11 @@ function Wizard() {
         .select("id")
         .single();
       if (error || !data) throw error ?? new Error("Could Not Queue Job");
-      toast.success("Job Queued.");
+      toast.success("Job Queued. Running Pipeline…");
       navigate({ to: "/app/jobs/$jobId", params: { jobId: data.id } });
+      runJobFn({ data: { jobId: data.id } }).catch((e) =>
+        toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
+      );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
     } finally {
