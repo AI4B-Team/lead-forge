@@ -5,9 +5,9 @@ import { ShieldCheck, MessageCircleOff, FileCheck, BadgeCheck, Clock, Ban } from
 export const Route = createFileRoute("/compliance")({
   head: () => ({
     meta: [
-      { title: "Compliance — LeadForge" },
+      { title: "Compliance — LeadTrace" },
       { name: "description", content: "DNC scrubbing on every list, automatic STOP handling, timestamped audit logs, quiet hours, and guided 10DLC registration. Non-bypassable." },
-      { property: "og:title", content: "Compliance At LeadForge" },
+      { property: "og:title", content: "Compliance At LeadTrace" },
       { property: "og:description", content: "Built in. Non-bypassable. Selling point, not fine print." },
     ],
   }),
@@ -31,7 +31,7 @@ function Compliance() {
           Compliance Is Not Fine Print. It Is The Product.
         </h1>
         <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
-          LeadForge is the platform and carries the liability. That is why every guardrail below is
+          LeadTrace is the platform and carries the liability. That is why every guardrail below is
           non-bypassable, and why buyers pick us over stitched-together tooling.
         </p>
         <div className="grid md:grid-cols-2 gap-5 mt-12">

@@ -8,7 +8,7 @@ import { UploadCloud } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/app/new-job/upload")({
-  head: () => ({ meta: [{ title: "Upload My List — LeadForge" }] }),
+  head: () => ({ meta: [{ title: "Upload My List — LeadTrace" }] }),
   component: Wizard,
 });
 

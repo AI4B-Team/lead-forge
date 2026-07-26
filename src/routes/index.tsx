@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles,
@@ -13,20 +14,27 @@ import {
   Activity,
   Lock,
   ArrowRight,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { MarketingNav, ComplianceStrip, MarketingFooter } from "@/components/marketing/marketing-layout";
-import { MarkerHighlight } from "@/components/marketing/marker-highlight";
-import { PipelineAnimation } from "@/components/marketing/pipeline-animation";
+import { PromptHero } from "@/components/marketing/prompt-hero";
+import { TemplateCard } from "@/components/marketing/template-card";
+import { TEMPLATES } from "@/lib/templates";
 import { INDUSTRIES } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "LeadForge — Leads To Deals, On Autopilot" },
+      { title: "LeadTrace — Leads To Deals, On Autopilot" },
       { name: "description", content: "Scrape, skip trace, DNC scrub, and text your leads from one compliant platform. Built for insurance, real estate, solar, and home services." },
-      { property: "og:title", content: "LeadForge — Leads To Deals, On Autopilot" },
+      { property: "og:title", content: "LeadTrace — Leads To Deals, On Autopilot" },
       { property: "og:description", content: "One platform replaces your scraper, skip tracer, DNC service, and texting tool." },
     ],
+  }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    prompt: typeof search.prompt === "string" ? search.prompt : undefined,
   }),
   component: Home,
 });
@@ -34,59 +42,10 @@ export const Route = createFileRoute("/")({
 function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Hero (dark) with its own nav */}
-      <section className="bg-ink text-ink-foreground">
-        <MarketingNav dark />
-        <div className="mx-auto max-w-7xl px-6 py-20 md:py-28 grid md:grid-cols-2 gap-16 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-[0.18em]">
-              <Sparkles className="h-3.5 w-3.5" />
-              Leads To Deals, On Autopilot
-            </div>
-            <h1 className="mt-6 font-display text-5xl md:text-6xl lg:text-7xl font-black leading-[1.05] text-ink-foreground">
-              Find Them.
-              <br />
-              <MarkerHighlight>Reach Them.</MarkerHighlight>
-              <br />
-              Close Them.
-            </h1>
-            <p className="mt-6 text-lg text-ink-muted max-w-lg">
-              LeadForge scrapes your leads, verifies their contact info, scrubs them clean, and
-              launches your campaign. One platform replaces your scraper, your skip tracer, your DNC
-              service, and your texting tool.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-full">
-                <Link to="/start">
-                  Start Your 14-Day Free Trial <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="rounded-full bg-transparent border-white/25 text-ink-foreground hover:bg-white/10 hover:text-ink-foreground"
-              >
-                <Link to="/how-it-works">
-                  <Play className="mr-1 h-4 w-4" /> Watch Demo
-                </Link>
-              </Button>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-6 text-sm text-ink-muted">
-              <span className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-primary" /> No Credit Card Required
-              </span>
-              <span className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-primary" /> 14-Day Free Trial
-              </span>
-            </div>
-          </div>
-          <div className="flex justify-center md:justify-end">
-            <PipelineAnimation />
-          </div>
-        </div>
-      </section>
-
+      <MarketingNav />
+      <PromptHero />
+      <TemplateTeaser />
+      <ConsolidationBand />
       <HowItWorksSection />
       <FeaturesSection />
       <IndustriesSection />
@@ -94,6 +53,155 @@ function Home() {
       <ComplianceStrip />
       <MarketingFooter />
     </div>
+  );
+}
+
+function TemplateTeaser() {
+  const [offset, setOffset] = useState(0);
+  const [order, setOrder] = useState(() => TEMPLATES.map((_, i) => i));
+  const pageSize = 6;
+  const visible = useMemo(() => {
+    const arr: typeof TEMPLATES = [];
+    for (let i = 0; i < pageSize; i++) {
+      arr.push(TEMPLATES[order[(offset + i) % order.length]]);
+    }
+    return arr;
+  }, [offset, order]);
+
+  const shuffle = () => {
+    const next = [...order];
+    for (let i = next.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [next[i], next[j]] = [next[j], next[i]];
+    }
+    setOrder(next);
+    setOffset(0);
+  };
+
+  return (
+    <section className="bg-background pb-20">
+      <div className="mx-auto max-w-[1240px] px-6">
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">
+            Not Sure Where To Start? Try One Of These…
+          </h2>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={shuffle}
+              className="grid place-items-center h-9 w-9 rounded-full border border-border bg-surface hover:bg-surface-muted"
+              aria-label="Shuffle Templates"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setOffset((o) => (o - pageSize + order.length) % order.length)}
+              className="grid place-items-center h-9 w-9 rounded-full border border-border bg-surface hover:bg-surface-muted"
+              aria-label="Previous"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setOffset((o) => (o + pageSize) % order.length)}
+              className="grid place-items-center h-9 w-9 rounded-full border border-border bg-surface hover:bg-surface-muted"
+              aria-label="Next"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <Link to="/templates" className="text-sm font-semibold text-primary hover:underline ml-2">
+              Browse Templates →
+            </Link>
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {visible.map((t, i) => (
+            <TemplateCard key={`${t.id}-${i}`} template={t} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ConsolidationBand() {
+  return (
+    <section className="bg-ink text-ink-foreground py-20 md:py-24">
+      <div className="mx-auto max-w-7xl px-6 grid md:grid-cols-2 gap-14 items-center">
+        <div>
+          <div className="inline-flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-[0.18em]">
+            <Sparkles className="h-3.5 w-3.5" />
+            One Platform, Not Four Tools
+          </div>
+          <h2 className="mt-6 font-display text-5xl md:text-6xl font-black leading-[1.05] text-ink-foreground">
+            Four Tools.
+            <br />
+            One Login.
+          </h2>
+          <p className="mt-6 text-lg text-ink-muted max-w-lg">
+            LeadTrace scrapes your leads, verifies their contact info, scrubs them clean, and launches
+            your campaign. One platform replaces your scraper, your skip tracer, your DNC service, and
+            your texting tool.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button asChild size="lg" className="rounded-full">
+              <Link to="/start">
+                Start Your 14-Day Free Trial <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="rounded-full bg-transparent border-white/25 text-ink-foreground hover:bg-white/10 hover:text-ink-foreground"
+            >
+              <Link to="/how-it-works">
+                <Play className="mr-1 h-4 w-4" /> Watch Demo
+              </Link>
+            </Button>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-6 text-sm text-ink-muted">
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-primary" /> No Credit Card Required
+            </span>
+            <span className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-primary" /> 14-Day Free Trial
+            </span>
+          </div>
+        </div>
+        <div className="relative">
+          <div className="flex gap-2 mb-4">
+            {["Business", "Records", "Upload"].map((s) => (
+              <span
+                key={s}
+                className="rounded-full border border-white/20 bg-white/5 text-ink-foreground/90 px-3 py-1 text-xs font-medium"
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+          <div className="relative rounded-2xl bg-white text-foreground p-6 rotate-[-1.5deg] shadow-2xl">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Pipeline Status
+            </div>
+            <div className="mt-2 font-display font-black text-3xl">
+              Skip Traced <span className="text-primary">2,810</span>
+            </div>
+            <div className="mt-4 h-2 rounded-full bg-surface-muted overflow-hidden">
+              <div className="h-full bg-primary" style={{ width: "78%" }} />
+            </div>
+            <div className="mt-5 flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-2 text-sm">
+              <Check className="h-4 w-4" />
+              Compliance Scrub Baked In
+            </div>
+            <div className="absolute -top-4 -right-4 rounded-xl bg-ink text-ink-foreground px-4 py-2 text-sm font-semibold rotate-[4deg] shadow-lg">
+              Reply Rate <span style={{ color: "#F5D547" }}>12.4%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 

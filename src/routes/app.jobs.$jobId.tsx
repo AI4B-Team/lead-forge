@@ -7,7 +7,7 @@ import { MOCK_JOBS, statusLabel } from "@/lib/mock-data";
 import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/app/jobs/$jobId")({
-  head: () => ({ meta: [{ title: "Pipeline Review — LeadForge" }] }),
+  head: () => ({ meta: [{ title: "Pipeline Review — LeadTrace" }] }),
   loader: ({ params }) => {
     const job = MOCK_JOBS.find((j) => j.id === params.jobId);
     if (!job) throw notFound();

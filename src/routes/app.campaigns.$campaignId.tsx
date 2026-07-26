@@ -7,7 +7,7 @@ import { MOCK_CAMPAIGNS } from "@/lib/mock-data";
 import { Pause, Play } from "lucide-react";
 
 export const Route = createFileRoute("/app/campaigns/$campaignId")({
-  head: () => ({ meta: [{ title: "Campaign Detail — LeadForge" }] }),
+  head: () => ({ meta: [{ title: "Campaign Detail — LeadTrace" }] }),
   loader: ({ params }) => {
     const c = MOCK_CAMPAIGNS.find((x) => x.id === params.campaignId);
     if (!c) throw notFound();

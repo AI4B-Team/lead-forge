@@ -8,7 +8,7 @@ import { INDUSTRIES } from "@/lib/mock-data";
 import { useState } from "react";
 
 export const Route = createFileRoute("/app/settings")({
-  head: () => ({ meta: [{ title: "Settings — LeadForge" }] }),
+  head: () => ({ meta: [{ title: "Settings — LeadTrace" }] }),
   component: Settings,
 });
 

@@ -9,9 +9,9 @@ import { useState } from "react";
 export const Route = createFileRoute("/start")({
   head: () => ({
     meta: [
-      { title: "Start Free Trial — LeadForge" },
-      { name: "description", content: "Start your 14-day LeadForge trial. No credit card required." },
-      { property: "og:title", content: "Start Your LeadForge Trial" },
+      { title: "Start Free Trial — LeadTrace" },
+      { name: "description", content: "Start your 14-day LeadTrace trial. No credit card required." },
+      { property: "og:title", content: "Start Your LeadTrace Trial" },
       { property: "og:description", content: "14 days free. No credit card. Cancel anytime." },
     ],
   }),

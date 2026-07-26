@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignInRouteImport } from './routes/sign-in'
@@ -34,6 +35,11 @@ import { Route as AppNewJobBusinessRouteImport } from './routes/app.new-job.busi
 import { Route as AppJobsJobIdRouteImport } from './routes/app.jobs.$jobId'
 import { Route as AppCampaignsCampaignIdRouteImport } from './routes/app.campaigns.$campaignId'
 
+const TemplatesRoute = TemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StartRoute = StartRouteImport.update({
   id: '/start',
   path: '/start',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
+  '/templates': typeof TemplatesRoute
   '/app/billing': typeof AppBillingRoute
   '/app/campaigns': typeof AppCampaignsRouteWithChildren
   '/app/compliance': typeof AppComplianceRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
+  '/templates': typeof TemplatesRoute
   '/app/billing': typeof AppBillingRoute
   '/app/campaigns': typeof AppCampaignsRouteWithChildren
   '/app/compliance': typeof AppComplianceRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
+  '/templates': typeof TemplatesRoute
   '/app/billing': typeof AppBillingRoute
   '/app/campaigns': typeof AppCampaignsRouteWithChildren
   '/app/compliance': typeof AppComplianceRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sitemap.xml'
     | '/start'
+    | '/templates'
     | '/app/billing'
     | '/app/campaigns'
     | '/app/compliance'
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sitemap.xml'
     | '/start'
+    | '/templates'
     | '/app/billing'
     | '/app/campaigns'
     | '/app/compliance'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sitemap.xml'
     | '/start'
+    | '/templates'
     | '/app/billing'
     | '/app/campaigns'
     | '/app/compliance'
@@ -324,10 +336,18 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StartRoute: typeof StartRoute
+  TemplatesRoute: typeof TemplatesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/templates': {
+      id: '/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof TemplatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/start': {
       id: '/start'
       path: '/start'
@@ -566,6 +586,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StartRoute: StartRoute,
+  TemplatesRoute: TemplatesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 
 export const Route = createFileRoute("/app/new-job/records")({
-  head: () => ({ meta: [{ title: "Scrape Public Records — LeadForge" }] }),
+  head: () => ({ meta: [{ title: "Scrape Public Records — LeadTrace" }] }),
   component: Wizard,
 });
 

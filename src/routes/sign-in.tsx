@@ -7,10 +7,10 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/sign-in")({
   head: () => ({
     meta: [
-      { title: "Sign In — LeadForge" },
-      { name: "description", content: "Sign in to your LeadForge workspace." },
-      { property: "og:title", content: "Sign In To LeadForge" },
-      { property: "og:description", content: "Sign in to your LeadForge workspace." },
+      { title: "Sign In — LeadTrace" },
+      { name: "description", content: "Sign in to your LeadTrace workspace." },
+      { property: "og:title", content: "Sign In To LeadTrace" },
+      { property: "og:description", content: "Sign in to your LeadTrace workspace." },
     ],
   }),
   component: SignIn,
@@ -40,7 +40,7 @@ function SignIn() {
           <Button type="submit" className="w-full rounded-full">Sign In</Button>
         </form>
         <p className="text-sm text-muted-foreground mt-6 text-center">
-          New To LeadForge?{" "}
+          New To LeadTrace?{" "}
           <Link to="/start" className="text-primary font-medium">Start Free Trial</Link>
         </p>
       </section>
