@@ -37,6 +37,7 @@ import { Route as AuthenticatedAppNewJobUploadRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppNewJobRecordsRouteImport } from './routes/_authenticated/app.new-job.records'
 import { Route as AuthenticatedAppNewJobBusinessRouteImport } from './routes/_authenticated/app.new-job.business'
 import { Route as AuthenticatedAppJobsJobIdRouteImport } from './routes/_authenticated/app.jobs.$jobId'
+import { Route as AuthenticatedAppCampaignsNewRouteImport } from './routes/_authenticated/app.campaigns.new'
 import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
 
 const TemplatesRoute = TemplatesRouteImport.update({
@@ -187,6 +188,12 @@ const AuthenticatedAppJobsJobIdRoute =
     path: '/jobs/$jobId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppCampaignsNewRoute =
+  AuthenticatedAppCampaignsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedAppCampaignsRoute,
+  } as any)
 const AuthenticatedAppCampaignsCampaignIdRoute =
   AuthenticatedAppCampaignsCampaignIdRouteImport.update({
     id: '/$campaignId',
@@ -219,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
+  '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
   '/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
   '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
@@ -248,6 +256,7 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
+  '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
   '/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
   '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
@@ -280,6 +289,7 @@ export interface FileRoutesById {
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
+  '/_authenticated/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/_authenticated/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
   '/_authenticated/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
   '/_authenticated/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/'
     | '/app/campaigns/$campaignId'
+    | '/app/campaigns/new'
     | '/app/jobs/$jobId'
     | '/app/new-job/business'
     | '/app/new-job/records'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app'
     | '/app/campaigns/$campaignId'
+    | '/app/campaigns/new'
     | '/app/jobs/$jobId'
     | '/app/new-job/business'
     | '/app/new-job/records'
@@ -372,6 +384,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/settings'
     | '/_authenticated/app/'
     | '/_authenticated/app/campaigns/$campaignId'
+    | '/_authenticated/app/campaigns/new'
     | '/_authenticated/app/jobs/$jobId'
     | '/_authenticated/app/new-job/business'
     | '/_authenticated/app/new-job/records'
@@ -592,6 +605,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppJobsJobIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/campaigns/new': {
+      id: '/_authenticated/app/campaigns/new'
+      path: '/new'
+      fullPath: '/app/campaigns/new'
+      preLoaderRoute: typeof AuthenticatedAppCampaignsNewRouteImport
+      parentRoute: typeof AuthenticatedAppCampaignsRoute
+    }
     '/_authenticated/app/campaigns/$campaignId': {
       id: '/_authenticated/app/campaigns/$campaignId'
       path: '/$campaignId'
@@ -604,12 +624,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAppCampaignsRouteChildren {
   AuthenticatedAppCampaignsCampaignIdRoute: typeof AuthenticatedAppCampaignsCampaignIdRoute
+  AuthenticatedAppCampaignsNewRoute: typeof AuthenticatedAppCampaignsNewRoute
 }
 
 const AuthenticatedAppCampaignsRouteChildren: AuthenticatedAppCampaignsRouteChildren =
   {
     AuthenticatedAppCampaignsCampaignIdRoute:
       AuthenticatedAppCampaignsCampaignIdRoute,
+    AuthenticatedAppCampaignsNewRoute: AuthenticatedAppCampaignsNewRoute,
   }
 
 const AuthenticatedAppCampaignsRouteWithChildren =
