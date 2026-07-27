@@ -1,23 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { RawLead } from "./data-providers";
 
 // ---------------------------------------------------------------------------
 // Source adapter interface. Real providers (Outscraper, county scrapers, CSV
 // parser) drop in behind this shape without touching the orchestrator.
 // ---------------------------------------------------------------------------
-
-type RawLead = {
-  full_name?: string | null;
-  business_name?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  zip?: string | null;
-  source_meta?: Record<string, unknown>;
-};
 
 type JobParams = Record<string, unknown>;
 
@@ -32,7 +21,6 @@ interface SourceAdapter {
 // funnel work end-to-end while real providers are still being wired up.
 // ---------------------------------------------------------------------------
 
-const FRANCHISE_MARKERS = ["ServPro", "Roto-Rooter", "Mr Rooter", "Aire Serv"];
 const FIRST_NAMES = ["Alex", "Jordan", "Taylor", "Casey", "Morgan", "Riley", "Sam", "Jamie", "Drew", "Reese"];
 const LAST_NAMES = ["Nguyen", "Patel", "Garcia", "Smith", "Johnson", "Lopez", "Kim", "Davis", "Martinez", "Chen"];
 
@@ -48,34 +36,16 @@ function fakePhone(i: number) {
 }
 
 const businessAdapter: SourceAdapter = {
-  key: "business.google.mock",
+  key: "business.apify",
   coverage: "live",
   async run(params) {
-    const niches = (params.niches as string[] | undefined) ?? ["HVAC"];
-    const counties = (params.counties as string[] | undefined) ?? [];
-    const state = (params.state as string | undefined) ?? "FL";
-    const targetCounties = counties.length ? counties : ["Hillsborough", "Pasco", "Pinellas"];
-    const rows: RawLead[] = [];
-    let i = 0;
-    for (const niche of niches) {
-      for (const county of targetCounties) {
-        const count = 60 + ((niche.length * county.length) % 40);
-        for (let n = 0; n < count; n++) {
-          const isFranchise = n % 17 === 0;
-          const nameBase = isFranchise ? pick(FRANCHISE_MARKERS, n) : `${pick(LAST_NAMES, n + i)} ${niche}`;
-          rows.push({
-            business_name: `${nameBase} · ${county}`,
-            phone: fakePhone(i),
-            email: `contact${i}@example.com`,
-            city: county,
-            state,
-            source_meta: { niche, county, franchise: isFranchise },
-          });
-          i++;
-        }
-      }
-    }
-    return rows;
+    const { getBusinessScraper } = await import("./data-providers");
+    const scraper = getBusinessScraper();
+    return scraper.scrape({
+      niches: (params.niches as string[] | undefined) ?? ["HVAC"],
+      counties: (params.counties as string[] | undefined) ?? [],
+      state: (params.state as string | undefined) ?? "FL",
+    });
   },
 };
 
@@ -259,33 +229,36 @@ export const runJob = createServerFn({ method: "POST" })
       balance: Math.max(0, (scrapeBal?.balance ?? 0) - deduped.length),
     });
 
-    // 5) SCRUB (DNC + Litigator) -- Prompt 6 wires a real provider here. Until
-    // then we mark statuses with a deterministic split so the UI is exercised.
+    // 5) SCRUB (DNC + Litigator) via configurable provider ---------------------
     await supabase.from("jobs").update({ status: "scrubbing" }).eq("id", jobId);
     const { data: inserted } = await supabase
       .from("leads")
-      .select("id")
+      .select("id, phone")
       .eq("job_id", jobId);
+    const { getDncScrubber } = await import("./data-providers");
+    const scrubber = getDncScrubber();
+    const phones = (inserted ?? []).map((l) => l.phone ?? "").filter(Boolean);
+    const scrubResult = await scrubber.scrub(phones);
+    const byPhone = new Map(scrubResult.results.map((r) => [r.phone, r.status]));
     let clean = 0, dnc = 0, litigator = 0;
     if (inserted) {
-      for (let i = 0; i < inserted.length; i++) {
-        let status: "clean" | "dnc" | "litigator";
-        const r = i % 20;
-        if (r === 0) { status = "litigator"; litigator++; }
-        else if (r < 4) { status = "dnc"; dnc++; }
-        else { status = "clean"; clean++; }
-        await supabase.from("leads").update({ scrub_status: status }).eq("id", inserted[i]!.id);
+      for (const lead of inserted) {
+        const status = (lead.phone && byPhone.get(lead.phone)) || "clean";
+        if (status === "litigator") litigator++;
+        else if (status === "dnc") dnc++;
+        else clean++;
+        await supabase.from("leads").update({ scrub_status: status }).eq("id", lead.id);
       }
     }
     await supabase.from("scrub_runs").insert({
       workspace_id: workspaceId,
       job_id: jobId,
-      provider: "mock-scrubber-v1",
+      provider: scrubResult.provider,
       total: inserted?.length ?? 0,
       clean_count: clean,
       dnc_count: dnc,
       litigator_count: litigator,
-      proof: { note: "Mock scrub run. Replace with real DNC/Litigator provider proof." },
+      proof: scrubResult.proof as never,
     });
 
     // 6) READY -----------------------------------------------------------------
