@@ -2,10 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,17 +17,49 @@ export const Route = createFileRoute("/_authenticated/app/registration")({
   component: RegistrationPage,
 });
 
+type StatusTheme = {
+  bg: string;
+  border: string;
+  text: string;
+  dot: string;
+};
+
 function StatusPill({ label, value }: { label: string; value: string | null | undefined }) {
   const v = value ?? "pending";
-  const tone =
-    v === "approved" ? "bg-success/10 text-success border-success/20" :
-    v === "rejected" ? "bg-danger/10 text-danger border-danger/20" :
-    v === "submitted" ? "bg-warn/10 text-warn border-warn/20" :
-    "bg-muted text-muted-foreground border-border";
+  const themes: Record<string, StatusTheme> = {
+    approved: {
+      bg: "bg-success/10",
+      border: "border-success/20",
+      text: "text-success",
+      dot: "bg-success shadow-[0_0_8px_var(--color-success)]",
+    },
+    submitted: {
+      bg: "bg-warn/10",
+      border: "border-warn/20",
+      text: "text-warn",
+      dot: "bg-warn shadow-[0_0_8px_var(--color-warn)]",
+    },
+    rejected: {
+      bg: "bg-danger/10",
+      border: "border-danger/20",
+      text: "text-danger",
+      dot: "bg-danger shadow-[0_0_8px_var(--color-danger)]",
+    },
+    pending: {
+      bg: "bg-muted",
+      border: "border-border",
+      text: "text-muted-foreground",
+      dot: "bg-muted-foreground shadow-[0_0_8px_var(--color-muted-foreground)]",
+    },
+  };
+  const theme = themes[v] ?? themes.pending;
+
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
-      <Badge variant="outline" className={tone}>{v}</Badge>
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${theme.bg} border ${theme.border} ring-1 ring-inset ring-border/30 transition-colors hover:opacity-90`}>
+      <div className={`w-1.5 h-1.5 rounded-full ${theme.dot}`} />
+      <span className={`text-[11px] font-medium tracking-wide uppercase ${theme.text}`}>
+        {label}: {v}
+      </span>
     </div>
   );
 }
@@ -113,17 +143,21 @@ function RegistrationPage() {
 
   return (
     <div>
-      <PageHeader
-        title="10DLC Registration"
-        description="A2P Brand + Campaign Approval. Sending Is Blocked Server-Side Until Campaign Status Is Approved."
-        descriptionClassName="whitespace-nowrap"
-        actions={
-          <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 mb-8">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">10DLC Registration</h1>
+          <div className="flex items-center gap-2 shrink-0">
             <StatusPill label="Brand" value={reg?.brand_status} />
             <StatusPill label="Campaign" value={reg?.campaign_status} />
           </div>
-        }
-      />
+        </div>
+        <div className="flex items-center gap-4">
+          <p className="text-sm text-muted-foreground whitespace-nowrap">
+            A2P Brand + Campaign Approval. Sending Is Blocked Server-Side Until Campaign Status Is Approved.
+          </p>
+          <div className="hidden sm:block flex-grow h-px bg-white/5" />
+        </div>
+      </div>
 
       {campaignApproved ? (
         <div className="mb-6 rounded-2xl border border-success/30 bg-success/5 p-4 flex items-center gap-3">
