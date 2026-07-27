@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app/page-header";
+import { StatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { MOCK_JOBS, statusLabel } from "@/lib/mock-data";
+import { MOCK_JOBS } from "@/lib/mock-data";
 import { Plus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/lists")({
@@ -52,7 +52,7 @@ function Lists() {
                     <span className="text-warn font-medium">{j.dnc.toLocaleString()}</span> /{" "}
                     <span className="text-danger font-medium">{j.litigator.toLocaleString()}</span>
                   </td>
-                  <td className="p-4"><Badge variant="outline">{statusLabel(j.status)}</Badge></td>
+                  <td className="p-4"><StatusBadge status={j.status} /></td>
                   <td className="p-4 text-muted-foreground">{j.createdAt}</td>
                 </tr>
               ))}
