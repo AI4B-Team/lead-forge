@@ -135,6 +135,40 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  useEffect(() => {
+    // After a redeploy, previously-loaded pages reference old hashed chunks
+    // that no longer exist. Reload once to pick up the current build.
+    const RELOAD_KEY = "leadtrace_chunk_reload_at";
+    const isChunkError = (msg: string) =>
+      /Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError/i.test(
+        msg,
+      );
+    const maybeReload = (msg: string) => {
+      if (!isChunkError(msg)) return;
+      try {
+        const last = Number(sessionStorage.getItem(RELOAD_KEY) ?? "0");
+        if (Date.now() - last < 10_000) return; // avoid reload loops
+        sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+      } catch {
+        /* ignore */
+      }
+      window.location.reload();
+    };
+    const onError = (e: ErrorEvent) => maybeReload(e.message ?? "");
+    const onRejection = (e: PromiseRejectionEvent) => {
+      const reason = e.reason;
+      const msg =
+        reason instanceof Error ? reason.message : typeof reason === "string" ? reason : "";
+      maybeReload(msg);
+    };
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onRejection);
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onRejection);
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
