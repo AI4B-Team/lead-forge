@@ -83,6 +83,56 @@ export const buyNumbers = createServerFn({ method: "POST" })
     return { added: rows.length, mode: useReal ? "telnyx" : "stub" };
   });
 
+// Search live Telnyx inventory for available numbers in an area code so users
+// can hand-pick specific numbers instead of relying on regional bulk buy.
+export const searchInventory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      areaCode: z.string().regex(/^\d{3}$/),
+      limit: z.number().int().min(1).max(50).default(20),
+    }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { isProviderConfigured, getProvider } = await import("@/lib/sms");
+    if (!isProviderConfigured()) return { configured: false, numbers: [] as { phone: string; areaCode: string; region?: string }[] };
+    const provider = getProvider();
+    if (!provider.searchAvailable) return { configured: true, numbers: [] };
+    const numbers = await provider.searchAvailable(data.areaCode, data.limit);
+    return { configured: true, numbers };
+  });
+
+// Purchase a specific phone the user picked from searchInventory.
+export const buySpecificNumber = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      workspaceId: z.string().uuid(),
+      phone: z.string().min(8),
+      areaCode: z.string().regex(/^\d{3}$/),
+      region: z.enum(["east", "central", "mountain", "west"]),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { isProviderConfigured, getProvider } = await import("@/lib/sms");
+    if (!isProviderConfigured()) throw new Error("Telnyx not configured");
+    const provider = getProvider();
+    if (!provider.buySpecific) throw new Error("Provider does not support specific-number purchase");
+    const bought = await provider.buySpecific(data.phone);
+    const { error } = await context.supabase.from("sending_numbers").insert({
+      workspace_id: data.workspaceId,
+      phone: bought.phone,
+      area_code: data.areaCode,
+      region: data.region,
+      health_score: 100,
+      optout_rate: 0,
+      status: "active",
+      provider_sid: bought.providerSid,
+    });
+    if (error) throw error;
+    return { ok: true, phone: bought.phone };
+  });
+
 export const getRegistration = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
@@ -142,6 +192,112 @@ export const advanceRegistration = createServerFn({ method: "POST" })
     const { error } = await context.supabase.from("registrations").upsert(payload);
     if (error) throw error;
     return { ok: true };
+  });
+
+// Submit the workspace's brand to Telnyx 10DLC. Persists the returned provider
+// brand id so campaign submission can reference it later.
+export const submitBrandToProvider = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      workspaceId: z.string().uuid(),
+      brand: z.object({
+        legal_name: z.string().min(1),
+        ein: z.string().min(1),
+        website: z.string().url(),
+        contact_email: z.string().email(),
+      }),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { isProviderConfigured, getProvider } = await import("@/lib/sms");
+    const { data: existing } = await context.supabase
+      .from("registrations")
+      .select("*")
+      .eq("workspace_id", data.workspaceId)
+      .maybeSingle();
+    const refs = (existing?.provider_refs as Record<string, unknown> | null) ?? {};
+
+    let providerId: string | null = null;
+    let status = "submitted";
+    if (isProviderConfigured() && getProvider().submitBrand) {
+      try {
+        const r = await getProvider().submitBrand!({
+          legalName: data.brand.legal_name,
+          ein: data.brand.ein,
+          website: data.brand.website,
+          contactEmail: data.brand.contact_email,
+        });
+        providerId = r.providerId || null;
+        status = r.status || "submitted";
+      } catch (e) {
+        throw new Error(`Brand submission failed: ${(e as Error).message}`);
+      }
+    }
+
+    const nextRefs = { ...refs, brand: data.brand, brand_provider_id: providerId };
+    const brandStatus = /approv/i.test(status) ? "approved" : /reject/i.test(status) ? "rejected" : "submitted";
+    const { error } = await context.supabase.from("registrations").upsert({
+      workspace_id: data.workspaceId,
+      brand_status: brandStatus,
+      campaign_status: existing?.campaign_status ?? "pending",
+      provider_refs: nextRefs as never,
+    });
+    if (error) throw error;
+    return { ok: true, providerId, status };
+  });
+
+// Submit the workspace's campaign (message samples + use case) to Telnyx 10DLC.
+// Requires a previously-approved brand.
+export const submitCampaignToProvider = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      workspaceId: z.string().uuid(),
+      campaign: z.object({
+        use_case: z.string().min(1),
+        sample_messages: z.array(z.string()).min(1),
+        opt_in_flow: z.string().min(1),
+      }),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { isProviderConfigured, getProvider } = await import("@/lib/sms");
+    const { data: existing } = await context.supabase
+      .from("registrations")
+      .select("*")
+      .eq("workspace_id", data.workspaceId)
+      .maybeSingle();
+    const refs = (existing?.provider_refs as Record<string, unknown> | null) ?? {};
+    const brandProviderId = (refs.brand_provider_id as string | undefined) ?? "";
+
+    let providerId: string | null = null;
+    let status = "submitted";
+    if (isProviderConfigured() && getProvider().submitCampaign && brandProviderId) {
+      try {
+        const r = await getProvider().submitCampaign!({
+          brandProviderId,
+          useCase: data.campaign.use_case,
+          sampleMessages: data.campaign.sample_messages,
+          optInFlow: data.campaign.opt_in_flow,
+        });
+        providerId = r.providerId || null;
+        status = r.status || "submitted";
+      } catch (e) {
+        throw new Error(`Campaign submission failed: ${(e as Error).message}`);
+      }
+    }
+
+    const nextRefs = { ...refs, campaign: data.campaign, campaign_provider_id: providerId };
+    const campaignStatus = /approv/i.test(status) ? "approved" : /reject/i.test(status) ? "rejected" : "submitted";
+    const { error } = await context.supabase.from("registrations").upsert({
+      workspace_id: data.workspaceId,
+      brand_status: existing?.brand_status ?? "pending",
+      campaign_status: campaignStatus,
+      provider_refs: nextRefs as never,
+    });
+    if (error) throw error;
+    return { ok: true, providerId, status };
   });
 
 // Server-enforced gate used by the campaign runner. Reads registration status
