@@ -15,6 +15,7 @@ import {
   Inbox,
   ShieldAlert,
   BarChart3,
+  Users,
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,7 @@ const ITEMS = [
   { to: "/app/numbers", label: "Numbers", icon: Phone },
   { to: "/app/registration", label: "10DLC", icon: BadgeCheck },
   { to: "/app/compliance", label: "Compliance", icon: ShieldCheck },
+  { to: "/app/team", label: "Team", icon: Users },
   { to: "/app/settings", label: "Settings", icon: Settings },
   { to: "/app/billing", label: "Billing", icon: CreditCard },
 ] as const;

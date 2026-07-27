@@ -32,6 +32,7 @@ import { Route as B2bRouteImport } from './routes/b2b'
 import { Route as AutoRouteImport } from './routes/auto'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AgencyRouteImport } from './routes/agency'
+import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
@@ -174,6 +175,11 @@ const AuthRoute = AuthRouteImport.update({
 const AgencyRoute = AgencyRouteImport.update({
   id: '/agency',
   path: '/agency',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcceptInviteRoute = AcceptInviteRouteImport.update({
+  id: '/accept-invite',
+  path: '/accept-invite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -332,6 +338,7 @@ const AuthenticatedAppCampaignsCampaignIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
   '/auth': typeof AuthRoute
   '/auto': typeof AutoRoute
@@ -384,6 +391,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
   '/auth': typeof AuthRoute
   '/auto': typeof AutoRoute
@@ -437,6 +445,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
   '/auth': typeof AuthRoute
   '/auto': typeof AutoRoute
@@ -491,6 +500,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accept-invite'
     | '/agency'
     | '/auth'
     | '/auto'
@@ -543,6 +553,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accept-invite'
     | '/agency'
     | '/auth'
     | '/auto'
@@ -595,6 +606,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/accept-invite'
     | '/agency'
     | '/auth'
     | '/auto'
@@ -649,6 +661,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AcceptInviteRoute: typeof AcceptInviteRoute
   AgencyRoute: typeof AgencyRoute
   AuthRoute: typeof AuthRoute
   AutoRoute: typeof AutoRoute
@@ -839,6 +852,13 @@ declare module '@tanstack/react-router' {
       path: '/agency'
       fullPath: '/agency'
       preLoaderRoute: typeof AgencyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accept-invite': {
+      id: '/accept-invite'
+      path: '/accept-invite'
+      fullPath: '/accept-invite'
+      preLoaderRoute: typeof AcceptInviteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1130,6 +1150,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AcceptInviteRoute: AcceptInviteRoute,
   AgencyRoute: AgencyRoute,
   AuthRoute: AuthRoute,
   AutoRoute: AutoRoute,
