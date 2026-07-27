@@ -14,7 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { launchCampaignFromJob } from "@/lib/jobs.functions";
 import { updateCampaignConfig } from "@/lib/campaigns.functions";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Sparkles } from "lucide-react";
+import { spinCount, spinSample } from "@/lib/spintax";
 
 export const Route = createFileRoute("/_authenticated/app/campaigns/new")({
   head: () => ({ meta: [{ title: "New Campaign — LeadTrace" }] }),
@@ -181,7 +182,11 @@ function NewCampaign() {
                 value={s.body}
                 onChange={(e) => setSteps(steps.map((x, idx) => idx === i ? { ...x, body: e.target.value } : x))}
               />
-              <div className="text-xs text-muted-foreground">Tokens: <code>{`{{first_name}}`}</code> <code>{`{{city}}`}</code> <code>{`{{state}}`}</code> <code>{`{{address}}`}</code></div>
+              <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
+                <span>Tokens: <code>{`{{first_name}}`}</code> <code>{`{{city}}`}</code> <code>{`{{state}}`}</code> <code>{`{{address}}`}</code></span>
+                <span>Spintax: <code>{`{Hi|Hello|Hey}`}</code> rotates automatically.</span>
+              </div>
+              <SpintaxPreview body={s.body} />
             </div>
           ))}
         </CardContent>
@@ -191,6 +196,23 @@ function NewCampaign() {
         <Button asChild variant="outline" className="rounded-full"><Link to="/app/campaigns">Cancel</Link></Button>
         <Button className="rounded-full" onClick={submit} disabled={saving}>{saving ? "Creating…" : "Create Campaign"}</Button>
       </div>
+    </div>
+  );
+}
+
+function SpintaxPreview({ body }: { body: string }) {
+  const count = spinCount(body);
+  const samples = count > 1 ? spinSample(body, 3) : [];
+  if (count <= 1) return null;
+  return (
+    <div className="rounded-lg bg-surface-muted p-3 space-y-1">
+      <div className="text-xs font-semibold text-foreground flex items-center gap-1">
+        <Sparkles className="h-3.5 w-3.5 text-primary" />
+        {count.toLocaleString()} Unique Variations
+      </div>
+      {samples.map((v, i) => (
+        <div key={i} className="text-xs text-muted-foreground">→ {v}</div>
+      ))}
     </div>
   );
 }

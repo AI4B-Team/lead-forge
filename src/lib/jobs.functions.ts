@@ -2,6 +2,81 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+// List every job for a workspace with lead-bucket counts for the Lists page.
+export const listJobs = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: jobs, error } = await supabase
+      .from("jobs")
+      .select("id, source_type, status, rows_in, rows_deduped, params, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+
+    const ids = (jobs ?? []).map((j) => j.id);
+    const counts = new Map<string, { clean: number; dnc: number; litigator: number }>();
+    for (const id of ids) counts.set(id, { clean: 0, dnc: 0, litigator: 0 });
+    if (ids.length) {
+      const { data: rows } = await supabase
+        .from("leads")
+        .select("job_id, scrub_status")
+        .in("job_id", ids);
+      for (const r of rows ?? []) {
+        const c = counts.get(r.job_id!);
+        if (!c) continue;
+        if (r.scrub_status === "clean") c.clean += 1;
+        else if (r.scrub_status === "dnc") c.dnc += 1;
+        else if (r.scrub_status === "litigator") c.litigator += 1;
+      }
+    }
+
+    return {
+      jobs: (jobs ?? []).map((j) => {
+        const params = (j.params ?? {}) as { name?: string; file_name?: string };
+        return {
+          id: j.id,
+          name: params.name ?? params.file_name ?? `${j.source_type} · ${j.id.slice(0, 8)}`,
+          source_type: j.source_type,
+          status: j.status,
+          rows_in: j.rows_in ?? 0,
+          rows_deduped: j.rows_deduped ?? 0,
+          created_at: j.created_at,
+          counts: counts.get(j.id) ?? { clean: 0, dnc: 0, litigator: 0 },
+        };
+      }),
+    };
+  });
+
+// Paginated lead browser for the Job Detail drawer.
+export const listJobLeads = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      jobId: z.string().uuid(),
+      bucket: z.enum(["clean", "dnc", "litigator", "all"]).default("clean"),
+      search: z.string().max(120).optional(),
+      limit: z.number().int().min(1).max(200).default(100),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    let q = context.supabase
+      .from("leads")
+      .select("id, full_name, business_name, phone, phone_type, email, city, state, address, scrub_status")
+      .eq("job_id", data.jobId)
+      .order("full_name", { ascending: true })
+      .limit(data.limit);
+    if (data.bucket !== "all") q = q.eq("scrub_status", data.bucket);
+    if (data.search?.trim()) {
+      const s = `%${data.search.trim()}%`;
+      q = q.or(`full_name.ilike.${s},business_name.ilike.${s},phone.ilike.${s},email.ilike.${s},city.ilike.${s}`);
+    }
+    const { data: leads, error } = await q;
+    if (error) throw error;
+    return { leads: leads ?? [] };
+  });
+
 // Load a job with its leads counts, scrub run, and computed quality score.
 export const getJobReview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

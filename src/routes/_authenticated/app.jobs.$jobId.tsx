@@ -2,13 +2,16 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2 } from "lucide-react";
+import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search } from "lucide-react";
 import { toast } from "sonner";
-import { getJobReview, getLeadsByBucket, launchCampaignFromJob } from "@/lib/jobs.functions";
+import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobLeads } from "@/lib/jobs.functions";
 
 export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
   head: () => ({ meta: [{ title: "Pipeline Review — LeadTrace" }] }),
@@ -89,9 +92,12 @@ function JobDetail() {
         title={jobName}
         description="Pipeline Review · Every Row Passed Through De-Dupe, Enrich, Skip Trace, And Scrub."
         actions={
-          <Badge variant="outline" className="text-sm">
-            {STATUS_LABEL[job.status ?? "queued"] ?? job.status}
-          </Badge>
+          <>
+            <Badge variant="outline" className="text-sm">
+              {STATUS_LABEL[job.status ?? "queued"] ?? job.status}
+            </Badge>
+            <LeadsBrowser jobId={jobId} disabled={!isReady} />
+          </>
         }
       />
 
@@ -157,6 +163,80 @@ function JobDetail() {
         </Button>
       </div>
     </div>
+  );
+}
+
+function LeadsBrowser({ jobId, disabled }: { jobId: string; disabled: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [bucket, setBucket] = useState<"clean" | "dnc" | "litigator" | "all">("clean");
+  const [q, setQ] = useState("");
+  const fetchLeads = useServerFn(listJobLeads);
+  const { data, isFetching } = useQuery({
+    queryKey: ["job-leads", jobId, bucket, q],
+    queryFn: () => fetchLeads({ data: { jobId, bucket, search: q || undefined, limit: 100 } }),
+    enabled: open,
+  });
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="outline" className="rounded-full" disabled={disabled}>
+          <Users className="mr-1 h-4 w-4" /> Browse Leads
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="font-display">Leads In This List</SheetTitle>
+        </SheetHeader>
+        <div className="mt-4 flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, phone, email…" className="pl-9" />
+          </div>
+          <Select value={bucket} onValueChange={(v) => setBucket(v as typeof bucket)}>
+            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="clean">Clean</SelectItem>
+              <SelectItem value="dnc">DNC</SelectItem>
+              <SelectItem value="litigator">Litigator</SelectItem>
+              <SelectItem value="all">All</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="mt-4 space-y-2">
+          {isFetching && <div className="text-sm text-muted-foreground">Loading…</div>}
+          {!isFetching && (data?.leads.length ?? 0) === 0 && (
+            <div className="text-sm text-muted-foreground text-center py-6">No Leads Match.</div>
+          )}
+          {data?.leads.map((l) => (
+            <div key={l.id} className="rounded-xl border border-border p-3">
+              <div className="flex items-center justify-between">
+                <div className="font-semibold text-sm text-foreground">{l.full_name ?? l.business_name ?? "—"}</div>
+                <Badge
+                  variant="outline"
+                  className={
+                    l.scrub_status === "clean" ? "text-success border-success/30 bg-success/10" :
+                    l.scrub_status === "dnc" ? "text-warn border-warn/30 bg-warn/10" :
+                    "text-danger border-danger/30 bg-danger/10"
+                  }
+                >
+                  {l.scrub_status}
+                </Badge>
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground space-x-3">
+                {l.phone && <span>📞 {l.phone}{l.phone_type ? ` (${l.phone_type})` : ""}</span>}
+                {l.email && <span>✉ {l.email}</span>}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {[l.address, l.city, l.state].filter(Boolean).join(", ") || "—"}
+              </div>
+            </div>
+          ))}
+          {(data?.leads.length ?? 0) === 100 && (
+            <div className="text-xs text-muted-foreground text-center pt-2">Showing First 100 · Refine Search To See More.</div>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 

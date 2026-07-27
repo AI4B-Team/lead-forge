@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { spinOnce } from "@/lib/spintax";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
 
@@ -274,7 +275,8 @@ export const tickCampaign = createServerFn({ method: "POST" })
       const variants = step1.message_variants;
       const template = variants[Math.floor(Math.random() * variants.length)];
       const first_name = (lead.full_name ?? "").trim().split(/\s+/)[0] ?? "there";
-      const body = renderTemplate(template, { ...lead, first_name });
+      const spun = spinOnce(template);
+      const body = renderTemplate(spun, { ...lead, first_name });
       rows.push({
         workspace_id: campaign.workspace_id,
         campaign_id: campaign.id,

@@ -14,6 +14,7 @@ import {
   Radar,
   Inbox,
   ShieldAlert,
+  BarChart3,
 } from "lucide-react";
 import {
   Sidebar,
@@ -38,6 +39,7 @@ const ITEMS = [
   { to: "/app/lists", label: "Lists", icon: ListChecks },
   { to: "/app/campaigns", label: "Campaigns", icon: MessageSquare },
   { to: "/app/inbox", label: "Inbox", icon: Inbox },
+  { to: "/app/reports", label: "Reports", icon: BarChart3 },
   { to: "/app/numbers", label: "Numbers", icon: Phone },
   { to: "/app/registration", label: "10DLC", icon: BadgeCheck },
   { to: "/app/compliance", label: "Compliance", icon: ShieldCheck },
