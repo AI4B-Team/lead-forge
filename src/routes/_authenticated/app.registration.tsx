@@ -113,17 +113,21 @@ function RegistrationPage() {
 
   return (
     <div>
-      <PageHeader
-        title="10DLC Registration"
-        description="A2P Brand + Campaign Approval. Sending Is Blocked Server-Side Until Campaign Status Is Approved."
-        descriptionClassName="whitespace-nowrap"
-        actions={
-          <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 mb-8">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">10DLC Registration</h1>
+          <div className="flex items-center gap-2 shrink-0">
             <StatusPill label="Brand" value={reg?.brand_status} />
             <StatusPill label="Campaign" value={reg?.campaign_status} />
           </div>
-        }
-      />
+        </div>
+        <div className="flex items-center gap-4">
+          <p className="text-sm text-muted-foreground whitespace-nowrap">
+            A2P Brand + Campaign Approval. Sending Is Blocked Server-Side Until Campaign Status Is Approved.
+          </p>
+          <div className="hidden sm:block flex-grow h-px bg-white/5" />
+        </div>
+      </div>
 
       {campaignApproved ? (
         <div className="mb-6 rounded-2xl border border-success/30 bg-success/5 p-4 flex items-center gap-3">
