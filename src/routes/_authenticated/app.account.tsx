@@ -10,19 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { meIsSuperAdmin } from "@/lib/admin.functions";
-import {
-  CreditCard,
-  Users,
-  Settings as SettingsIcon,
-  BadgeCheck,
-  ShieldCheck,
-  ShieldAlert,
-  ChevronRight,
-} from "lucide-react";
 
 const searchSchema = z.object({ tab: z.enum(["profile", "security"]).optional() });
 
@@ -35,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/app/account")({
 function AccountPage() {
   const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
+  const rootNavigate = useNavigate();
   const { user } = useAuth();
   const fetchIsAdmin = useServerFn(meIsSuperAdmin);
   const { data: admin } = useQuery({
@@ -90,23 +82,33 @@ function AccountPage() {
   return (
     <div className="max-w-3xl">
       <PageHeader title="Account" description="Manage Your Profile, Security, And Preferences." />
-      <div className="mb-6 grid gap-2 sm:grid-cols-2">
-        <AccountLink to="/app/billing" icon={<CreditCard className="h-4 w-4" />} label="Billing" description="Plans, credits, invoices" />
-        <AccountLink to="/app/team" icon={<Users className="h-4 w-4" />} label="Team" description="Invite and manage members" />
-        <AccountLink to="/app/settings" icon={<SettingsIcon className="h-4 w-4" />} label="Workspace Settings" description="Name, defaults, preferences" />
-        <AccountLink to="/app/registration" icon={<BadgeCheck className="h-4 w-4" />} label="10DLC Registration" description="Brand & campaign approval" />
-        <AccountLink to="/app/compliance" icon={<ShieldCheck className="h-4 w-4" />} label="Compliance" description="DNC, quiet hours, opt-outs" />
-        {admin?.isSuperAdmin && (
-          <AccountLink to="/app/admin" icon={<ShieldAlert className="h-4 w-4" />} label="Admin Console" description="Super admin controls" />
-        )}
-      </div>
       <Tabs
         value={tab ?? "profile"}
-        onValueChange={(v) => navigate({ search: { tab: v as "profile" | "security" }, replace: true })}
+        onValueChange={(v) => {
+          const routeMap: Record<string, string> = {
+            billing: "/app/billing",
+            team: "/app/team",
+            workspace: "/app/settings",
+            registration: "/app/registration",
+            compliance: "/app/compliance",
+            admin: "/app/admin",
+          };
+          if (routeMap[v]) {
+            rootNavigate({ to: routeMap[v] });
+            return;
+          }
+          navigate({ search: { tab: v as "profile" | "security" }, replace: true });
+        }}
       >
-        <TabsList>
+        <TabsList className="flex flex-wrap h-auto justify-start">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
+          <TabsTrigger value="team">Team</TabsTrigger>
+          <TabsTrigger value="workspace">Workspace</TabsTrigger>
+          <TabsTrigger value="registration">10DLC</TabsTrigger>
+          <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          {admin?.isSuperAdmin && <TabsTrigger value="admin">Admin</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="profile" className="mt-4 space-y-4">
@@ -176,33 +178,5 @@ function AccountPage() {
         </TabsContent>
       </Tabs>
     </div>
-  );
-}
-
-function AccountLink({
-  to,
-  icon,
-  label,
-  description,
-}: {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-  description: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-3 hover:bg-muted transition-colors"
-    >
-      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        {icon}
-      </span>
-      <span className="flex-1 min-w-0">
-        <span className="block text-sm font-medium text-foreground">{label}</span>
-        <span className="block text-xs text-muted-foreground truncate">{description}</span>
-      </span>
-      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-    </Link>
   );
 }
