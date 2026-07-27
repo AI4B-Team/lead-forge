@@ -10,19 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { meIsSuperAdmin } from "@/lib/admin.functions";
-import {
-  CreditCard,
-  Users,
-  Settings as SettingsIcon,
-  BadgeCheck,
-  ShieldCheck,
-  ShieldAlert,
-  ChevronRight,
-} from "lucide-react";
 
 const searchSchema = z.object({ tab: z.enum(["profile", "security"]).optional() });
 
@@ -35,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/app/account")({
 function AccountPage() {
   const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
+  const rootNavigate = useNavigate();
   const { user } = useAuth();
   const fetchIsAdmin = useServerFn(meIsSuperAdmin);
   const { data: admin } = useQuery({
@@ -102,7 +94,7 @@ function AccountPage() {
             admin: "/app/admin",
           };
           if (routeMap[v]) {
-            window.location.href = routeMap[v];
+            rootNavigate({ to: routeMap[v] });
             return;
           }
           navigate({ search: { tab: v as "profile" | "security" }, replace: true });
