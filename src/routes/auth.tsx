@@ -11,7 +11,10 @@ import { toast } from "sonner";
 import { Radar, ShieldCheck, Sparkles, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: z.object({ mode: z.enum(["signin", "signup"]).optional() }),
+  validateSearch: z.object({
+    mode: z.enum(["signin", "signup"]).optional(),
+    redirect: z.string().optional(),
+  }),
   head: () => ({
     meta: [
       { title: "Sign In or Start Free — LeadTrace" },
