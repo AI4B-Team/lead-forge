@@ -11,15 +11,27 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as StartRouteImport } from './routes/start'
+import { Route as SolarRouteImport } from './routes/solar'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as RealestateRouteImport } from './routes/realestate'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as MortgageRouteImport } from './routes/mortgage'
+import { Route as MedicalRouteImport } from './routes/medical'
+import { Route as LegalRouteImport } from './routes/legal'
+import { Route as InsuranceRouteImport } from './routes/insurance'
 import { Route as IndustriesRouteImport } from './routes/industries'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as HomeServicesRouteImport } from './routes/home-services'
 import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as EducationRouteImport } from './routes/education'
+import { Route as EcommerceRouteImport } from './routes/ecommerce'
 import { Route as ComplianceRouteImport } from './routes/compliance'
+import { Route as B2bRouteImport } from './routes/b2b'
+import { Route as AutoRouteImport } from './routes/auto'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AgencyRouteImport } from './routes/agency'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
@@ -55,6 +67,11 @@ const StartRoute = StartRouteImport.update({
   path: '/start',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SolarRoute = SolarRouteImport.update({
+  id: '/solar',
+  path: '/solar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -63,6 +80,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RealestateRoute = RealestateRouteImport.update({
+  id: '/realestate',
+  path: '/realestate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -75,6 +97,26 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MortgageRoute = MortgageRouteImport.update({
+  id: '/mortgage',
+  path: '/mortgage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MedicalRoute = MedicalRouteImport.update({
+  id: '/medical',
+  path: '/medical',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsuranceRoute = InsuranceRouteImport.update({
+  id: '/insurance',
+  path: '/insurance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndustriesRoute = IndustriesRouteImport.update({
   id: '/industries',
   path: '/industries',
@@ -85,9 +127,24 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
   path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeServicesRoute = HomeServicesRouteImport.update({
+  id: '/home-services',
+  path: '/home-services',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EducationRoute = EducationRouteImport.update({
+  id: '/education',
+  path: '/education',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EcommerceRoute = EcommerceRouteImport.update({
+  id: '/ecommerce',
+  path: '/ecommerce',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComplianceRoute = ComplianceRouteImport.update({
@@ -95,9 +152,24 @@ const ComplianceRoute = ComplianceRouteImport.update({
   path: '/compliance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const B2bRoute = B2bRouteImport.update({
+  id: '/b2b',
+  path: '/b2b',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AutoRoute = AutoRouteImport.update({
+  id: '/auto',
+  path: '/auto',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgencyRoute = AgencyRouteImport.update({
+  id: '/agency',
+  path: '/agency',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -236,15 +308,27 @@ const AuthenticatedAppCampaignsCampaignIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agency': typeof AgencyRoute
   '/auth': typeof AuthRoute
+  '/auto': typeof AutoRoute
+  '/b2b': typeof B2bRoute
   '/compliance': typeof ComplianceRoute
+  '/ecommerce': typeof EcommerceRoute
+  '/education': typeof EducationRoute
   '/features': typeof FeaturesRoute
+  '/home-services': typeof HomeServicesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
+  '/insurance': typeof InsuranceRoute
+  '/legal': typeof LegalRoute
+  '/medical': typeof MedicalRoute
+  '/mortgage': typeof MortgageRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/realestate': typeof RealestateRoute
   '/sign-in': typeof SignInRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/solar': typeof SolarRoute
   '/start': typeof StartRoute
   '/templates': typeof TemplatesRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
@@ -272,15 +356,27 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agency': typeof AgencyRoute
   '/auth': typeof AuthRoute
+  '/auto': typeof AutoRoute
+  '/b2b': typeof B2bRoute
   '/compliance': typeof ComplianceRoute
+  '/ecommerce': typeof EcommerceRoute
+  '/education': typeof EducationRoute
   '/features': typeof FeaturesRoute
+  '/home-services': typeof HomeServicesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
+  '/insurance': typeof InsuranceRoute
+  '/legal': typeof LegalRoute
+  '/medical': typeof MedicalRoute
+  '/mortgage': typeof MortgageRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/realestate': typeof RealestateRoute
   '/sign-in': typeof SignInRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/solar': typeof SolarRoute
   '/start': typeof StartRoute
   '/templates': typeof TemplatesRoute
   '/app/account': typeof AuthenticatedAppAccountRoute
@@ -309,15 +405,27 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/agency': typeof AgencyRoute
   '/auth': typeof AuthRoute
+  '/auto': typeof AutoRoute
+  '/b2b': typeof B2bRoute
   '/compliance': typeof ComplianceRoute
+  '/ecommerce': typeof EcommerceRoute
+  '/education': typeof EducationRoute
   '/features': typeof FeaturesRoute
+  '/home-services': typeof HomeServicesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
+  '/insurance': typeof InsuranceRoute
+  '/legal': typeof LegalRoute
+  '/medical': typeof MedicalRoute
+  '/mortgage': typeof MortgageRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/realestate': typeof RealestateRoute
   '/sign-in': typeof SignInRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/solar': typeof SolarRoute
   '/start': typeof StartRoute
   '/templates': typeof TemplatesRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
@@ -347,15 +455,27 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agency'
     | '/auth'
+    | '/auto'
+    | '/b2b'
     | '/compliance'
+    | '/ecommerce'
+    | '/education'
     | '/features'
+    | '/home-services'
     | '/how-it-works'
     | '/industries'
+    | '/insurance'
+    | '/legal'
+    | '/medical'
+    | '/mortgage'
     | '/onboarding'
     | '/pricing'
+    | '/realestate'
     | '/sign-in'
     | '/sitemap.xml'
+    | '/solar'
     | '/start'
     | '/templates'
     | '/app'
@@ -383,15 +503,27 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agency'
     | '/auth'
+    | '/auto'
+    | '/b2b'
     | '/compliance'
+    | '/ecommerce'
+    | '/education'
     | '/features'
+    | '/home-services'
     | '/how-it-works'
     | '/industries'
+    | '/insurance'
+    | '/legal'
+    | '/medical'
+    | '/mortgage'
     | '/onboarding'
     | '/pricing'
+    | '/realestate'
     | '/sign-in'
     | '/sitemap.xml'
+    | '/solar'
     | '/start'
     | '/templates'
     | '/app/account'
@@ -419,15 +551,27 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/agency'
     | '/auth'
+    | '/auto'
+    | '/b2b'
     | '/compliance'
+    | '/ecommerce'
+    | '/education'
     | '/features'
+    | '/home-services'
     | '/how-it-works'
     | '/industries'
+    | '/insurance'
+    | '/legal'
+    | '/medical'
+    | '/mortgage'
     | '/onboarding'
     | '/pricing'
+    | '/realestate'
     | '/sign-in'
     | '/sitemap.xml'
+    | '/solar'
     | '/start'
     | '/templates'
     | '/_authenticated/app'
@@ -457,15 +601,27 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AgencyRoute: typeof AgencyRoute
   AuthRoute: typeof AuthRoute
+  AutoRoute: typeof AutoRoute
+  B2bRoute: typeof B2bRoute
   ComplianceRoute: typeof ComplianceRoute
+  EcommerceRoute: typeof EcommerceRoute
+  EducationRoute: typeof EducationRoute
   FeaturesRoute: typeof FeaturesRoute
+  HomeServicesRoute: typeof HomeServicesRoute
   HowItWorksRoute: typeof HowItWorksRoute
   IndustriesRoute: typeof IndustriesRoute
+  InsuranceRoute: typeof InsuranceRoute
+  LegalRoute: typeof LegalRoute
+  MedicalRoute: typeof MedicalRoute
+  MortgageRoute: typeof MortgageRoute
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
+  RealestateRoute: typeof RealestateRoute
   SignInRoute: typeof SignInRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SolarRoute: typeof SolarRoute
   StartRoute: typeof StartRoute
   TemplatesRoute: typeof TemplatesRoute
   ApiPublicHooksInboundSmsRoute: typeof ApiPublicHooksInboundSmsRoute
@@ -490,6 +646,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/solar': {
+      id: '/solar'
+      path: '/solar'
+      fullPath: '/solar'
+      preLoaderRoute: typeof SolarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -502,6 +665,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/realestate': {
+      id: '/realestate'
+      path: '/realestate'
+      fullPath: '/realestate'
+      preLoaderRoute: typeof RealestateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -518,6 +688,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mortgage': {
+      id: '/mortgage'
+      path: '/mortgage'
+      fullPath: '/mortgage'
+      preLoaderRoute: typeof MortgageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/medical': {
+      id: '/medical'
+      path: '/medical'
+      fullPath: '/medical'
+      preLoaderRoute: typeof MedicalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insurance': {
+      id: '/insurance'
+      path: '/insurance'
+      fullPath: '/insurance'
+      preLoaderRoute: typeof InsuranceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/industries': {
       id: '/industries'
       path: '/industries'
@@ -532,11 +730,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home-services': {
+      id: '/home-services'
+      path: '/home-services'
+      fullPath: '/home-services'
+      preLoaderRoute: typeof HomeServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/features': {
       id: '/features'
       path: '/features'
       fullPath: '/features'
       preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/education': {
+      id: '/education'
+      path: '/education'
+      fullPath: '/education'
+      preLoaderRoute: typeof EducationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ecommerce': {
+      id: '/ecommerce'
+      path: '/ecommerce'
+      fullPath: '/ecommerce'
+      preLoaderRoute: typeof EcommerceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compliance': {
@@ -546,11 +765,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComplianceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/b2b': {
+      id: '/b2b'
+      path: '/b2b'
+      fullPath: '/b2b'
+      preLoaderRoute: typeof B2bRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auto': {
+      id: '/auto'
+      path: '/auto'
+      fullPath: '/auto'
+      preLoaderRoute: typeof AutoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agency': {
+      id: '/agency'
+      path: '/agency'
+      fullPath: '/agency'
+      preLoaderRoute: typeof AgencyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -806,15 +1046,27 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AgencyRoute: AgencyRoute,
   AuthRoute: AuthRoute,
+  AutoRoute: AutoRoute,
+  B2bRoute: B2bRoute,
   ComplianceRoute: ComplianceRoute,
+  EcommerceRoute: EcommerceRoute,
+  EducationRoute: EducationRoute,
   FeaturesRoute: FeaturesRoute,
+  HomeServicesRoute: HomeServicesRoute,
   HowItWorksRoute: HowItWorksRoute,
   IndustriesRoute: IndustriesRoute,
+  InsuranceRoute: InsuranceRoute,
+  LegalRoute: LegalRoute,
+  MedicalRoute: MedicalRoute,
+  MortgageRoute: MortgageRoute,
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
+  RealestateRoute: RealestateRoute,
   SignInRoute: SignInRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SolarRoute: SolarRoute,
   StartRoute: StartRoute,
   TemplatesRoute: TemplatesRoute,
   ApiPublicHooksInboundSmsRoute: ApiPublicHooksInboundSmsRoute,
