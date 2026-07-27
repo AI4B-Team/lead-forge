@@ -1,4 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   Plus,
@@ -10,6 +12,8 @@ import {
   Settings,
   CreditCard,
   Radar,
+  Inbox,
+  ShieldAlert,
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,12 +28,16 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { BRAND_NAME } from "@/config/brand";
+import { useWorkspaceId } from "@/hooks/use-workspace";
+import { unreadCount } from "@/lib/inbox.functions";
+import { meIsSuperAdmin } from "@/lib/admin.functions";
 
 const ITEMS = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/app/new-job", label: "New Job", icon: Plus },
   { to: "/app/lists", label: "Lists", icon: ListChecks },
   { to: "/app/campaigns", label: "Campaigns", icon: MessageSquare },
+  { to: "/app/inbox", label: "Inbox", icon: Inbox },
   { to: "/app/numbers", label: "Numbers", icon: Phone },
   { to: "/app/registration", label: "10DLC", icon: BadgeCheck },
   { to: "/app/compliance", label: "Compliance", icon: ShieldCheck },
@@ -41,6 +49,19 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { workspaceId } = useWorkspaceId();
+  const fetchUnread = useServerFn(unreadCount);
+  const fetchIsAdmin = useServerFn(meIsSuperAdmin);
+  const { data: unread } = useQuery({
+    queryKey: ["inbox-unread", workspaceId],
+    queryFn: () => fetchUnread({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId,
+    refetchInterval: 30000,
+  });
+  const { data: admin } = useQuery({
+    queryKey: ["me-is-super-admin"],
+    queryFn: () => fetchIsAdmin(),
+  });
 
   return (
     <Sidebar collapsible="icon">
@@ -59,17 +80,33 @@ export function AppSidebar() {
             <SidebarMenu>
               {ITEMS.map((item) => {
                 const active = pathname === item.to || pathname.startsWith(item.to + "/");
+                const showBadge = item.to === "/app/inbox" && (unread?.count ?? 0) > 0;
                 return (
                   <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton asChild isActive={active}>
                       <Link to={item.to} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />
-                        {!collapsed && <span>{item.label}</span>}
+                        {!collapsed && <span className="flex-1">{item.label}</span>}
+                        {!collapsed && showBadge && (
+                          <span className="ml-auto rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 min-w-[18px] text-center">
+                            {unread!.count > 99 ? "99+" : unread!.count}
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
               })}
+              {admin?.isSuperAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith("/app/admin")}>
+                    <Link to="/app/admin" className="flex items-center gap-2">
+                      <ShieldAlert className="h-4 w-4" />
+                      {!collapsed && <span>Admin</span>}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

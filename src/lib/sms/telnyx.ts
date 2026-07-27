@@ -10,7 +10,16 @@
 // using Ed25519. Verify with the Telnyx-Signature-Ed25519 + Telnyx-Timestamp
 // headers against TELNYX_PUBLIC_KEY.
 
-import type { SmsProvider, SmsSendResult, InboundMessage, Dlr, BoughtNumber } from "./provider";
+import type {
+  SmsProvider,
+  SmsSendResult,
+  InboundMessage,
+  Dlr,
+  BoughtNumber,
+  AvailableNumber,
+  BrandSubmission,
+  CampaignSubmission,
+} from "./provider";
 
 const TELNYX_API = "https://api.telnyx.com/v2";
 
@@ -70,6 +79,76 @@ export const telnyxProvider: SmsProvider = {
     });
 
     return { phone, providerSid: order.data.id };
+  },
+
+  async searchAvailable(areaCode: string, limit = 20): Promise<AvailableNumber[]> {
+    const search = (await tx(
+      `/available_phone_numbers?filter[national_destination_code]=${areaCode}&filter[features][]=sms&filter[limit]=${limit}`,
+    )) as { data: Array<{ phone_number: string; region_information?: Array<{ region_name?: string }> }> };
+    return (search.data ?? []).map((r) => ({
+      phone: r.phone_number,
+      areaCode,
+      region: r.region_information?.[0]?.region_name,
+    }));
+  },
+
+  async buySpecific(phone: string): Promise<BoughtNumber> {
+    const profile = requireEnv("TELNYX_MESSAGING_PROFILE_ID");
+    const order = (await tx("/number_orders", {
+      method: "POST",
+      body: JSON.stringify({ phone_numbers: [{ phone_number: phone }] }),
+    })) as { data: { id: string } };
+    await tx(`/phone_numbers/${encodeURIComponent(phone)}/messaging`, {
+      method: "PATCH",
+      body: JSON.stringify({ messaging_profile_id: profile }),
+    });
+    return { phone, providerSid: order.data.id };
+  },
+
+  async submitBrand(brand: BrandSubmission): Promise<{ providerId: string; status: string }> {
+    // Telnyx 10DLC brand registration.
+    // Docs: https://developers.telnyx.com/api/messaging/tag/Brand
+    const resp = (await tx("/10dlc/brand", {
+      method: "POST",
+      body: JSON.stringify({
+        entityType: "PRIVATE_PROFIT",
+        brandRelationship: "BASIC_ACCOUNT",
+        vertical: "TECHNOLOGY",
+        displayName: brand.legalName,
+        companyName: brand.legalName,
+        ein: brand.ein,
+        website: brand.website,
+        email: brand.contactEmail,
+        country: "US",
+      }),
+    })) as { brandId?: string; identityStatus?: string; id?: string; status?: string };
+    return {
+      providerId: resp.brandId ?? resp.id ?? "",
+      status: resp.identityStatus ?? resp.status ?? "pending",
+    };
+  },
+
+  async submitCampaign(campaign: CampaignSubmission): Promise<{ providerId: string; status: string }> {
+    const profile = requireEnv("TELNYX_MESSAGING_PROFILE_ID");
+    const resp = (await tx("/10dlc/campaign", {
+      method: "POST",
+      body: JSON.stringify({
+        brandId: campaign.brandProviderId,
+        usecase: "ACCOUNT_NOTIFICATION",
+        subUsecases: ["LEAD_MANAGEMENT"],
+        description: campaign.useCase,
+        messageFlow: campaign.optInFlow,
+        sample1: campaign.sampleMessages[0] ?? "",
+        sample2: campaign.sampleMessages[1] ?? campaign.sampleMessages[0] ?? "",
+        hasEmbeddedLinks: true,
+        hasEmbeddedPhone: false,
+        messagingProfileId: profile,
+      }),
+    })) as { campaignId?: string; id?: string; status?: string };
+    return {
+      providerId: resp.campaignId ?? resp.id ?? "",
+      status: resp.status ?? "pending",
+    };
   },
 
   async releaseNumber(providerSid: string): Promise<void> {

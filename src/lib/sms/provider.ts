@@ -26,9 +26,33 @@ export interface BoughtNumber {
   providerSid: string;
 }
 
+export interface AvailableNumber {
+  phone: string;
+  areaCode: string;
+  region?: string;
+}
+
+export interface BrandSubmission {
+  legalName: string;
+  ein: string;
+  website: string;
+  contactEmail: string;
+}
+
+export interface CampaignSubmission {
+  brandProviderId: string;
+  useCase: string;
+  sampleMessages: string[];
+  optInFlow: string;
+}
+
 export interface SmsProvider {
   readonly name: string;
   buyNumber(areaCode: string): Promise<BoughtNumber>;
+  searchAvailable?(areaCode: string, limit?: number): Promise<AvailableNumber[]>;
+  buySpecific?(phone: string): Promise<BoughtNumber>;
+  submitBrand?(brand: BrandSubmission): Promise<{ providerId: string; status: string }>;
+  submitCampaign?(campaign: CampaignSubmission): Promise<{ providerId: string; status: string }>;
   releaseNumber(providerSid: string): Promise<void>;
   send(from: string, to: string, body: string): Promise<SmsSendResult>;
   parseInbound(req: Request): Promise<InboundMessage>;

@@ -249,6 +249,63 @@ export type Database = {
           },
         ]
       }
+      lead_imports: {
+        Row: {
+          column_map: Json
+          created_at: string
+          created_by: string | null
+          error: string | null
+          filename: string
+          id: string
+          job_id: string | null
+          rows_imported: number
+          rows_total: number
+          status: string
+          workspace_id: string
+        }
+        Insert: {
+          column_map?: Json
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          filename: string
+          id?: string
+          job_id?: string | null
+          rows_imported?: number
+          rows_total?: number
+          status?: string
+          workspace_id: string
+        }
+        Update: {
+          column_map?: Json
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          filename?: string
+          id?: string
+          job_id?: string | null
+          rows_imported?: number
+          rows_total?: number
+          status?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_imports_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_imports_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           address: string | null
@@ -332,8 +389,10 @@ export type Database = {
           is_optout: boolean | null
           lead_id: string | null
           provider_sid: string | null
+          read_at: string | null
           sending_number_id: string | null
           status: string | null
+          thread_key: string | null
           workspace_id: string
         }
         Insert: {
@@ -346,8 +405,10 @@ export type Database = {
           is_optout?: boolean | null
           lead_id?: string | null
           provider_sid?: string | null
+          read_at?: string | null
           sending_number_id?: string | null
           status?: string | null
+          thread_key?: string | null
           workspace_id: string
         }
         Update: {
@@ -360,8 +421,10 @@ export type Database = {
           is_optout?: boolean | null
           lead_id?: string | null
           provider_sid?: string | null
+          read_at?: string | null
           sending_number_id?: string | null
           status?: string | null
+          thread_key?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -581,6 +644,71 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      workspace_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          role: string
+          token: string
+          workspace_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: string
+          token?: string
+          workspace_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: string
+          token?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_invites_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_members: {
         Row: {
           created_at: string
@@ -612,6 +740,7 @@ export type Database = {
       }
       workspaces: {
         Row: {
+          billing_plan: string
           created_at: string
           id: string
           industry: string | null
@@ -619,6 +748,7 @@ export type Database = {
           plan: string
         }
         Insert: {
+          billing_plan?: string
           created_at?: string
           id?: string
           industry?: string | null
@@ -626,6 +756,7 @@ export type Database = {
           plan?: string
         }
         Update: {
+          billing_plan?: string
           created_at?: string
           id?: string
           industry?: string | null
@@ -639,10 +770,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_workspace_member: { Args: { _workspace_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "owner" | "admin" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -769,6 +907,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "owner", "admin", "member"],
+    },
   },
 } as const

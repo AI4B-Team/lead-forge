@@ -41,10 +41,12 @@ import { Route as AuthenticatedAppRegistrationRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppNumbersRouteImport } from './routes/_authenticated/app.numbers'
 import { Route as AuthenticatedAppNewJobRouteImport } from './routes/_authenticated/app.new-job'
 import { Route as AuthenticatedAppListsRouteImport } from './routes/_authenticated/app.lists'
+import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
 import { Route as AuthenticatedAppComplianceRouteImport } from './routes/_authenticated/app.compliance'
 import { Route as AuthenticatedAppCampaignsRouteImport } from './routes/_authenticated/app.campaigns'
 import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
+import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
 import { Route as AuthenticatedAppAccountRouteImport } from './routes/_authenticated/app.account'
 import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
 import { Route as ApiPublicHooksTelnyxInboundRouteImport } from './routes/api/public/hooks/telnyx-inbound'
@@ -218,6 +220,11 @@ const AuthenticatedAppListsRoute = AuthenticatedAppListsRouteImport.update({
   path: '/lists',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppInboxRoute = AuthenticatedAppInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppDashboardRoute =
   AuthenticatedAppDashboardRouteImport.update({
     id: '/dashboard',
@@ -239,6 +246,11 @@ const AuthenticatedAppCampaignsRoute =
 const AuthenticatedAppBillingRoute = AuthenticatedAppBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppAdminRoute = AuthenticatedAppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppAccountRoute = AuthenticatedAppAccountRouteImport.update({
@@ -333,10 +345,12 @@ export interface FileRoutesByFullPath {
   '/templates': typeof TemplatesRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/app/account': typeof AuthenticatedAppAccountRoute
+  '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/billing': typeof AuthenticatedAppBillingRoute
   '/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/lists': typeof AuthenticatedAppListsRoute
   '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
@@ -380,10 +394,12 @@ export interface FileRoutesByTo {
   '/start': typeof StartRoute
   '/templates': typeof TemplatesRoute
   '/app/account': typeof AuthenticatedAppAccountRoute
+  '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/billing': typeof AuthenticatedAppBillingRoute
   '/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/lists': typeof AuthenticatedAppListsRoute
   '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
@@ -430,10 +446,12 @@ export interface FileRoutesById {
   '/templates': typeof TemplatesRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/app/account': typeof AuthenticatedAppAccountRoute
+  '/_authenticated/app/admin': typeof AuthenticatedAppAdminRoute
   '/_authenticated/app/billing': typeof AuthenticatedAppBillingRoute
   '/_authenticated/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
   '/_authenticated/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
   '/_authenticated/app/lists': typeof AuthenticatedAppListsRoute
   '/_authenticated/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/_authenticated/app/numbers': typeof AuthenticatedAppNumbersRoute
@@ -480,10 +498,12 @@ export interface FileRouteTypes {
     | '/templates'
     | '/app'
     | '/app/account'
+    | '/app/admin'
     | '/app/billing'
     | '/app/campaigns'
     | '/app/compliance'
     | '/app/dashboard'
+    | '/app/inbox'
     | '/app/lists'
     | '/app/new-job'
     | '/app/numbers'
@@ -527,10 +547,12 @@ export interface FileRouteTypes {
     | '/start'
     | '/templates'
     | '/app/account'
+    | '/app/admin'
     | '/app/billing'
     | '/app/campaigns'
     | '/app/compliance'
     | '/app/dashboard'
+    | '/app/inbox'
     | '/app/lists'
     | '/app/new-job'
     | '/app/numbers'
@@ -576,10 +598,12 @@ export interface FileRouteTypes {
     | '/templates'
     | '/_authenticated/app'
     | '/_authenticated/app/account'
+    | '/_authenticated/app/admin'
     | '/_authenticated/app/billing'
     | '/_authenticated/app/campaigns'
     | '/_authenticated/app/compliance'
     | '/_authenticated/app/dashboard'
+    | '/_authenticated/app/inbox'
     | '/_authenticated/app/lists'
     | '/_authenticated/app/new-job'
     | '/_authenticated/app/numbers'
@@ -856,6 +880,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppListsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/inbox': {
+      id: '/_authenticated/app/inbox'
+      path: '/inbox'
+      fullPath: '/app/inbox'
+      preLoaderRoute: typeof AuthenticatedAppInboxRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/dashboard': {
       id: '/_authenticated/app/dashboard'
       path: '/dashboard'
@@ -882,6 +913,13 @@ declare module '@tanstack/react-router' {
       path: '/billing'
       fullPath: '/app/billing'
       preLoaderRoute: typeof AuthenticatedAppBillingRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/admin': {
+      id: '/_authenticated/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AuthenticatedAppAdminRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/account': {
@@ -1001,10 +1039,12 @@ const AuthenticatedAppNewJobRouteWithChildren =
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAccountRoute: typeof AuthenticatedAppAccountRoute
+  AuthenticatedAppAdminRoute: typeof AuthenticatedAppAdminRoute
   AuthenticatedAppBillingRoute: typeof AuthenticatedAppBillingRoute
   AuthenticatedAppCampaignsRoute: typeof AuthenticatedAppCampaignsRouteWithChildren
   AuthenticatedAppComplianceRoute: typeof AuthenticatedAppComplianceRoute
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
+  AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
   AuthenticatedAppListsRoute: typeof AuthenticatedAppListsRoute
   AuthenticatedAppNewJobRoute: typeof AuthenticatedAppNewJobRouteWithChildren
   AuthenticatedAppNumbersRoute: typeof AuthenticatedAppNumbersRoute
@@ -1016,10 +1056,12 @@ interface AuthenticatedAppRouteChildren {
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAccountRoute: AuthenticatedAppAccountRoute,
+  AuthenticatedAppAdminRoute: AuthenticatedAppAdminRoute,
   AuthenticatedAppBillingRoute: AuthenticatedAppBillingRoute,
   AuthenticatedAppCampaignsRoute: AuthenticatedAppCampaignsRouteWithChildren,
   AuthenticatedAppComplianceRoute: AuthenticatedAppComplianceRoute,
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
+  AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
   AuthenticatedAppListsRoute: AuthenticatedAppListsRoute,
   AuthenticatedAppNewJobRoute: AuthenticatedAppNewJobRouteWithChildren,
   AuthenticatedAppNumbersRoute: AuthenticatedAppNumbersRoute,

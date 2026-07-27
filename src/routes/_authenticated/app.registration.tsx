@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { getRegistration, advanceRegistration } from "@/lib/numbers.functions";
+import { getRegistration, advanceRegistration, submitBrandToProvider, submitCampaignToProvider } from "@/lib/numbers.functions";
 
 export const Route = createFileRoute("/_authenticated/app/registration")({
   head: () => ({ meta: [{ title: "10DLC Registration — LeadTrace" }] }),
@@ -38,6 +38,8 @@ function RegistrationPage() {
   const { workspaceId } = useWorkspaceId();
   const fetchReg = useServerFn(getRegistration);
   const advance = useServerFn(advanceRegistration);
+  const submitBrandFn = useServerFn(submitBrandToProvider);
+  const submitCampaignFn = useServerFn(submitCampaignToProvider);
   const qc = useQueryClient();
 
   const { data } = useQuery({
@@ -66,8 +68,10 @@ function RegistrationPage() {
   const submitBrand = async () => {
     setBusy("brand");
     try {
-      await advance({ data: { workspaceId, brand_status: "submitted", brand: { legal_name: legal, ein, website, contact_email: email } } });
-      toast.success("Brand Submitted To Registry.");
+      const r = await submitBrandFn({
+        data: { workspaceId, brand: { legal_name: legal, ein, website, contact_email: email } },
+      });
+      toast.success(r.providerId ? `Brand Submitted (${r.status}).` : "Brand Saved. Provider Not Configured.");
       qc.invalidateQueries({ queryKey: ["registration", workspaceId] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed.");
@@ -76,8 +80,17 @@ function RegistrationPage() {
   const submitCampaign = async () => {
     setBusy("campaign");
     try {
-      await advance({ data: { workspaceId, campaign_status: "submitted", campaign: { use_case: useCase, sample_messages: samples.split("\n").filter(Boolean), opt_in_flow: optIn } } });
-      toast.success("Campaign Submitted To Registry.");
+      const r = await submitCampaignFn({
+        data: {
+          workspaceId,
+          campaign: {
+            use_case: useCase,
+            sample_messages: samples.split("\n").filter(Boolean),
+            opt_in_flow: optIn,
+          },
+        },
+      });
+      toast.success(r.providerId ? `Campaign Submitted (${r.status}).` : "Campaign Saved. Provider Not Configured.");
       qc.invalidateQueries({ queryKey: ["registration", workspaceId] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed.");

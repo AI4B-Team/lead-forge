@@ -2,6 +2,8 @@
 // dispatch logic from tickCampaign but runs under the service role so pg_cron
 // can drive it without a user session.
 
+import { isWithinTcpaWindow } from "@/lib/tcpa";
+
 type SendWindow = { quiet_start?: string; quiet_end?: string };
 
 function hhmm(d: Date) {
@@ -126,6 +128,9 @@ async function tickOne(campaign: {
 
   const toSend = leads
     .filter((l) => l.phone && !suppressed.has(l.phone) && !messaged.has(l.id))
+    // TCPA: skip any recipient currently outside their local 8am–9pm window.
+    // They'll be picked up on a later tick when their local time is legal.
+    .filter((l) => isWithinTcpaWindow(l.phone as string))
     .slice(0, take);
 
   const provider = isProviderConfigured() ? getProvider() : null;
