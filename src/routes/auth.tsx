@@ -123,16 +123,16 @@ function AuthPage() {
             </div>
             <ul className="relative mt-10 space-y-4 text-sm">
               <li className="flex items-start gap-3">
+                <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <span>Business Scrapes + Public Records In One Place.</span>
+              </li>
+              <li className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                 <span>DNC + Litigator Scrubbing On Every List.</span>
               </li>
               <li className="flex items-start gap-3">
                 <Zap className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                <span>Regional Numbers, Rotation, And Daily Caps Built In.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                <span>Business Scrapes + Public Records In One Place.</span>
+                <span>Local Phone Numbers & Rotation.</span>
               </li>
             </ul>
           </aside>
