@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/app/billing")({
 });
 
 function Billing() {
-  const workspaceId = useWorkspaceId();
+  const { workspaceId } = useWorkspaceId();
   const fetchBilling = useServerFn(getBilling);
   const runTopUp = useServerFn(topUpCredits);
   const qc = useQueryClient();
