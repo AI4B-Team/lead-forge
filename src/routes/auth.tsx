@@ -40,9 +40,15 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/app/dashboard" });
+      if (data.session) {
+        if (search.redirect && search.redirect.startsWith("/")) {
+          window.location.href = search.redirect;
+        } else {
+          navigate({ to: "/app/dashboard" });
+        }
+      }
     });
-  }, [navigate]);
+  }, [navigate, search.redirect]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +65,11 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/onboarding" });
+        if (search.redirect && search.redirect.startsWith("/")) {
+          window.location.href = search.redirect;
+        } else {
+          navigate({ to: "/onboarding" });
+        }
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something Went Wrong");
