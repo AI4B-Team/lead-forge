@@ -180,31 +180,3 @@ function AccountPage() {
     </div>
   );
 }
-
-function AccountLink({
-  to,
-  icon,
-  label,
-  description,
-}: {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-  description: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-3 hover:bg-muted transition-colors"
-    >
-      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        {icon}
-      </span>
-      <span className="flex-1 min-w-0">
-        <span className="block text-sm font-medium text-foreground">{label}</span>
-        <span className="block text-xs text-muted-foreground truncate">{description}</span>
-      </span>
-      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-    </Link>
-  );
-}
