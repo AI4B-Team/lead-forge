@@ -31,6 +31,25 @@ function Wizard() {
   const [mobileOnly, setMobileOnly] = useState(true);
   const [avoidMetros, setAvoidMetros] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [prompt, setPrompt] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const stashed = sessionStorage.getItem("leadtrace_prompt");
+      if (!stashed) return;
+      setPrompt(stashed);
+      sessionStorage.removeItem("leadtrace_prompt");
+      // Naive parse: 2-letter state at end (after optional comma), first capitalized/known word as niche.
+      const stateMatch = stashed.match(/\b([A-Z]{2})\b\s*\.?\s*$/);
+      if (stateMatch) setState(stateMatch[1]);
+      const known = NICHES.find((n) => new RegExp(`\\b${n}\\b`, "i").test(stashed));
+      if (known) setPicked([known]);
+      else {
+        const first = stashed.split(/\s+/)[0]?.trim();
+        if (first && first.length >= 2) setPicked([first]);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const toggle = (n: string) =>
     setPicked((p) => (p.includes(n) ? p.filter((x) => x !== n) : [...p, n]));
@@ -93,6 +112,13 @@ function Wizard() {
   return (
     <div className="max-w-3xl">
       <PageHeader title="Scrape A Niche" description="Door A · Business Scrape" />
+      {prompt && (
+        <div className="mb-4 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
+          <div className="text-xs font-semibold uppercase tracking-wider text-primary">Your Prompt</div>
+          <div className="mt-1 text-foreground">{prompt}</div>
+          <div className="mt-1 text-xs text-muted-foreground">We've prefilled niche and state below — tweak anything and hit Run Job.</div>
+        </div>
+      )}
       <Card>
         <CardContent className="pt-6 space-y-6">
           <div>
