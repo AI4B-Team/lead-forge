@@ -744,6 +744,7 @@ export type Database = {
           created_at: string
           id: string
           industry: string | null
+          monthly_sms_cap: number | null
           name: string
           plan: string
         }
@@ -752,6 +753,7 @@ export type Database = {
           created_at?: string
           id?: string
           industry?: string | null
+          monthly_sms_cap?: number | null
           name: string
           plan?: string
         }
@@ -760,6 +762,7 @@ export type Database = {
           created_at?: string
           id?: string
           industry?: string | null
+          monthly_sms_cap?: number | null
           name?: string
           plan?: string
         }

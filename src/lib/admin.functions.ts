@@ -8,6 +8,11 @@ async function assertSuperAdmin(supabase: any, userId: string) {
   if (!data) throw new Error("Forbidden");
 }
 
+function startOfMonthIso() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
+}
+
 // Whether the current user has super_admin. Used to gate the admin nav item.
 export const meIsSuperAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -27,7 +32,7 @@ export const listAllWorkspaces = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: workspaces, error } = await supabaseAdmin
       .from("workspaces")
-      .select("id, name, industry, plan, billing_plan, created_at")
+      .select("id, name, industry, plan, billing_plan, monthly_sms_cap, created_at")
       .order("created_at", { ascending: false });
     if (error) throw error;
 
@@ -48,21 +53,23 @@ export const listAllWorkspaces = createServerFn({ method: "GET" })
     }
 
     // Usage stats
-    const stats = new Map<string, { leads: number; sent: number; numbers: number }>();
+    const monthStart = startOfMonthIso();
+    const stats = new Map<string, { leads: number; sent: number; sent_month: number; numbers: number }>();
     for (const w of workspaces ?? []) {
-      const [{ count: leads }, { count: sent }, { count: numbers }] = await Promise.all([
+      const [{ count: leads }, { count: sent }, { count: sentMonth }, { count: numbers }] = await Promise.all([
         supabaseAdmin.from("leads").select("id", { count: "exact", head: true }).eq("workspace_id", w.id),
         supabaseAdmin.from("messages").select("id", { count: "exact", head: true }).eq("workspace_id", w.id).eq("direction", "outbound"),
+        supabaseAdmin.from("messages").select("id", { count: "exact", head: true }).eq("workspace_id", w.id).eq("direction", "outbound").gte("created_at", monthStart),
         supabaseAdmin.from("sending_numbers").select("id", { count: "exact", head: true }).eq("workspace_id", w.id),
       ]);
-      stats.set(w.id, { leads: leads ?? 0, sent: sent ?? 0, numbers: numbers ?? 0 });
+      stats.set(w.id, { leads: leads ?? 0, sent: sent ?? 0, sent_month: sentMonth ?? 0, numbers: numbers ?? 0 });
     }
 
     return {
       workspaces: (workspaces ?? []).map((w) => ({
         ...w,
         owner_email: ownerByWs.get(w.id) ?? "",
-        stats: stats.get(w.id) ?? { leads: 0, sent: 0, numbers: 0 },
+        stats: stats.get(w.id) ?? { leads: 0, sent: 0, sent_month: 0, numbers: 0 },
       })),
     };
   });
@@ -85,6 +92,62 @@ export const setBillingPlan = createServerFn({ method: "POST" })
       .eq("id", data.workspaceId);
     if (error) throw error;
     return { ok: true };
+  });
+
+// Set the monthly outbound SMS cap. null = unlimited.
+export const setMonthlySmsCap = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      workspaceId: z.string().uuid(),
+      cap: z.number().int().min(0).max(10_000_000).nullable(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("workspaces")
+      .update({ monthly_sms_cap: data.cap })
+      .eq("id", data.workspaceId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+// Grant credits to a workspace without a payment. Used for comped accounts.
+export const grantCredits = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      workspaceId: z.string().uuid(),
+      kind: z.enum(["scrape", "skip_trace", "sms"]),
+      amount: z.number().int().min(1).max(10_000_000),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin
+      .from("credit_balances")
+      .select("balance")
+      .eq("workspace_id", data.workspaceId)
+      .eq("kind", data.kind)
+      .maybeSingle();
+    const next = (existing?.balance ?? 0) + data.amount;
+    const { error: upErr } = await supabaseAdmin
+      .from("credit_balances")
+      .upsert(
+        { workspace_id: data.workspaceId, kind: data.kind, balance: next },
+        { onConflict: "workspace_id,kind" },
+      );
+    if (upErr) throw upErr;
+    await supabaseAdmin.from("credit_ledger").insert({
+      workspace_id: data.workspaceId,
+      kind: data.kind,
+      delta: data.amount,
+      reason: "admin_grant",
+    });
+    return { balance: next };
   });
 
 // List every super_admin (so an owner can revoke others).

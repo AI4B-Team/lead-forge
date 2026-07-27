@@ -61,6 +61,25 @@ async function tickOne(campaign: {
     return { dispatched: 0, reason: "quiet_hours" };
   }
 
+  // Workspace-level monthly SMS cap (super admin can set this to keep comped
+  // accounts safe). null = unlimited.
+  const { data: ws } = await supabaseAdmin
+    .from("workspaces").select("monthly_sms_cap").eq("id", campaign.workspace_id).maybeSingle();
+  const monthlyCap = (ws as { monthly_sms_cap: number | null } | null)?.monthly_sms_cap ?? null;
+  let remainingMonthly = Number.POSITIVE_INFINITY;
+  if (typeof monthlyCap === "number") {
+    const monthStart = new Date();
+    monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+    const { count: sentMonth } = await supabaseAdmin
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", campaign.workspace_id)
+      .eq("direction", "outbound")
+      .gte("created_at", monthStart.toISOString());
+    remainingMonthly = Math.max(0, monthlyCap - (sentMonth ?? 0));
+    if (remainingMonthly === 0) return { dispatched: 0, reason: "monthly_cap_reached" };
+  }
+
   const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
   const { count: sentToday } = await supabaseAdmin
     .from("messages")
@@ -114,7 +133,7 @@ async function tickOne(campaign: {
     .from("messages").select("lead_id").eq("campaign_id", campaign.id).eq("direction", "outbound");
   const messaged = new Set((prevMsgs ?? []).map((m) => m.lead_id).filter(Boolean) as string[]);
 
-  const take = Math.min(remainingCap, 50);
+  const take = Math.min(remainingCap, remainingMonthly, 50);
   const { data: leads } = await supabaseAdmin
     .from("leads")
     .select("id, full_name, phone, city, state, address")
