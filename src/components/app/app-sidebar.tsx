@@ -7,15 +7,9 @@ import {
   ListChecks,
   MessageSquare,
   Phone,
-  ShieldCheck,
-  BadgeCheck,
-  Settings,
-  CreditCard,
   Radar,
   Inbox,
-  ShieldAlert,
   BarChart3,
-  Users,
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,7 +26,6 @@ import {
 import { BRAND_NAME } from "@/config/brand";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { unreadCount } from "@/lib/inbox.functions";
-import { meIsSuperAdmin } from "@/lib/admin.functions";
 
 const ITEMS = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -42,11 +35,6 @@ const ITEMS = [
   { to: "/app/inbox", label: "Inbox", icon: Inbox },
   { to: "/app/reports", label: "Reports", icon: BarChart3 },
   { to: "/app/numbers", label: "Numbers", icon: Phone },
-  { to: "/app/registration", label: "10DLC", icon: BadgeCheck },
-  { to: "/app/compliance", label: "Compliance", icon: ShieldCheck },
-  { to: "/app/team", label: "Team", icon: Users },
-  { to: "/app/settings", label: "Settings", icon: Settings },
-  { to: "/app/billing", label: "Billing", icon: CreditCard },
 ] as const;
 
 export function AppSidebar() {
@@ -55,16 +43,11 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { workspaceId } = useWorkspaceId();
   const fetchUnread = useServerFn(unreadCount);
-  const fetchIsAdmin = useServerFn(meIsSuperAdmin);
   const { data: unread } = useQuery({
     queryKey: ["inbox-unread", workspaceId],
     queryFn: () => fetchUnread({ data: { workspaceId: workspaceId! } }),
     enabled: !!workspaceId,
     refetchInterval: 30000,
-  });
-  const { data: admin } = useQuery({
-    queryKey: ["me-is-super-admin"],
-    queryFn: () => fetchIsAdmin(),
   });
 
   return (
@@ -101,16 +84,6 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
-              {admin?.isSuperAdmin && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname.startsWith("/app/admin")}>
-                    <Link to="/app/admin" className="flex items-center gap-2">
-                      <ShieldAlert className="h-4 w-4" />
-                      {!collapsed && <span>Admin</span>}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

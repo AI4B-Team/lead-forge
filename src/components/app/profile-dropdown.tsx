@@ -1,16 +1,36 @@
 import { useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Settings, CreditCard, Shield, Power, UserPlus, Zap } from "lucide-react";
+import {
+  User,
+  Settings,
+  CreditCard,
+  Shield,
+  Power,
+  UserPlus,
+  Zap,
+  Users,
+  BadgeCheck,
+  ShieldCheck,
+  ShieldAlert,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { meIsSuperAdmin } from "@/lib/admin.functions";
 
 export function ProfileDropdown({ className }: { className?: string }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const fetchIsAdmin = useServerFn(meIsSuperAdmin);
+  const { data: admin } = useQuery({
+    queryKey: ["me-is-super-admin"],
+    queryFn: () => fetchIsAdmin(),
+  });
 
   const userName =
     (user?.user_metadata?.full_name as string | undefined) ||
@@ -74,6 +94,13 @@ export function ProfileDropdown({ className }: { className?: string }) {
           <MenuItem icon={<Settings className="h-4 w-4" />} label="Account" onClick={() => go("/app/account")} />
           <MenuItem icon={<Shield className="h-4 w-4" />} label="Security" onClick={() => go("/app/account?tab=security")} />
           <MenuItem icon={<CreditCard className="h-4 w-4" />} label="Billing" onClick={() => go("/app/billing")} />
+          <MenuItem icon={<Users className="h-4 w-4" />} label="Team" onClick={() => go("/app/team")} />
+          <MenuItem icon={<Settings className="h-4 w-4" />} label="Workspace Settings" onClick={() => go("/app/settings")} />
+          <MenuItem icon={<BadgeCheck className="h-4 w-4" />} label="10DLC Registration" onClick={() => go("/app/registration")} />
+          <MenuItem icon={<ShieldCheck className="h-4 w-4" />} label="Compliance" onClick={() => go("/app/compliance")} />
+          {admin?.isSuperAdmin && (
+            <MenuItem icon={<ShieldAlert className="h-4 w-4" />} label="Admin Console" onClick={() => go("/app/admin")} />
+          )}
         </div>
 
         <div className="border-t border-border p-4">
