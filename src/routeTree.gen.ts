@@ -41,6 +41,7 @@ import { Route as AuthenticatedAppRegistrationRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppNumbersRouteImport } from './routes/_authenticated/app.numbers'
 import { Route as AuthenticatedAppNewJobRouteImport } from './routes/_authenticated/app.new-job'
 import { Route as AuthenticatedAppListsRouteImport } from './routes/_authenticated/app.lists'
+import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
 import { Route as AuthenticatedAppComplianceRouteImport } from './routes/_authenticated/app.compliance'
 import { Route as AuthenticatedAppCampaignsRouteImport } from './routes/_authenticated/app.campaigns'
@@ -218,6 +219,11 @@ const AuthenticatedAppListsRoute = AuthenticatedAppListsRouteImport.update({
   path: '/lists',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppInboxRoute = AuthenticatedAppInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppDashboardRoute =
   AuthenticatedAppDashboardRouteImport.update({
     id: '/dashboard',
@@ -337,6 +343,7 @@ export interface FileRoutesByFullPath {
   '/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/lists': typeof AuthenticatedAppListsRoute
   '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
@@ -384,6 +391,7 @@ export interface FileRoutesByTo {
   '/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/lists': typeof AuthenticatedAppListsRoute
   '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
@@ -434,6 +442,7 @@ export interface FileRoutesById {
   '/_authenticated/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
   '/_authenticated/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
   '/_authenticated/app/lists': typeof AuthenticatedAppListsRoute
   '/_authenticated/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/_authenticated/app/numbers': typeof AuthenticatedAppNumbersRoute
@@ -484,6 +493,7 @@ export interface FileRouteTypes {
     | '/app/campaigns'
     | '/app/compliance'
     | '/app/dashboard'
+    | '/app/inbox'
     | '/app/lists'
     | '/app/new-job'
     | '/app/numbers'
@@ -531,6 +541,7 @@ export interface FileRouteTypes {
     | '/app/campaigns'
     | '/app/compliance'
     | '/app/dashboard'
+    | '/app/inbox'
     | '/app/lists'
     | '/app/new-job'
     | '/app/numbers'
@@ -580,6 +591,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/campaigns'
     | '/_authenticated/app/compliance'
     | '/_authenticated/app/dashboard'
+    | '/_authenticated/app/inbox'
     | '/_authenticated/app/lists'
     | '/_authenticated/app/new-job'
     | '/_authenticated/app/numbers'
@@ -856,6 +868,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppListsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/inbox': {
+      id: '/_authenticated/app/inbox'
+      path: '/inbox'
+      fullPath: '/app/inbox'
+      preLoaderRoute: typeof AuthenticatedAppInboxRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/dashboard': {
       id: '/_authenticated/app/dashboard'
       path: '/dashboard'
@@ -1005,6 +1024,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppCampaignsRoute: typeof AuthenticatedAppCampaignsRouteWithChildren
   AuthenticatedAppComplianceRoute: typeof AuthenticatedAppComplianceRoute
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
+  AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
   AuthenticatedAppListsRoute: typeof AuthenticatedAppListsRoute
   AuthenticatedAppNewJobRoute: typeof AuthenticatedAppNewJobRouteWithChildren
   AuthenticatedAppNumbersRoute: typeof AuthenticatedAppNumbersRoute
@@ -1020,6 +1040,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppCampaignsRoute: AuthenticatedAppCampaignsRouteWithChildren,
   AuthenticatedAppComplianceRoute: AuthenticatedAppComplianceRoute,
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
+  AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
   AuthenticatedAppListsRoute: AuthenticatedAppListsRoute,
   AuthenticatedAppNewJobRoute: AuthenticatedAppNewJobRouteWithChildren,
   AuthenticatedAppNumbersRoute: AuthenticatedAppNumbersRoute,
