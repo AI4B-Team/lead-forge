@@ -1,23 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { RawLead } from "./data-providers";
 
 // ---------------------------------------------------------------------------
 // Source adapter interface. Real providers (Outscraper, county scrapers, CSV
 // parser) drop in behind this shape without touching the orchestrator.
 // ---------------------------------------------------------------------------
-
-type RawLead = {
-  full_name?: string | null;
-  business_name?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  zip?: string | null;
-  source_meta?: Record<string, unknown>;
-};
 
 type JobParams = Record<string, unknown>;
 
@@ -48,34 +37,16 @@ function fakePhone(i: number) {
 }
 
 const businessAdapter: SourceAdapter = {
-  key: "business.google.mock",
+  key: "business.apify",
   coverage: "live",
   async run(params) {
-    const niches = (params.niches as string[] | undefined) ?? ["HVAC"];
-    const counties = (params.counties as string[] | undefined) ?? [];
-    const state = (params.state as string | undefined) ?? "FL";
-    const targetCounties = counties.length ? counties : ["Hillsborough", "Pasco", "Pinellas"];
-    const rows: RawLead[] = [];
-    let i = 0;
-    for (const niche of niches) {
-      for (const county of targetCounties) {
-        const count = 60 + ((niche.length * county.length) % 40);
-        for (let n = 0; n < count; n++) {
-          const isFranchise = n % 17 === 0;
-          const nameBase = isFranchise ? pick(FRANCHISE_MARKERS, n) : `${pick(LAST_NAMES, n + i)} ${niche}`;
-          rows.push({
-            business_name: `${nameBase} · ${county}`,
-            phone: fakePhone(i),
-            email: `contact${i}@example.com`,
-            city: county,
-            state,
-            source_meta: { niche, county, franchise: isFranchise },
-          });
-          i++;
-        }
-      }
-    }
-    return rows;
+    const { getBusinessScraper } = await import("./data-providers");
+    const scraper = getBusinessScraper();
+    return scraper.scrape({
+      niches: (params.niches as string[] | undefined) ?? ["HVAC"],
+      counties: (params.counties as string[] | undefined) ?? [],
+      state: (params.state as string | undefined) ?? "FL",
+    });
   },
 };
 
