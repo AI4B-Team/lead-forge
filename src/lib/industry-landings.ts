@@ -113,11 +113,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
       subtitle: "Pull homeowners in your service area, filter by roof age and property type, and launch text campaigns that book site surveys — all in one place.",
     },
     stats: [
-      { value: "Homeowners", body: "", label: "Owner-Occupied Only" },
+      { value: "Homeowners", label: "Owner-Occupied Only" },
       { value: "Roof Age", label: "10+ Year Filter" },
       { value: "Local", label: "Area-Code Matched SMS" },
       { value: "Reply-Stop", label: "Auto Pauses On Reply" },
-    ] as any,
+    ],
     useCases: [
       { title: "Homeowners By ZIP", body: "Owner-occupied properties in your license area, filtered by home value and roof age." },
       { title: "Storm Response Lists", body: "Recent storm-affected ZIPs pulled overnight for roofing response campaigns." },
