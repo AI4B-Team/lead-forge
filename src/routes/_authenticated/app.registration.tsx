@@ -17,9 +17,16 @@ export const Route = createFileRoute("/_authenticated/app/registration")({
   component: RegistrationPage,
 });
 
+type StatusTheme = {
+  bg: string;
+  border: string;
+  text: string;
+  dot: string;
+};
+
 function StatusPill({ label, value }: { label: string; value: string | null | undefined }) {
   const v = value ?? "pending";
-  const theme = {
+  const themes: Record<string, StatusTheme> = {
     approved: {
       bg: "bg-success/10",
       border: "border-success/20",
@@ -44,7 +51,8 @@ function StatusPill({ label, value }: { label: string; value: string | null | un
       text: "text-muted-foreground",
       dot: "bg-muted-foreground shadow-[0_0_8px_var(--color-muted-foreground)]",
     },
-  }[v as keyof typeof theme] ?? theme.pending;
+  };
+  const theme = themes[v] ?? themes.pending;
 
   return (
     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${theme.bg} border ${theme.border} ring-1 ring-inset ring-border/30 transition-colors hover:opacity-90`}>
