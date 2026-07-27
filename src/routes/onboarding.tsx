@@ -100,7 +100,12 @@ function Onboarding() {
       );
 
       toast.success("Workspace Ready.");
-      navigate({ to: "/app/dashboard" });
+      const stashed = (() => { try { return sessionStorage.getItem("leadtrace_prompt"); } catch { return null; } })();
+      if (stashed) {
+        navigate({ to: "/app/new-job/business" });
+      } else {
+        navigate({ to: "/app/dashboard" });
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Setup Failed");
     } finally {

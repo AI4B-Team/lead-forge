@@ -87,6 +87,9 @@ export function PromptHero() {
 
   const submit = () => {
     if (!value.trim() && files.length === 0) return;
+    try {
+      if (value.trim()) sessionStorage.setItem("leadtrace_prompt", value.trim());
+    } catch { /* ignore */ }
     navigate({ to: "/start" });
   };
 
