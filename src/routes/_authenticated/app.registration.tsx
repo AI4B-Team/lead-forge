@@ -19,15 +19,37 @@ export const Route = createFileRoute("/_authenticated/app/registration")({
 
 function StatusPill({ label, value }: { label: string; value: string | null | undefined }) {
   const v = value ?? "pending";
-  const dot =
-    v === "approved" ? "bg-success shadow-[0_0_8px_var(--color-success)]" :
-    v === "rejected" ? "bg-danger shadow-[0_0_8px_var(--color-danger)]" :
-    v === "submitted" ? "bg-warn shadow-[0_0_8px_var(--color-warn)]" :
-    "bg-muted-foreground shadow-[0_0_8px_var(--color-muted-foreground)]";
+  const theme = {
+    approved: {
+      bg: "bg-success/10",
+      border: "border-success/20",
+      text: "text-success",
+      dot: "bg-success shadow-[0_0_8px_var(--color-success)]",
+    },
+    submitted: {
+      bg: "bg-warn/10",
+      border: "border-warn/20",
+      text: "text-warn",
+      dot: "bg-warn shadow-[0_0_8px_var(--color-warn)]",
+    },
+    rejected: {
+      bg: "bg-danger/10",
+      border: "border-danger/20",
+      text: "text-danger",
+      dot: "bg-danger shadow-[0_0_8px_var(--color-danger)]",
+    },
+    pending: {
+      bg: "bg-muted",
+      border: "border-border",
+      text: "text-muted-foreground",
+      dot: "bg-muted-foreground shadow-[0_0_8px_var(--color-muted-foreground)]",
+    },
+  }[v as keyof typeof theme] ?? theme.pending;
+
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border ring-1 ring-inset ring-border/30 transition-colors hover:bg-muted/80">
-      <div className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-      <span className="text-[11px] font-medium text-muted-foreground tracking-wide uppercase">
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${theme.bg} border ${theme.border} ring-1 ring-inset ring-border/30 transition-colors hover:opacity-90`}>
+      <div className={`w-1.5 h-1.5 rounded-full ${theme.dot}`} />
+      <span className={`text-[11px] font-medium tracking-wide uppercase ${theme.text}`}>
         {label}: {v}
       </span>
     </div>
