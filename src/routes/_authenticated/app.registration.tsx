@@ -116,6 +116,7 @@ function RegistrationPage() {
       <PageHeader
         title="10DLC Registration"
         description="A2P Brand + Campaign Approval. Sending Is Blocked Server-Side Until Campaign Status Is Approved."
+        descriptionClassName="whitespace-nowrap"
         actions={
           <div className="flex items-center gap-3">
             <StatusPill label="Brand" value={reg?.brand_status} />
