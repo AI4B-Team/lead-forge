@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
+import { StatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { statusLabel, type JobStatus } from "@/lib/mock-data";
+import { type JobStatus } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { Users, ListChecks, MessageSquare, Activity, Plus, ArrowUpRight } from "lucide-react";
@@ -182,22 +182,5 @@ function CreditRow({ label, value }: { label: string; value: number }) {
       <span className="text-muted-foreground">{label}</span>
       <span className="font-medium text-foreground">{value.toLocaleString()}</span>
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: JobStatus }) {
-  const map: Record<string, string> = {
-    ready: "bg-success/10 text-success border-success/20",
-    scrubbing: "bg-warn/10 text-warn border-warn/20",
-    skiptracing: "bg-warn/10 text-warn border-warn/20",
-    enriching: "bg-warn/10 text-warn border-warn/20",
-    scraping: "bg-warn/10 text-warn border-warn/20",
-    queued: "bg-muted text-muted-foreground border-border",
-    failed: "bg-danger/10 text-danger border-danger/20",
-  };
-  return (
-    <Badge variant="outline" className={`${map[status]} font-medium`}>
-      {statusLabel(status)}
-    </Badge>
   );
 }
