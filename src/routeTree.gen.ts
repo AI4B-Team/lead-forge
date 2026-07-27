@@ -13,6 +13,7 @@ import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as RealestateRouteImport } from './routes/realestate'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as IndustriesRouteImport } from './routes/industries'
@@ -63,6 +64,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RealestateRoute = RealestateRouteImport.update({
+  id: '/realestate',
+  path: '/realestate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -243,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/industries': typeof IndustriesRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/realestate': typeof RealestateRoute
   '/sign-in': typeof SignInRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
@@ -279,6 +286,7 @@ export interface FileRoutesByTo {
   '/industries': typeof IndustriesRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/realestate': typeof RealestateRoute
   '/sign-in': typeof SignInRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
@@ -316,6 +324,7 @@ export interface FileRoutesById {
   '/industries': typeof IndustriesRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/realestate': typeof RealestateRoute
   '/sign-in': typeof SignInRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
@@ -354,6 +363,7 @@ export interface FileRouteTypes {
     | '/industries'
     | '/onboarding'
     | '/pricing'
+    | '/realestate'
     | '/sign-in'
     | '/sitemap.xml'
     | '/start'
@@ -390,6 +400,7 @@ export interface FileRouteTypes {
     | '/industries'
     | '/onboarding'
     | '/pricing'
+    | '/realestate'
     | '/sign-in'
     | '/sitemap.xml'
     | '/start'
@@ -426,6 +437,7 @@ export interface FileRouteTypes {
     | '/industries'
     | '/onboarding'
     | '/pricing'
+    | '/realestate'
     | '/sign-in'
     | '/sitemap.xml'
     | '/start'
@@ -464,6 +476,7 @@ export interface RootRouteChildren {
   IndustriesRoute: typeof IndustriesRoute
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
+  RealestateRoute: typeof RealestateRoute
   SignInRoute: typeof SignInRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StartRoute: typeof StartRoute
@@ -502,6 +515,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/realestate': {
+      id: '/realestate'
+      path: '/realestate'
+      fullPath: '/realestate'
+      preLoaderRoute: typeof RealestateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -813,6 +833,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndustriesRoute: IndustriesRoute,
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
+  RealestateRoute: RealestateRoute,
   SignInRoute: SignInRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StartRoute: StartRoute,
