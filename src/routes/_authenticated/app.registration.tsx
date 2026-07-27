@@ -2,10 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,15 +19,17 @@ export const Route = createFileRoute("/_authenticated/app/registration")({
 
 function StatusPill({ label, value }: { label: string; value: string | null | undefined }) {
   const v = value ?? "pending";
-  const tone =
-    v === "approved" ? "bg-success/10 text-success border-success/20" :
-    v === "rejected" ? "bg-danger/10 text-danger border-danger/20" :
-    v === "submitted" ? "bg-warn/10 text-warn border-warn/20" :
-    "bg-muted text-muted-foreground border-border";
+  const dot =
+    v === "approved" ? "bg-success shadow-[0_0_8px_var(--color-success)]" :
+    v === "rejected" ? "bg-danger shadow-[0_0_8px_var(--color-danger)]" :
+    v === "submitted" ? "bg-warn shadow-[0_0_8px_var(--color-warn)]" :
+    "bg-muted-foreground shadow-[0_0_8px_var(--color-muted-foreground)]";
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
-      <Badge variant="outline" className={tone}>{v}</Badge>
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-border/50 ring-1 ring-inset ring-border/30 transition-colors hover:bg-white/[0.07]">
+      <div className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+      <span className="text-[11px] font-medium text-muted-foreground tracking-wide uppercase">
+        {label}: {v}
+      </span>
     </div>
   );
 }
