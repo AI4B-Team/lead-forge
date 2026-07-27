@@ -41,6 +41,11 @@ function AuthPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
+        const stashed = (() => { try { return sessionStorage.getItem("leadtrace_prompt"); } catch { return null; } })();
+        if (stashed) {
+          window.location.href = "/app/new-job/business";
+          return;
+        }
         if (search.redirect && search.redirect.startsWith("/")) {
           window.location.href = search.redirect;
         } else {
@@ -65,6 +70,11 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        const stashed = (() => { try { return sessionStorage.getItem("leadtrace_prompt"); } catch { return null; } })();
+        if (stashed) {
+          navigate({ to: "/app/new-job/business" });
+          return;
+        }
         if (search.redirect && search.redirect.startsWith("/")) {
           window.location.href = search.redirect;
         } else {
