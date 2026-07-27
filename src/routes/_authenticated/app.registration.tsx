@@ -25,7 +25,7 @@ function StatusPill({ label, value }: { label: string; value: string | null | un
     v === "submitted" ? "bg-warn shadow-[0_0_8px_var(--color-warn)]" :
     "bg-muted-foreground shadow-[0_0_8px_var(--color-muted-foreground)]";
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-border/50 ring-1 ring-inset ring-border/30 transition-colors hover:bg-white/[0.07]">
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border ring-1 ring-inset ring-border/30 transition-colors hover:bg-muted/80">
       <div className={`w-1.5 h-1.5 rounded-full ${dot}`} />
       <span className="text-[11px] font-medium text-muted-foreground tracking-wide uppercase">
         {label}: {v}
