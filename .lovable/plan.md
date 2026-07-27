@@ -1,92 +1,102 @@
-# LeadForge — Phased Build Plan
+# LeadTrace — Path to Fully Functional
 
-You picked **Scaffold full UI shell + all routes (no backend yet)**. Here is the phased plan to get there. Everything below is frontend + mock data; Lovable Cloud (Supabase), scraping adapters, Stripe, and edge functions come in later phases once you approve this shell.
+Build order below. Stripe is intentionally last so everything else is testable without payments in the way.
 
-## Phase 1 — Brand + design system foundation
+## New capability: "Comp Accounts"
 
-- `src/config/brand.ts` — `BRAND_NAME`, `BRAND_ACCENT`, `BRAND_DOMAIN` (single source of truth per Part 6).
-- `src/styles.css` — add semantic tokens in `oklch` matching the spec:
-  - `--primary` = #CC0000 (accent red), `--primary-hover` = #A30000
-  - `--ink` = #0E0E10 (dark hero/cards), surfaces #FFFFFF and #F6F6F7
-  - `--highlight` = #F5D547 (marker highlight)
-  - `--success` #16A34A, `--warn` #F59E0B, `--danger` #DC2626
-  - `--border` #E6E6E8, radius 16px cards, pill buttons
-- Fonts: Playfair Display (display) + DM Sans (body) via `<link>` in `__root.tsx` head.
-- shadcn Button variants: `hero` (red pill), `secondary-dark`, `ghost-dark`.
-- Utility component: `<MarkerHighlight>` wraps a hero word with the yellow hand-drawn underline.
-- Copy guardrails documented in a top-of-file comment: Title Case everywhere, no em-dashes, no gradients, Lucide icons only.
+You (as system owner) can flag any workspace as **comped** — no monthly platform fee, only usage fees (SMS, skip trace, scrape credits) still apply.
 
-## Phase 2 — Marketing site (replaces placeholder `/`)
+- New `app_role` enum: `super_admin`, `owner`, `admin`, `member`
+- New `user_roles` table (RLS-safe via `has_role()` security-definer function)
+- New `workspaces.billing_plan` column: `trial` | `paid` | `comped` | `past_due`
+- New `/app/admin` route visible only to `super_admin` — lists all workspaces, toggle "Comp this account" button
+- Billing gate in the app: monthly fee enforced only when `billing_plan != 'comped'`; usage-fee metering still runs for everyone
+- Your account seeded as `super_admin` on first migration
 
-Routes created in `src/routes/`:
+## Phase 1 — SMS operational core
 
-```text
-/                 index.tsx        Home (hero + how it works + features + industries + pricing + compliance)
-/how-it-works     how-it-works.tsx
-/features         features.tsx
-/industries       industries.tsx
-/pricing          pricing.tsx
-/compliance       compliance.tsx
-/sign-in          sign-in.tsx      (mock, no auth yet)
-/start            start.tsx        (mock signup, routes into /app)
+1. **Number purchasing UI** at `/app/settings/numbers`
+   - Search Telnyx inventory by area code → buy → assign to workspace
+   - Uses existing `SmsProvider.buyNumber()`
+2. **Inbox / conversations** at `/app/inbox`
+   - Threaded view grouped by lead phone
+   - Reply box (sends via existing provider)
+   - Unread badge in sidebar
+   - Filter: All / Unread / Opt-outs / Litigator flags
+3. **10DLC brand + campaign submission** — wire the existing `registrations` form to Telnyx `/v2/10dlc/brand` and `/v2/10dlc/campaign` endpoints (currently just stores rows)
+4. **TCPA quiet hours** — campaign runner respects recipient timezone (derived from area code); no sends outside 8am–9pm local
+
+## Phase 2 — Data acquisition
+
+5. **Scraper adapter — Apify** (`src/lib/scrapers/apify.ts`)
+   - Implements existing `ScraperAdapter` interface
+   - Covers Google Maps, Yelp, LinkedIn Sales Nav templates
+   - Requires `APIFY_TOKEN` secret (I'll request it when Phase 2 starts)
+6. **Skip trace provider — BatchSkipTracing** (`src/lib/skip-trace/batch.ts`)
+   - Enriches leads with phone/email
+   - Requires `BATCH_SKIP_TRACING_API_KEY`
+7. **DNC + Litigator scrubber — Blacklist Alliance** (`src/lib/scrub/blacklist-alliance.ts`)
+   - Runs automatically at end of every job
+   - Populates `scrub_runs` with real results
+   - Requires `BLACKLIST_ALLIANCE_API_KEY`
+
+## Phase 3 — App UX gaps
+
+8. **Lead detail drawer** — click any lead → full profile, skip trace fields, message history, notes
+9. **CSV import** — upload → column-mapping wizard → job
+10. **CSV export** — download any list, scrubbed or raw
+11. **Campaign builder v2** — message composer with `{{first_name}}` variables, spintax (`{Hi|Hey|Yo}`), 3-step follow-up sequences, A/B variants
+12. **Analytics** at `/app/analytics` — delivery rate, opt-out rate, response rate, per-campaign and per-number
+
+## Phase 4 — Team & security
+
+13. **Team invites** — email-based invites to a workspace, roles: `owner` / `admin` / `member`
+14. **Password reset page** at `/reset-password` (currently missing)
+15. **Roles enforcement** on server functions using `has_role()`
+16. **Super-admin console** at `/app/admin` (comp accounts, view all workspaces, view usage per workspace)
+
+## Phase 5 — Billing (Stripe, last)
+
+17. Enable Lovable's built-in Stripe payments (seamless, no API key needed)
+18. **Two-part billing model:**
+    - **Platform fee** (monthly subscription) — waived for `comped` workspaces
+    - **Usage fees** — SMS at cost + margin, skip trace per record, scrape credits — billed to *all* workspaces including comped ones
+19. Wire `credit_ledger` + `credit_balances` to real Stripe usage records
+20. "Top Up Credits" button in profile dropdown → Stripe Checkout
+21. Usage webhook at `/api/public/hooks/stripe`
+
+## Technical details
+
+### Database changes
+```sql
+-- Roles
+CREATE TYPE app_role AS ENUM ('super_admin', 'owner', 'admin', 'member');
+CREATE TABLE user_roles (id uuid PK, user_id uuid FK auth.users, role app_role, workspace_id uuid nullable);
+CREATE FUNCTION has_role(_user_id uuid, _role app_role) SECURITY DEFINER;
+
+-- Billing plan
+ALTER TABLE workspaces ADD COLUMN billing_plan text DEFAULT 'trial';
+
+-- Conversations
+ALTER TABLE messages ADD COLUMN thread_key text; -- lead phone for grouping
+CREATE INDEX ON messages(workspace_id, thread_key, created_at);
+
+-- CSV imports
+CREATE TABLE lead_imports (id, workspace_id, source_filename, rows_total, rows_imported, status);
 ```
 
-Shared marketing chrome (nav + footer) lives in a `MarketingLayout` component used by all marketing routes. Each route has its own `head()` with unique title/description/og.
+### External services (secrets I'll request per phase)
+- Phase 2: `APIFY_TOKEN`, `BATCH_SKIP_TRACING_API_KEY`, `BLACKLIST_ALLIANCE_API_KEY`
+- Phase 5: Stripe — no key needed (seamless integration)
 
-Hero implements the spec exactly:
-- Dark `#0E0E10` background
-- Eyebrow "Leads To Deals, On Autopilot" + Lucide `Sparkles`
-- H1 Playfair: "Find Them. Reach Them. Close Them." with `Reach Them.` in yellow marker highlight
-- Right side: animated pipeline card stack (CSS/Framer Motion) cycling through Scraped → Skip Traced → Clean/DNC/Litigator counts → Campaign Live
+### Files touched (rough)
+- ~15 new routes under `src/routes/_authenticated/app.*`
+- ~8 new server-function modules under `src/lib/*.functions.ts`
+- ~10 migrations
+- 3 new provider modules (`scrapers/`, `skip-trace/`, `scrub/`)
 
-Pricing uses the 3-card layout with red "Most Popular" ribbon on Growth.
+## Delivery cadence
 
-## Phase 3 — App shell (`/app` subtree)
+I'll ship Phase 1 first as one push, then check in before Phase 2 (since it needs your API keys for the three vendors). Phases 3–4 can go in a single push after that. Phase 5 (Stripe) is the final push.
 
-Routes:
-
-```text
-/app                            _app.tsx layout (sidebar + header)
-/app                            _app.index.tsx  → redirect to /app/dashboard
-/app/dashboard                  4 metric cards + credit widget + recent jobs table
-/app/new-job                    three-door picker
-/app/new-job/business           Door A wizard (niche + geography + filters)
-/app/new-job/records            Door B wizard (record type + county + date range)
-/app/new-job/upload             Door C wizard (dropzone + column mapper)
-/app/jobs/$jobId                Pipeline Review (rows in, deduped, enriched, skip traced, 3 buckets + Launch button)
-/app/lists                      Lists table
-/app/campaigns                  Campaigns table + create flow
-/app/campaigns/$campaignId      Campaign detail (steps, deliverability, inbox)
-/app/numbers                    Number pool + health scores
-/app/compliance                 10DLC registration status + audit logs + suppression list
-/app/settings                   Workspace + industry preset + team
-/app/billing                    Plan + credit balances + top-ups (mock)
-```
-
-Sidebar (Lucide icons): Dashboard, New Job, Lists, Campaigns, Numbers, Compliance, Settings, Billing. Collapsible with `shadcn/ui sidebar`, `SidebarTrigger` in the header (always visible).
-
-All screens render from `src/lib/mock-data.ts` — realistic sample jobs, leads, campaigns, numbers, ledger entries. No backend, no API calls yet.
-
-## Phase 4 — Not built in this pass (deferred)
-
-These require Lovable Cloud + provider integrations and will be follow-up turns:
-
-- Supabase schema + RLS (Part 4.1)
-- Edge functions: run-job, source-*, enrich-dedupe, skiptrace, scrub, campaign-runner, inbound-webhook, register-10dlc, stripe-webhook
-- Provider adapters: Outscraper, BatchData, DNCScrub, Twilio/Telnyx
-- Stripe checkout + metered credits
-- 10DLC registration workflow
-- Real STOP handling + suppression enforcement
-
-## Technical notes
-
-- TanStack Start file-based routing; every `createFileRoute("/...")` matches the filename precisely.
-- `__root.tsx` stays as the sole root layout. Marketing routes use a shared `MarketingLayout` component (not a file-based layout). The `/app` subtree uses a real file-based layout route `_app.tsx` rendering `<Outlet />` inside `SidebarProvider`.
-- `head()` metadata on every content route (title, description, og:title, og:description, og:type). Root gets stripped of the placeholder "Lovable App" title.
-- No colors hardcoded in components — everything reads from tokens in `src/styles.css`.
-- `src/routes/index.tsx` placeholder is replaced by the real marketing home page.
-- `public/robots.txt` + `src/routes/sitemap[.]xml.ts` added at the end covering all public routes.
-
-## Deliverable
-
-A fully clickable frontend where every marketing page and every app screen exists with mock data, matching the spec's tokens, copy rules, and information architecture. Ready to layer Cloud + adapters on top.
+**Approve to start Phase 1** (comp-account roles infrastructure + number purchasing + inbox + 10DLC submission + quiet hours).
