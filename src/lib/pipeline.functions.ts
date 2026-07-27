@@ -106,8 +106,12 @@ const uploadAdapter: SourceAdapter = {
   key: "upload.csv.mock",
   coverage: "live",
   async run(params) {
-    // In a real build we'd parse the uploaded file. For now we synthesize a
-    // reasonable list sized to the reported file so the UI reflects the upload.
+    // If the client parsed the CSV and passed rows through, use them directly.
+    const parsed = params.rows as RawLead[] | undefined;
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+
+    // Fallback: synthesize a list sized to the reported file so the UI still
+    // exercises the pipeline when no parsed rows were provided.
     const size = Number(params.file_size ?? 0);
     const count = Math.max(80, Math.min(2000, Math.round(size / 120)));
     const rows: RawLead[] = [];

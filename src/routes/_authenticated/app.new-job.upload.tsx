@@ -12,6 +12,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
+import { csvToLeads, type CsvLead } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/app/new-job/upload")({
   head: () => ({ meta: [{ title: "Upload My List — LeadTrace" }] }),
@@ -24,11 +25,29 @@ function Wizard() {
   const runJobFn = useServerFn(runJob);
   const columns = ["Full Name", "Phone", "Email", "Address", "City", "State", "Zip"];
   const [file, setFile] = useState<File | null>(null);
+  const [parsed, setParsed] = useState<{ rows: CsvLead[]; skipped: number; headers: string[] } | null>(null);
+  const [parsing, setParsing] = useState(false);
   const [mapping, setMapping] = useState<Record<string, string>>(
     Object.fromEntries(columns.map((c) => [c, c])),
   );
   const [skipTrace, setSkipTrace] = useState(true);
   const [busy, setBusy] = useState(false);
+
+  const onFile = async (f: File | null) => {
+    setFile(f);
+    setParsed(null);
+    if (!f) return;
+    if (!/\.csv$/i.test(f.name)) return; // XLSX handled server-side later
+    setParsing(true);
+    try {
+      const text = await f.text();
+      setParsed(csvToLeads(text));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Read CSV");
+    } finally {
+      setParsing(false);
+    }
+  };
 
   const run = async () => {
     if (!workspaceId) return;
@@ -50,6 +69,7 @@ function Wizard() {
             file_size: file.size,
             mapping,
             skip_trace: skipTrace,
+            rows: parsed?.rows ?? null,
           },
         })
         .select("id")
@@ -78,13 +98,19 @@ function Wizard() {
               {file ? file.name : "Drop A CSV Or XLSX File"}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              {file ? `${(file.size / 1024).toFixed(1)} KB` : "Up To 100,000 Rows Per Upload"}
+              {parsing
+                ? "Parsing…"
+                : parsed
+                  ? `${parsed.rows.length.toLocaleString()} Rows Detected${parsed.skipped ? ` · ${parsed.skipped} Skipped` : ""}`
+                  : file
+                    ? `${(file.size / 1024).toFixed(1)} KB`
+                    : "Up To 25,000 Rows Per CSV Upload"}
             </div>
             <input
               type="file"
               className="hidden"
               accept=".csv,.xlsx"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => onFile(e.target.files?.[0] ?? null)}
             />
           </label>
 
