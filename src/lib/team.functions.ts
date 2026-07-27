@@ -32,7 +32,7 @@ export const listTeam = createServerFn({ method: "GET" })
     }
     const { data: invites } = await supabaseAdmin
       .from("workspace_invites")
-      .select("id, email, role, created_at, expires_at, accepted_at")
+      .select("id, email, role, created_at, expires_at, accepted_at, token")
       .eq("workspace_id", data.workspaceId)
       .is("accepted_at", null)
       .order("created_at", { ascending: false });
