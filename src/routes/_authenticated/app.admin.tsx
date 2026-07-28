@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
+import { AccountTabs } from "@/components/app/account-tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -173,6 +174,7 @@ function AdminPage() {
         title="Super Admin"
         description="Manage Every Workspace. Comp Accounts. Grant Credits. Cap Monthly Usage."
       />
+      <AccountTabs current="admin" />
 
       <Card className="mb-6">
         <CardHeader>
