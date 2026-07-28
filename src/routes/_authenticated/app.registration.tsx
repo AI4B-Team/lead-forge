@@ -11,6 +11,7 @@ import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { getRegistration, advanceRegistration, submitBrandToProvider, submitCampaignToProvider } from "@/lib/numbers.functions";
+import { AccountTabs } from "@/components/app/account-tabs";
 
 export const Route = createFileRoute("/_authenticated/app/registration")({
   head: () => ({ meta: [{ title: "10DLC Registration — LeadTrace" }] }),
