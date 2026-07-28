@@ -92,7 +92,7 @@ function RegistrationPage() {
     "Reply STOP to opt out."
   ]).join("\n"));
   const [optIn, setOptIn] = useState(refs.campaign?.opt_in_flow ?? "Lead provided phone via public record / opt-in form. STOP + HELP honored.");
-  const [busy, setBusy] = useState<null | "brand" | "campaign" | "approve">(null);
+  const [busy, setBusy] = useState<null | "brand" | "campaign" | "approve" | "reset">(null);
 
   if (!workspaceId) return null;
 
@@ -138,6 +138,16 @@ function RegistrationPage() {
       toast.error(e instanceof Error ? e.message : "Failed.");
     } finally { setBusy(null); }
   };
+  const resetDemo = async () => {
+    setBusy("reset");
+    try {
+      await advance({ data: { workspaceId, brand_status: "pending", campaign_status: "pending" } });
+      toast.success("Registration Reset.");
+      qc.invalidateQueries({ queryKey: ["registration", workspaceId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed.");
+    } finally { setBusy(null); }
+  };
 
   const brandApproved = reg?.brand_status === "approved";
   const campaignApproved = reg?.campaign_status === "approved";
@@ -165,7 +175,13 @@ function RegistrationPage() {
         <div className="mb-6 rounded-2xl border border-success/30 bg-success/5 p-4 flex items-center gap-3">
           <ShieldCheck className="h-5 w-5 text-success" />
           <div className="font-display font-bold text-foreground">Registration Approved — Sending Is Unlocked.</div>
-          <Button asChild size="sm" variant="outline" className="ml-auto rounded-full"><Link to="/app/campaigns">Go To Campaigns</Link></Button>
+          <div className="ml-auto flex items-center gap-2">
+            <Button size="sm" variant="outline" className="rounded-full" onClick={resetDemo} disabled={busy === "reset"}>
+              {busy === "reset" && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
+              Reset (Demo)
+            </Button>
+            <Button asChild size="sm" variant="outline" className="rounded-full"><Link to="/app/campaigns">Go To Campaigns</Link></Button>
+          </div>
         </div>
       ) : (
         <div className="mb-6 rounded-2xl border border-warn/30 bg-warn/5 p-4 flex items-center gap-3">
