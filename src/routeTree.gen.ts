@@ -47,10 +47,10 @@ import { Route as AuthenticatedAppListsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
 import { Route as AuthenticatedAppComplianceRouteImport } from './routes/_authenticated/app.compliance'
-import { Route as AuthenticatedAppCampaignsRouteImport } from './routes/_authenticated/app.campaigns'
 import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
 import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
 import { Route as AuthenticatedAppAccountRouteImport } from './routes/_authenticated/app.account'
+import { Route as AuthenticatedAppCampaignsIndexRouteImport } from './routes/_authenticated/app.campaigns.index'
 import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
 import { Route as ApiPublicHooksTelnyxInboundRouteImport } from './routes/api/public/hooks/telnyx-inbound'
 import { Route as ApiPublicHooksTelnyxDlrRouteImport } from './routes/api/public/hooks/telnyx-dlr'
@@ -255,12 +255,6 @@ const AuthenticatedAppComplianceRoute =
     path: '/compliance',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppCampaignsRoute =
-  AuthenticatedAppCampaignsRouteImport.update({
-    id: '/campaigns',
-    path: '/campaigns',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
 const AuthenticatedAppBillingRoute = AuthenticatedAppBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -276,6 +270,12 @@ const AuthenticatedAppAccountRoute = AuthenticatedAppAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppCampaignsIndexRoute =
+  AuthenticatedAppCampaignsIndexRouteImport.update({
+    id: '/campaigns/',
+    path: '/campaigns/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const ApiPublicHooksTickCampaignsRoute =
   ApiPublicHooksTickCampaignsRouteImport.update({
     id: '/api/public/hooks/tick-campaigns',
@@ -325,15 +325,15 @@ const AuthenticatedAppJobsJobIdRoute =
   } as any)
 const AuthenticatedAppCampaignsNewRoute =
   AuthenticatedAppCampaignsNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedAppCampaignsRoute,
+    id: '/campaigns/new',
+    path: '/campaigns/new',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppCampaignsCampaignIdRoute =
   AuthenticatedAppCampaignsCampaignIdRouteImport.update({
-    id: '/$campaignId',
-    path: '/$campaignId',
-    getParentRoute: () => AuthenticatedAppCampaignsRoute,
+    id: '/campaigns/$campaignId',
+    path: '/campaigns/$campaignId',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -366,7 +366,6 @@ export interface FileRoutesByFullPath {
   '/app/account': typeof AuthenticatedAppAccountRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/billing': typeof AuthenticatedAppBillingRoute
-  '/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
@@ -388,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -418,7 +418,6 @@ export interface FileRoutesByTo {
   '/app/account': typeof AuthenticatedAppAccountRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/billing': typeof AuthenticatedAppBillingRoute
-  '/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
@@ -440,6 +439,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/app/campaigns': typeof AuthenticatedAppCampaignsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -473,7 +473,6 @@ export interface FileRoutesById {
   '/_authenticated/app/account': typeof AuthenticatedAppAccountRoute
   '/_authenticated/app/admin': typeof AuthenticatedAppAdminRoute
   '/_authenticated/app/billing': typeof AuthenticatedAppBillingRoute
-  '/_authenticated/app/campaigns': typeof AuthenticatedAppCampaignsRouteWithChildren
   '/_authenticated/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
@@ -495,6 +494,7 @@ export interface FileRoutesById {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/_authenticated/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -528,7 +528,6 @@ export interface FileRouteTypes {
     | '/app/account'
     | '/app/admin'
     | '/app/billing'
-    | '/app/campaigns'
     | '/app/compliance'
     | '/app/dashboard'
     | '/app/inbox'
@@ -550,6 +549,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/app/campaigns/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -580,7 +580,6 @@ export interface FileRouteTypes {
     | '/app/account'
     | '/app/admin'
     | '/app/billing'
-    | '/app/campaigns'
     | '/app/compliance'
     | '/app/dashboard'
     | '/app/inbox'
@@ -602,6 +601,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/app/campaigns'
   id:
     | '__root__'
     | '/'
@@ -634,7 +634,6 @@ export interface FileRouteTypes {
     | '/_authenticated/app/account'
     | '/_authenticated/app/admin'
     | '/_authenticated/app/billing'
-    | '/_authenticated/app/campaigns'
     | '/_authenticated/app/compliance'
     | '/_authenticated/app/dashboard'
     | '/_authenticated/app/inbox'
@@ -656,6 +655,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/_authenticated/app/campaigns/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -959,13 +959,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppComplianceRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/campaigns': {
-      id: '/_authenticated/app/campaigns'
-      path: '/campaigns'
-      fullPath: '/app/campaigns'
-      preLoaderRoute: typeof AuthenticatedAppCampaignsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
     '/_authenticated/app/billing': {
       id: '/_authenticated/app/billing'
       path: '/billing'
@@ -985,6 +978,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/app/account'
       preLoaderRoute: typeof AuthenticatedAppAccountRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/campaigns/': {
+      id: '/_authenticated/app/campaigns/'
+      path: '/campaigns'
+      fullPath: '/app/campaigns/'
+      preLoaderRoute: typeof AuthenticatedAppCampaignsIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/api/public/hooks/tick-campaigns': {
@@ -1045,37 +1045,20 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/app/campaigns/new': {
       id: '/_authenticated/app/campaigns/new'
-      path: '/new'
+      path: '/campaigns/new'
       fullPath: '/app/campaigns/new'
       preLoaderRoute: typeof AuthenticatedAppCampaignsNewRouteImport
-      parentRoute: typeof AuthenticatedAppCampaignsRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/campaigns/$campaignId': {
       id: '/_authenticated/app/campaigns/$campaignId'
-      path: '/$campaignId'
+      path: '/campaigns/$campaignId'
       fullPath: '/app/campaigns/$campaignId'
       preLoaderRoute: typeof AuthenticatedAppCampaignsCampaignIdRouteImport
-      parentRoute: typeof AuthenticatedAppCampaignsRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
   }
 }
-
-interface AuthenticatedAppCampaignsRouteChildren {
-  AuthenticatedAppCampaignsCampaignIdRoute: typeof AuthenticatedAppCampaignsCampaignIdRoute
-  AuthenticatedAppCampaignsNewRoute: typeof AuthenticatedAppCampaignsNewRoute
-}
-
-const AuthenticatedAppCampaignsRouteChildren: AuthenticatedAppCampaignsRouteChildren =
-  {
-    AuthenticatedAppCampaignsCampaignIdRoute:
-      AuthenticatedAppCampaignsCampaignIdRoute,
-    AuthenticatedAppCampaignsNewRoute: AuthenticatedAppCampaignsNewRoute,
-  }
-
-const AuthenticatedAppCampaignsRouteWithChildren =
-  AuthenticatedAppCampaignsRoute._addFileChildren(
-    AuthenticatedAppCampaignsRouteChildren,
-  )
 
 interface AuthenticatedAppNewJobRouteChildren {
   AuthenticatedAppNewJobBusinessRoute: typeof AuthenticatedAppNewJobBusinessRoute
@@ -1099,7 +1082,6 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAccountRoute: typeof AuthenticatedAppAccountRoute
   AuthenticatedAppAdminRoute: typeof AuthenticatedAppAdminRoute
   AuthenticatedAppBillingRoute: typeof AuthenticatedAppBillingRoute
-  AuthenticatedAppCampaignsRoute: typeof AuthenticatedAppCampaignsRouteWithChildren
   AuthenticatedAppComplianceRoute: typeof AuthenticatedAppComplianceRoute
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
@@ -1111,14 +1093,16 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppCampaignsCampaignIdRoute: typeof AuthenticatedAppCampaignsCampaignIdRoute
+  AuthenticatedAppCampaignsNewRoute: typeof AuthenticatedAppCampaignsNewRoute
   AuthenticatedAppJobsJobIdRoute: typeof AuthenticatedAppJobsJobIdRoute
+  AuthenticatedAppCampaignsIndexRoute: typeof AuthenticatedAppCampaignsIndexRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAccountRoute: AuthenticatedAppAccountRoute,
   AuthenticatedAppAdminRoute: AuthenticatedAppAdminRoute,
   AuthenticatedAppBillingRoute: AuthenticatedAppBillingRoute,
-  AuthenticatedAppCampaignsRoute: AuthenticatedAppCampaignsRouteWithChildren,
   AuthenticatedAppComplianceRoute: AuthenticatedAppComplianceRoute,
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
@@ -1130,7 +1114,11 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppCampaignsCampaignIdRoute:
+    AuthenticatedAppCampaignsCampaignIdRoute,
+  AuthenticatedAppCampaignsNewRoute: AuthenticatedAppCampaignsNewRoute,
   AuthenticatedAppJobsJobIdRoute: AuthenticatedAppJobsJobIdRoute,
+  AuthenticatedAppCampaignsIndexRoute: AuthenticatedAppCampaignsIndexRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
