@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app/page-header";
+import { AccountTabs } from "@/components/app/account-tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ function Compliance() {
   return (
     <div>
       <PageHeader title="Compliance" description="10DLC Registration, Audit Logs, And Suppression Enforcement." />
+      <AccountTabs current="compliance" />
 
       <div className="grid md:grid-cols-2 gap-4">
         <Card>
