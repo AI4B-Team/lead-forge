@@ -10,10 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { meIsSuperAdmin } from "@/lib/admin.functions";
+import { AccountTabs } from "@/components/app/account-tabs";
 
 const searchSchema = z.object({ tab: z.enum(["profile", "security"]).optional() });
 
@@ -26,13 +23,7 @@ export const Route = createFileRoute("/_authenticated/app/account")({
 function AccountPage() {
   const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const rootNavigate = useNavigate();
   const { user } = useAuth();
-  const fetchIsAdmin = useServerFn(meIsSuperAdmin);
-  const { data: admin } = useQuery({
-    queryKey: ["me-is-super-admin"],
-    queryFn: () => fetchIsAdmin(),
-  });
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -82,35 +73,11 @@ function AccountPage() {
   return (
     <div className="max-w-3xl">
       <PageHeader title="Account" description="Manage Your Profile, Security, And Preferences." />
+      <AccountTabs current={tab ?? "profile"} />
       <Tabs
         value={tab ?? "profile"}
-        onValueChange={(v) => {
-          const routeMap: Record<string, string> = {
-            billing: "/app/billing",
-            team: "/app/team",
-            workspace: "/app/settings",
-            registration: "/app/registration",
-            compliance: "/app/compliance",
-            admin: "/app/admin",
-          };
-          if (routeMap[v]) {
-            rootNavigate({ to: routeMap[v] });
-            return;
-          }
-          navigate({ search: { tab: v as "profile" | "security" }, replace: true });
-        }}
+        onValueChange={(v) => navigate({ search: { tab: v as "profile" | "security" }, replace: true })}
       >
-        <TabsList className="flex flex-wrap h-auto justify-start">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
-          <TabsTrigger value="workspace">Workspace</TabsTrigger>
-          <TabsTrigger value="registration">10DLC</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
-          {admin?.isSuperAdmin && <TabsTrigger value="admin">Admin</TabsTrigger>}
-        </TabsList>
-
         <TabsContent value="profile" className="mt-4 space-y-4">
           <Card>
             <CardHeader><CardTitle className="text-base font-display">Profile</CardTitle></CardHeader>

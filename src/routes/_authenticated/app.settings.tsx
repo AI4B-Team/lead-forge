@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app/page-header";
+import { AccountTabs } from "@/components/app/account-tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ function Settings() {
   return (
     <div className="max-w-3xl">
       <PageHeader title="Settings" description="Workspace, Industry Preset, And Team." />
+      <AccountTabs current="workspace" />
       <div className="space-y-4">
         <Card>
           <CardHeader><CardTitle className="text-base font-display">Workspace</CardTitle></CardHeader>

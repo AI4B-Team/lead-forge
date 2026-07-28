@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Copy, Trash2, UserPlus, Mail } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
+import { AccountTabs } from "@/components/app/account-tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,6 +66,7 @@ function TeamPage() {
   return (
     <div className="max-w-4xl space-y-6">
       <PageHeader title="Team" description="Invite Teammates To Collaborate In This Workspace." />
+      <AccountTabs current="team" />
 
       <Card>
         <CardHeader>

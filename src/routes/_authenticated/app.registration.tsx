@@ -11,6 +11,7 @@ import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { getRegistration, advanceRegistration, submitBrandToProvider, submitCampaignToProvider } from "@/lib/numbers.functions";
+import { AccountTabs } from "@/components/app/account-tabs";
 
 export const Route = createFileRoute("/_authenticated/app/registration")({
   head: () => ({ meta: [{ title: "10DLC Registration — LeadTrace" }] }),
@@ -143,6 +144,7 @@ function RegistrationPage() {
 
   return (
     <div>
+      <AccountTabs current="registration" />
       <div className="flex flex-col gap-3 mb-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">10DLC Registration</h1>
