@@ -143,6 +143,7 @@ function RegistrationPage() {
 
   return (
     <div>
+      <AccountTabs current="registration" />
       <div className="flex flex-col gap-3 mb-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">10DLC Registration</h1>
