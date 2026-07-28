@@ -10,7 +10,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { getRegistration } from "@/lib/numbers.functions";
 import { listCampaigns } from "@/lib/campaigns.functions";
 
-export const Route = createFileRoute("/_authenticated/app/campaigns")({
+export const Route = createFileRoute("/_authenticated/app/campaigns/")({
   head: () => ({ meta: [{ title: "Campaigns — LeadTrace" }] }),
   component: Campaigns,
 });
