@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
+import { AccountTabs } from "@/components/app/account-tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,7 @@ function Billing() {
   return (
     <div className="max-w-5xl">
       <PageHeader title="Billing" description="Plan, Metered Credits, And Recent Activity." />
+      <AccountTabs current="billing" />
 
       <Card className="mb-6">
         <CardHeader className="flex flex-row items-center justify-between">
