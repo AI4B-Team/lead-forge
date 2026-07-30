@@ -298,6 +298,19 @@ function NewCampaign() {
 }
 
 function SpintaxPreview({ body }: { body: string }) {
+  return <SpintaxPreviewInner body={body} />;
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border p-4">
+      <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-2xl font-black text-foreground">{value}</div>
+    </div>
+  );
+}
+
+function SpintaxPreviewInner({ body }: { body: string }) {
   const count = spinCount(body);
   const samples = count > 1 ? spinSample(body, 3) : [];
   if (count <= 1) return null;
