@@ -136,17 +136,39 @@ export const runJob = createServerFn({ method: "POST" })
     const raw = await adapter.run(params);
     await supabase.from("jobs").update({ rows_in: raw.length }).eq("id", jobId);
 
-    // 2) ENRICH + DEDUPE (drop franchises, dedupe by phone+name) --------------
+    // 2) ENRICH + DEDUPE (drop franchises, dedupe in-batch + across lists) ----
     await supabase.from("jobs").update({ status: "enriching" }).eq("id", jobId);
     const removeFranchises = params.remove_franchises !== false;
+    const dedupe = params.dedupe !== false;
     const seen = new Set<string>();
+
+    // Pull phones already in this workspace so re-runs don't re-import the same
+    // business/owner that a previous job already delivered.
+    if (dedupe) {
+      const { data: existing } = await supabase
+        .from("leads")
+        .select("phone")
+        .eq("workspace_id", workspaceId)
+        .not("phone", "is", null)
+        .limit(50000);
+      for (const row of existing ?? []) {
+        const d = digits(row.phone);
+        if (d) seen.add(`p:${d}`);
+      }
+    }
+
     const deduped: RawLead[] = [];
     for (const r of raw) {
       const meta = (r.source_meta ?? {}) as { franchise?: boolean };
       if (removeFranchises && meta.franchise) continue;
-      const key = `${(r.phone ?? "").toLowerCase()}|${(r.business_name ?? r.full_name ?? "").toLowerCase()}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
+      if (dedupe) {
+        const phoneKey = digits(r.phone) ? `p:${digits(r.phone)}` : null;
+        const emailKey = r.email ? `e:${r.email.trim().toLowerCase()}` : null;
+        const nameKey = `n:${norm(r.business_name ?? r.full_name)}|${norm(r.address)}|${norm(r.city)}|${norm(r.state)}`;
+        const keys = [phoneKey, emailKey, nameKey].filter(Boolean) as string[];
+        if (keys.some((k) => seen.has(k))) continue;
+        for (const k of keys) seen.add(k);
+      }
       deduped.push(r);
     }
     await supabase.from("jobs").update({ rows_deduped: deduped.length, rows_enriched: deduped.length }).eq("id", jobId);
