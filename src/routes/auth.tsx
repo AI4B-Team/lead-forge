@@ -70,6 +70,7 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        try { localStorage.setItem("leadtrace_returning", "1"); } catch { /* ignore */ }
         const stashed = (() => { try { return sessionStorage.getItem("leadtrace_prompt"); } catch { return null; } })();
         if (stashed) {
           navigate({ to: "/app/new-job/business" });
