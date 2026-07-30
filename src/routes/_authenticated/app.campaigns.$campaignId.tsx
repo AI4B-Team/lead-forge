@@ -77,11 +77,11 @@ function CampaignDetail() {
             )}
             <Badge variant="outline" className="uppercase">{campaign.status ?? "draft"}</Badge>
             {campaign.status !== "sending" ? (
-              <Button className="rounded-full" onClick={() => setStatus("sending")}>
+              <Button className="rounded-full bg-success text-success-foreground hover:bg-success/90" onClick={() => setStatus("sending")}>
                 <Play className="mr-1 h-4 w-4" /> Start
               </Button>
             ) : (
-              <Button className="rounded-full" variant="outline" onClick={() => setStatus("paused")}>
+              <Button className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => setStatus("paused")}>
                 <Pause className="mr-1 h-4 w-4" /> Pause
               </Button>
             )}
