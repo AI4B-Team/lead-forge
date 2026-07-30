@@ -153,7 +153,11 @@ function Wizard() {
         <div className="mb-4 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
           <div className="text-xs font-semibold uppercase tracking-wider text-primary">Your Prompt</div>
           <div className="mt-1 text-foreground">{prompt}</div>
-          <div className="mt-1 text-xs text-muted-foreground">We've prefilled niche and state below — tweak anything and hit Run Job.</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {autoCounty
+              ? `We've prefilled niche, state, and ${autoCounty} County below — tweak anything and hit Run Job.`
+              : "We've prefilled niche and state below — tweak anything and hit Run Job."}
+          </div>
         </div>
       )}
       <Card>
