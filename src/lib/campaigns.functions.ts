@@ -229,6 +229,8 @@ export const previewCampaign = createServerFn({ method: "GET" })
       dropSize: z.number().int().min(50).max(5000).default(500),
       dropTimes: z.array(z.string().regex(/^\d{2}:\d{2}$/)).default(["10:00", "12:00", "15:00", "17:00"]),
       bodies: z.array(z.string().max(2000)).default([]),
+      startAt: z.string().optional(),
+      instant: z.boolean().default(false),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -243,7 +245,8 @@ export const previewCampaign = createServerFn({ method: "GET" })
 
     const recipients = unique.size;
     const cost = estimateCost(recipients, data.bodies.map((b) => ({ message_variants: [b] })));
-    const drops = planDrops(recipients, data.dropSize, data.dropTimes);
+    const from = data.startAt ? new Date(data.startAt) : new Date();
+    const drops = planDrops(recipients, data.dropSize, data.dropTimes, from, data.instant);
     return { recipients, duplicates, cost, drops };
   });
 
@@ -254,6 +257,8 @@ export const scheduleCampaignDrops = createServerFn({ method: "POST" })
     z.object({
       campaignId: z.string().uuid(),
       recipients: z.number().int().min(0),
+      startAt: z.string().optional(),
+      instant: z.boolean().default(false),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -265,7 +270,14 @@ export const scheduleCampaignDrops = createServerFn({ method: "POST" })
     if (!campaign) throw new Error("Campaign Not Found");
 
     await context.supabase.from("campaign_drops").delete().eq("campaign_id", campaign.id);
-    const drops = planDrops(data.recipients, campaign.drop_size ?? 500, campaign.drop_times ?? undefined);
+    const from = data.startAt ? new Date(data.startAt) : new Date();
+    const drops = planDrops(
+      data.recipients,
+      campaign.drop_size ?? 500,
+      campaign.drop_times ?? undefined,
+      from,
+      data.instant,
+    );
     if (drops.length) {
       const { error } = await context.supabase.from("campaign_drops").insert(
         drops.map((d) => ({

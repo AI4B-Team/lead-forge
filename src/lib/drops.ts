@@ -5,12 +5,24 @@ export const DEFAULT_DROP_TIMES = ["10:00", "12:00", "15:00", "17:00"];
 
 export type PlannedDrop = { drop_index: number; scheduled_at: string; size: number };
 
+/** Render a 24h "HH:MM" string as friendly 12-hour time, e.g. "3:00 PM". */
+export function formatTime12(value: string): string {
+  const [hRaw, mRaw] = value.split(":");
+  const h = Number(hRaw);
+  const m = (mRaw ?? "00").padStart(2, "0");
+  const suffix = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${m} ${suffix}`;
+}
+
 /** Split `total` contacts into `dropSize` batches scheduled across `times` per day. */
 export function planDrops(
   total: number,
   dropSize = 500,
   times: string[] = DEFAULT_DROP_TIMES,
   from: Date = new Date(),
+  /** When true, the first drop goes out immediately and the rest use the slots. */
+  instant = false,
 ): PlannedDrop[] {
   const size = Math.max(1, dropSize);
   const slots = times.length ? times : DEFAULT_DROP_TIMES;
@@ -18,6 +30,11 @@ export function planDrops(
   const drops: PlannedDrop[] = [];
   let remaining = total;
   for (let i = 0; i < count; i++) {
+    if (instant && i === 0) {
+      drops.push({ drop_index: 1, scheduled_at: from.toISOString(), size: Math.min(size, remaining) });
+      remaining -= size;
+      continue;
+    }
     const dayOffset = Math.floor(i / slots.length);
     const [h, m] = slots[i % slots.length].split(":").map(Number);
     const when = new Date(from);
