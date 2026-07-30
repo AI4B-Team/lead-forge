@@ -291,7 +291,7 @@ export const tickCampaign = createServerFn({ method: "POST" })
 
     const { data: campaign } = await supabase
       .from("campaigns")
-      .select("id, workspace_id, list_job_id, status, daily_cap, send_window")
+      .select("id, workspace_id, list_job_id, status, daily_cap, send_window, drop_size, duplicate_policy")
       .eq("id", data.campaignId).maybeSingle();
     if (!campaign) throw new Error("Campaign Not Found");
     if (campaign.status !== "sending") return { dispatched: 0, reason: "not_sending" };
@@ -344,8 +344,28 @@ export const tickCampaign = createServerFn({ method: "POST" })
       .from("messages").select("lead_id").eq("campaign_id", campaign.id).eq("direction", "outbound");
     const messaged = new Set((prevMsgs ?? []).map((m) => m.lead_id).filter(Boolean) as string[]);
 
+    // Drop gating: first touches only leave inside a scheduled, due drop.
+    const { data: dueDrops } = await supabase
+      .from("campaign_drops")
+      .select("id, drop_index, size, sent_count, status")
+      .eq("campaign_id", campaign.id)
+      .in("status", ["pending", "sending"])
+      .lte("scheduled_at", new Date().toISOString())
+      .order("drop_index")
+      .limit(1);
+    const activeDrop = dueDrops?.[0] ?? null;
+    const { count: totalDrops } = await supabase
+      .from("campaign_drops")
+      .select("id", { count: "exact", head: true })
+      .eq("campaign_id", campaign.id);
+    if ((totalDrops ?? 0) > 0 && !activeDrop) return { dispatched: 0, reason: "no_drop_due" };
+    const dropRoom = activeDrop
+      ? Math.max(0, (activeDrop.size ?? 0) - (activeDrop.sent_count ?? 0))
+      : Number.POSITIVE_INFINITY;
+    if (dropRoom === 0) return { dispatched: 0, reason: "drop_complete" };
+
     // Fetch next clean leads to send (limit conservatively; filter suppressed/messaged in-app)
-    const take = Math.min(remainingCap, batch);
+    const take = Math.min(remainingCap, dropRoom, batch);
     const { data: leads } = await supabase
       .from("leads")
       .select("id, full_name, phone, city, state, address")
@@ -357,7 +377,14 @@ export const tickCampaign = createServerFn({ method: "POST" })
       return { dispatched: 0, reason: "list_exhausted" };
     }
 
-    const toSend = leads.filter((l) => l.phone && !suppressed.has(l.phone) && !messaged.has(l.id)).slice(0, take);
+    // duplicate_policy = "skip" (default) never re-messages a lead already
+    // contacted by this campaign.
+    const skipDupes = (campaign.duplicate_policy ?? "skip") === "skip";
+    const toSend = leads
+      .filter((l) => l.phone && !suppressed.has(l.phone) && (!skipDupes || !messaged.has(l.id)))
+      // 6pm rule: a first touch never starts after 6pm recipient local time.
+      .filter((l) => canStartNewDrop(l.phone as string))
+      .slice(0, take);
 
     let dispatched = 0;
     const rows: Array<Record<string, unknown>> = [];
@@ -386,8 +413,16 @@ export const tickCampaign = createServerFn({ method: "POST" })
       if (error) throw error;
     }
 
+    if (activeDrop && dispatched > 0) {
+      const nextSent = (activeDrop.sent_count ?? 0) + dispatched;
+      await supabase
+        .from("campaign_drops")
+        .update({ sent_count: nextSent, status: nextSent >= (activeDrop.size ?? 0) ? "complete" : "sending" })
+        .eq("id", activeDrop.id);
+    }
+
     // If nothing left after this batch, complete campaign.
-    if (toSend.length < take) {
+    if (!activeDrop && toSend.length < take) {
       await supabase.from("campaigns").update({ status: "completed" }).eq("id", campaign.id);
     }
 
