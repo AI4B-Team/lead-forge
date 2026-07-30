@@ -18,6 +18,19 @@ export const Route = createFileRoute("/_authenticated/app/new-job/business")({
   component: Wizard,
 });
 
+const STATE_NAMES: Record<string, string> = {
+  Alabama: "AL", Alaska: "AK", Arizona: "AZ", Arkansas: "AR", California: "CA",
+  Colorado: "CO", Connecticut: "CT", Delaware: "DE", Florida: "FL", Georgia: "GA",
+  Hawaii: "HI", Idaho: "ID", Illinois: "IL", Indiana: "IN", Iowa: "IA",
+  Kansas: "KS", Kentucky: "KY", Louisiana: "LA", Maine: "ME", Maryland: "MD",
+  Massachusetts: "MA", Michigan: "MI", Minnesota: "MN", Mississippi: "MS", Missouri: "MO",
+  Montana: "MT", Nebraska: "NE", Nevada: "NV", "New Hampshire": "NH", "New Jersey": "NJ",
+  "New Mexico": "NM", "New York": "NY", "North Carolina": "NC", "North Dakota": "ND", Ohio: "OH",
+  Oklahoma: "OK", Oregon: "OR", Pennsylvania: "PA", "Rhode Island": "RI", "South Carolina": "SC",
+  "South Dakota": "SD", Tennessee: "TN", Texas: "TX", Utah: "UT", Vermont: "VT",
+  Virginia: "VA", Washington: "WA", "West Virginia": "WV", Wisconsin: "WI", Wyoming: "WY",
+};
+
 function Wizard() {
   const navigate = useNavigate();
   const { workspaceId } = useWorkspaceId();
@@ -32,6 +45,7 @@ function Wizard() {
   const [avoidMetros, setAvoidMetros] = useState(false);
   const [busy, setBusy] = useState(false);
   const [prompt, setPrompt] = useState<string | null>(null);
+  const [autoCounty, setAutoCounty] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -39,9 +53,16 @@ function Wizard() {
       if (!stashed) return;
       setPrompt(stashed);
       sessionStorage.removeItem("leadtrace_prompt");
-      // Naive parse: 2-letter state at end (after optional comma), first capitalized/known word as niche.
-      const stateMatch = stashed.match(/\b([A-Z]{2})\b\s*\.?\s*$/);
-      if (stateMatch) setState(stateMatch[1]);
+      // State: full name anywhere, else 2-letter code.
+      const named = Object.entries(STATE_NAMES).find(([name]) =>
+        new RegExp(`\\b${name}\\b`, "i").test(stashed),
+      );
+      if (named) {
+        setState(named[1]);
+      } else {
+        const stateMatch = stashed.match(/\b([A-Z]{2})\b/);
+        if (stateMatch) setState(stateMatch[1]);
+      }
       const known = NICHES.find((n) => new RegExp(`\\b${n}\\b`, "i").test(stashed));
       if (known) setPicked([known]);
       else {
@@ -60,12 +81,28 @@ function Wizard() {
     (async () => {
       const { data } = await supabase
         .from("municipalities")
-        .select("county")
+        .select("county, city")
         .eq("state", state);
-      const uniq = Array.from(new Set((data ?? []).map((r) => r.county as string))).sort();
+      const rows = data ?? [];
+      const uniq = Array.from(new Set(rows.map((r) => r.county as string))).sort();
       setCounties(uniq);
+
+      // If the prompt names a city (e.g. "Tampa, FL"), auto-select its county.
+      if (!prompt) return;
+      const hay = prompt.toLowerCase();
+      const cityHit = rows
+        .filter((r) => r.city && hay.includes(String(r.city).toLowerCase()))
+        .sort((a, b) => String(b.city).length - String(a.city).length)[0];
+      const countyHit = uniq
+        .filter((c) => hay.includes(`${c.toLowerCase()} count`))
+        .sort((a, b) => b.length - a.length)[0];
+      const county = countyHit ?? (cityHit?.county as string | undefined);
+      if (county) {
+        setPickedCounties([county]);
+        setAutoCounty(county);
+      }
     })();
-  }, [state]);
+  }, [state, prompt]);
 
   const addCustomNiche = () => {
     const n = customNiche.trim();
@@ -116,7 +153,11 @@ function Wizard() {
         <div className="mb-4 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
           <div className="text-xs font-semibold uppercase tracking-wider text-primary">Your Prompt</div>
           <div className="mt-1 text-foreground">{prompt}</div>
-          <div className="mt-1 text-xs text-muted-foreground">We've prefilled niche and state below — tweak anything and hit Run Job.</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {autoCounty
+              ? `We've prefilled niche, state, and ${autoCounty} County below — tweak anything and hit Run Job.`
+              : "We've prefilled niche and state below — tweak anything and hit Run Job."}
+          </div>
         </div>
       )}
       <Card>
