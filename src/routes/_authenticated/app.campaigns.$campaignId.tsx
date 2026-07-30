@@ -11,7 +11,9 @@ import { toast } from "sonner";
 import { getCampaignDetail, tickCampaign, updateCampaignStatus, updateCampaignConfig } from "@/lib/campaigns.functions";
 import { BotConsole } from "@/components/app/bot-console";
 import { BotTrainer } from "@/components/app/bot-trainer";
+import { BrandPicker } from "@/components/app/brand-picker";
 import { DripEditor, type DripStep } from "@/components/app/drip-editor";
+import { useWorkspaceId } from "@/hooks/use-workspace";
 
 export const Route = createFileRoute("/_authenticated/app/campaigns/$campaignId")({
   head: () => ({ meta: [{ title: "Campaign Detail — LeadTrace" }] }),
@@ -88,6 +90,12 @@ function CampaignDetail() {
           </>
         }
       />
+
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <BrandAssignment campaignId={campaignId} brandId={campaign.brand_id ?? null} />
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         <Stat label="Recipients" value={stats.recipients} />
@@ -177,7 +185,11 @@ function CampaignDetail() {
         config={(campaign.bot_config ?? {}) as Record<string, never>}
       />
 
-      <BotTrainer campaignId={campaignId} />
+      {campaign.brand_id ? (
+        <BotTrainer key={campaign.brand_id} brandId={campaign.brand_id} heading="Brand Knowledge (Shared Across Campaigns)" />
+      ) : (
+        <BotTrainer campaignId={campaignId} heading="Campaign-Only Bot Training" />
+      )}
 
       <div className="mt-6 text-right">
         <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/campaigns" })}>Back To Campaigns</Button>
@@ -196,6 +208,26 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: "su
       </CardContent>
     </Card>
   );
+}
+
+/** Attach the campaign to a reusable brand so the bot inherits its knowledge. */
+function BrandAssignment({ campaignId, brandId }: { campaignId: string; brandId: string | null }) {
+  const qc = useQueryClient();
+  const { workspaceId } = useWorkspaceId();
+  const saveConfig = useServerFn(updateCampaignConfig);
+
+  const assign = async (id: string | null) => {
+    try {
+      await saveConfig({ data: { campaignId, brand_id: id } });
+      qc.invalidateQueries({ queryKey: ["campaign-detail", campaignId] });
+      toast.success(id ? "Brand Linked" : "Brand Cleared");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Update Failed");
+    }
+  };
+
+  if (!workspaceId) return null;
+  return <BrandPicker workspaceId={workspaceId} value={brandId} onChange={assign} />;
 }
 
 /** Editable drip sequence with per-touch wait duration, saved back to the campaign. */

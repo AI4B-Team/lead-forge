@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/app/campaigns/")({
 
 function Campaigns() {
   const { workspaceId } = useWorkspaceId();
-  const [view, setView] = useState<ViewMode>("cards");
+  const [view, setView] = useState<ViewMode>("list");
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? (localStorage.getItem("campaigns-view") as ViewMode | null) : null;

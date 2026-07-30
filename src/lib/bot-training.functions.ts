@@ -1,17 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { knowledgeScope } from "@/lib/bot-training.shared";
 
-/** List every brand-training source attached to a campaign. */
+/** List every brand-training source in the given scope. */
 export const listBotKnowledge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ campaignId: z.string().uuid() }).parse(input))
+  .inputValidator((input) => knowledgeScope.parse(input))
   .handler(async ({ data, context }) => {
-    const { data: rows, error } = await context.supabase
+    let q = context.supabase
       .from("bot_knowledge")
       .select("id, source_type, title, source_url, content, created_at")
-      .eq("campaign_id", data.campaignId)
       .order("created_at", { ascending: false });
+    q = data.brandId ? q.eq("brand_id", data.brandId) : q.eq("campaign_id", data.campaignId!);
+    const { data: rows, error } = await q;
     if (error) throw error;
     return (rows ?? []).map((r) => ({
       id: r.id,
@@ -29,7 +31,8 @@ export const addBotKnowledge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z.object({
-      campaignId: z.string().uuid(),
+      brandId: z.string().uuid().optional(),
+      campaignId: z.string().uuid().optional(),
       items: z
         .array(
           z.object({
@@ -44,26 +47,21 @@ export const addBotKnowledge = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { data: campaign, error: cErr } = await context.supabase
-      .from("campaigns")
-      .select("id, workspace_id")
-      .eq("id", data.campaignId)
-      .maybeSingle();
-    if (cErr) throw cErr;
-    if (!campaign) throw new Error("Campaign Not Found");
-
+    const { resolveKnowledgeScope } = await import("@/lib/bot-training.server");
+    const target = await resolveKnowledgeScope(context.supabase, data);
     const { normalizeContent } = await import("@/lib/bot-training.server");
-    const rows = data.items.map((i) => ({
-      workspace_id: campaign.workspace_id,
-      campaign_id: campaign.id,
-      source_type: i.source_type,
-      title: i.title.trim(),
-      source_url: i.source_url?.trim() || null,
-      content: normalizeContent(i.content),
-    })).filter((r) => r.content.length > 0);
+    const rows = data.items
+      .map((i) => ({
+        ...target,
+        source_type: i.source_type,
+        title: i.title.trim(),
+        source_url: i.source_url?.trim() || null,
+        content: normalizeContent(i.content),
+      }))
+      .filter((r) => r.content.length > 0);
 
     if (!rows.length) throw new Error("Nothing Readable To Train On");
-    const { error } = await context.supabase.from("bot_knowledge").insert(rows);
+    const { error } = await context.supabase.from("bot_knowledge").insert(rows as never);
     if (error) throw error;
     return { added: rows.length };
   });
@@ -73,18 +71,14 @@ export const addBotKnowledgeFromUrls = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z.object({
-      campaignId: z.string().uuid(),
+      brandId: z.string().uuid().optional(),
+      campaignId: z.string().uuid().optional(),
       urls: z.array(z.string().url().max(600)).min(1).max(10),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { data: campaign } = await context.supabase
-      .from("campaigns")
-      .select("id, workspace_id")
-      .eq("id", data.campaignId)
-      .maybeSingle();
-    if (!campaign) throw new Error("Campaign Not Found");
-
+    const { resolveKnowledgeScope } = await import("@/lib/bot-training.server");
+    const target = await resolveKnowledgeScope(context.supabase, data);
     const { fetchUrlText } = await import("@/lib/bot-training.server");
     const ok: Array<{ title: string; content: string; url: string }> = [];
     const failed: Array<{ url: string; reason: string }> = [];
@@ -99,13 +93,12 @@ export const addBotKnowledgeFromUrls = createServerFn({ method: "POST" })
     if (ok.length) {
       const { error } = await context.supabase.from("bot_knowledge").insert(
         ok.map((r) => ({
-          workspace_id: campaign.workspace_id,
-          campaign_id: campaign.id,
+          ...target,
           source_type: "url",
           title: r.title,
           source_url: r.url,
           content: r.content,
-        })),
+        })) as never,
       );
       if (error) throw error;
     }

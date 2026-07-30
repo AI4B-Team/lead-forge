@@ -10,6 +10,7 @@ import {
   Radar,
   Inbox,
   BarChart3,
+  BrainCircuit,
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,6 +32,7 @@ const ITEMS = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/app/new-job", label: "New Job", icon: Plus },
   { to: "/app/lists", label: "Lists", icon: ListChecks },
+  { to: "/app/brands", label: "Brands", icon: BrainCircuit },
   { to: "/app/campaigns", label: "Campaigns", icon: MessageSquare },
   { to: "/app/inbox", label: "Inbox", icon: Inbox },
   { to: "/app/reports", label: "Reports", icon: BarChart3 },
