@@ -1,7 +1,32 @@
 import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
-import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
+import { supabase } from "@/integrations/supabase/client";
+
+// Project-specific replacement for the generated attachSupabaseAuth: when the
+// stored refresh token is stale, getSession() returns null and the RPC hits the
+// server with no bearer -> "Unauthorized: No authorization header provided" and
+// a blank screen from the router error boundary. Try one explicit refresh, and
+// if there is genuinely no session, send the user to /auth instead of firing an
+// unauthenticated request.
+const attachSupabaseAuth = createMiddleware({ type: "function" }).client(
+  async ({ next }) => {
+    let token: string | undefined;
+    if (typeof window !== "undefined") {
+      const { data } = await supabase.auth.getSession();
+      token = data.session?.access_token;
+      if (!token) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        token = refreshed.session?.access_token;
+      }
+      if (!token && !window.location.pathname.startsWith("/auth")) {
+        window.location.replace("/auth");
+        await new Promise(() => {}); // page is navigating away
+      }
+    }
+    return next({ headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  },
+);
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
