@@ -51,6 +51,7 @@ function Brands() {
       <PageHeader
         title="Brands & Bot Training"
         description="Teach The Bot Your Brand Before You Build A Campaign. Every Reply Comes Only From Approved Material."
+        descriptionClassName="whitespace-nowrap"
       />
 
       {workspaceId && (
