@@ -6,7 +6,6 @@ import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Plus, ShieldAlert, LayoutGrid, List, Bot } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { getRegistration } from "@/lib/numbers.functions";
