@@ -85,7 +85,7 @@ export const getThread = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: messages, error } = await context.supabase
       .from("messages")
-      .select("id, direction, body, status, created_at, is_optout, provider_sid, sending_number_id, lead_id, error_code")
+      .select("id, direction, body, status, created_at, is_optout, is_bot, handoff_reason, provider_sid, sending_number_id, lead_id, error_code")
       .eq("workspace_id", data.workspaceId)
       .eq("thread_key", data.threadKey)
       .order("created_at", { ascending: true });
@@ -102,7 +102,8 @@ export const getThread = createServerFn({ method: "GET" })
         : Promise.resolve(null),
     ]);
 
-    return { messages: messages ?? [], lead, number };
+    const handoff = messages?.find((m) => m.handoff_reason)?.handoff_reason ?? null;
+    return { messages: messages ?? [], lead, number, handoff };
   });
 
 // Mark all inbound messages in a thread as read.
