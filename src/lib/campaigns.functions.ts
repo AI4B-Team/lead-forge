@@ -35,10 +35,16 @@ export const listCampaigns = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data: campaigns, error } = await supabase
       .from("campaigns")
-      .select("id, name, status, daily_cap, send_window, list_job_id, created_at")
+      .select("id, name, status, daily_cap, send_window, list_job_id, created_at, tag_id, bot_enabled, drop_size")
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: false });
     if (error) throw error;
+
+    const { data: tagRows } = await supabase
+      .from("tags")
+      .select("id, name, color")
+      .eq("workspace_id", data.workspaceId);
+    const tags = Object.fromEntries((tagRows ?? []).map((t) => [t.id, t]));
 
     // Aggregate message stats per campaign.
     const ids = (campaigns ?? []).map((c) => c.id);
