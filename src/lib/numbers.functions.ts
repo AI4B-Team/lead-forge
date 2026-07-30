@@ -29,10 +29,11 @@ export const buyNumbers = createServerFn({ method: "POST" })
       workspaceId: z.string().uuid(),
       region: z.enum(["east", "central", "mountain", "west"]),
       quantity: z.number().int().min(1).max(20),
+      areaCodes: z.array(z.string().regex(/^\d{3}$/)).max(20).optional(),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const codes = REGION_AREA_CODES[data.region];
+    const codes = data.areaCodes?.length ? data.areaCodes : REGION_AREA_CODES[data.region];
     const { isProviderConfigured, getProvider } = await import("@/lib/sms");
     const useReal = isProviderConfigured();
     const provider = useReal ? getProvider() : null;

@@ -46,7 +46,8 @@ function Numbers() {
 
   const [open, setOpen] = useState(false);
   const [region, setRegion] = useState<Region>("east");
-  const [qty, setQty] = useState(3);
+  const [qtyInput, setQtyInput] = useState("3");
+  const [areaCodesInput, setAreaCodesInput] = useState("");
   const [busy, setBusy] = useState(false);
 
   if (isLoading || !data) {
@@ -63,10 +64,26 @@ function Numbers() {
 
   const submit = async () => {
     if (!workspaceId) return;
+    const qty = Number(qtyInput);
+    if (!Number.isInteger(qty) || qty < 1 || qty > 20) {
+      toast.error("Enter A Quantity Between 1 And 20.");
+      return;
+    }
+    const areaCodes = areaCodesInput
+      .split(/[^0-9]+/)
+      .filter(Boolean);
+    if (areaCodes.some((c) => c.length !== 3)) {
+      toast.error("Area Codes Must Be 3 Digits, Separated By Commas.");
+      return;
+    }
     setBusy(true);
     try {
-      const res = await buy({ data: { workspaceId, region, quantity: qty } });
-      toast.success(`Added ${res.added} Number${res.added === 1 ? "" : "s"} To ${region.toUpperCase()} Pool.`);
+      const res = await buy({
+        data: { workspaceId, region, quantity: qty, ...(areaCodes.length ? { areaCodes } : {}) },
+      });
+      toast.success(
+        `Added ${res.added} Number${res.added === 1 ? "" : "s"} ${areaCodes.length ? `In ${areaCodes.join(", ")}` : `To ${region.toUpperCase()} Pool`}.`,
+      );
       setOpen(false);
       qc.invalidateQueries({ queryKey: ["numbers", workspaceId] });
     } catch (e) {
@@ -103,7 +120,24 @@ function Numbers() {
                 </div>
                 <div>
                   <Label>Quantity</Label>
-                  <Input type="number" min={1} max={20} value={qty} onChange={(e) => setQty(Number(e.target.value))} />
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="3"
+                    value={qtyInput}
+                    onChange={(e) => setQtyInput(e.target.value.replace(/[^0-9]/g, ""))}
+                  />
+                </div>
+                <div>
+                  <Label>Specific Area Codes (Optional)</Label>
+                  <Input
+                    placeholder="e.g. 305, 786, 954"
+                    value={areaCodesInput}
+                    onChange={(e) => setAreaCodesInput(e.target.value)}
+                  />
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Leave Blank To Use The Region Pool. Numbers Cycle Through The Codes You List.
+                  </p>
                 </div>
               </div>
               <DialogFooter>
