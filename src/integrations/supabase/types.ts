@@ -46,6 +46,47 @@ export type Database = {
           },
         ]
       }
+      bot_knowledge: {
+        Row: {
+          campaign_id: string | null
+          content: string
+          created_at: string
+          id: string
+          source_type: string
+          source_url: string | null
+          title: string
+          workspace_id: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          source_type?: string
+          source_url?: string | null
+          title: string
+          workspace_id: string
+        }
+        Update: {
+          campaign_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          source_type?: string
+          source_url?: string | null
+          title?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_knowledge_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_drops: {
         Row: {
           campaign_id: string

@@ -62,10 +62,18 @@ export const previewBotReply = createServerFn({ method: "POST" })
     }
 
     const { generateBotReply } = await import("@/lib/bot.server");
+    const { data: knowledgeRows } = await context.supabase
+      .from("bot_knowledge")
+      .select("title, content, source_type, source_url")
+      .eq("campaign_id", data.campaignId)
+      .order("created_at", { ascending: false })
+      .limit(25);
+    const { buildKnowledgeBrief } = await import("@/lib/bot-training.server");
     const outcome = await generateBotReply({
       message: data.message,
       config: (campaign.bot_config ?? {}) as Record<string, never>,
       regulated: !!campaign.regulated_vertical,
+      knowledge: buildKnowledgeBrief(knowledgeRows ?? []),
     });
     return outcome;
   });

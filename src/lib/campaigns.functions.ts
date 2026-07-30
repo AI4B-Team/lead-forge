@@ -186,7 +186,7 @@ export const updateCampaignConfig = createServerFn({ method: "POST" })
       duplicate_policy: z.enum(["skip", "resend"]).optional(),
       steps: z
         .array(z.object({
-          step_order: z.number().int().min(1).max(10),
+          step_order: z.number().int().min(1).max(20),
           delay_minutes: z.number().int().min(0).max(60 * 24 * 30),
           message_variants: z.array(z.string().min(1).max(320)).min(1).max(5),
         }))

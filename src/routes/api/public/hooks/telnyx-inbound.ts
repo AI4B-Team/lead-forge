@@ -123,10 +123,18 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
 
           if (campaign?.bot_enabled) {
             const { generateBotReply } = await import("@/lib/bot.server");
+            const { buildKnowledgeBrief } = await import("@/lib/bot-training.server");
+            const { data: knowledgeRows } = await admin
+              .from("bot_knowledge")
+              .select("title, content, source_type, source_url")
+              .eq("campaign_id", campaignId)
+              .order("created_at", { ascending: false })
+              .limit(25);
             const outcome = await generateBotReply({
               message: inbound.body,
               config: (campaign.bot_config ?? {}) as Record<string, never>,
               regulated: !!campaign.regulated_vertical,
+              knowledge: buildKnowledgeBrief(knowledgeRows ?? []),
             });
 
             if (outcome.action === "reply") {

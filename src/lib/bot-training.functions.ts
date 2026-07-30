@@ -1,0 +1,122 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+/** List every brand-training source attached to a campaign. */
+export const listBotKnowledge = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ campaignId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("bot_knowledge")
+      .select("id, source_type, title, source_url, content, created_at")
+      .eq("campaign_id", data.campaignId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (rows ?? []).map((r) => ({
+      id: r.id,
+      source_type: r.source_type,
+      title: r.title,
+      source_url: r.source_url,
+      created_at: r.created_at,
+      chars: (r.content ?? "").length,
+      excerpt: (r.content ?? "").slice(0, 240),
+    }));
+  });
+
+/** Add one or many pasted / dictated / file-extracted sources in a single call. */
+export const addBotKnowledge = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      campaignId: z.string().uuid(),
+      items: z
+        .array(
+          z.object({
+            source_type: z.enum(["text", "voice", "file", "url"]),
+            title: z.string().min(1).max(160),
+            content: z.string().min(1).max(200000),
+            source_url: z.string().max(600).optional(),
+          }),
+        )
+        .min(1)
+        .max(25),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: campaign, error: cErr } = await context.supabase
+      .from("campaigns")
+      .select("id, workspace_id")
+      .eq("id", data.campaignId)
+      .maybeSingle();
+    if (cErr) throw cErr;
+    if (!campaign) throw new Error("Campaign Not Found");
+
+    const { normalizeContent } = await import("@/lib/bot-training.server");
+    const rows = data.items.map((i) => ({
+      workspace_id: campaign.workspace_id,
+      campaign_id: campaign.id,
+      source_type: i.source_type,
+      title: i.title.trim(),
+      source_url: i.source_url?.trim() || null,
+      content: normalizeContent(i.content),
+    })).filter((r) => r.content.length > 0);
+
+    if (!rows.length) throw new Error("Nothing Readable To Train On");
+    const { error } = await context.supabase.from("bot_knowledge").insert(rows);
+    if (error) throw error;
+    return { added: rows.length };
+  });
+
+/** Crawl one or more public URLs server-side and store the readable text. */
+export const addBotKnowledgeFromUrls = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      campaignId: z.string().uuid(),
+      urls: z.array(z.string().url().max(600)).min(1).max(10),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: campaign } = await context.supabase
+      .from("campaigns")
+      .select("id, workspace_id")
+      .eq("id", data.campaignId)
+      .maybeSingle();
+    if (!campaign) throw new Error("Campaign Not Found");
+
+    const { fetchUrlText } = await import("@/lib/bot-training.server");
+    const ok: Array<{ title: string; content: string; url: string }> = [];
+    const failed: Array<{ url: string; reason: string }> = [];
+    for (const url of data.urls) {
+      try {
+        const r = await fetchUrlText(url);
+        ok.push({ ...r, url });
+      } catch (e) {
+        failed.push({ url, reason: e instanceof Error ? e.message : "Fetch Failed" });
+      }
+    }
+    if (ok.length) {
+      const { error } = await context.supabase.from("bot_knowledge").insert(
+        ok.map((r) => ({
+          workspace_id: campaign.workspace_id,
+          campaign_id: campaign.id,
+          source_type: "url",
+          title: r.title,
+          source_url: r.url,
+          content: r.content,
+        })),
+      );
+      if (error) throw error;
+    }
+    return { added: ok.length, failed };
+  });
+
+export const deleteBotKnowledge = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("bot_knowledge").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });

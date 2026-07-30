@@ -1,25 +1,22 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pause, Play, Send, ShieldAlert, Bot } from "lucide-react";
 import { toast } from "sonner";
-import { getCampaignDetail, tickCampaign, updateCampaignStatus } from "@/lib/campaigns.functions";
+import { getCampaignDetail, tickCampaign, updateCampaignStatus, updateCampaignConfig } from "@/lib/campaigns.functions";
 import { BotConsole } from "@/components/app/bot-console";
+import { BotTrainer } from "@/components/app/bot-trainer";
+import { DripEditor, type DripStep } from "@/components/app/drip-editor";
 
 export const Route = createFileRoute("/_authenticated/app/campaigns/$campaignId")({
   head: () => ({ meta: [{ title: "Campaign Detail — LeadTrace" }] }),
   component: CampaignDetail,
 });
-
-function fmtDelay(minutes: number) {
-  if (minutes < 60) return minutes === 0 ? "Immediately" : `${minutes} Min`;
-  if (minutes < 60 * 24) return `${Math.round(minutes / 60)} Hr`;
-  return `${Math.round(minutes / (60 * 24))} Day`;
-}
 
 function CampaignDetail() {
   const { campaignId } = Route.useParams();
@@ -142,24 +139,14 @@ function CampaignDetail() {
         </Card>
       )}
 
-      <Card className="mt-6">
-        <CardHeader><CardTitle className="text-base font-display">Drip Steps</CardTitle></CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {steps.map((s) => (
-              <div key={s.id} className="rounded-xl border border-border p-4">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="font-semibold text-foreground">Touch {s.step_order}</div>
-                  <div className="text-muted-foreground">{fmtDelay(s.delay_minutes)} · {s.message_variants.length} Variant{s.message_variants.length === 1 ? "" : "s"}</div>
-                </div>
-                <ul className="mt-2 space-y-1 text-sm text-foreground">
-                  {s.message_variants.map((v, i) => (<li key={i}>• {v}</li>))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <DripSequenceEditor
+        campaignId={campaignId}
+        steps={steps.map((s) => ({
+          step_order: s.step_order,
+          delay_minutes: s.delay_minutes,
+          body: s.message_variants[0] ?? "",
+        }))}
+      />
 
       <Card className="mt-6">
         <CardHeader><CardTitle className="text-base font-display">Recent Messages</CardTitle></CardHeader>
@@ -190,6 +177,8 @@ function CampaignDetail() {
         config={(campaign.bot_config ?? {}) as Record<string, never>}
       />
 
+      <BotTrainer campaignId={campaignId} />
+
       <div className="mt-6 text-right">
         <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/campaigns" })}>Back To Campaigns</Button>
       </div>
@@ -206,5 +195,61 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: "su
         <div className={`mt-2 font-display text-2xl font-black ${toneClass}`}>{(value ?? 0).toLocaleString()}</div>
       </CardContent>
     </Card>
+  );
+}
+
+/** Editable drip sequence with per-touch wait duration, saved back to the campaign. */
+function DripSequenceEditor({ campaignId, steps }: { campaignId: string; steps: DripStep[] }) {
+  const qc = useQueryClient();
+  const saveConfig = useServerFn(updateCampaignConfig);
+  const [draft, setDraft] = useState<DripStep[]>(steps);
+  const [saving, setSaving] = useState(false);
+  const key = JSON.stringify(steps);
+
+  useEffect(() => {
+    setDraft(steps);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  const dirty = JSON.stringify(draft) !== key;
+
+  const save = async () => {
+    const clean = draft.filter((s) => s.body.trim().length > 0);
+    if (!clean.length) return toast.error("Write At Least One Message");
+    setSaving(true);
+    try {
+      await saveConfig({
+        data: {
+          campaignId,
+          steps: clean.map((s, i) => ({
+            step_order: i + 1,
+            delay_minutes: s.delay_minutes,
+            message_variants: [s.body.trim().slice(0, 320)],
+          })),
+        },
+      });
+      toast.success("Drip Sequence Saved");
+      qc.invalidateQueries({ queryKey: ["campaign-detail", campaignId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Save Failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <DripEditor steps={draft} onChange={setDraft} />
+      <div className="mt-3 flex justify-end gap-2">
+        {dirty && (
+          <Button variant="outline" className="rounded-full" onClick={() => setDraft(steps)} disabled={saving}>
+            Reset
+          </Button>
+        )}
+        <Button className="rounded-full" onClick={save} disabled={saving || !dirty}>
+          {saving ? "Saving…" : "Save Drip Sequence"}
+        </Button>
+      </div>
+    </div>
   );
 }
