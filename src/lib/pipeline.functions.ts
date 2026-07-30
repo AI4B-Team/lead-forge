@@ -10,6 +10,14 @@ import type { RawLead } from "./data-providers";
 
 type JobParams = Record<string, unknown>;
 
+function digits(v: unknown): string {
+  return typeof v === "string" ? v.replace(/\D/g, "") : "";
+}
+
+function norm(v: unknown): string {
+  return typeof v === "string" ? v.trim().toLowerCase().replace(/\s+/g, " ") : "";
+}
+
 interface SourceAdapter {
   key: string;
   coverage: "live" | "beta" | "requested";
