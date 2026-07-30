@@ -76,7 +76,7 @@ function CampaignDetail() {
             )}
             <Badge variant="outline" className="uppercase">{campaign.status ?? "draft"}</Badge>
             {campaign.status !== "sending" ? (
-              <Button className="rounded-full bg-success text-success-foreground hover:bg-success/90" onClick={() => setStatus("sending")}>
+              <Button className="rounded-full bg-success text-white hover:bg-success/90" onClick={() => setStatus("sending")}>
                 <Play className="mr-1 h-4 w-4" /> Start
               </Button>
             ) : (
