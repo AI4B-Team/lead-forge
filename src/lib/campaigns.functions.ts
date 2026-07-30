@@ -76,7 +76,7 @@ export const listCampaigns = createServerFn({ method: "GET" })
       }
     }
 
-    return { campaigns: campaigns ?? [], stats };
+    return { campaigns: campaigns ?? [], stats, tags };
   });
 
 export const getCampaignDetail = createServerFn({ method: "GET" })
