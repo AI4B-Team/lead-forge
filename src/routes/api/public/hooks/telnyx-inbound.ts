@@ -66,7 +66,7 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
         const isOptOut = OPTOUT_RE.test(inbound.body);
         const isHelp = HELP_RE.test(inbound.body);
 
-        await admin.from("messages").insert({
+        const { data: inboundRow } = await admin.from("messages").insert({
           workspace_id: num.workspace_id,
           campaign_id: campaignId,
           lead_id: lead?.id ?? null,
@@ -76,7 +76,7 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
           is_optout: isOptOut,
           status: "received",
           provider_sid: inbound.providerSid,
-        });
+        }).select("id").single();
 
         if (isOptOut) {
           // Suppress the phone across ALL future campaigns for this workspace.
@@ -146,16 +146,12 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
               } catch {
                 /* best-effort; thread stays in the inbox for a human */
               }
-            } else {
+            } else if (inboundRow) {
               // Hand the thread to a human and record why the bot stepped back.
               await admin
                 .from("messages")
                 .update({ handoff_reason: outcome.reason })
-                .eq("workspace_id", num.workspace_id)
-                .eq("lead_id", lead?.id ?? "")
-                .eq("direction", "inbound")
-                .order("created_at", { ascending: false })
-                .limit(1);
+                .eq("id", inboundRow.id);
             }
           }
         }
