@@ -117,7 +117,7 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
           // can never talk past a compliance keyword.
           const { data: campaign } = await admin
             .from("campaigns")
-            .select("bot_enabled, bot_config, regulated_vertical")
+            .select("bot_enabled, bot_config, regulated_vertical, brand_id")
             .eq("id", campaignId)
             .maybeSingle();
 
@@ -127,7 +127,11 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
             const { data: knowledgeRows } = await admin
               .from("bot_knowledge")
               .select("title, content, source_type, source_url")
-              .eq("campaign_id", campaignId)
+              .or(
+                campaign.brand_id
+                  ? `campaign_id.eq.${campaignId},brand_id.eq.${campaign.brand_id}`
+                  : `campaign_id.eq.${campaignId}`,
+              )
               .order("created_at", { ascending: false })
               .limit(25);
             const outcome = await generateBotReply({

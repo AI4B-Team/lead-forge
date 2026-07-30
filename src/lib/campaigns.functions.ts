@@ -181,6 +181,7 @@ export const updateCampaignConfig = createServerFn({ method: "POST" })
       quiet_start: z.string().regex(/^\d{2}:\d{2}$/).optional(),
       quiet_end: z.string().regex(/^\d{2}:\d{2}$/).optional(),
       tag_id: z.string().uuid().nullable().optional(),
+      brand_id: z.string().uuid().nullable().optional(),
       drop_size: z.number().int().min(50).max(5000).optional(),
       drop_times: z.array(z.string().regex(/^\d{2}:\d{2}$/)).min(1).max(8).optional(),
       duplicate_policy: z.enum(["skip", "resend"]).optional(),
@@ -197,6 +198,7 @@ export const updateCampaignConfig = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = {};
     if (typeof data.daily_cap === "number") patch.daily_cap = data.daily_cap;
     if (data.tag_id !== undefined) patch.tag_id = data.tag_id;
+    if (data.brand_id !== undefined) patch.brand_id = data.brand_id;
     if (typeof data.drop_size === "number") patch.drop_size = data.drop_size;
     if (data.drop_times) patch.drop_times = data.drop_times;
     if (data.duplicate_policy) patch.duplicate_policy = data.duplicate_policy;

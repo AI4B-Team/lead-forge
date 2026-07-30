@@ -41,7 +41,17 @@ function getRecognition(): SpeechRecognitionLike | null {
  * pasted text, dictation, single/batch file upload, or public URLs.
  * Everything stored here becomes the bot's approved source of truth.
  */
-export function BotTrainer({ campaignId }: { campaignId: string }) {
+export function BotTrainer({
+  campaignId,
+  brandId,
+  heading = "Train The Bot On Your Brand",
+}: {
+  campaignId?: string;
+  brandId?: string;
+  heading?: string;
+}) {
+  const scope = brandId ? { brandId } : { campaignId: campaignId! };
+  const scopeKey = brandId ? `brand:${brandId}` : `campaign:${campaignId}`;
   const qc = useQueryClient();
   const list = useServerFn(listBotKnowledge);
   const add = useServerFn(addBotKnowledge);
@@ -49,8 +59,8 @@ export function BotTrainer({ campaignId }: { campaignId: string }) {
   const remove = useServerFn(deleteBotKnowledge);
 
   const { data: sources, isLoading } = useQuery({
-    queryKey: ["bot-knowledge", campaignId],
-    queryFn: () => list({ data: { campaignId } }),
+    queryKey: ["bot-knowledge", scopeKey],
+    queryFn: () => list({ data: scope }),
   });
 
   const [busy, setBusy] = useState(false);
@@ -62,7 +72,7 @@ export function BotTrainer({ campaignId }: { campaignId: string }) {
   const dragRef = useRef<HTMLLabelElement | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  const refresh = () => qc.invalidateQueries({ queryKey: ["bot-knowledge", campaignId] });
+  const refresh = () => qc.invalidateQueries({ queryKey: ["bot-knowledge", scopeKey] });
 
   useEffect(() => () => recRef.current?.stop(), []);
 
@@ -99,7 +109,7 @@ export function BotTrainer({ campaignId }: { campaignId: string }) {
     try {
       await add({
         data: {
-          campaignId,
+          ...scope,
           items: [{ source_type: kind, title: title.trim() || (kind === "voice" ? "Dictated Brand Notes" : "Brand Notes"), content: text }],
         },
       });
@@ -132,7 +142,7 @@ export function BotTrainer({ campaignId }: { campaignId: string }) {
             content: (await f.text()).slice(0, 200000),
           })),
         );
-        const res = await add({ data: { campaignId, items: items.filter((i) => i.content.trim().length > 0) } });
+        const res = await add({ data: { ...scope, items: items.filter((i) => i.content.trim().length > 0) } });
         toast.success(`${res.added} File${res.added === 1 ? "" : "s"} Added`, {
           description: skipped ? `${skipped} Unsupported File${skipped === 1 ? "" : "s"} Skipped.` : undefined,
         });
@@ -144,7 +154,7 @@ export function BotTrainer({ campaignId }: { campaignId: string }) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [campaignId],
+    [scopeKey],
   );
 
   const saveUrls = async () => {
@@ -156,7 +166,7 @@ export function BotTrainer({ campaignId }: { campaignId: string }) {
     if (!parsed.length) return toast.error("Add At Least One URL");
     setBusy(true);
     try {
-      const res = await addUrls({ data: { campaignId, urls: parsed.slice(0, 10) } });
+      const res = await addUrls({ data: { ...scope, urls: parsed.slice(0, 10) } });
       if (res.added) toast.success(`${res.added} Page${res.added === 1 ? "" : "s"} Learned`);
       for (const f of res.failed) toast.error(f.url, { description: f.reason });
       setUrls("");
@@ -183,7 +193,7 @@ export function BotTrainer({ campaignId }: { campaignId: string }) {
     <Card className="mt-6">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-base font-display flex items-center gap-2">
-          <BrainCircuit className="h-4 w-4 text-primary" /> Train The Bot On Your Brand
+          <BrainCircuit className="h-4 w-4 text-primary" /> {heading}
         </CardTitle>
         <Badge variant="outline" className="text-[10px] uppercase">
           {(sources ?? []).length} Source{(sources ?? []).length === 1 ? "" : "s"} · {totalChars.toLocaleString()} Chars

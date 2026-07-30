@@ -47,6 +47,7 @@ import { Route as AuthenticatedAppListsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
 import { Route as AuthenticatedAppComplianceRouteImport } from './routes/_authenticated/app.compliance'
+import { Route as AuthenticatedAppBrandsRouteImport } from './routes/_authenticated/app.brands'
 import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
 import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
 import { Route as AuthenticatedAppAccountRouteImport } from './routes/_authenticated/app.account'
@@ -255,6 +256,11 @@ const AuthenticatedAppComplianceRoute =
     path: '/compliance',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppBrandsRoute = AuthenticatedAppBrandsRouteImport.update({
+  id: '/brands',
+  path: '/brands',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppBillingRoute = AuthenticatedAppBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -366,6 +372,7 @@ export interface FileRoutesByFullPath {
   '/app/account': typeof AuthenticatedAppAccountRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/billing': typeof AuthenticatedAppBillingRoute
+  '/app/brands': typeof AuthenticatedAppBrandsRoute
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
@@ -418,6 +425,7 @@ export interface FileRoutesByTo {
   '/app/account': typeof AuthenticatedAppAccountRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/billing': typeof AuthenticatedAppBillingRoute
+  '/app/brands': typeof AuthenticatedAppBrandsRoute
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
@@ -473,6 +481,7 @@ export interface FileRoutesById {
   '/_authenticated/app/account': typeof AuthenticatedAppAccountRoute
   '/_authenticated/app/admin': typeof AuthenticatedAppAdminRoute
   '/_authenticated/app/billing': typeof AuthenticatedAppBillingRoute
+  '/_authenticated/app/brands': typeof AuthenticatedAppBrandsRoute
   '/_authenticated/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
@@ -528,6 +537,7 @@ export interface FileRouteTypes {
     | '/app/account'
     | '/app/admin'
     | '/app/billing'
+    | '/app/brands'
     | '/app/compliance'
     | '/app/dashboard'
     | '/app/inbox'
@@ -580,6 +590,7 @@ export interface FileRouteTypes {
     | '/app/account'
     | '/app/admin'
     | '/app/billing'
+    | '/app/brands'
     | '/app/compliance'
     | '/app/dashboard'
     | '/app/inbox'
@@ -634,6 +645,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/account'
     | '/_authenticated/app/admin'
     | '/_authenticated/app/billing'
+    | '/_authenticated/app/brands'
     | '/_authenticated/app/compliance'
     | '/_authenticated/app/dashboard'
     | '/_authenticated/app/inbox'
@@ -959,6 +971,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppComplianceRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/brands': {
+      id: '/_authenticated/app/brands'
+      path: '/brands'
+      fullPath: '/app/brands'
+      preLoaderRoute: typeof AuthenticatedAppBrandsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/billing': {
       id: '/_authenticated/app/billing'
       path: '/billing'
@@ -1082,6 +1101,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAccountRoute: typeof AuthenticatedAppAccountRoute
   AuthenticatedAppAdminRoute: typeof AuthenticatedAppAdminRoute
   AuthenticatedAppBillingRoute: typeof AuthenticatedAppBillingRoute
+  AuthenticatedAppBrandsRoute: typeof AuthenticatedAppBrandsRoute
   AuthenticatedAppComplianceRoute: typeof AuthenticatedAppComplianceRoute
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
@@ -1103,6 +1123,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAccountRoute: AuthenticatedAppAccountRoute,
   AuthenticatedAppAdminRoute: AuthenticatedAppAdminRoute,
   AuthenticatedAppBillingRoute: AuthenticatedAppBillingRoute,
+  AuthenticatedAppBrandsRoute: AuthenticatedAppBrandsRoute,
   AuthenticatedAppComplianceRoute: AuthenticatedAppComplianceRoute,
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,

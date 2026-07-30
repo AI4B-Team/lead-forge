@@ -48,6 +48,7 @@ export type Database = {
       }
       bot_knowledge: {
         Row: {
+          brand_id: string | null
           campaign_id: string | null
           content: string
           created_at: string
@@ -58,6 +59,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          brand_id?: string | null
           campaign_id?: string | null
           content?: string
           created_at?: string
@@ -68,6 +70,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          brand_id?: string | null
           campaign_id?: string | null
           content?: string
           created_at?: string
@@ -79,6 +82,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "bot_knowledge_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bot_knowledge_campaign_id_fkey"
             columns: ["campaign_id"]
             isOneToOne: false
@@ -86,6 +96,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      brands: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          website: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          website?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          website?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
       }
       campaign_drops: {
         Row: {
@@ -177,6 +217,7 @@ export type Database = {
         Row: {
           bot_config: Json
           bot_enabled: boolean
+          brand_id: string | null
           created_at: string
           daily_cap: number | null
           drop_size: number
@@ -194,6 +235,7 @@ export type Database = {
         Insert: {
           bot_config?: Json
           bot_enabled?: boolean
+          brand_id?: string | null
           created_at?: string
           daily_cap?: number | null
           drop_size?: number
@@ -211,6 +253,7 @@ export type Database = {
         Update: {
           bot_config?: Json
           bot_enabled?: boolean
+          brand_id?: string | null
           created_at?: string
           daily_cap?: number | null
           drop_size?: number
@@ -226,6 +269,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "campaigns_list_job_id_fkey"
             columns: ["list_job_id"]

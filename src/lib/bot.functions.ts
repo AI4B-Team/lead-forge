@@ -48,7 +48,7 @@ export const previewBotReply = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: campaign } = await context.supabase
       .from("campaigns")
-      .select("bot_config, regulated_vertical")
+      .select("bot_config, regulated_vertical, brand_id")
       .eq("id", data.campaignId)
       .maybeSingle();
     if (!campaign) throw new Error("Campaign Not Found");
@@ -62,10 +62,15 @@ export const previewBotReply = createServerFn({ method: "POST" })
     }
 
     const { generateBotReply } = await import("@/lib/bot.server");
+    // Brand knowledge is shared across campaigns; campaign-level rows layer on top.
     const { data: knowledgeRows } = await context.supabase
       .from("bot_knowledge")
       .select("title, content, source_type, source_url")
-      .eq("campaign_id", data.campaignId)
+      .or(
+        campaign.brand_id
+          ? `campaign_id.eq.${data.campaignId},brand_id.eq.${campaign.brand_id}`
+          : `campaign_id.eq.${data.campaignId}`,
+      )
       .order("created_at", { ascending: false })
       .limit(25);
     const { buildKnowledgeBrief } = await import("@/lib/bot-training.server");

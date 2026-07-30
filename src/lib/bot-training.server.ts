@@ -72,3 +72,28 @@ export function buildKnowledgeBrief(
   }
   return parts.join("\n\n");
 }
+
+/** Resolve which workspace / brand / campaign new knowledge rows belong to. */
+export async function resolveKnowledgeScope(
+  supabase: { from: (table: string) => any },
+  data: { brandId?: string; campaignId?: string },
+): Promise<{ workspace_id: string; brand_id: string | null; campaign_id: string | null }> {
+  if (data.brandId) {
+    const { data: brand, error } = await supabase
+      .from("brands")
+      .select("id, workspace_id")
+      .eq("id", data.brandId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!brand) throw new Error("Brand Not Found");
+    return { workspace_id: brand.workspace_id, brand_id: brand.id, campaign_id: null };
+  }
+  const { data: campaign, error } = await supabase
+    .from("campaigns")
+    .select("id, workspace_id")
+    .eq("id", data.campaignId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!campaign) throw new Error("Campaign Not Found");
+  return { workspace_id: campaign.workspace_id, brand_id: null, campaign_id: campaign.id };
+}
