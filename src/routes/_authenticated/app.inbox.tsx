@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Inbox as InboxIcon, Loader2, Send, ShieldOff } from "lucide-react";
+import { Bot, Inbox as InboxIcon, Loader2, Send, ShieldOff, UserRound, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { listThreads, getThread, markThreadRead, sendReply } from "@/lib/inbox.functions";
+import { listQuickReplies, createQuickReply } from "@/lib/tags.functions";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
   head: () => ({ meta: [{ title: "Inbox — LeadTrace" }] }),
@@ -42,6 +43,8 @@ function InboxPage() {
   const fetchThread = useServerFn(getThread);
   const markRead = useServerFn(markThreadRead);
   const send = useServerFn(sendReply);
+  const fetchSnippets = useServerFn(listQuickReplies);
+  const addSnippet = useServerFn(createQuickReply);
 
   const threadsQ = useQuery({
     queryKey: ["inbox-threads", workspaceId, filter],
@@ -56,6 +59,26 @@ function InboxPage() {
     enabled: !!workspaceId && !!selected,
     refetchInterval: 10000,
   });
+
+  // Operator-approved quick replies — one tap to load into the composer.
+  const snippetsQ = useQuery({
+    queryKey: ["quick-replies", workspaceId],
+    queryFn: () => fetchSnippets({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId,
+  });
+
+  const saveSnippet = async () => {
+    if (!workspaceId || !reply.trim()) return;
+    try {
+      await addSnippet({
+        data: { workspaceId, title: reply.trim().slice(0, 40), body: reply.trim() },
+      });
+      qc.invalidateQueries({ queryKey: ["quick-replies", workspaceId] });
+      toast.success("Saved As Quick Reply");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Save Failed");
+    }
+  };
 
   // Auto-select first thread and mark read when opened.
   useEffect(() => {
@@ -172,12 +195,22 @@ function InboxPage() {
                   <div className="font-display font-bold">
                     {threadQ.data?.lead?.full_name || threadQ.data?.lead?.phone || activeThread?.thread_key}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {threadQ.data?.lead?.phone} {threadQ.data?.lead?.city ? `· ${threadQ.data.lead.city}, ${threadQ.data.lead.state}` : ""}
+                  <div className="text-xs text-muted-foreground flex items-center flex-wrap gap-x-2">
+                    <span className="inline-flex items-center gap-1">
+                      <UserRound className="h-3 w-3" /> Lead {threadQ.data?.lead?.phone}
+                    </span>
+                    {threadQ.data?.number && (
+                      <span className="inline-flex items-center gap-1">
+                        <Send className="h-3 w-3" /> Sent From {threadQ.data.number.phone}
+                      </span>
+                    )}
+                    {threadQ.data?.lead?.city ? <span>· {threadQ.data.lead.city}, {threadQ.data.lead.state}</span> : null}
                   </div>
                 </div>
-                {threadQ.data?.number && (
-                  <Badge variant="outline" className="text-xs">From {threadQ.data.number.phone}</Badge>
+                {threadQ.data?.handoff && (
+                  <Badge variant="outline" className="bg-warn/10 text-warn border-warn/20 text-xs">
+                    Handoff: {threadQ.data.handoff}
+                  </Badge>
                 )}
                 {activeThread?.is_optout && (
                   <Badge variant="outline" className="bg-danger/10 text-danger border-danger/20">Opted Out</Badge>
@@ -200,11 +233,27 @@ function InboxPage() {
                         m.direction === "outbound" ? "text-primary-foreground" : "text-muted-foreground",
                       )}>
                         {new Date(m.created_at).toLocaleString()} · {m.status}
+                        {m.is_bot ? " · Bot" : ""}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
+              {!!snippetsQ.data?.snippets.length && (
+                <div className="px-3 pt-2 flex flex-wrap gap-1">
+                  {snippetsQ.data.snippets.map((s) => (
+                    <Button
+                      key={s.id}
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full h-7 text-xs"
+                      onClick={() => setReply(s.body)}
+                    >
+                      {s.title}
+                    </Button>
+                  ))}
+                </div>
+              )}
               <div className="p-3 border-t flex gap-2">
                 <Input
                   value={reply}
@@ -213,6 +262,16 @@ function InboxPage() {
                   disabled={activeThread?.is_optout || sending}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                 />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full shrink-0"
+                  title="Save As Quick Reply"
+                  onClick={saveSnippet}
+                  disabled={!reply.trim()}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
                 <Button onClick={handleSend} disabled={activeThread?.is_optout || sending || !reply.trim()} className="rounded-full">
                   {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
