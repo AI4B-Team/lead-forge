@@ -32,6 +32,7 @@ function Campaigns() {
   const campaignApproved = regData?.registration?.campaign_status === "approved";
   const campaigns = campaignsData?.campaigns ?? [];
   const stats = campaignsData?.stats ?? {};
+  const tags = campaignsData?.tags ?? {};
   return (
     <div>
       <PageHeader
@@ -75,9 +76,26 @@ function Campaigns() {
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between">
                       <Badge variant="outline" className="uppercase text-[10px]">{c.status ?? "draft"}</Badge>
-                      <div className="text-xs text-muted-foreground">Cap {c.daily_cap ?? 500}/Day</div>
+                      <div className="flex items-center gap-2">
+                        {c.tag_id && tags[c.tag_id] && (
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[10px] font-semibold border"
+                            style={{
+                              backgroundColor: `${tags[c.tag_id].color}1a`,
+                              color: tags[c.tag_id].color,
+                              borderColor: `${tags[c.tag_id].color}55`,
+                            }}
+                          >
+                            {tags[c.tag_id].name}
+                          </span>
+                        )}
+                        <div className="text-xs text-muted-foreground">Cap {c.daily_cap ?? 500}/Day</div>
+                      </div>
                     </div>
                     <div className="mt-3 font-display font-bold text-lg text-foreground">{c.name}</div>
+                    {c.bot_enabled && (
+                      <div className="mt-1 text-[11px] font-semibold text-primary">AI Warm-Up Bot On</div>
+                    )}
                     <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
                       <MiniStat label="Sent" value={s.sent} />
                       <MiniStat label="Replies" value={s.replies} />
