@@ -126,7 +126,12 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // Remember that this device has had a real session so the prompt-box
+      // flow can send them to Log In instead of Start Free next time.
+      if (session) {
+        try { localStorage.setItem("leadtrace_returning", "1"); } catch { /* ignore */ }
+      }
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
         router.invalidate();
         if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
