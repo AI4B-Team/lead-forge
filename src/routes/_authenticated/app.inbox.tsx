@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Bot, Inbox as InboxIcon, Loader2, Send, ShieldOff, UserRound, Plus } from "lucide-react";
+import { Inbox as InboxIcon, Loader2, Send, ShieldOff, UserRound, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { listThreads, getThread, markThreadRead, sendReply } from "@/lib/inbox.functions";
