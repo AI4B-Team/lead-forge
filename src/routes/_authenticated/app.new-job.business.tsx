@@ -41,6 +41,7 @@ function Wizard() {
   const [counties, setCounties] = useState<string[]>([]);
   const [pickedCounties, setPickedCounties] = useState<string[]>([]);
   const [removeFranchises, setRemoveFranchises] = useState(true);
+  const [dedupe, setDedupe] = useState(true);
   const [mobileOnly, setMobileOnly] = useState(true);
   const [avoidMetros, setAvoidMetros] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -127,6 +128,7 @@ function Wizard() {
             state,
             counties: pickedCounties,
             remove_franchises: removeFranchises,
+            dedupe,
             mobile_only: mobileOnly,
             avoid_metros: avoidMetros,
           },
@@ -239,6 +241,7 @@ function Wizard() {
           )}
           <div className="space-y-3 rounded-lg border border-border p-4">
             <ToggleRow label="Remove Franchises And Chains" checked={removeFranchises} onChange={setRemoveFranchises} />
+            <ToggleRow label="Remove Duplicates (Phone, Email, Name + Address)" checked={dedupe} onChange={setDedupe} />
             <ToggleRow label="Require Mobile-Reachable" checked={mobileOnly} onChange={setMobileOnly} />
             <ToggleRow label="Focus On Smaller Counties" checked={avoidMetros} onChange={setAvoidMetros} />
           </div>
