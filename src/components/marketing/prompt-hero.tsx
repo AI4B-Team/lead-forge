@@ -162,6 +162,7 @@ export function PromptHero() {
                   key={i}
                   className="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 text-xs font-medium"
                 >
+                  <FileText className="h-3.5 w-3.5 shrink-0" />
                   {f.name}
                   <button
                     type="button"
