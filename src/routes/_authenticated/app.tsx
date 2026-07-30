@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, Zap } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { ProfileDropdown } from "@/components/app/profile-dropdown";
+import { ThemeToggle } from "@/components/app/theme-toggle";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -29,6 +30,7 @@ function AppLayout() {
               <Button size="icon" variant="ghost">
                 <Bell className="h-4 w-4" />
               </Button>
+              <ThemeToggle />
               <ProfileDropdown />
             </div>
           </header>
