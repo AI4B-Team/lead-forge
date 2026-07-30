@@ -14,7 +14,19 @@ function StartRedirect() {
       if (data.session) {
         navigate({ to: "/app/new-job/business", replace: true });
       } else {
-        navigate({ to: "/auth", search: { mode: "signup" }, replace: true });
+        const returning = (() => {
+          try {
+            if (localStorage.getItem("leadtrace_returning")) return true;
+            return Object.keys(localStorage).some((k) => k.startsWith("sb-"));
+          } catch {
+            return false;
+          }
+        })();
+        navigate({
+          to: "/auth",
+          search: { mode: returning ? "signin" : "signup" },
+          replace: true,
+        });
       }
     })();
   }, [navigate]);
