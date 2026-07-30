@@ -46,6 +46,57 @@ export type Database = {
           },
         ]
       }
+      campaign_drops: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          drop_index: number
+          id: string
+          scheduled_at: string
+          sent_count: number
+          size: number
+          status: string
+          workspace_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          drop_index: number
+          id?: string
+          scheduled_at: string
+          sent_count?: number
+          size?: number
+          status?: string
+          workspace_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          drop_index?: number
+          id?: string
+          scheduled_at?: string
+          sent_count?: number
+          size?: number
+          status?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_drops_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_drops_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_steps: {
         Row: {
           active: boolean | null
@@ -83,33 +134,54 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          bot_config: Json
+          bot_enabled: boolean
           created_at: string
           daily_cap: number | null
+          drop_size: number
+          drop_times: string[]
+          duplicate_policy: string
           id: string
           list_job_id: string | null
           name: string
+          regulated_vertical: boolean
           send_window: Json | null
           status: string | null
+          tag_id: string | null
           workspace_id: string
         }
         Insert: {
+          bot_config?: Json
+          bot_enabled?: boolean
           created_at?: string
           daily_cap?: number | null
+          drop_size?: number
+          drop_times?: string[]
+          duplicate_policy?: string
           id?: string
           list_job_id?: string | null
           name: string
+          regulated_vertical?: boolean
           send_window?: Json | null
           status?: string | null
+          tag_id?: string | null
           workspace_id: string
         }
         Update: {
+          bot_config?: Json
+          bot_enabled?: boolean
           created_at?: string
           daily_cap?: number | null
+          drop_size?: number
+          drop_times?: string[]
+          duplicate_policy?: string
           id?: string
           list_job_id?: string | null
           name?: string
+          regulated_vertical?: boolean
           send_window?: Json | null
           status?: string | null
+          tag_id?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -118,6 +190,13 @@ export type Database = {
             columns: ["list_job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
             referencedColumns: ["id"]
           },
           {
@@ -385,7 +464,9 @@ export type Database = {
           created_at: string
           direction: string
           error_code: string | null
+          handoff_reason: string | null
           id: string
+          is_bot: boolean
           is_optout: boolean | null
           lead_id: string | null
           provider_sid: string | null
@@ -401,7 +482,9 @@ export type Database = {
           created_at?: string
           direction: string
           error_code?: string | null
+          handoff_reason?: string | null
           id?: string
+          is_bot?: boolean
           is_optout?: boolean | null
           lead_id?: string | null
           provider_sid?: string | null
@@ -417,7 +500,9 @@ export type Database = {
           created_at?: string
           direction?: string
           error_code?: string | null
+          handoff_reason?: string | null
           id?: string
+          is_bot?: boolean
           is_optout?: boolean | null
           lead_id?: string | null
           provider_sid?: string | null
@@ -478,6 +563,38 @@ export type Database = {
           state?: string
         }
         Relationships: []
+      }
+      quick_replies: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          title: string
+          workspace_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          title: string
+          workspace_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          title?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quick_replies_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       registrations: {
         Row: {
@@ -643,6 +760,56 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tags: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          workspace_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          workspace_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tags_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_prefs: {
+        Row: {
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

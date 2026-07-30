@@ -66,7 +66,7 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
         const isOptOut = OPTOUT_RE.test(inbound.body);
         const isHelp = HELP_RE.test(inbound.body);
 
-        await admin.from("messages").insert({
+        const { data: inboundRow } = await admin.from("messages").insert({
           workspace_id: num.workspace_id,
           campaign_id: campaignId,
           lead_id: lead?.id ?? null,
@@ -76,7 +76,7 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
           is_optout: isOptOut,
           status: "received",
           provider_sid: inbound.providerSid,
-        });
+        }).select("id").single();
 
         if (isOptOut) {
           // Suppress the phone across ALL future campaigns for this workspace.
@@ -111,6 +111,48 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
             });
           } catch {
             /* best-effort */
+          }
+        } else if (campaignId) {
+          // AI Warm-Up Bot — runs ONLY after opt-out and HELP are handled, so it
+          // can never talk past a compliance keyword.
+          const { data: campaign } = await admin
+            .from("campaigns")
+            .select("bot_enabled, bot_config, regulated_vertical")
+            .eq("id", campaignId)
+            .maybeSingle();
+
+          if (campaign?.bot_enabled) {
+            const { generateBotReply } = await import("@/lib/bot.server");
+            const outcome = await generateBotReply({
+              message: inbound.body,
+              config: (campaign.bot_config ?? {}) as Record<string, never>,
+              regulated: !!campaign.regulated_vertical,
+            });
+
+            if (outcome.action === "reply") {
+              try {
+                const send = await provider.send(inbound.to, inbound.from, outcome.body);
+                await admin.from("messages").insert({
+                  workspace_id: num.workspace_id,
+                  campaign_id: campaignId,
+                  lead_id: lead?.id ?? null,
+                  sending_number_id: num.id,
+                  direction: "outbound",
+                  body: outcome.body,
+                  is_bot: true,
+                  status: send.status,
+                  provider_sid: send.providerSid,
+                });
+              } catch {
+                /* best-effort; thread stays in the inbox for a human */
+              }
+            } else if (inboundRow) {
+              // Hand the thread to a human and record why the bot stepped back.
+              await admin
+                .from("messages")
+                .update({ handoff_reason: outcome.reason })
+                .eq("id", inboundRow.id);
+            }
           }
         }
 

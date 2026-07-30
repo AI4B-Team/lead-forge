@@ -5,9 +5,10 @@ import { PageHeader } from "@/components/app/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pause, Play, Send, ShieldAlert } from "lucide-react";
+import { Pause, Play, Send, ShieldAlert, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { getCampaignDetail, tickCampaign, updateCampaignStatus } from "@/lib/campaigns.functions";
+import { BotConsole } from "@/components/app/bot-console";
 
 export const Route = createFileRoute("/_authenticated/app/campaigns/$campaignId")({
   head: () => ({ meta: [{ title: "Campaign Detail — LeadTrace" }] }),
@@ -35,7 +36,7 @@ function CampaignDetail() {
   });
 
   if (isLoading || !data) return <div className="text-sm text-muted-foreground">Loading Campaign…</div>;
-  const { campaign, steps, stats, recentMessages } = data;
+  const { campaign, steps, stats, recentMessages, drops, tag } = data;
   const win = (campaign.send_window ?? {}) as { quiet_start?: string; quiet_end?: string };
 
   const setStatus = async (status: "sending" | "paused" | "draft") => {
@@ -66,6 +67,14 @@ function CampaignDetail() {
         description="Message Variants Rotate · Reply Halts Remaining Steps · Quiet Hours Enforced."
         actions={
           <>
+            {tag && (
+              <span
+                className="rounded-full px-3 py-1 text-xs font-semibold border"
+                style={{ backgroundColor: `${tag.color}1a`, color: tag.color, borderColor: `${tag.color}55` }}
+              >
+                {tag.name}
+              </span>
+            )}
             <Badge variant="outline" className="uppercase">{campaign.status ?? "draft"}</Badge>
             {campaign.status !== "sending" ? (
               <Button className="rounded-full" onClick={() => setStatus("sending")}>
@@ -83,31 +92,55 @@ function CampaignDetail() {
         }
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         <Stat label="Recipients" value={stats.recipients} />
         <Stat label="Sent" value={stats.sent} />
         <Stat label="Delivered" value={stats.delivered} />
         <Stat label="Replies" value={stats.replies} tone="success" />
         <Stat label="Opt-Outs" value={stats.optOuts} tone="warn" />
+        <Stat label="Bot Replies" value={stats.botHandled} />
+        <Stat label="Handoffs" value={stats.handoffs} tone="warn" />
       </div>
 
       <div className="grid md:grid-cols-3 gap-4 mt-6">
         <Card><CardContent className="pt-6">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Daily Cap</div>
-          <div className="font-display font-bold text-2xl">{campaign.daily_cap ?? 500}</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Daily Cap · Drop Size</div>
+          <div className="font-display font-bold text-2xl">{campaign.daily_cap ?? 500} · {campaign.drop_size ?? 500}</div>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Quiet Hours</div>
           <div className="font-display font-bold text-2xl">{win.quiet_start ?? "21:00"} → {win.quiet_end ?? "09:00"}</div>
         </CardContent></Card>
         <Card><CardContent className="pt-6 flex items-center gap-2">
-          <ShieldAlert className="h-5 w-5 text-warn" />
+          {campaign.bot_enabled ? <Bot className="h-5 w-5 text-primary" /> : <ShieldAlert className="h-5 w-5 text-warn" />}
           <div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground">Compliance</div>
-            <div className="text-sm text-foreground">Clean-Only · STOP Auto-Suppresses</div>
+            <div className="text-sm text-foreground">
+              Clean-Only · STOP Auto-Suppresses{campaign.bot_enabled ? " · Bot On" : ""}
+            </div>
           </div>
         </CardContent></Card>
       </div>
+
+      {drops.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader><CardTitle className="text-base font-display">Drop Schedule</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
+              {drops.map((d) => (
+                <div key={d.id} className="rounded-xl border border-border p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold text-sm text-foreground">Drop {d.drop_index}</div>
+                    <Badge variant="outline" className="uppercase text-[10px]">{d.status ?? "pending"}</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">{new Date(d.scheduled_at).toLocaleString()}</div>
+                  <div className="text-xs text-foreground mt-1">{d.sent_count ?? 0} / {d.size} Sent</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="mt-6">
         <CardHeader><CardTitle className="text-base font-display">Drip Steps</CardTitle></CardHeader>
@@ -139,6 +172,8 @@ function CampaignDetail() {
                 <div key={m.id} className="text-xs flex items-center gap-2 border-b border-border pb-2">
                   <Badge variant="outline" className="uppercase">{m.direction}</Badge>
                   {m.is_optout && <Badge className="bg-warn/20 text-warn border-warn/30">Opt-Out</Badge>}
+                  {m.is_bot && <Badge className="bg-primary/15 text-primary border-primary/30">Bot</Badge>}
+                  {m.handoff_reason && <Badge variant="outline" className="text-[10px]">Handoff: {m.handoff_reason}</Badge>}
                   <div className="flex-1 truncate text-foreground">{m.body}</div>
                   <div className="text-muted-foreground">{new Date(m.created_at).toLocaleTimeString()}</div>
                 </div>
@@ -147,6 +182,13 @@ function CampaignDetail() {
           )}
         </CardContent>
       </Card>
+
+      <BotConsole
+        campaignId={campaignId}
+        enabled={!!campaign.bot_enabled}
+        regulated={!!campaign.regulated_vertical}
+        config={(campaign.bot_config ?? {}) as Record<string, never>}
+      />
 
       <div className="mt-6 text-right">
         <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/campaigns" })}>Back To Campaigns</Button>

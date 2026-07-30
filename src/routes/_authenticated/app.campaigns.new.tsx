@@ -13,9 +13,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { launchCampaignFromJob } from "@/lib/jobs.functions";
-import { updateCampaignConfig } from "@/lib/campaigns.functions";
+import { updateCampaignConfig, previewCampaign, scheduleCampaignDrops } from "@/lib/campaigns.functions";
+import { TagPicker } from "@/components/app/tag-picker";
 import { ShieldCheck, Sparkles } from "lucide-react";
 import { spinCount, spinSample } from "@/lib/spintax";
+import { DEFAULT_DROP_TIMES } from "@/lib/drops";
 
 export const Route = createFileRoute("/_authenticated/app/campaigns/new")({
   head: () => ({ meta: [{ title: "New Campaign — LeadTrace" }] }),
@@ -34,12 +36,18 @@ function NewCampaign() {
   const navigate = useNavigate();
   const launchFn = useServerFn(launchCampaignFromJob);
   const configFn = useServerFn(updateCampaignConfig);
+  const previewFn = useServerFn(previewCampaign);
+  const scheduleFn = useServerFn(scheduleCampaignDrops);
 
   const [selectedJob, setSelectedJob] = useState<string>("");
   const [name, setName] = useState("");
   const [dailyCap, setDailyCap] = useState(500);
   const [quietStart, setQuietStart] = useState("21:00");
   const [quietEnd, setQuietEnd] = useState("09:00");
+  const [tagId, setTagId] = useState<string | null>(null);
+  const [dropSize, setDropSize] = useState(500);
+  const [dropTimes, setDropTimes] = useState<string[]>(DEFAULT_DROP_TIMES);
+  const [duplicatePolicy, setDuplicatePolicy] = useState<"skip" | "resend">("skip");
   const [steps, setSteps] = useState(DEFAULT_STEPS);
   const [saving, setSaving] = useState(false);
 
@@ -57,6 +65,22 @@ function NewCampaign() {
     enabled: !!workspaceId,
   });
 
+  // Review preview: real recipient count, duplicates found, drop plan, and
+  // estimated credit cost before anything is created.
+  const { data: preview } = useQuery({
+    queryKey: ["campaign-preview", selectedJob, dropSize, dropTimes, steps.map((s) => s.body).join("|")],
+    queryFn: () =>
+      previewFn({
+        data: {
+          jobId: selectedJob,
+          dropSize,
+          dropTimes,
+          bodies: steps.map((s) => s.body),
+        },
+      }),
+    enabled: !!selectedJob,
+  });
+
   const submit = async () => {
     if (!selectedJob) return toast.error("Pick A Ready List First");
     if (!name.trim()) return toast.error("Name Your Campaign");
@@ -69,6 +93,10 @@ function NewCampaign() {
           daily_cap: dailyCap,
           quiet_start: quietStart,
           quiet_end: quietEnd,
+          tag_id: tagId,
+          drop_size: dropSize,
+          drop_times: dropTimes,
+          duplicate_policy: duplicatePolicy,
           steps: steps.map((s) => ({
             step_order: s.step_order,
             delay_minutes: s.delay_minutes,
@@ -76,6 +104,7 @@ function NewCampaign() {
           })),
         },
       });
+      await scheduleFn({ data: { campaignId, recipients: preview?.recipients ?? 0 } });
       toast.success("Campaign Created");
       navigate({ to: "/app/campaigns/$campaignId", params: { campaignId } });
     } catch (e) {
@@ -131,9 +160,47 @@ function NewCampaign() {
               <Label>Name</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Q1 Roof Homeowners — Tampa" />
             </div>
+            {workspaceId && <TagPicker workspaceId={workspaceId} value={tagId} onChange={setTagId} />}
             <div>
               <Label>Daily Cap (Per Campaign)</Label>
               <Input type="number" min={1} max={5000} value={dailyCap} onChange={(e) => setDailyCap(Number(e.target.value) || 0)} />
+            </div>
+            <div>
+              <Label>Drop Size</Label>
+              <Input type="number" min={50} max={5000} step={50} value={dropSize} onChange={(e) => setDropSize(Number(e.target.value) || 500)} />
+              <div className="text-[11px] text-muted-foreground mt-1">Operator-Proven Default: 500 Contacts Per Drop.</div>
+            </div>
+            <div>
+              <Label>Duplicates</Label>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {(["skip", "resend"] as const).map((p) => (
+                  <Button
+                    key={p}
+                    type="button"
+                    size="sm"
+                    variant={duplicatePolicy === p ? "default" : "outline"}
+                    className="rounded-full h-8"
+                    onClick={() => setDuplicatePolicy(p)}
+                  >
+                    {p === "skip" ? "Skip Already-Messaged" : "Allow Resend"}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label>Drop Times (Local)</Label>
+              <div className="mt-1 grid grid-cols-2 gap-2">
+                {dropTimes.map((t, i) => (
+                  <Input
+                    key={i}
+                    type="time"
+                    value={t}
+                    onChange={(e) => setDropTimes(dropTimes.map((x, idx) => (idx === i ? e.target.value : x)))}
+                    className="h-8"
+                  />
+                ))}
+              </div>
+              <div className="text-[11px] text-muted-foreground mt-1">New Drops Never Start After 6PM Recipient Local Time.</div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -155,9 +222,37 @@ function NewCampaign() {
             <div>· Sending Blocked Until 10DLC Campaign Is Approved.</div>
             <div>· Inbound STOP Adds The Number To Suppression Instantly.</div>
             <div>· Sending Numbers Auto-Cool Above 5% Opt-Out Rate.</div>
+            <div>· A New Drop Never Starts After 6PM Recipient Local Time.</div>
           </CardContent>
         </Card>
       </div>
+
+      {preview && (
+        <Card className="mt-6">
+          <CardHeader><CardTitle className="text-base font-display">Review · Cost & Drop Plan</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Metric label="Recipients" value={preview.recipients.toLocaleString()} />
+              <Metric label="Duplicates Removed" value={preview.duplicates.toLocaleString()} />
+              <Metric label="Segments" value={preview.cost.segments.toLocaleString()} />
+              <Metric label="Est. Credits" value={preview.cost.credits.toLocaleString()} />
+            </div>
+            <div className="mt-4 rounded-xl border border-border p-4">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                {preview.drops.length} Drop{preview.drops.length === 1 ? "" : "s"} · {dropSize} Contacts Each
+              </div>
+              <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                {preview.drops.slice(0, 12).map((d) => (
+                  <div key={d.drop_index} className="rounded-lg bg-surface-muted px-3 py-2">
+                    <div className="font-semibold text-foreground">Drop {d.drop_index}</div>
+                    <div className="text-muted-foreground">{new Date(d.scheduled_at).toLocaleString()} · {d.size}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="mt-6">
         <CardHeader><CardTitle className="text-base font-display">Drip Sequence</CardTitle></CardHeader>
@@ -201,6 +296,19 @@ function NewCampaign() {
 }
 
 function SpintaxPreview({ body }: { body: string }) {
+  return <SpintaxPreviewInner body={body} />;
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border p-4">
+      <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-2xl font-black text-foreground">{value}</div>
+    </div>
+  );
+}
+
+function SpintaxPreviewInner({ body }: { body: string }) {
   const count = spinCount(body);
   const samples = count > 1 ? spinSample(body, 3) : [];
   if (count <= 1) return null;

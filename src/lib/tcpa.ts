@@ -94,3 +94,23 @@ export function isWithinTcpaWindow(phone: string, now: Date = new Date()): boole
   const h = Number(parts.find((p) => p.type === "hour")?.value ?? "12");
   return h >= 8 && h < 21;
 }
+
+// Recipient-local hour (0-23) for scheduling decisions.
+export function localHourForPhone(phone: string | null | undefined, now: Date = new Date()): number {
+  const tz = timezoneForPhone(phone);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hour12: false,
+    hour: "2-digit",
+  }).formatToParts(now);
+  return Number(parts.find((p) => p.type === "hour")?.value ?? "12");
+}
+
+// The 6pm rule: a NEW drop (first touch) may not START after 18:00 recipient
+// local time, and never before the 09:00 morning floor. Follow-up drip touches
+// for already-enrolled leads are NOT bound by this — they use the wider TCPA
+// window in isWithinTcpaWindow.
+export function canStartNewDrop(phone: string | null | undefined, now: Date = new Date()): boolean {
+  const h = localHourForPhone(phone, now);
+  return h >= 9 && h < 18;
+}
