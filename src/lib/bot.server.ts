@@ -50,7 +50,7 @@ export function preCheckHandoff(message: string, regulated: boolean): string | n
   return null;
 }
 
-function buildSystemPrompt(cfg: BotConfig, regulated: boolean) {
+function buildSystemPrompt(cfg: BotConfig, regulated: boolean, knowledge?: string) {
   const faqs = (cfg.faqs ?? []).map((f) => `Q: ${f.q}\nA: ${f.a}`).join("\n");
   const approved = (cfg.approved_responses ?? []).map((a) => `- ${a}`).join("\n");
   const screening = (cfg.screening_questions ?? []).map((s) => `- ${s}`).join("\n");
@@ -59,6 +59,7 @@ function buildSystemPrompt(cfg: BotConfig, regulated: boolean) {
     `Industry / vertical: ${cfg.vertical || "general"}`,
     `What is offered: ${cfg.product || "not specified"}`,
     `Tone: ${cfg.tone || "warm, brief, human, no hype"}`,
+    knowledge ? `Approved brand knowledge base (treat as source of truth, answer ONLY from it):\n${knowledge}` : "",
     faqs ? `Approved FAQ answers (answer ONLY from these):\n${faqs}` : "",
     approved ? `Approved responses:\n${approved}` : "",
     screening ? `Screening questions to work through, one at a time:\n${screening}` : "",
@@ -79,6 +80,7 @@ export async function generateBotReply(opts: {
   message: string;
   config: BotConfig;
   regulated: boolean;
+  knowledge?: string;
   history?: Array<{ role: "user" | "assistant"; content: string }>;
 }): Promise<BotOutcome> {
   const pre = preCheckHandoff(opts.message, opts.regulated);
@@ -94,7 +96,7 @@ export async function generateBotReply(opts: {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: buildSystemPrompt(opts.config, opts.regulated) },
+          { role: "system", content: buildSystemPrompt(opts.config, opts.regulated, opts.knowledge) },
           ...(opts.history ?? []),
           { role: "user", content: opts.message },
         ],

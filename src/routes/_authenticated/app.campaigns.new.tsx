@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,16 +14,16 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { launchCampaignFromJob } from "@/lib/jobs.functions";
 import { updateCampaignConfig, previewCampaign, scheduleCampaignDrops } from "@/lib/campaigns.functions";
 import { TagPicker } from "@/components/app/tag-picker";
-import { ShieldCheck, Sparkles } from "lucide-react";
-import { spinCount, spinSample } from "@/lib/spintax";
+import { ShieldCheck } from "lucide-react";
 import { DEFAULT_DROP_TIMES } from "@/lib/drops";
+import { DripEditor, type DripStep } from "@/components/app/drip-editor";
 
 export const Route = createFileRoute("/_authenticated/app/campaigns/new")({
   head: () => ({ meta: [{ title: "New Campaign — LeadTrace" }] }),
   component: NewCampaign,
 });
 
-const DEFAULT_STEPS = [
+const DEFAULT_STEPS: DripStep[] = [
   { step_order: 1, delay_minutes: 0, body: "Hi {{first_name}} — quick question about your {{niche}} in {{city}}?" },
   { step_order: 2, delay_minutes: 180, body: "Following up — any interest?" },
   { step_order: 3, delay_minutes: 60 * 24 * 2, body: "Still exploring options in {{city}}? Happy to send info." },
@@ -48,7 +47,7 @@ function NewCampaign() {
   const [dropSize, setDropSize] = useState(500);
   const [dropTimes, setDropTimes] = useState<string[]>(DEFAULT_DROP_TIMES);
   const [duplicatePolicy, setDuplicatePolicy] = useState<"skip" | "resend">("skip");
-  const [steps, setSteps] = useState(DEFAULT_STEPS);
+  const [steps, setSteps] = useState<DripStep[]>(DEFAULT_STEPS);
   const [saving, setSaving] = useState(false);
 
   const { data: jobs } = useQuery({
@@ -84,6 +83,8 @@ function NewCampaign() {
   const submit = async () => {
     if (!selectedJob) return toast.error("Pick A Ready List First");
     if (!name.trim()) return toast.error("Name Your Campaign");
+    const cleanSteps = steps.filter((s) => s.body.trim().length > 0);
+    if (!cleanSteps.length) return toast.error("Write At Least One Message");
     setSaving(true);
     try {
       const { campaignId } = await launchFn({ data: { jobId: selectedJob, name: name.trim() } });
@@ -97,10 +98,10 @@ function NewCampaign() {
           drop_size: dropSize,
           drop_times: dropTimes,
           duplicate_policy: duplicatePolicy,
-          steps: steps.map((s) => ({
-            step_order: s.step_order,
+          steps: cleanSteps.map((s, i) => ({
+            step_order: i + 1,
             delay_minutes: s.delay_minutes,
-            message_variants: [s.body],
+            message_variants: [s.body.trim().slice(0, 320)],
           })),
         },
       });
@@ -254,38 +255,7 @@ function NewCampaign() {
         </Card>
       )}
 
-      <Card className="mt-6">
-        <CardHeader><CardTitle className="text-base font-display">Drip Sequence</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          {steps.map((s, i) => (
-            <div key={s.step_order} className="rounded-xl border border-border p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="font-semibold text-foreground">Touch {s.step_order}</div>
-                <div className="flex items-center gap-2 text-xs">
-                  <Label className="text-xs">Delay (Min)</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={s.delay_minutes}
-                    onChange={(e) => setSteps(steps.map((x, idx) => idx === i ? { ...x, delay_minutes: Number(e.target.value) || 0 } : x))}
-                    className="h-8 w-24"
-                  />
-                </div>
-              </div>
-              <Textarea
-                rows={2}
-                value={s.body}
-                onChange={(e) => setSteps(steps.map((x, idx) => idx === i ? { ...x, body: e.target.value } : x))}
-              />
-              <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
-                <span>Tokens: <code>{`{{first_name}}`}</code> <code>{`{{city}}`}</code> <code>{`{{state}}`}</code> <code>{`{{address}}`}</code></span>
-                <span>Spintax: <code>{`{Hi|Hello|Hey}`}</code> rotates automatically.</span>
-              </div>
-              <SpintaxPreview body={s.body} />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      <DripEditor steps={steps} onChange={setSteps} />
 
       <div className="mt-6 flex justify-end gap-2">
         <Button asChild variant="outline" className="rounded-full"><Link to="/app/campaigns">Cancel</Link></Button>
@@ -295,32 +265,11 @@ function NewCampaign() {
   );
 }
 
-function SpintaxPreview({ body }: { body: string }) {
-  return <SpintaxPreviewInner body={body} />;
-}
-
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-border p-4">
       <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">{label}</div>
       <div className="mt-1 font-display text-2xl font-black text-foreground">{value}</div>
-    </div>
-  );
-}
-
-function SpintaxPreviewInner({ body }: { body: string }) {
-  const count = spinCount(body);
-  const samples = count > 1 ? spinSample(body, 3) : [];
-  if (count <= 1) return null;
-  return (
-    <div className="rounded-lg bg-surface-muted p-3 space-y-1">
-      <div className="text-xs font-semibold text-foreground flex items-center gap-1">
-        <Sparkles className="h-3.5 w-3.5 text-primary" />
-        {count.toLocaleString()} Unique Variations
-      </div>
-      {samples.map((v, i) => (
-        <div key={i} className="text-xs text-muted-foreground">→ {v}</div>
-      ))}
     </div>
   );
 }
