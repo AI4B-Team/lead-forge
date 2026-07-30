@@ -2,7 +2,7 @@
 // dispatch logic from tickCampaign but runs under the service role so pg_cron
 // can drive it without a user session.
 
-import { isWithinTcpaWindow } from "@/lib/tcpa";
+import { isWithinTcpaWindow, canStartNewDrop } from "@/lib/tcpa";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
 
@@ -30,7 +30,7 @@ export async function tickAllSendingCampaigns() {
 
   const { data: campaigns } = await supabaseAdmin
     .from("campaigns")
-    .select("id, workspace_id, list_job_id, status, daily_cap, send_window")
+    .select("id, workspace_id, list_job_id, status, daily_cap, send_window, drop_size")
     .eq("status", "sending");
 
   const results: Array<{ campaignId: string; dispatched: number; reason: string }> = [];
@@ -49,6 +49,7 @@ async function tickOne(campaign: {
   list_job_id: string | null;
   daily_cap: number | null;
   send_window: unknown;
+  drop_size?: number | null;
 }): Promise<{ dispatched: number; reason: string }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   if (!campaign.list_job_id) return { dispatched: 0, reason: "no_list" };
@@ -133,7 +134,28 @@ async function tickOne(campaign: {
     .from("messages").select("lead_id").eq("campaign_id", campaign.id).eq("direction", "outbound");
   const messaged = new Set((prevMsgs ?? []).map((m) => m.lead_id).filter(Boolean) as string[]);
 
-  const take = Math.min(remainingCap, remainingMonthly, 50);
+  // Drop gating: first touches only go out inside a scheduled, due drop and
+  // only up to that drop's remaining size.
+  const { data: dueDrops } = await supabaseAdmin
+    .from("campaign_drops")
+    .select("id, drop_index, size, sent_count, status, scheduled_at")
+    .eq("campaign_id", campaign.id)
+    .in("status", ["pending", "sending"])
+    .lte("scheduled_at", new Date().toISOString())
+    .order("drop_index")
+    .limit(1);
+  const activeDrop = dueDrops?.[0] ?? null;
+  const { count: totalDrops } = await supabaseAdmin
+    .from("campaign_drops")
+    .select("id", { count: "exact", head: true })
+    .eq("campaign_id", campaign.id);
+  if ((totalDrops ?? 0) > 0 && !activeDrop) return { dispatched: 0, reason: "no_drop_due" };
+  const dropRoom = activeDrop
+    ? Math.max(0, (activeDrop.size ?? 0) - (activeDrop.sent_count ?? 0))
+    : Number.POSITIVE_INFINITY;
+  if (dropRoom === 0) return { dispatched: 0, reason: "drop_complete" };
+
+  const take = Math.min(remainingCap, remainingMonthly, dropRoom, 50);
   const { data: leads } = await supabaseAdmin
     .from("leads")
     .select("id, full_name, phone, city, state, address")
@@ -150,6 +172,8 @@ async function tickOne(campaign: {
     // TCPA: skip any recipient currently outside their local 8am–9pm window.
     // They'll be picked up on a later tick when their local time is legal.
     .filter((l) => isWithinTcpaWindow(l.phone as string))
+    // 6pm rule: never START a first touch after 6pm recipient local time.
+    .filter((l) => canStartNewDrop(l.phone as string))
     .slice(0, take);
 
   const provider = isProviderConfigured() ? getProvider() : null;
@@ -209,7 +233,18 @@ async function tickOne(campaign: {
     dispatched += 1;
   }
 
-  if (toSend.length < take) {
+  if (activeDrop && dispatched > 0) {
+    const nextSent = (activeDrop.sent_count ?? 0) + dispatched;
+    await supabaseAdmin
+      .from("campaign_drops")
+      .update({
+        sent_count: nextSent,
+        status: nextSent >= (activeDrop.size ?? 0) ? "complete" : "sending",
+      })
+      .eq("id", activeDrop.id);
+  }
+
+  if (!activeDrop && toSend.length < take) {
     await supabaseAdmin.from("campaigns").update({ status: "completed" }).eq("id", campaign.id);
   }
 

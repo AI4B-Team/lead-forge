@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { spinOnce } from "@/lib/spintax";
+import { planDrops, estimateCost } from "@/lib/drops";
+import { canStartNewDrop } from "@/lib/tcpa";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
 
@@ -89,19 +91,31 @@ export const getCampaignDetail = createServerFn({ method: "GET" })
       .eq("campaign_id", data.campaignId)
       .order("step_order", { ascending: true });
 
+    const { data: drops } = await supabase
+      .from("campaign_drops")
+      .select("id, drop_index, scheduled_at, size, sent_count, status")
+      .eq("campaign_id", data.campaignId)
+      .order("drop_index", { ascending: true });
+
+    const { data: tag } = campaign.tag_id
+      ? await supabase.from("tags").select("id, name, color").eq("id", campaign.tag_id).maybeSingle()
+      : { data: null };
+
     const { data: msgs } = await supabase
       .from("messages")
-      .select("id, direction, body, status, is_optout, created_at")
+      .select("id, direction, body, status, is_optout, is_bot, handoff_reason, created_at")
       .eq("campaign_id", data.campaignId)
       .order("created_at", { ascending: false })
       .limit(50);
 
-    let sent = 0, replies = 0, optOuts = 0, delivered = 0;
+    let sent = 0, replies = 0, optOuts = 0, delivered = 0, botHandled = 0, handoffs = 0;
     for (const m of msgs ?? []) {
       if (m.direction === "outbound") sent += 1;
       if (m.direction === "inbound") replies += 1;
       if (m.is_optout) optOuts += 1;
       if (m.status === "delivered") delivered += 1;
+      if (m.is_bot) botHandled += 1;
+      if (m.handoff_reason) handoffs += 1;
     }
 
     let recipients = 0;
@@ -114,7 +128,14 @@ export const getCampaignDetail = createServerFn({ method: "GET" })
       recipients = count ?? 0;
     }
 
-    return { campaign, steps: steps ?? [], recentMessages: msgs ?? [], stats: { sent, replies, optOuts, delivered, recipients } };
+    return {
+      campaign,
+      tag,
+      drops: drops ?? [],
+      steps: steps ?? [],
+      recentMessages: msgs ?? [],
+      stats: { sent, replies, optOuts, delivered, recipients, botHandled, handoffs },
+    };
   });
 
 export const updateCampaignStatus = createServerFn({ method: "POST" })
@@ -153,6 +174,10 @@ export const updateCampaignConfig = createServerFn({ method: "POST" })
       daily_cap: z.number().int().min(1).max(50000).optional(),
       quiet_start: z.string().regex(/^\d{2}:\d{2}$/).optional(),
       quiet_end: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+      tag_id: z.string().uuid().nullable().optional(),
+      drop_size: z.number().int().min(50).max(5000).optional(),
+      drop_times: z.array(z.string().regex(/^\d{2}:\d{2}$/)).min(1).max(8).optional(),
+      duplicate_policy: z.enum(["skip", "resend"]).optional(),
       steps: z
         .array(z.object({
           step_order: z.number().int().min(1).max(10),
@@ -163,13 +188,17 @@ export const updateCampaignConfig = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const patch: { daily_cap?: number; send_window?: { quiet_start: string; quiet_end: string } } = {};
+    const patch: Record<string, unknown> = {};
     if (typeof data.daily_cap === "number") patch.daily_cap = data.daily_cap;
+    if (data.tag_id !== undefined) patch.tag_id = data.tag_id;
+    if (typeof data.drop_size === "number") patch.drop_size = data.drop_size;
+    if (data.drop_times) patch.drop_times = data.drop_times;
+    if (data.duplicate_policy) patch.duplicate_policy = data.duplicate_policy;
     if (data.quiet_start || data.quiet_end) {
       patch.send_window = { quiet_start: data.quiet_start ?? "21:00", quiet_end: data.quiet_end ?? "09:00" };
     }
     if (Object.keys(patch).length) {
-      const { error } = await context.supabase.from("campaigns").update(patch).eq("id", data.campaignId);
+      const { error } = await context.supabase.from("campaigns").update(patch as never).eq("id", data.campaignId);
       if (error) throw error;
     }
     if (data.steps) {
@@ -179,6 +208,69 @@ export const updateCampaignConfig = createServerFn({ method: "POST" })
       );
     }
     return { ok: true };
+  });
+
+// Review-screen cost preview: recipients x segments across every drip step,
+// plus the drop plan (500-contact batches spread across the day) and how many
+// duplicate phone numbers exist in the source list.
+export const previewCampaign = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      jobId: z.string().uuid(),
+      dropSize: z.number().int().min(50).max(5000).default(500),
+      dropTimes: z.array(z.string().regex(/^\d{2}:\d{2}$/)).default(["10:00", "12:00", "15:00", "17:00"]),
+      bodies: z.array(z.string().max(2000)).default([]),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: leads } = await context.supabase
+      .from("leads")
+      .select("phone")
+      .eq("job_id", data.jobId)
+      .eq("scrub_status", "clean");
+    const phones = (leads ?? []).map((l) => l.phone).filter((p): p is string => !!p);
+    const unique = new Set(phones);
+    const duplicates = phones.length - unique.size;
+
+    const recipients = unique.size;
+    const cost = estimateCost(recipients, data.bodies.map((b) => ({ message_variants: [b] })));
+    const drops = planDrops(recipients, data.dropSize, data.dropTimes);
+    return { recipients, duplicates, cost, drops };
+  });
+
+// Materialize the drop schedule for a campaign.
+export const scheduleCampaignDrops = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      campaignId: z.string().uuid(),
+      recipients: z.number().int().min(0),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: campaign } = await context.supabase
+      .from("campaigns")
+      .select("id, workspace_id, drop_size, drop_times")
+      .eq("id", data.campaignId)
+      .maybeSingle();
+    if (!campaign) throw new Error("Campaign Not Found");
+
+    await context.supabase.from("campaign_drops").delete().eq("campaign_id", campaign.id);
+    const drops = planDrops(data.recipients, campaign.drop_size ?? 500, campaign.drop_times ?? undefined);
+    if (drops.length) {
+      const { error } = await context.supabase.from("campaign_drops").insert(
+        drops.map((d) => ({
+          workspace_id: campaign.workspace_id,
+          campaign_id: campaign.id,
+          drop_index: d.drop_index,
+          scheduled_at: d.scheduled_at,
+          size: d.size,
+        })),
+      );
+      if (error) throw error;
+    }
+    return { drops: drops.length };
   });
 
 // Runner: dispatch up to `batchSize` outbound messages for a single campaign.
