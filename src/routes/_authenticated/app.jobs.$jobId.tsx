@@ -3,6 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/app/page-header";
@@ -11,7 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search } from "lucide-react";
 import { toast } from "sonner";
-import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobLeads } from "@/lib/jobs.functions";
+import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobLeads, listJobs } from "@/lib/jobs.functions";
+import { useWorkspaceId } from "@/hooks/use-workspace";
 
 export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
   head: () => ({ meta: [{ title: "Pipeline Review — LeadTrace" }] }),
@@ -46,8 +49,6 @@ function JobDetail() {
   const navigate = useNavigate();
   const fetchReview = useServerFn(getJobReview);
   const fetchBucket = useServerFn(getLeadsByBucket);
-  const launch = useServerFn(launchCampaignFromJob);
-  const [launching, setLaunching] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["job-review", jobId],
@@ -71,19 +72,6 @@ function JobDetail() {
     const res = await fetchBucket({ data: { jobId, bucket } });
     if (!res.rows.length) return toast.info("No Rows In This Bucket.");
     downloadCsv(`${jobName.replace(/\s+/g, "_")}_${bucket}.csv`, toCsv(res.rows));
-  };
-
-  const onLaunch = async () => {
-    setLaunching(true);
-    try {
-      const { campaignId } = await launch({ data: { jobId, name: `${jobName} — Campaign` } });
-      toast.success("Campaign Created With Clean File Only.");
-      navigate({ to: "/app/campaigns/$campaignId", params: { campaignId } });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could Not Launch Campaign.");
-    } finally {
-      setLaunching(false);
-    }
   };
 
   return (
@@ -157,12 +145,98 @@ function JobDetail() {
         <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/lists" })}>
           Back To Lists
         </Button>
-        <Button className="rounded-full" disabled={!isReady || launching || counts.clean === 0} onClick={onLaunch}>
-          {launching ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-1 h-4 w-4" />}
-          Launch Campaign With Clean File
-        </Button>
+        <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />
       </div>
     </div>
+  );
+}
+
+// Launch a campaign from ANY ready list in the workspace, not just this one.
+function LaunchCampaignDialog({ defaultJobId, defaultJobName }: { defaultJobId: string; defaultJobName: string }) {
+  const navigate = useNavigate();
+  const { workspaceId } = useWorkspaceId();
+  const fetchJobs = useServerFn(listJobs);
+  const launch = useServerFn(launchCampaignFromJob);
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState(defaultJobId);
+  const [name, setName] = useState(`${defaultJobName} — Campaign`);
+  const [launching, setLaunching] = useState(false);
+
+  const { data } = useQuery({
+    queryKey: ["launchable-jobs", workspaceId],
+    queryFn: () => fetchJobs({ data: { workspaceId: workspaceId! } }),
+    enabled: open && !!workspaceId,
+  });
+
+  const options = (data?.jobs ?? []).filter((j) => j.status === "ready" && j.counts.clean > 0);
+
+  const pick = (id: string) => {
+    setSelected(id);
+    const j = options.find((o) => o.id === id);
+    if (j) setName(`${j.name} — Campaign`);
+  };
+
+  const onLaunch = async () => {
+    if (!selected) return toast.error("Pick A List First.");
+    if (!name.trim()) return toast.error("Name Your Campaign.");
+    setLaunching(true);
+    try {
+      const { campaignId } = await launch({ data: { jobId: selected, name: name.trim() } });
+      toast.success("Campaign Created With Clean File Only.");
+      setOpen(false);
+      navigate({ to: "/app/campaigns/$campaignId", params: { campaignId } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Launch Campaign.");
+    } finally {
+      setLaunching(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="rounded-full">
+          <MessageSquare className="mr-1 h-4 w-4" /> Launch Campaign With Clean File
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="font-display">Launch Campaign</DialogTitle>
+          <DialogDescription>
+            Pick Any Ready List. Only Clean Rows Are Attached — DNC And Litigator Stay Download-Only.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>List / File</Label>
+            <Select value={selected} onValueChange={pick}>
+              <SelectTrigger><SelectValue placeholder="Choose A Ready List" /></SelectTrigger>
+              <SelectContent>
+                {options.length === 0 && (
+                  <div className="px-2 py-3 text-sm text-muted-foreground">No Ready Lists With Clean Rows Yet.</div>
+                )}
+                {options.map((j) => (
+                  <SelectItem key={j.id} value={j.id}>
+                    {j.name} · {j.counts.clean.toLocaleString()} Clean
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Campaign Name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Campaign Name" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" className="rounded-full" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button className="rounded-full" disabled={launching || !selected} onClick={onLaunch}>
+            {launching ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-1 h-4 w-4" />}
+            Launch Campaign
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
