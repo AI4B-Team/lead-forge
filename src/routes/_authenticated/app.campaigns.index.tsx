@@ -57,14 +57,22 @@ function Campaigns() {
         description="Only Clean Files Can Be Loaded. Reply-Stops-Drip Is Automatic."
         actions={
           <div className="flex items-center gap-2">
-            <ToggleGroup type="single" value={view} onValueChange={(v) => handleSetView(v as ViewMode)} className="border rounded-full p-1 bg-background">
-              <ToggleGroupItem value="cards" aria-label="Card view" className="rounded-full px-3 py-1.5 h-auto data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                <LayoutGrid className="h-4 w-4 mr-1.5" /> Cards
-              </ToggleGroupItem>
-              <ToggleGroupItem value="list" aria-label="List view" className="rounded-full px-3 py-1.5 h-auto data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                <List className="h-4 w-4 mr-1.5" /> List
-              </ToggleGroupItem>
-            </ToggleGroup>
+            <Button
+              variant={view === "cards" ? "default" : "outline"}
+              className="rounded-full"
+              aria-label="Grid view"
+              onClick={() => handleSetView("cards")}
+            >
+              <LayoutGrid className="mr-1.5 h-4 w-4" /> Grid
+            </Button>
+            <Button
+              variant={view === "list" ? "default" : "outline"}
+              className="rounded-full"
+              aria-label="List view"
+              onClick={() => handleSetView("list")}
+            >
+              <List className="mr-1.5 h-4 w-4" /> List
+            </Button>
             <Button asChild className="rounded-full">
               <Link to="/app/campaigns/new"><Plus className="mr-1 h-4 w-4" /> New Campaign</Link>
             </Button>
