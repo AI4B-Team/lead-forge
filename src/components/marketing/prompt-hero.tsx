@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Plus, Upload, HardDrive, Send, X } from "lucide-react";
+import { Plus, Upload, HardDrive, Send, X, FileText } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
