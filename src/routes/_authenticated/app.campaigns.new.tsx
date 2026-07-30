@@ -165,33 +165,31 @@ function NewCampaign() {
               <Label>Daily Cap (Per Campaign)</Label>
               <Input type="number" min={1} max={5000} value={dailyCap} onChange={(e) => setDailyCap(Number(e.target.value) || 0)} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Drop Size</Label>
-                <Input type="number" min={50} max={5000} step={50} value={dropSize} onChange={(e) => setDropSize(Number(e.target.value) || 500)} />
-                <div className="text-[11px] text-muted-foreground mt-1">Operator-Proven Default: 500 Contacts Per Drop.</div>
-              </div>
-              <div>
-                <Label>Duplicates</Label>
-                <div className="mt-1 flex gap-1">
-                  {(["skip", "resend"] as const).map((p) => (
-                    <Button
-                      key={p}
-                      type="button"
-                      size="sm"
-                      variant={duplicatePolicy === p ? "default" : "outline"}
-                      className="rounded-full capitalize h-8"
-                      onClick={() => setDuplicatePolicy(p)}
-                    >
-                      {p === "skip" ? "Skip Already-Messaged" : "Allow Resend"}
-                    </Button>
-                  ))}
-                </div>
+            <div>
+              <Label>Drop Size</Label>
+              <Input type="number" min={50} max={5000} step={50} value={dropSize} onChange={(e) => setDropSize(Number(e.target.value) || 500)} />
+              <div className="text-[11px] text-muted-foreground mt-1">Operator-Proven Default: 500 Contacts Per Drop.</div>
+            </div>
+            <div>
+              <Label>Duplicates</Label>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {(["skip", "resend"] as const).map((p) => (
+                  <Button
+                    key={p}
+                    type="button"
+                    size="sm"
+                    variant={duplicatePolicy === p ? "default" : "outline"}
+                    className="rounded-full h-8"
+                    onClick={() => setDuplicatePolicy(p)}
+                  >
+                    {p === "skip" ? "Skip Already-Messaged" : "Allow Resend"}
+                  </Button>
+                ))}
               </div>
             </div>
             <div>
               <Label>Drop Times (Local)</Label>
-              <div className="mt-1 grid grid-cols-4 gap-2">
+              <div className="mt-1 grid grid-cols-2 gap-2">
                 {dropTimes.map((t, i) => (
                   <Input
                     key={i}
