@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
-      { title: "From Raw Data To Ready-To-Contact Leads | LeadTrace" },
+      { title: "From Raw Data To Ready Leads | LeadTrace" },
       {
         name: "description",
         content:
-          "See what happens after you click Build My List: five verification steps that turn 1,240 raw businesses into 554 clean, mobile-verified, DNC-scrubbed contacts in about 90 seconds.",
+          "See what happens after you click Build My List: five verification steps that turn 1,240 raw records into 554 clean, mobile-verified, DNC-scrubbed contacts in about 90 seconds.",
       },
-      { property: "og:title", content: "From Raw Data To Ready-To-Contact Leads — LeadTrace" },
+      { property: "og:title", content: "From Raw Data To Ready Leads — LeadTrace" },
       {
         property: "og:description",
         content: "One request. Five verification steps. A list you can text in about 90 seconds.",
