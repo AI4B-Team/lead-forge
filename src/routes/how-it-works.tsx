@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
-      { title: "From Raw Data To Ready-To-Contact Leads | LeadTrace" },
+      { title: "From Raw Data To Ready Leads | LeadTrace" },
       {
         name: "description",
         content:
-          "See what happens after you click Build My List: five verification steps that turn 1,240 raw businesses into 554 clean, mobile-verified, DNC-scrubbed contacts in about 90 seconds.",
+          "See what happens after you click Build My List: five verification steps that turn 1,240 raw records into 554 clean, mobile-verified, DNC-scrubbed contacts in about 90 seconds.",
       },
-      { property: "og:title", content: "From Raw Data To Ready-To-Contact Leads — LeadTrace" },
+      { property: "og:title", content: "From Raw Data To Ready Leads — LeadTrace" },
       {
         property: "og:description",
         content: "One request. Five verification steps. A list you can text in about 90 seconds.",
@@ -68,7 +68,7 @@ function HowItWorks() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">How It Works</div>
           <h1 className="mt-3 font-display text-4xl md:text-6xl font-black leading-[1.05] text-foreground">
-            From Raw Data To Ready-To-Contact Leads
+            From Raw Data To Ready Leads
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
             Generate a new list, upload one you already have, or mix sources. Every record runs the same
