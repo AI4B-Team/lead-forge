@@ -86,8 +86,8 @@ function HowItWorks() {
             Watch LeadTrace Clean A List
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            The same pipeline runs whether the list came from our data sources, public records, or a CSV you
-            uploaded. Watch it cycle through real scenarios.
+            The same pipeline runs whether you built a new list or uploaded a CSV of your own. Watch it cycle
+            through real scenarios.
           </p>
           <LivePipeline className="mt-8" />
         </div>
