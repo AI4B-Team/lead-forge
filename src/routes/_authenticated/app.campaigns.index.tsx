@@ -10,6 +10,9 @@ import { Plus, ShieldAlert, LayoutGrid, List, Bot } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { getRegistration } from "@/lib/numbers.functions";
 import { listCampaigns } from "@/lib/campaigns.functions";
+import { TagManagerDialog } from "@/components/app/tag-manager-dialog";
+import { CampaignTagMenu } from "@/components/app/campaign-tag-menu";
+import { TagBadge } from "@/components/app/tag-badge";
 
 type ViewMode = "cards" | "list";
 
@@ -21,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/app/campaigns/")({
 function Campaigns() {
   const { workspaceId } = useWorkspaceId();
   const [view, setView] = useState<ViewMode>("list");
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? (localStorage.getItem("campaigns-view") as ViewMode | null) : null;
@@ -46,9 +50,18 @@ function Campaigns() {
     enabled: !!workspaceId,
   });
   const campaignApproved = regData?.registration?.campaign_status === "approved";
-  const campaigns = campaignsData?.campaigns ?? [];
+  const allCampaigns = campaignsData?.campaigns ?? [];
   const stats = campaignsData?.stats ?? {};
-  const tags = campaignsData?.tags ?? {};
+  const tags = (campaignsData?.tags ?? {}) as Record<string, { id: string; name: string; color: string }>;
+  const campaigns = tagFilter
+    ? allCampaigns.filter((c) => (tagFilter === "untagged" ? !c.tag_id : c.tag_id === tagFilter))
+    : allCampaigns;
+  const tagCounts = allCampaigns.reduce<Record<string, number>>((acc, c) => {
+    const k = c.tag_id ?? "untagged";
+    acc[k] = (acc[k] ?? 0) + 1;
+    return acc;
+  }, {});
+  const tagList = Object.values(tags);
   return (
     <div>
       <PageHeader
@@ -72,12 +85,49 @@ function Campaigns() {
             >
               <List className="mr-1.5 h-4 w-4" /> List
             </Button>
+            {workspaceId && <TagManagerDialog workspaceId={workspaceId} />}
             <Button asChild className="rounded-full">
               <Link to="/app/campaigns/new"><Plus className="mr-1 h-4 w-4" /> New Campaign</Link>
             </Button>
           </div>
         }
       />
+      {(tagList.length > 0 || (tagCounts.untagged ?? 0) > 0) && allCampaigns.length > 0 && (
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setTagFilter(null)}
+            className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+              tagFilter === null ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            All ({allCampaigns.length})
+          </button>
+          {tagList.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTagFilter(tagFilter === t.id ? null : t.id)}
+              className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${tagFilter === t.id ? "ring-2 ring-offset-1" : ""}`}
+              style={{
+                backgroundColor: `${t.color}1a`,
+                color: t.color,
+                borderColor: `${t.color}55`,
+              }}
+            >
+              {t.name} ({tagCounts[t.id] ?? 0})
+            </button>
+          ))}
+          {(tagCounts.untagged ?? 0) > 0 && (
+            <button
+              onClick={() => setTagFilter(tagFilter === "untagged" ? null : "untagged")}
+              className={`rounded-full border border-dashed px-3 py-1 text-xs font-semibold transition-colors ${
+                tagFilter === "untagged" ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Untagged ({tagCounts.untagged})
+            </button>
+          )}
+        </div>
+      )}
       {!campaignApproved && (
         <div className="mb-6 rounded-2xl border border-warn/30 bg-warn/5 p-4 flex items-start gap-3">
           <ShieldAlert className="h-5 w-5 text-warn shrink-0 mt-0.5" />
@@ -103,17 +153,17 @@ function Campaigns() {
       ) : view === "cards" ? (
         <div className="grid md:grid-cols-3 gap-4">
           {campaigns.map((c) => (
-            <CampaignCard key={c.id} campaign={c} stats={stats[c.id]} tag={c.tag_id ? tags[c.tag_id] : undefined} />
+            <CampaignCard key={c.id} campaign={c} stats={stats[c.id]} tag={c.tag_id ? tags[c.tag_id] : undefined} workspaceId={workspaceId} />
           ))}
         </div>
       ) : (
-        <CampaignList campaigns={campaigns} stats={stats} tags={tags} />
+        <CampaignList campaigns={campaigns} stats={stats} tags={tags} workspaceId={workspaceId} />
       )}
     </div>
   );
 }
 
-function CampaignCard({ campaign: c, stats: s, tag }: { campaign: any; stats?: any; tag?: any }) {
+function CampaignCard({ campaign: c, stats: s, tag, workspaceId }: { campaign: any; stats?: any; tag?: any; workspaceId?: string | null }) {
   const stat = s ?? { sent: 0, replies: 0, optOuts: 0, recipients: 0 };
   return (
     <Link to="/app/campaigns/$campaignId" params={{ campaignId: c.id }}>
@@ -122,17 +172,10 @@ function CampaignCard({ campaign: c, stats: s, tag }: { campaign: any; stats?: a
           <div className="flex items-center justify-between">
             <Badge variant="outline" className="uppercase text-[10px]">{c.status ?? "draft"}</Badge>
             <div className="flex items-center gap-2">
-              {tag && (
-                <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-semibold border"
-                  style={{
-                    backgroundColor: `${tag.color}1a`,
-                    color: tag.color,
-                    borderColor: `${tag.color}55`,
-                  }}
-                >
-                  {tag.name}
-                </span>
+              {workspaceId ? (
+                <CampaignTagMenu workspaceId={workspaceId} campaignId={c.id} tag={tag} />
+              ) : (
+                tag && <TagBadge tag={tag} />
               )}
               <div className="text-xs text-muted-foreground">Cap {c.daily_cap ?? 500}/Day</div>
             </div>
@@ -154,7 +197,7 @@ function CampaignCard({ campaign: c, stats: s, tag }: { campaign: any; stats?: a
   );
 }
 
-function CampaignList({ campaigns, stats, tags }: { campaigns: any[]; stats: Record<string, any>; tags: Record<string, any> }) {
+function CampaignList({ campaigns, stats, tags, workspaceId }: { campaigns: any[]; stats: Record<string, any>; tags: Record<string, any>; workspaceId?: string | null }) {
   return (
     <Card>
       <CardContent className="p-0">
@@ -188,17 +231,10 @@ function CampaignList({ campaigns, stats, tags }: { campaigns: any[]; stats: Rec
                       <Badge variant="outline" className="uppercase text-[10px]">{c.status ?? "draft"}</Badge>
                     </td>
                     <td className="px-4 py-3">
-                      {tag ? (
-                        <span
-                          className="rounded-full px-2 py-0.5 text-[10px] font-semibold border"
-                          style={{
-                            backgroundColor: `${tag.color}1a`,
-                            color: tag.color,
-                            borderColor: `${tag.color}55`,
-                          }}
-                        >
-                          {tag.name}
-                        </span>
+                      {workspaceId ? (
+                        <CampaignTagMenu workspaceId={workspaceId} campaignId={c.id} tag={tag} />
+                      ) : tag ? (
+                        <TagBadge tag={tag} />
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
