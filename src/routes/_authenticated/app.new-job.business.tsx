@@ -132,6 +132,13 @@ function Wizard() {
     setCustomNiche("");
   };
 
+  // Live credit estimate: batch cap doubles as the user's spend control.
+  const cap = Math.max(50, Math.min(50_000, parseInt(maxResults, 10) || 0));
+  const areas = pickedCounties.length || 6;
+  const rawYield = Math.max(1, picked.length) * areas * 120;
+  const estimate = Math.min(cap, rawYield);
+  const overdrawn = scrapeBalance !== null && estimate > scrapeBalance;
+
   const run = async () => {
     if (!workspaceId) return;
     if (overdrawn) {
