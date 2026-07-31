@@ -138,11 +138,25 @@ export const runJob = createServerFn({ method: "POST" })
     const workspaceId = job.workspace_id;
     const params = (job.params ?? {}) as JobParams;
 
+    // Human-readable narration for the live progress feed.
+    const say = async (stage: string, message: string, count?: number) => {
+      await supabase.from("job_events").insert({
+        job_id: jobId,
+        workspace_id: workspaceId,
+        stage,
+        message,
+        count: count ?? null,
+      });
+    };
+    await say("queued", "Job accepted — we'll keep working even if you close this tab.");
+
     // 1) SOURCE ----------------------------------------------------------------
     await supabase.from("jobs").update({ status: "scraping" }).eq("id", jobId);
+    await say("scraping", "Searching the source for matching records…");
     const adapter = selectAdapter(job.source_type);
     const raw = await adapter.run(params);
     await supabase.from("jobs").update({ rows_in: raw.length }).eq("id", jobId);
+    await say("scraping", `Found ${raw.length.toLocaleString()} records.`, raw.length);
 
     // 2) ENRICH + DEDUPE (drop franchises, dedupe in-batch + across lists) ----
     await supabase.from("jobs").update({ status: "enriching" }).eq("id", jobId);
@@ -180,6 +194,11 @@ export const runJob = createServerFn({ method: "POST" })
       deduped.push(r);
     }
     await supabase.from("jobs").update({ rows_deduped: deduped.length, rows_enriched: deduped.length }).eq("id", jobId);
+    await say(
+      "enriching",
+      `Removed ${(raw.length - deduped.length).toLocaleString()} duplicates and franchise locations — ${deduped.length.toLocaleString()} unique records remain.`,
+      deduped.length,
+    );
 
     // 3) SKIPTRACE (fill missing phones for records + upload w/ opt-in) --------
     await supabase.from("jobs").update({ status: "skiptracing" }).eq("id", jobId);
@@ -217,6 +236,13 @@ export const runJob = createServerFn({ method: "POST" })
         });
     }
     await supabase.from("jobs").update({ rows_skiptraced: skiptraced }).eq("id", jobId);
+    await say(
+      "skiptracing",
+      skiptraced > 0
+        ? `Skip traced ${skiptraced.toLocaleString()} records that were missing a phone number.`
+        : "No skip tracing needed — every record already had a phone number.",
+      skiptraced,
+    );
 
     // 4) INSERT LEADS ----------------------------------------------------------
     const leadRows = deduped.map((r) => ({
@@ -261,6 +287,7 @@ export const runJob = createServerFn({ method: "POST" })
 
     // 5) SCRUB (DNC + Litigator) via configurable provider ---------------------
     await supabase.from("jobs").update({ status: "scrubbing" }).eq("id", jobId);
+    await say("scrubbing", "Scrubbing against the National DNC Registry and known litigators…");
     const { data: inserted } = await supabase
       .from("leads")
       .select("id, phone")
@@ -290,8 +317,14 @@ export const runJob = createServerFn({ method: "POST" })
       litigator_count: litigator,
       proof: scrubResult.proof as never,
     });
+    await say(
+      "scrubbing",
+      `${dnc.toLocaleString()} numbers flagged DNC and ${litigator.toLocaleString()} flagged as known litigators.`,
+      dnc + litigator,
+    );
 
     // 6) READY -----------------------------------------------------------------
     await supabase.from("jobs").update({ status: "ready" }).eq("id", jobId);
+    await say("ready", `${clean.toLocaleString()} clean, textable leads are ready.`, clean);
     return { ok: true, status: "ready", clean, dnc, litigator, total: inserted?.length ?? 0 };
   });
