@@ -43,7 +43,7 @@ const STAGES = [
   {
     icon: Smartphone,
     name: "Fill Missing Data",
-    body: "Carrier lookup sorts mobile, landline, and email. Optional skip trace appends missing contact data when you need it.",
+    body: "Carrier lookup identifies mobile and landline numbers. Optional skip tracing appends missing phone numbers and email addresses when available.",
     time: "~40 seconds",
   },
   {
