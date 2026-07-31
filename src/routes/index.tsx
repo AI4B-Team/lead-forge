@@ -386,7 +386,7 @@ function FeaturesSection() {
       <div className="mx-auto max-w-7xl px-6">
         <SectionHeading
           eyebrow="Features"
-          title="Everything Between Raw Data And Ready-To-Contact."
+          title="Turn Raw Data Into Ready-To-Contact Leads."
           subtitle="Bring data in from anywhere, let LeadTrace clean and verify it automatically, then launch compliant outreach."
         />
         <div className="mt-12 grid gap-4 md:grid-cols-2">
