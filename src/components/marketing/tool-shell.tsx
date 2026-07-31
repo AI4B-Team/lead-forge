@@ -90,13 +90,13 @@ export function ToolShell<T>({
 
         <div className="mt-10 flex flex-wrap gap-3">
           {related.map((r) => (
-            <Link
+            <a
               key={r.to}
-              to={r.to}
+              href={r.to}
               className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:border-primary"
             >
               {r.label}
-            </Link>
+            </a>
           ))}
         </div>
 
