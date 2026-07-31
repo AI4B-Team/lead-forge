@@ -201,8 +201,8 @@ function LeadsIndex() {
                           {r.business}
                         </td>
                         <td className="px-4 py-3 tabular-nums text-foreground">
-                          <span className="inline-flex items-center gap-1.5">
-                            <Smartphone className="h-3.5 w-3.5 text-primary" />
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <Smartphone className="h-3.5 w-3.5 shrink-0 text-primary" />
                             {r.phone}
                           </span>
                         </td>
