@@ -201,20 +201,64 @@ function ConsolidationBand() {
 
 function HowItWorksSection() {
   const steps = [
-    { n: "01", title: "Pick Your Source.", body: "Scrape a niche, scrape public records, or upload a list you already own." },
-    { n: "02", title: "We Do The Grunt Work.", body: "De-dupe, remove franchises, skip trace missing numbers, and scrub DNC + litigators into three files." },
-    { n: "03", title: "Launch The Campaign.", body: "Send from geo-matched numbers with drips that stop the second someone replies." },
+    {
+      n: "Step 1",
+      icon: Database,
+      title: "Generate Or Import",
+      body: "Generate leads from multiple data sources or upload an existing CSV, CRM export, or lead list.",
+      checks: [] as string[],
+    },
+    {
+      n: "Step 2",
+      icon: Settings2,
+      title: "Clean & Verify",
+      body: "Clean duplicates, verify contacts, optionally skip trace missing data, and run compliance checks before delivery.",
+      checks: ["Remove Duplicates", "Verify Mobile Numbers", "Optional Skip Trace", "DNC Compliance", "Outreach Ready"],
+    },
+    {
+      n: "Step 3",
+      icon: Rocket,
+      title: "Launch Outreach",
+      body: "Launch compliant SMS campaigns with local numbers, automated follow-ups, and built-in STOP handling.",
+      checks: [] as string[],
+    },
   ];
   return (
     <section className="bg-surface py-24">
       <div className="mx-auto max-w-7xl px-6">
-        <SectionHeading eyebrow="How It Works" title="Three Doors. One Pipeline." />
-        <div className="grid md:grid-cols-3 gap-6 mt-12">
-          {steps.map((s) => (
-            <div key={s.n} className="rounded-2xl border border-border bg-surface p-8">
-              <div className="text-primary font-display text-4xl font-black">{s.n}</div>
-              <div className="mt-4 text-xl font-display font-bold text-foreground">{s.title}</div>
-              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{s.body}</p>
+        <SectionHeading eyebrow="How It Works" title="Three Ways In. One Clean Pipeline." />
+        <div className="relative mt-12 grid items-stretch gap-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]">
+          {steps.map((s, i) => (
+            <div key={s.n} className="contents">
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-surface p-8">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <s.icon className="h-5 w-5" />
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    {s.n}
+                  </span>
+                </div>
+                <div className="mt-5 font-display text-xl font-bold text-foreground">{s.title}</div>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+                {s.checks.length > 0 && (
+                  <ul className="mt-5 space-y-2 border-t border-border pt-5">
+                    {s.checks.map((c) => (
+                      <li key={c} className="flex items-center gap-2 text-sm text-foreground">
+                        <Check className="h-4 w-4 shrink-0 text-primary" />
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {i < steps.length - 1 && (
+                <div className="flex items-center justify-center" aria-hidden="true">
+                  <span className="hidden h-px w-6 bg-border md:block" />
+                  <ArrowRight className="h-5 w-5 rotate-90 text-muted-foreground md:rotate-0" />
+                  <span className="hidden h-px w-6 bg-border md:block" />
+                </div>
+              )}
             </div>
           ))}
         </div>
