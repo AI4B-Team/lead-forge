@@ -205,46 +205,59 @@ function HowItWorksSection() {
       n: "Step 1",
       icon: Database,
       title: "Generate Or Import",
-      body: "Generate leads from multiple data sources or upload an existing CSV, CRM export, or lead list.",
+      body: "Generate new leads or import an existing CSV, CRM export, or lead list.",
       checks: [] as string[],
     },
     {
       n: "Step 2",
       icon: Settings2,
       title: "Clean & Verify",
-      body: "Clean duplicates, verify contacts, optionally skip trace missing data, and run compliance checks before delivery.",
-      checks: ["Remove Duplicates", "Verify Mobile Numbers", "Optional Skip Trace", "DNC Compliance", "Outreach Ready"],
+      body: "Every record runs the same verification process before it reaches your outreach.",
+      checks: ["Verify Contacts", "Optional Skip Trace", "Compliance Checked", "Ready To Launch"],
     },
     {
       n: "Step 3",
       icon: Rocket,
       title: "Launch Outreach",
-      body: "Launch compliant SMS campaigns with local numbers, automated follow-ups, and built-in STOP handling.",
+      body: "Reach more prospects using local numbers, automated follow-ups, and built-in compliance.",
       checks: [] as string[],
     },
   ];
   return (
-    <section className="bg-surface py-24">
+    <section className="bg-surface py-20">
       <div className="mx-auto max-w-7xl px-6">
-        <SectionHeading eyebrow="How It Works" title="Three Ways In. One Clean Pipeline." />
-        <div className="relative mt-12 grid items-stretch gap-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">How It Works</div>
+          <h2 className="mt-3 font-display text-3xl font-black leading-tight text-foreground md:text-4xl lg:text-[2.75rem] lg:whitespace-nowrap">
+            However Your Leads Start, They End Outreach-Ready.
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
+            Generate new leads, upload your own lists, or process public records — all through the same
+            pipeline.
+          </p>
+        </div>
+        <div className="relative mt-10 grid items-stretch gap-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]">
           {steps.map((s, i) => (
             <div key={s.n} className="contents">
-              <div className="flex h-full flex-col rounded-2xl border border-border bg-surface p-8">
+              <div className="flex h-full flex-col rounded-2xl border border-border bg-surface p-7 transition-colors hover:border-primary/40">
                 <div className="flex items-center gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                    <s.icon className="h-5 w-5" />
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <s.icon className="h-6 w-6" />
                   </span>
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     {s.n}
                   </span>
                 </div>
-                <div className="mt-5 font-display text-xl font-bold text-foreground">{s.title}</div>
+                <div className="mt-4 font-display text-xl font-bold text-foreground">{s.title}</div>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
                 {s.checks.length > 0 && (
-                  <ul className="mt-5 space-y-2 border-t border-border pt-5">
-                    {s.checks.map((c) => (
-                      <li key={c} className="flex items-center gap-2 text-sm text-foreground">
+                  <ul className="stage-checks mt-4 space-y-2 border-t border-border pt-4">
+                    {s.checks.map((c, ci) => (
+                      <li
+                        key={c}
+                        className="flex items-center gap-2 text-sm text-foreground"
+                        style={{ animationDelay: `${ci * 110}ms` }}
+                      >
                         <Check className="h-4 w-4 shrink-0 text-primary" />
                         {c}
                       </li>
@@ -255,7 +268,10 @@ function HowItWorksSection() {
               {i < steps.length - 1 && (
                 <div className="flex items-center justify-center" aria-hidden="true">
                   <span className="hidden h-px w-6 bg-border md:block" />
-                  <ArrowRight className="h-5 w-5 rotate-90 text-muted-foreground md:rotate-0" />
+                  <ArrowRight
+                    className="arrow-nudge h-5 w-5 rotate-90 text-muted-foreground md:rotate-0"
+                    style={{ animationDelay: `${i * 400}ms` }}
+                  />
                   <span className="hidden h-px w-6 bg-border md:block" />
                 </div>
               )}
