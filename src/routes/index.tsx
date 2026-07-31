@@ -400,27 +400,7 @@ function FeaturesSection() {
 }
 
 function IndustriesSection() {
-  return (
-    <section className="bg-surface py-24">
-      <div className="mx-auto max-w-7xl px-6">
-        <SectionHeading eyebrow="Industries" title="Same Engine. Your Playbook." />
-        <div className="flex flex-wrap gap-2 justify-center mt-10">
-          {INDUSTRIES.map((i) => (
-            <span
-              key={i.key}
-              className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground"
-            >
-              {i.label}
-            </span>
-          ))}
-        </div>
-        <p className="text-center text-muted-foreground text-sm mt-6 max-w-2xl mx-auto">
-          Insurance agents pull business lists. Real estate wholesalers pull public records.
-          Home services scrape their trade. Same pipeline, tuned to the way you sell.
-        </p>
-      </div>
-    </section>
-  );
+  return <IndustryPreview />;
 }
 
 function PricingPreview() {
