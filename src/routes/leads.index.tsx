@@ -45,14 +45,6 @@ export const Route = createFileRoute("/leads/")({
   component: LeadsIndex,
 });
 
-const BADGES = [
-  "Multi-Source Data",
-  "Upload Your Own Lists",
-  "Mobile Verified",
-  "Skip Trace Available",
-  "Outreach Ready",
-];
-
 const WORKFLOW_STEPS = ["Generate Lists", "Clean & Verify", "Launch Outreach"];
 
 const NICHE_FACTS = [
