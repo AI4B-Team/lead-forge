@@ -61,17 +61,6 @@ const NAV_LINKS = [
   { to: "/pricing", label: "Pricing" },
 ] as const;
 
-function Unused() {
-  return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <MarketingNav />
-      <main className="flex-1">{children}</main>
-      <ComplianceStrip />
-      <MarketingFooter />
-    </div>
-  );
-}
-
 export { ComplianceStrip, MarketingFooter };
 
 export function MarketingNav({ dark = false }: { dark?: boolean }) {
@@ -206,6 +195,8 @@ function MarketingFooter() {
         </div>
         <div className="flex justify-center gap-6">
           <Link to="/leads">Lead Lists</Link>
+          <Link to="/how-it-works">How It Works</Link>
+          <Link to="/tools">Free Tools</Link>
           <Link to="/pricing">Pricing</Link>
           <Link to="/compliance">Compliance</Link>
           <Link to="/sign-in">Sign In</Link>
