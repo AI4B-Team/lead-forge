@@ -6,6 +6,21 @@
 // suppressed leads, and never launches anything. A human clicks Run.
 
 import { jobSpecSchema, type JobSpec, type AssistantMessage } from "./assistant.shared";
+import { countiesForState, formatCounty, parseCounty } from "./us-geo";
+
+/** Snap model-provided county names onto real counties in the spec's state. */
+function normalizeCounties(counties: string[], state: string | null): string[] {
+  if (!state) return counties;
+  const all = countiesForState(state);
+  const out: string[] = [];
+  for (const raw of counties) {
+    const bare = parseCounty(raw).county.replace(/\b(county|parish|borough)\b/gi, "").trim();
+    const hit = all.find((c) => c.toLowerCase() === bare.toLowerCase());
+    const label = formatCounty(hit ?? bare, state);
+    if (!out.some((v) => v.toLowerCase() === label.toLowerCase())) out.push(label);
+  }
+  return out;
+}
 
 const NON_COMPLIANT = [
   { re: /\b(text|message|send)\b[^.?!]{0,40}\b(dnc|do not call|litigator|suppressed|opted[- ]out)\b/i, why: "Only Clean-File Leads Are Campaignable. DNC, Litigator And Suppressed Numbers Are Never Sent To." },
@@ -33,7 +48,8 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "HARD RULES:",
     "- Never propose messaging DNC, litigator, suppressed, or opted-out leads. Only Clean-file leads are campaignable.",
     "- Never draft hidden or mid-message opt-out traps, and never guarantee outcomes.",
-    "- Never claim coverage for a county not listed above. Say plainly it is not covered yet, offer to log a county request, and suggest the closest covered market or another source.",
+    "- You may select any real county in the chosen state, and select several at once when the operator asks for a region or metro. Always set state (2-letter) plus counties[] using plain county names.",
+    "- Never claim adapter coverage for a county not listed above. Select it if asked, but say plainly it is not covered yet, offer to log a county request, and suggest the closest covered market or another source.",
     "- Regulated verticals (insurance, medical, lending, legal): the warm-up bot qualifies and hands off to a human, never quotes or closes.",
     "- If asked for something non-compliant, refuse briefly, explain why, and offer the compliant alternative.",
     "",
@@ -93,9 +109,12 @@ export async function askAssistant(opts: {
   }
 
   const merged = jobSpecSchema.safeParse({ ...opts.spec, ...(out.specPatch ?? {}) });
+  const spec = merged.success
+    ? { ...merged.data, counties: normalizeCounties(merged.data.counties, merged.data.state) }
+    : opts.spec;
   return {
     reply: out.reply?.trim() || "Updated The Job Spec On The Right.",
-    spec: merged.success ? merged.data : opts.spec,
+    spec,
     suggestedTemplates: (out.suggestedTemplates ?? []).slice(0, 4),
   };
 }
