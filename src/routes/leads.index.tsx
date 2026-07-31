@@ -27,7 +27,7 @@ export const Route = createFileRoute("/leads/")({
   component: LeadsIndex,
 });
 
-const BADGES = ["Mobile Verified", "DNC Scrubbed", "No Franchises", "Duplicate Free", "Ready To Import"];
+const BADGES = ["Mobile Verified", "DNC Scrubbed", "Duplicate Free", "Ready To Import"];
 
 /** Outcome-framed headings for the pipeline-stage pages (presentation only). */
 const BENEFITS: Record<string, { title: string; body: string }> = {
