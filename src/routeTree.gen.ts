@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SolarRouteImport } from './routes/solar'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -36,9 +35,11 @@ import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
+import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as LeadsIndexRouteImport } from './routes/leads.index'
 import { Route as ToolsLineTypeCheckerRouteImport } from './routes/tools.line-type-checker'
 import { Route as ToolsDncCheckerRouteImport } from './routes/tools.dnc-checker'
+import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as LeadsSlugRouteImport } from './routes/leads.$slug'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
@@ -69,11 +70,6 @@ import { Route as AuthenticatedAppJobsJobIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppCampaignsNewRouteImport } from './routes/_authenticated/app.campaigns.new'
 import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
 
-const TemplatesRoute = TemplatesRouteImport.update({
-  id: '/templates',
-  path: '/templates',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const StartRoute = StartRouteImport.update({
   id: '/start',
   path: '/start',
@@ -203,6 +199,11 @@ const ToolsIndexRoute = ToolsIndexRouteImport.update({
   path: '/tools/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
+  id: '/templates/',
+  path: '/templates/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LeadsIndexRoute = LeadsIndexRouteImport.update({
   id: '/leads/',
   path: '/leads/',
@@ -216,6 +217,11 @@ const ToolsLineTypeCheckerRoute = ToolsLineTypeCheckerRouteImport.update({
 const ToolsDncCheckerRoute = ToolsDncCheckerRouteImport.update({
   id: '/tools/dnc-checker',
   path: '/tools/dnc-checker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
+  id: '/templates/$templateId',
+  path: '/templates/$templateId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeadsSlugRoute = LeadsSlugRouteImport.update({
@@ -404,12 +410,13 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
-  '/templates': typeof TemplatesRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/leads/$slug': typeof LeadsSlugRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
   '/leads/': typeof LeadsIndexRoute
+  '/templates/': typeof TemplatesIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/app/account': typeof AuthenticatedAppAccountRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
@@ -464,11 +471,12 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
-  '/templates': typeof TemplatesRoute
   '/leads/$slug': typeof LeadsSlugRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
   '/leads': typeof LeadsIndexRoute
+  '/templates': typeof TemplatesIndexRoute
   '/tools': typeof ToolsIndexRoute
   '/app/account': typeof AuthenticatedAppAccountRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
@@ -525,12 +533,13 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
-  '/templates': typeof TemplatesRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/leads/$slug': typeof LeadsSlugRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
   '/leads/': typeof LeadsIndexRoute
+  '/templates/': typeof TemplatesIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/_authenticated/app/account': typeof AuthenticatedAppAccountRoute
   '/_authenticated/app/admin': typeof AuthenticatedAppAdminRoute
@@ -587,12 +596,13 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
-    | '/templates'
     | '/app'
     | '/leads/$slug'
+    | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
     | '/leads/'
+    | '/templates/'
     | '/tools/'
     | '/app/account'
     | '/app/admin'
@@ -647,11 +657,12 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
-    | '/templates'
     | '/leads/$slug'
+    | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
     | '/leads'
+    | '/templates'
     | '/tools'
     | '/app/account'
     | '/app/admin'
@@ -707,12 +718,13 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
-    | '/templates'
     | '/_authenticated/app'
     | '/leads/$slug'
+    | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
     | '/leads/'
+    | '/templates/'
     | '/tools/'
     | '/_authenticated/app/account'
     | '/_authenticated/app/admin'
@@ -769,11 +781,12 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SolarRoute: typeof SolarRoute
   StartRoute: typeof StartRoute
-  TemplatesRoute: typeof TemplatesRoute
   LeadsSlugRoute: typeof LeadsSlugRoute
+  TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsDncCheckerRoute: typeof ToolsDncCheckerRoute
   ToolsLineTypeCheckerRoute: typeof ToolsLineTypeCheckerRoute
   LeadsIndexRoute: typeof LeadsIndexRoute
+  TemplatesIndexRoute: typeof TemplatesIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   ApiPublicHooksInboundSmsRoute: typeof ApiPublicHooksInboundSmsRoute
   ApiPublicHooksTelnyxDlrRoute: typeof ApiPublicHooksTelnyxDlrRoute
@@ -783,13 +796,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/templates': {
-      id: '/templates'
-      path: '/templates'
-      fullPath: '/templates'
-      preLoaderRoute: typeof TemplatesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/start': {
       id: '/start'
       path: '/start'
@@ -972,6 +978,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/templates/': {
+      id: '/templates/'
+      path: '/templates'
+      fullPath: '/templates/'
+      preLoaderRoute: typeof TemplatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leads/': {
       id: '/leads/'
       path: '/leads'
@@ -991,6 +1004,13 @@ declare module '@tanstack/react-router' {
       path: '/tools/dnc-checker'
       fullPath: '/tools/dnc-checker'
       preLoaderRoute: typeof ToolsDncCheckerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates/$templateId': {
+      id: '/templates/$templateId'
+      path: '/templates/$templateId'
+      fullPath: '/templates/$templateId'
+      preLoaderRoute: typeof TemplatesTemplateIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leads/$slug': {
@@ -1304,11 +1324,12 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SolarRoute: SolarRoute,
   StartRoute: StartRoute,
-  TemplatesRoute: TemplatesRoute,
   LeadsSlugRoute: LeadsSlugRoute,
+  TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsDncCheckerRoute: ToolsDncCheckerRoute,
   ToolsLineTypeCheckerRoute: ToolsLineTypeCheckerRoute,
   LeadsIndexRoute: LeadsIndexRoute,
+  TemplatesIndexRoute: TemplatesIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   ApiPublicHooksInboundSmsRoute: ApiPublicHooksInboundSmsRoute,
   ApiPublicHooksTelnyxDlrRoute: ApiPublicHooksTelnyxDlrRoute,

@@ -1,15 +1,25 @@
 import { Link } from "@tanstack/react-router";
 import type { Template } from "@/lib/templates";
 
-export function TemplateCard({ template }: { template: Template }) {
+export function TemplateCard({
+  template,
+  /** "detail" opens the template's page; "prompt" prefills the homepage prompt. */
+  variant = "detail",
+}: {
+  template: Template;
+  variant?: "detail" | "prompt";
+}) {
   const Icon = template.icon;
   const logoUrl = template.logoDomain
     ? `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(template.logoDomain)}`
     : null;
+  const linkProps =
+    variant === "prompt"
+      ? ({ to: "/", search: { prompt: template.prompt } } as const)
+      : ({ to: "/templates/$templateId", params: { templateId: template.id } } as const);
   return (
     <Link
-      to="/"
-      search={{ prompt: template.prompt }}
+      {...linkProps}
       className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 hover:border-primary hover:shadow-sm transition text-left"
     >
       <span className={`grid place-items-center h-12 w-12 rounded-xl shrink-0 overflow-hidden bg-white border border-border ${logoUrl ? "" : template.tint}`}>
