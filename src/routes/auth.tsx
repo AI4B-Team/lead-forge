@@ -43,7 +43,7 @@ function AuthPage() {
       if (data.session) {
         const stashed = (() => { try { return sessionStorage.getItem("leadtrace_prompt"); } catch { return null; } })();
         if (stashed) {
-          window.location.href = "/app/new-job/business";
+          window.location.href = "/app/assistant";
           return;
         }
         if (search.redirect && search.redirect.startsWith("/")) {
@@ -73,7 +73,7 @@ function AuthPage() {
         try { localStorage.setItem("leadtrace_returning", "1"); } catch { /* ignore */ }
         const stashed = (() => { try { return sessionStorage.getItem("leadtrace_prompt"); } catch { return null; } })();
         if (stashed) {
-          navigate({ to: "/app/new-job/business" });
+          navigate({ to: "/app/assistant" });
           return;
         }
         if (search.redirect && search.redirect.startsWith("/")) {
