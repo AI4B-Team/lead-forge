@@ -81,7 +81,7 @@ function HowItWorks() {
 
       {/* Live run */}
       <section className="border-y border-border bg-surface-muted py-16">
-        <div className="mx-auto max-w-3xl px-6">
+        <div className="mx-auto max-w-4xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
             Watch LeadTrace Clean A List
           </h2>
