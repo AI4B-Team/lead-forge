@@ -134,6 +134,10 @@ function Wizard() {
 
   const run = async () => {
     if (!workspaceId) return;
+    if (overdrawn) {
+      toast.error("This Search Would Overdraw Your Credits. Top Up Or Lower Max Results.");
+      return;
+    }
     setBusy(true);
     try {
       const { data, error } = await supabase
@@ -151,6 +155,7 @@ function Wizard() {
             dedupe,
             mobile_only: mobileOnly,
             avoid_metros: avoidMetros,
+            max_results: cap,
           },
         })
         .select("id")
