@@ -104,6 +104,36 @@ function PillarArrow() {
   );
 }
 
+function MiniWorkflow({
+  steps,
+}: {
+  steps: { icon: React.ReactNode; label: string }[];
+}) {
+  return (
+    <div className="relative mt-5">
+      <div className="absolute left-[12%] right-[12%] top-7 hidden h-px bg-border sm:block" />
+      <div className="relative flex items-start justify-between gap-2">
+        {steps.map((s) => (
+          <span key={s.label} className="flex flex-1 flex-col items-center gap-2.5 text-center">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl border border-border bg-background text-primary">
+              {s.icon}
+            </span>
+            <span className="text-xs font-bold text-foreground">{s.label}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PillarArrowLegacy() {
+  return (
+    <div className="flex items-center justify-center py-1 md:py-0">
+      <ArrowRight className="arrow-nudge h-6 w-6 rotate-90 text-primary md:h-8 md:w-8 md:rotate-0" />
+    </div>
+  );
+}
+
 function PillarCard({
   icon,
   title,
