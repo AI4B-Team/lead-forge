@@ -77,6 +77,17 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           {BRAND_NAME}
         </Link>
         <div className="flex items-center gap-2 sm:gap-4">
+          <nav className="hidden md:flex items-center gap-5 text-sm font-medium">
+            {NAV_LINKS.map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                className={dark ? "text-ink-foreground/90 hover:text-ink-foreground" : "text-foreground hover:text-primary"}
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
           {!loading && signedIn ? (
             <>
               <button
