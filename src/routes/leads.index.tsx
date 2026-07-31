@@ -249,20 +249,13 @@ function LeadsIndex() {
                 <div className="font-display text-lg font-black text-foreground">
                   {p.nicheLabel ?? p.title}
                 </div>
-                <dl className="mt-3 space-y-1 text-sm text-muted-foreground">
-                  <div className="flex justify-between gap-3">
-                    <dt>Coverage</dt>
-                    <dd className="font-semibold text-foreground">Nationwide</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt>Numbers</dt>
-                    <dd className="font-semibold text-foreground">Mobile Verified</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt>Built</dt>
-                    <dd className="font-semibold text-foreground">On Demand</dd>
-                  </div>
-                </dl>
+                <ul className="mt-3 space-y-1.5 text-sm">
+                  {NICHE_FACTS.map((f) => (
+                    <li key={f.label} className="flex items-center gap-2 font-semibold text-foreground">
+                      <f.icon className="h-4 w-4 shrink-0 text-primary" /> {f.label}
+                    </li>
+                  ))}
+                </ul>
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
                   View Leads <ArrowRight className="h-3.5 w-3.5" />
                 </span>
