@@ -1,5 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check, Clock, Database, FileSpreadsheet, Phone, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Clock,
+  Database,
+  FileSpreadsheet,
+  Globe,
+  Phone,
+  ShieldCheck,
+  Smartphone,
+  Upload,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { PipelineFlow } from "@/components/marketing/pipeline-flow";
@@ -27,7 +39,27 @@ export const Route = createFileRoute("/leads/")({
   component: LeadsIndex,
 });
 
-const BADGES = ["Mobile Verified", "DNC Scrubbed", "Duplicate Free", "Ready To Import"];
+const BADGES = [
+  "Multi-Source Data",
+  "Upload Your Own Lists",
+  "Mobile Verified",
+  "Skip Trace Available",
+  "DNC Scrubbed",
+];
+
+const NICHE_FACTS = [
+  { icon: Globe, label: "Nationwide" },
+  { icon: Smartphone, label: "Mobile Verified" },
+  { icon: Zap, label: "Built On Demand" },
+];
+
+const UPLOAD_BENEFITS = [
+  "Remove Duplicates",
+  "Verify Mobile Numbers",
+  "Skip Trace Missing Contacts",
+  "Scrub DNC",
+  "Export A Cleaner List",
+];
 
 /** Outcome-framed headings for the pipeline-stage pages (presentation only). */
 const BENEFITS: Record<string, { title: string; body: string }> = {
@@ -40,7 +72,7 @@ const BENEFITS: Record<string, { title: string; body: string }> = {
     body: "Every number is carrier-checked, so your texts land on phones people actually carry instead of dying on office landlines.",
   },
   "dnc-list-scrubbing": {
-    title: "Fewer Complaints",
+    title: "Better Deliverability",
     body: "Numbers on the National Do Not Call Registry are removed before delivery, with a timestamped record of every check.",
   },
   "litigator-scrub": {
@@ -54,10 +86,11 @@ const BENEFITS: Record<string, { title: string; body: string }> = {
 };
 
 const SOURCES = [
-  { icon: Database, label: "Google Maps" },
+  { icon: Database, label: "Public Business Data" },
   { icon: FileSpreadsheet, label: "Public Records" },
+  { icon: Upload, label: "Multiple Data Sources" },
   { icon: Phone, label: "Carrier Data" },
-  { icon: ShieldCheck, label: "National DNC" },
+  { icon: ShieldCheck, label: "Compliance Data" },
 ];
 
 const PROMISES = ["Freshly Generated", "Never Resold", "Built On Demand", "Export Ready"];
@@ -76,9 +109,9 @@ function LeadsIndex() {
             Lead Lists You Can Actually Contact.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-relaxed text-muted-foreground">
-            Every list is deduplicated, mobile verified, scrubbed against the National DNC Registry, and
-            filtered for known litigators before it reaches you. You get names and numbers you can text
-            today — not a spreadsheet you have to clean first.
+            Build a new lead list from multiple data sources or upload your own. Every list can be cleaned,
+            enriched, mobile verified, skip-traced, scrubbed against the National DNC Registry, and prepared
+            for outreach before you ever contact a prospect.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -109,7 +142,7 @@ function LeadsIndex() {
       <section className="border-y border-border bg-surface-muted py-14 text-center">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
-            What Happens To 1,240 Businesses Before You Get Them
+            How Every List Gets Prepared
           </h2>
           <PipelineFlow stages={REFERENCE_FUNNEL} className="mt-8" />
           <p className="mx-auto mt-6 max-w-3xl text-sm text-muted-foreground">
@@ -134,20 +167,27 @@ function LeadsIndex() {
               <thead>
                 <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <th className="px-4 py-3">Business</th>
+                  <th className="px-4 py-3">Owner</th>
                   <th className="px-4 py-3">Mobile Phone</th>
                   <th className="px-4 py-3">Line Type</th>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Website</th>
                   <th className="px-4 py-3">DNC</th>
                   <th className="px-4 py-3">Litigator</th>
-                  <th className="px-4 py-3">Rating</th>
                   <th className="px-4 py-3">City</th>
+                  <th className="px-4 py-3">Source</th>
+                  <th className="px-4 py-3">Last Verified</th>
                 </tr>
               </thead>
               <tbody>
                 {sample.map((r) => (
                   <tr key={r.business} className="border-b border-border/60 last:border-0">
                     <td className="px-4 py-3 font-medium text-foreground">{r.business}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.owner}</td>
                     <td className="px-4 py-3 tabular-nums text-foreground">{r.phone}</td>
                     <td className="px-4 py-3 text-muted-foreground">{r.lineType}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.email}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.website}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <Check className="h-3.5 w-3.5 text-primary" /> {r.dnc}
@@ -158,13 +198,39 @@ function LeadsIndex() {
                         <Check className="h-3.5 w-3.5 text-primary" /> {r.litigator}
                       </span>
                     </td>
-                    <td className="px-4 py-3 tabular-nums text-foreground">{r.rating}</td>
                     <td className="px-4 py-3 text-muted-foreground">{r.city}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.source}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{r.lastVerified}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      {/* Already have a list? */}
+      <section className="border-t border-border bg-surface-muted py-14">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
+            Already Have A Lead List?
+          </h2>
+          <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
+            Upload your CSV and let LeadTrace do the cleanup — CRM exports, trade show lists, purchased
+            lists, or an old database you gave up on.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
+            {UPLOAD_BENEFITS.map((b) => (
+              <span key={b} className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <Check className="h-4 w-4 text-primary" /> {b}
+              </span>
+            ))}
+          </div>
+          <Button asChild size="lg" className="mt-8 rounded-full">
+            <Link to="/auth">
+              Upload A List <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </section>
 
@@ -183,20 +249,13 @@ function LeadsIndex() {
                 <div className="font-display text-lg font-black text-foreground">
                   {p.nicheLabel ?? p.title}
                 </div>
-                <dl className="mt-3 space-y-1 text-sm text-muted-foreground">
-                  <div className="flex justify-between gap-3">
-                    <dt>Coverage</dt>
-                    <dd className="font-semibold text-foreground">Nationwide</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt>Numbers</dt>
-                    <dd className="font-semibold text-foreground">Mobile Verified</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt>Built</dt>
-                    <dd className="font-semibold text-foreground">On Demand</dd>
-                  </div>
-                </dl>
+                <ul className="mt-3 space-y-1.5 text-sm">
+                  {NICHE_FACTS.map((f) => (
+                    <li key={f.label} className="flex items-center gap-2 font-semibold text-foreground">
+                      <f.icon className="h-4 w-4 shrink-0 text-primary" /> {f.label}
+                    </li>
+                  ))}
+                </ul>
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
                   View Leads <ArrowRight className="h-3.5 w-3.5" />
                 </span>
