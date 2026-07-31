@@ -14,6 +14,10 @@ export type SampleRow = {
   reviews: number;
   city: string;
   website: string;
+  owner: string;
+  email: string;
+  source: string;
+  lastVerified: string;
 };
 
 export type LeadPage = {
@@ -48,6 +52,9 @@ const CITIES = ["Tampa", "Brandon", "Clearwater", "Riverview", "St. Petersburg",
 const PHONES = ["(813) 555-0142", "(813) 555-0177", "(727) 555-0119", "(813) 555-0163", "(727) 555-0134", "(813) 555-0188", "(727) 555-0151"];
 const RATINGS = ["4.9", "4.7", "4.8", "4.6", "5.0", "4.5", "4.8"];
 const REVIEWS = [187, 93, 241, 58, 76, 132, 44];
+const OWNERS = ["M. Alvarez", "J. Whitfield", "D. Nguyen", "R. Castellano", "T. Okafor", "S. Brennan", "L. Farrow"];
+const SOURCES_SAMPLE = ["Public Records", "Business Directory", "Carrier Data", "Public Records", "Business Directory", "Uploaded List", "Public Records"];
+const VERIFIED = ["Jul 28, 2026", "Jul 27, 2026", "Jul 29, 2026", "Jul 26, 2026", "Jul 29, 2026", "Jul 25, 2026", "Jul 28, 2026"];
 
 function rows(entries: [string, string][]): SampleRow[] {
   return entries.map(([business, website], i) => ({
@@ -60,6 +67,10 @@ function rows(entries: [string, string][]): SampleRow[] {
     reviews: REVIEWS[i % REVIEWS.length]!,
     city: CITIES[i % CITIES.length]!,
     website,
+    owner: OWNERS[i % OWNERS.length]!,
+    email: `info@${website.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0]}`,
+    source: SOURCES_SAMPLE[i % SOURCES_SAMPLE.length]!,
+    lastVerified: VERIFIED[i % VERIFIED.length]!,
   }));
 }
 
