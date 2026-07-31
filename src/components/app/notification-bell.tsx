@@ -56,7 +56,7 @@ export function NotificationBell() {
                 <button
                   onClick={() => {
                     setOpen(false);
-                    navigate({ to: "/app/inbox", search: { thread: t.thread_key } as never });
+                    navigate({ to: "/app/inbox" });
                   }}
                   className="w-full text-left px-4 py-3 hover:bg-muted transition-colors flex gap-3"
                 >
