@@ -268,28 +268,130 @@ function HowItWorksSection() {
 }
 
 function FeaturesSection() {
-  const features = [
-    { icon: Search, title: "Niche Scraper", body: "Type A Trade And A State. Get Every Small Business, Franchises Removed." },
-    { icon: Landmark, title: "Public Records", body: "Probates, Code Violations, Pre-Foreclosures, Tax Defaults, Vacancy Notices." },
-    { icon: Upload, title: "Bring Your Own List", body: "Already Have Data? Drop A CSV And Skip Straight To Cleaning." },
-    { icon: UserSearch, title: "Auto Skip Trace", body: "Missing Phone Numbers Filled In Automatically." },
-    { icon: ShieldCheck, title: "Built-In Scrubbing", body: "DNC And Litigators Removed. Three Files, Every Time." },
-    { icon: MessageSquare, title: "Smart Campaigns", body: "Geo-Matched Numbers, Message Rotation, Reply-Stop Drips." },
-    { icon: Activity, title: "List Quality Score", body: "See How Hot A List Is Before You Spend A Credit." },
-    { icon: Lock, title: "Compliance First", body: "10DLC Guided Setup, STOP Handling, Audit Logs." },
+  type Stat = { label: string; value: string };
+  type Feature = {
+    icon: typeof Search;
+    title: string;
+    body: string;
+    stats: Stat[];
+    flagship?: boolean;
+  };
+  const groups: { group: string; caption: string; features: Feature[] }[] = [
+    {
+      group: "Lead Sources",
+      caption: "Find Leads",
+      features: [
+        {
+          icon: Search,
+          title: "Niche Scraper",
+          body: "Generate targeted business lists from multiple data sources in seconds.",
+          stats: [{ label: "Found", value: "1,240" }, { label: "Sources", value: "6" }],
+          flagship: true,
+        },
+        {
+          icon: Landmark,
+          title: "Public Records",
+          body: "Build highly targeted lists from public record datasets.",
+          stats: [{ label: "Datasets", value: "12" }, { label: "Coverage", value: "50 States" }],
+          flagship: true,
+        },
+        {
+          icon: Upload,
+          title: "Upload Existing Data",
+          body: "Drop a CSV or CRM export and skip straight to cleaning.",
+          stats: [{ label: "Formats", value: "CSV · XLSX" }],
+        },
+      ],
+    },
+    {
+      group: "Data Processing",
+      caption: "Clean, Enrich & Score",
+      features: [
+        {
+          icon: ShieldCheck,
+          title: "Built-In Scrubbing",
+          body: "Automatically remove records that don't meet your outreach criteria.",
+          stats: [{ label: "Removed", value: "686" }, { label: "Clean", value: "554" }],
+          flagship: true,
+        },
+        {
+          icon: UserSearch,
+          title: "Contact Enrichment",
+          body: "Append missing phone numbers and emails when available.",
+          stats: [{ label: "Before", value: "450" }, { label: "After", value: "812" }],
+        },
+        {
+          icon: Activity,
+          title: "Lead Quality Score",
+          body: "See how strong a list is before you spend a credit.",
+          stats: [{ label: "Score", value: "92" }, { label: "Grade", value: "A+" }],
+        },
+      ],
+    },
+    {
+      group: "Outreach",
+      caption: "Launch Outreach",
+      features: [
+        {
+          icon: MessageSquare,
+          title: "Smart Campaigns",
+          body: "Send compliant SMS campaigns with local numbers and automatic follow-ups.",
+          stats: [{ label: "Sent", value: "1,200" }, { label: "Replies", value: "148" }],
+          flagship: true,
+        },
+        {
+          icon: Lock,
+          title: "Compliance Built In",
+          body: "Guided carrier registration, reply detection, and audit logs.",
+          stats: [{ label: "STOP", value: "Automatic" }],
+        },
+      ],
+    },
   ];
+
+  const FeatureCard = ({ f }: { f: Feature }) => (
+    <div
+      className={`flex h-full flex-col rounded-2xl border bg-surface p-6 ${
+        f.flagship ? "border-primary/25 shadow-sm sm:col-span-2" : "border-border"
+      }`}
+    >
+      <div className="grid h-13 w-13 place-items-center rounded-xl bg-primary/10 text-primary">
+        <f.icon className="h-7 w-7" />
+      </div>
+      <div className="mt-4 font-display font-bold text-foreground">{f.title}</div>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.body}</p>
+      <div className="mt-auto flex flex-wrap items-center gap-2 pt-5">
+        {f.stats.map((s) => (
+          <span
+            key={s.label}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-surface-muted px-2.5 py-1 text-xs"
+          >
+            <span className="uppercase tracking-wide text-muted-foreground">{s.label}</span>
+            <span className="font-semibold text-foreground">{s.value}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <section className="bg-surface-muted py-24">
       <div className="mx-auto max-w-7xl px-6">
-        <SectionHeading eyebrow="Features" title="Everything The Pipeline Needs. Nothing It Doesn't." />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-12">
-          {features.map((f) => (
-            <div key={f.title} className="rounded-2xl border border-border bg-surface p-6">
-              <div className="grid place-items-center h-10 w-10 rounded-lg bg-primary/10 text-primary">
-                <f.icon className="h-5 w-5" />
+        <SectionHeading eyebrow="Features" title="Everything You Need To Build Better Lead Lists." />
+        <div className="mt-10 space-y-12">
+          {groups.map((g, gi) => (
+            <div key={g.group}>
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="font-display text-lg font-bold text-foreground">{g.group}</h3>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Step {gi + 1} · {g.caption}
+                </span>
               </div>
-              <div className="mt-4 font-display font-bold text-foreground">{f.title}</div>
-              <p className="mt-2 text-sm text-muted-foreground">{f.body}</p>
+              <div className="mt-5 grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                {g.features.map((f) => (
+                  <FeatureCard key={f.title} f={f} />
+                ))}
+              </div>
             </div>
           ))}
         </div>
