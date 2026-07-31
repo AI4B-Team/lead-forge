@@ -337,8 +337,8 @@ function FeaturesSection() {
     {
       icon: MessageSquare,
       title: "SMS Campaigns",
-      body: "Launch outreach with local numbers, message rotation, and reply-stop drips.",
-      chips: ["SMS", "Reply Detection", "STOP Handling"],
+      body: "Launch compliant SMS campaigns with local numbers, number rotation, reply detection, and automated STOP handling.",
+      chips: ["Local Numbers", "Number Rotation", "Reply Detection", "STOP Handling"],
       featured: true,
     },
   ];
