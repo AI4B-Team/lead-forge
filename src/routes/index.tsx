@@ -56,15 +56,16 @@ function Home() {
 
 function TemplateTeaser() {
   const [offset, setOffset] = useState(0);
-  const [order, setOrder] = useState(() => TEMPLATES.map((_, i) => i));
+  const displayTemplates = useMemo(() => TEMPLATES.filter((t) => t.category !== "upload"), []);
+  const [order, setOrder] = useState(() => displayTemplates.map((_, i) => i));
   const pageSize = 6;
   const visible = useMemo(() => {
     const arr: typeof TEMPLATES = [];
     for (let i = 0; i < pageSize; i++) {
-      arr.push(TEMPLATES[order[(offset + i) % order.length]]);
+      arr.push(displayTemplates[order[(offset + i) % order.length]]);
     }
     return arr;
-  }, [offset, order]);
+  }, [offset, order, displayTemplates]);
 
   const shuffle = () => {
     const next = [...order];
