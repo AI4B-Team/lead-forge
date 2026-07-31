@@ -90,7 +90,7 @@ export function TagPicker({
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
-            <DialogHeader><DialogTitle className="font-display">Create a Tag</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-display">Create A Tag</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div>
                 <Label>Tag Name</Label>

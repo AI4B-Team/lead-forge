@@ -38,7 +38,7 @@ function ToolsHub() {
       <section className="mx-auto max-w-5xl px-6 py-20">
         <div className="text-primary text-xs font-semibold uppercase tracking-[0.18em]">Free Tools</div>
         <h1 className="mt-3 font-display text-5xl font-black text-foreground leading-tight">
-          Free Tools for Clean Outreach
+          Free Tools For Clean Outreach
         </h1>
         <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
           Two checks we run automatically on every list, opened up one number at a time. No download, no setup.

@@ -68,7 +68,7 @@ function HowItWorks() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">How It Works</div>
           <h1 className="mt-3 font-display text-4xl md:text-6xl font-black leading-[1.05] text-foreground">
-            From Raw Data to Ready-To-Contact Leads
+            From Raw Data To Ready-To-Contact Leads
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
             Generate a new list, upload one you already have, or mix sources. Every record runs the same
@@ -83,7 +83,7 @@ function HowItWorks() {
       <section className="border-y border-border bg-surface-muted py-16">
         <div className="mx-auto max-w-3xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
-            Watch LeadTrace Clean a List
+            Watch LeadTrace Clean A List
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
             The same pipeline runs whether the list came from our data sources, public records, or a CSV you
@@ -97,7 +97,7 @@ function HowItWorks() {
       <section className="bg-background py-16">
         <div className="mx-auto max-w-4xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
-            Every List Follows the Same Five Steps
+            Every List Follows The Same Five Steps
           </h2>
           <div className="mt-10 space-y-4">
             {STAGES.map((s, i) => (

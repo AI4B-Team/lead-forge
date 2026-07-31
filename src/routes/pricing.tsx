@@ -58,7 +58,7 @@ function Pricing() {
         <div className="text-center max-w-3xl mx-auto">
           <div className="text-primary text-xs font-semibold uppercase tracking-[0.18em]">Pricing</div>
           <h1 className="mt-3 font-display text-5xl font-black text-foreground leading-tight">
-            Plans That Scale with You.
+            Plans That Scale With You.
           </h1>
           <p className="mt-4 text-muted-foreground">
             SMS, scrape, and skip trace credits are metered on top of every plan.

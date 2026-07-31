@@ -32,7 +32,7 @@ function Features() {
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="text-primary text-xs font-semibold uppercase tracking-[0.18em]">Features</div>
         <h1 className="mt-3 font-display text-5xl font-black text-foreground max-w-3xl leading-tight">
-          Everything the Pipeline Needs. Nothing It Doesn't.
+          Everything The Pipeline Needs. Nothing It Doesn't.
         </h1>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
           {features.map((f) => (

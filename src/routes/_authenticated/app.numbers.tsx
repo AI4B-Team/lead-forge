@@ -104,7 +104,7 @@ function Numbers() {
               <Button className="rounded-full"><Plus className="mr-1 h-4 w-4" /> Buy Numbers</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Buy Numbers into a Region</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>Buy Numbers Into A Region</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <div>
                   <Label>Region</Label>

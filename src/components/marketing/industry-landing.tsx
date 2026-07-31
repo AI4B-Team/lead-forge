@@ -137,7 +137,7 @@ export function IndustryLandingPage({ data }: { data: IndustryLanding }) {
               Who It's For
             </div>
             <h2 className="mt-3 font-display text-4xl md:text-5xl font-black text-foreground leading-tight">
-              Built for the Way You Work.
+              Built For The Way You Work.
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-4 mt-12">
