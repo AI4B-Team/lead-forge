@@ -49,7 +49,7 @@ const POPULAR_IDS = [
   "yellow-pages", "linkedin", "instagram-hashtag", "facebook-pages", "bbb",
 ];
 
-export const Route = createFileRoute("/templates")({
+export const Route = createFileRoute("/templates/")({
   head: () => ({
     meta: [
       { title: "Template Library — LeadTrace" },
