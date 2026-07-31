@@ -32,9 +32,8 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "One platform replaces your scraper, skip tracer, DNC service, and texting tool." },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({
-    prompt: typeof search.prompt === "string" ? search.prompt : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { prompt?: string } =>
+    typeof search.prompt === "string" ? { prompt: search.prompt } : {},
   component: Home,
 });
 

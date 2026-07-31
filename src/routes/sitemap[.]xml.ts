@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { INDUSTRY_LANDINGS } from "@/lib/industry-landings";
+import { LEAD_PAGES } from "@/lib/lead-pages";
 
 const BASE_URL = "";
 
@@ -21,6 +22,12 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/industries", changefreq: "monthly", priority: "0.7" },
           { path: "/pricing", changefreq: "monthly", priority: "0.9" },
           { path: "/compliance", changefreq: "monthly", priority: "0.7" },
+          { path: "/leads", changefreq: "weekly", priority: "0.9" },
+          ...LEAD_PAGES.map((p) => ({
+            path: `/leads/${p.slug}`,
+            changefreq: "monthly" as const,
+            priority: "0.8",
+          })),
           ...INDUSTRY_LANDINGS.map((i) => ({
             path: `/${i.slug}`,
             changefreq: "monthly" as const,

@@ -240,6 +240,7 @@ function MarketingFooter() {
           {BRAND_NAME}
         </div>
         <div className="flex justify-center gap-6">
+          <Link to="/leads">Lead Lists</Link>
           <Link to="/pricing">Pricing</Link>
           <Link to="/compliance">Compliance</Link>
           <Link to="/sign-in">Sign In</Link>
