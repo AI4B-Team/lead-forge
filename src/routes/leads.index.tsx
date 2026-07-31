@@ -63,13 +63,6 @@ const BENEFIT_ORDER = [
   "sms-lead-outreach",
 ];
 
-const UPLOAD_BENEFITS = [
-  "Remove Duplicates",
-  "Verify Mobile Numbers",
-  "Skip Trace Missing Contacts",
-  "Scrub DNC",
-  "Export A Cleaner List",
-];
 
 /** Outcome-framed headings for the pipeline-stage pages (presentation only). */
 const BENEFITS: Record<string, { title: string; body: string }> = {
