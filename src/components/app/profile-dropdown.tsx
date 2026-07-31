@@ -4,13 +4,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Settings, Power, UserPlus, Zap } from "lucide-react";
+import { User, Settings, Power, UserPlus, Zap, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/app/theme-toggle";
 
 export function ProfileDropdown({ className }: { className?: string }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const { theme, toggle } = useTheme();
 
   const userName =
     (user?.user_metadata?.full_name as string | undefined) ||
@@ -72,6 +74,12 @@ export function ProfileDropdown({ className }: { className?: string }) {
 
         <div className="border-t border-border py-2">
           <MenuItem icon={<Settings className="h-4 w-4" />} label="Account" onClick={() => go("/app/account")} />
+          <MenuItem
+            icon={theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            label="Theme"
+            onClick={toggle}
+            trailing={theme === "dark" ? "Dark" : "Light"}
+          />
         </div>
 
         <div className="border-t border-border p-4">
@@ -96,7 +104,7 @@ export function ProfileDropdown({ className }: { className?: string }) {
   );
 }
 
-function MenuItem({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+function MenuItem({ icon, label, onClick, trailing }: { icon: React.ReactNode; label: string; onClick: () => void; trailing?: string }) {
   return (
     <button
       onClick={onClick}
@@ -104,6 +112,7 @@ function MenuItem({ icon, label, onClick }: { icon: React.ReactNode; label: stri
     >
       <span className="text-muted-foreground">{icon}</span>
       <span className="text-sm font-medium">{label}</span>
+      {trailing && <span className="ml-auto text-xs text-muted-foreground">{trailing}</span>}
     </button>
   );
 }
