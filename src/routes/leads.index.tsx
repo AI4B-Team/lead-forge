@@ -197,22 +197,22 @@ function LeadsIndex() {
                       .split("/")[0];
                     return (
                       <tr key={r.business} className="border-b border-border/60 last:border-0">
-                        <td className="w-[40%] min-w-[220px] px-4 py-3 font-medium text-foreground">
-                          {r.business}
+                        <td className="w-[28%] px-4 py-3 font-medium text-foreground">
+                          <span className="block truncate" title={r.business}>{r.business}</span>
                         </td>
-                        <td className="px-4 py-3 tabular-nums text-foreground">
+                        <td className="w-[15%] px-4 py-3 tabular-nums text-foreground">
                           <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                             <Smartphone className="h-3.5 w-3.5 shrink-0 text-primary" />
                             {r.phone}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">{r.email}</td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          <span className="inline-block max-w-[120px] truncate" title={r.website}>
-                            {domain}
-                          </span>
+                        <td className="w-[25%] px-4 py-3 text-muted-foreground">
+                          <span className="block truncate" title={r.email}>{r.email}</span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="w-[15%] px-4 py-3 text-muted-foreground">
+                          <span className="block truncate" title={r.website}>{domain}</span>
+                        </td>
+                        <td className="w-[7%] px-4 py-3">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span className="inline-flex cursor-default items-center justify-center rounded-full bg-primary/10 p-1.5">
@@ -224,7 +224,7 @@ function LeadsIndex() {
                             </TooltipContent>
                           </Tooltip>
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">{r.city}</td>
+                        <td className="w-[10%] px-4 py-3 text-muted-foreground">{r.city}</td>
                       </tr>
                     );
                   })}
