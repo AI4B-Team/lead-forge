@@ -118,7 +118,7 @@ function TemplateTeaser() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {visible.map((t, i) => (
-            <TemplateCard key={`${t.id}-${i}`} template={t} />
+            <TemplateCard key={`${t.id}-${i}`} template={t} variant="prompt" />
           ))}
         </div>
       </div>
