@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { checkDncNumber } from "@/lib/free-tools.functions";
 
 export const Route = createFileRoute("/tools/dnc-checker")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    phone: typeof search.phone === "string" ? search.phone : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Free DNC Number Checker — National Registry Lookup | LeadTrace" },
@@ -20,8 +23,10 @@ export const Route = createFileRoute("/tools/dnc-checker")({
 
 function DncChecker() {
   const check = useServerFn(checkDncNumber);
+  const { phone } = Route.useSearch();
   return (
     <ToolShell
+      initialPhone={phone ?? ""}
       eyebrow="Free Tool"
       title="DNC Number Checker"
       blurb="Paste a phone number and see whether it sits on the National Do Not Call Registry or a known litigator list before you ever hit send."
