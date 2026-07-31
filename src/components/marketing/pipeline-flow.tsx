@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import type { FunnelStages } from "@/components/app/pipeline-funnel";
 
 const STEPS = [
-  { key: "found", icon: MapPin, label: "Businesses Found" },
+  { key: "found", icon: MapPin, label: "Records Received" },
   { key: "deduped", icon: Trash2, label: "Duplicates Removed" },
   { key: "textable", icon: Smartphone, label: "Mobile Verified" },
   { key: "scrubbed", icon: ShieldCheck, label: "DNC Scrubbed" },
