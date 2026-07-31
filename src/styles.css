@@ -203,3 +203,31 @@
     transform: rotate(-1deg);
   }
 }
+
+/* Subtle pipeline arrow nudge — signals flow without demanding attention. */
+@keyframes arrow-nudge {
+  0%, 70%, 100% { transform: translateX(0); }
+  85% { transform: translateX(4px); }
+}
+
+@utility arrow-nudge {
+  animation: arrow-nudge 2.6s ease-in-out infinite;
+}
+
+/* Staggered check reveal on card hover — reads as active processing. */
+@keyframes check-pop {
+  0% { opacity: 0.45; transform: translateX(-4px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@utility stage-checks {
+  & > li {
+    animation: none;
+  }
+
+  @media (hover: hover) {
+    &:hover > li {
+      animation: check-pop 0.45s ease-out both;
+    }
+  }
+}
