@@ -223,6 +223,10 @@ function Pricing() {
             The plans below only change what scales: seats, sending numbers, processing speed, support, and
             monthly usage credits.
           </p>
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            One lead credit = one record fully processed: sourcing, normalization, deduplication, line-type
+            lookup, and DNC plus litigator scrubbing. Skip trace is always optional and metered separately.
+          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 mt-14 items-start">
