@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
+  Building2,
   Check,
   Clock,
   Database,
@@ -45,12 +46,19 @@ export const Route = createFileRoute("/leads/")({
   component: LeadsIndex,
 });
 
-const WORKFLOW_STEPS = ["Generate Lists", "Clean & Verify", "Launch Outreach"];
-
 const NICHE_FACTS = [
   { icon: Globe, label: "Nationwide" },
   { icon: Smartphone, label: "Mobile Verified" },
   { icon: Zap, label: "Built On Demand" },
+];
+
+/** Benefit cards, sharpest copy first. */
+const BENEFIT_ORDER = [
+  "litigator-scrub",
+  "landline-remover",
+  "dnc-list-scrubbing",
+  "google-maps-lead-finder",
+  "sms-lead-outreach",
 ];
 
 const UPLOAD_BENEFITS = [
@@ -97,46 +105,70 @@ const PROMISES = ["Freshly Generated", "Never Resold", "Built On Demand", "Expor
 
 function LeadsIndex() {
   const niches = LEAD_PAGES.filter((p) => p.kind === "niche");
-  const stages = LEAD_PAGES.filter((p) => p.kind === "stage");
+  const stages = LEAD_PAGES.filter((p) => p.kind === "stage").sort(
+    (a, b) => BENEFIT_ORDER.indexOf(a.slug) - BENEFIT_ORDER.indexOf(b.slug),
+  );
   const sample = niches[0]?.rows.slice(0, 4) ?? [];
+  const removed = REFERENCE_FUNNEL.found - REFERENCE_FUNNEL.clean;
 
   return (
     <MarketingLayout>
       {/* Hero — outcome first */}
       <section className="bg-background pt-16 pb-12">
-        <div className="mx-auto max-w-6xl px-6">
-          <h1 className="font-display text-4xl md:text-6xl font-black leading-[1.05] text-foreground">
-            Lead Lists You Can Actually Contact.
-          </h1>
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <h1 className="max-w-xl font-display text-4xl md:text-5xl font-black leading-[1.05] text-foreground">
+              Lead Lists You Can Actually Contact.
+            </h1>
 
-          <div className="mt-6 inline-flex flex-wrap items-center gap-2 text-sm font-semibold text-muted-foreground">
-            {WORKFLOW_STEPS.map((step, i) => (
-              <span key={step} className="inline-flex items-center gap-2 last:mr-0">
-                <span className="text-foreground">{step}</span>
-                {i < WORKFLOW_STEPS.length - 1 && (
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                )}
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
+              Build a new lead list from multiple data sources or upload your own.
+              LeadTrace cleans, enriches, verifies, and prepares every list for outreach.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Button asChild size="lg" className="rounded-full">
+                <Link to="/auth">
+                  Build My List <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="rounded-full">
+                <a href="#sample-list">See Sample List</a>
+              </Button>
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" /> Updated {CONTENT_UPDATED}
               </span>
-            ))}
+            </div>
           </div>
 
-          <p className="mt-5 max-w-3xl text-lg leading-relaxed text-muted-foreground">
-            Build a new lead list from multiple data sources or upload your own.
-            LeadTrace cleans, enriches, verifies, and prepares every list for outreach.
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" className="rounded-full">
-              <Link to="/auth">
-                Build My List <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="rounded-full">
-              <a href="#sample-list">See Sample List</a>
-            </Button>
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <Clock className="h-3.5 w-3.5" /> Updated {CONTENT_UPDATED}
-            </span>
+          {/* Hero proof: the whole value prop in one card */}
+          <div className="rounded-3xl border border-border bg-surface p-6 md:p-8">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              A Real Reference Search
+            </div>
+            <div className="mt-5 flex items-center gap-5">
+              <div>
+                <div className="font-display text-3xl font-black tabular-nums text-muted-foreground">
+                  {REFERENCE_FUNNEL.found.toLocaleString()}
+                </div>
+                <div className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Records Received
+                </div>
+              </div>
+              <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <div className="rounded-2xl border border-primary bg-primary/5 px-5 py-3">
+                <div className="font-display text-3xl font-black tabular-nums text-foreground">
+                  {REFERENCE_FUNNEL.clean.toLocaleString()}
+                </div>
+                <div className="mt-1 text-xs font-semibold uppercase tracking-wider text-primary">
+                  Ready To Contact
+                </div>
+              </div>
+            </div>
+            <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
+              The {REFERENCE_FUNNEL.clean} delivered records are the ones you text. The {removed} removed
+              records are why you don't get complaints or demand letters.
+            </p>
           </div>
         </div>
       </section>
@@ -148,18 +180,12 @@ function LeadsIndex() {
             How Every List Gets Prepared
           </h2>
           <PipelineFlow stages={REFERENCE_FUNNEL} className="mt-8" />
-          <div className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center justify-center gap-3 text-sm font-semibold text-foreground">
-            <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">{REFERENCE_FUNNEL.clean} Ready To Contact</span>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            <span className="rounded-full border border-border bg-surface px-3 py-1">Launch SMS Campaign</span>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            <span className="rounded-full border border-border bg-surface px-3 py-1">Replies Start Coming In</span>
-          </div>
-          <p className="mx-auto mt-6 max-w-3xl text-sm text-muted-foreground">
-            A real reference search. The 554 delivered records are the ones you text.
+          <p className="mx-auto mt-8 max-w-3xl text-sm text-muted-foreground">
+            The {REFERENCE_FUNNEL.clean} delivered records are the ones you text — then launch an SMS
+            campaign and replies start coming in.
           </p>
           <p className="mx-auto mt-2 max-w-3xl text-sm text-muted-foreground">
-            The 686 removed records are why you don't get complaints or demand letters.
+            The {removed} removed records are why you don't get complaints or demand letters.
           </p>
         </div>
       </section>
