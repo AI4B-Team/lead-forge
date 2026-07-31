@@ -180,7 +180,7 @@ function HeroTransform() {
       <div key={`out-${i}`} className="animate-fade-in rounded-2xl border border-primary bg-primary/5 p-6">
         <div className="text-xs font-semibold uppercase tracking-widest text-primary">Output</div>
         <div className="mt-3 font-display text-2xl font-black text-foreground">
-          {out.toLocaleString()} ready-to-contact records
+          {out.toLocaleString()} Ready-To-Contact Records
         </div>
         <div className="mt-1 text-sm text-muted-foreground">
           Verified · DNC Scrubbed{s.skipTrace ? " · Skip Traced" : ""}
