@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "@/components/translation-provider";
 import { supabase } from "@/integrations/supabase/client";
 import { BRAND_NAME } from "@/config/brand";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import {
   Database,
   Phone,
   ChevronDown,
+  Loader2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -30,9 +32,9 @@ const LANGUAGES = [
   { code: "SV", g: "sv", label: "Svenska", flag: "🇸🇪" },
   { code: "TR", g: "tr", label: "Türkçe", flag: "🇹🇷" },
   { code: "AR", g: "ar", label: "العربية", flag: "🇸🇦" },
-  { code: "HE", g: "iw", label: "עברית", flag: "🇮🇱" },
+  { code: "HE", g: "he", label: "עברית", flag: "🇮🇱" },
   { code: "RU", g: "ru", label: "Русский", flag: "🇷🇺" },
-  { code: "ZH", g: "zh-CN", label: "中文", flag: "🇨🇳" },
+  { code: "ZH", g: "zh", label: "中文", flag: "🇨🇳" },
   { code: "JA", g: "ja", label: "日本語", flag: "🇯🇵" },
   { code: "KO", g: "ko", label: "한국어", flag: "🇰🇷" },
   { code: "HI", g: "hi", label: "हिन्दी", flag: "🇮🇳" },
@@ -40,57 +42,6 @@ const LANGUAGES = [
   { code: "TH", g: "th", label: "ไทย", flag: "🇹🇭" },
   { code: "ID", g: "id", label: "Bahasa Indonesia", flag: "🇮🇩" },
 ] as const;
-
-function readGoogTrans(): string {
-  if (typeof document === "undefined") return "en";
-  const m = document.cookie.match(/(?:^|; )googtrans=([^;]+)/);
-  if (!m) return "en";
-  const parts = decodeURIComponent(m[1]).split("/");
-  return parts[2] || "en";
-}
-
-function setGoogTrans(target: string) {
-  const value = `/en/${target}`;
-  const host = window.location.hostname;
-  document.cookie = `googtrans=${value}; path=/`;
-  // set for parent domain too so it survives subdomain nav
-  const parts = host.split(".");
-  if (parts.length > 1) {
-    const parent = "." + parts.slice(-2).join(".");
-    document.cookie = `googtrans=${value}; path=/; domain=${parent}`;
-  }
-}
-
-function ensureGoogleTranslateScript() {
-  if (typeof window === "undefined") return;
-  const w = window as unknown as { googleTranslateElementInit?: () => void; google?: { translate?: unknown } };
-  if (document.getElementById("google-translate-script")) return;
-  w.googleTranslateElementInit = () => {
-    const g = (window as unknown as { google?: { translate?: { TranslateElement?: new (opts: unknown, el: string) => void } } }).google;
-    const TE = g?.translate?.TranslateElement as (new (opts: unknown, el: string) => void) | undefined;
-    if (!TE) return;
-    if (!document.getElementById("google_translate_element")) {
-      const div = document.createElement("div");
-      div.id = "google_translate_element";
-      div.style.display = "none";
-      document.body.appendChild(div);
-    }
-    new TE({ pageLanguage: "en", autoDisplay: false }, "google_translate_element");
-  };
-  const s = document.createElement("script");
-  s.id = "google-translate-script";
-  s.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
-  s.async = true;
-  document.body.appendChild(s);
-
-  // Hide the Google Translate top banner it forces on <body>.
-  const style = document.createElement("style");
-  style.innerHTML = `
-    .goog-te-banner-frame, .skiptranslate { display: none !important; }
-    body { top: 0 !important; }
-  `;
-  document.head.appendChild(style);
-}
 
 export function MarketingLayout({ children }: { children: ReactNode }) {
   return (
@@ -106,28 +57,8 @@ export function MarketingLayout({ children }: { children: ReactNode }) {
 export { ComplianceStrip, MarketingFooter };
 
 export function MarketingNav({ dark = false }: { dark?: boolean }) {
-  const [lang, setLang] = useState<(typeof LANGUAGES)[number]["code"]>("EN");
-  useEffect(() => {
-    ensureGoogleTranslateScript();
-    const g = readGoogTrans();
-    const match = LANGUAGES.find((l) => l.g === g);
-    if (match) setLang(match.code);
-  }, []);
-  const current = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0];
-  const handleSelect = (code: (typeof LANGUAGES)[number]["code"]) => {
-    const target = LANGUAGES.find((l) => l.code === code);
-    if (!target) return;
-    setLang(code);
-    if (target.g === "en") {
-      // Clear translation cookies
-      document.cookie = "googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      const host = window.location.hostname.split(".").slice(-2).join(".");
-      document.cookie = `googtrans=; path=/; domain=.${host}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-    } else {
-      setGoogTrans(target.g);
-    }
-    window.location.reload();
-  };
+  const { lang, setLang, translating } = useTranslation();
+  const current = LANGUAGES.find((l) => l.g === lang) ?? LANGUAGES[0];
   const { session, loading } = useAuth();
   const signedIn = !!session;
   return (
@@ -178,6 +109,7 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label="Select language"
+              data-no-translate
               className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 dark
                   ? "border-white/20 text-ink-foreground hover:bg-white/10"
@@ -186,13 +118,17 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
             >
               <span className="text-base leading-none">{current.flag}</span>
               <span>{current.code}</span>
-              <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+              {translating ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin opacity-70" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+              )}
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto w-56">
+            <DropdownMenuContent align="end" data-no-translate className="max-h-80 overflow-y-auto w-56">
               {LANGUAGES.map((l) => (
                 <DropdownMenuItem
                   key={l.code}
-                  onSelect={() => handleSelect(l.code)}
+                  onSelect={() => setLang(l.g)}
                   className="cursor-pointer gap-2"
                 >
                   <span className="text-base leading-none">{l.flag}</span>
