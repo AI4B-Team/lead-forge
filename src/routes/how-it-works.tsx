@@ -31,7 +31,7 @@ const STAGES = [
   {
     icon: MapPin,
     name: "Bring In Records",
-    body: "Pull records from multiple data sources, public records, or upload a list you already own.",
+    body: "Build a new list from multiple data sources or upload a list you already own.",
     time: "~15 seconds",
   },
   {
