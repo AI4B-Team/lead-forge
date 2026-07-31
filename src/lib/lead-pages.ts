@@ -128,7 +128,7 @@ const NICHE_SEEDS: NicheSeed[] = [
       { title: "Storm Restoration & Retail Roofing Sales Teams", body: "Build a fresh canvass list for any county the day a storm map drops, instead of buying stale purchased lists." },
       { title: "Roofing Suppliers & Distributors", body: "Every contractor in your territory, with review counts to size them, ready for a rep outreach sequence." },
       { title: "Lead-Gen Agencies Serving Home Services", body: "Deliver client-ready, compliance-documented lists without stitching together three tools per order." },
-      { title: "SaaS & Service Providers Selling TO Roofers", body: "CRMs, financing, drone inspection, insurance — your ICP is literally on this map." },
+      { title: "SaaS & Service Providers Selling To Roofers", body: "CRMs, financing, drone inspection, insurance — your ICP is literally on this map." },
     ],
   },
   {
