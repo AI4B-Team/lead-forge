@@ -15,6 +15,36 @@ export const listTags = createServerFn({ method: "GET" })
     return { tags: tags ?? [] };
   });
 
+// Rename or recolor an existing tag. Workspace membership is enforced by RLS.
+export const updateTag = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      id: z.string().uuid(),
+      name: z.string().min(1).max(40).optional(),
+      color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const patch: Record<string, unknown> = {};
+    if (data.name) patch.name = data.name.trim();
+    if (data.color) patch.color = data.color;
+    if (!Object.keys(patch).length) return { ok: true };
+    const { error } = await context.supabase.from("tags").update(patch as never).eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+// Deleting a tag clears it from any campaign via ON DELETE SET NULL.
+export const deleteTag = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("tags").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 // Inline tag creation from the campaign builder — never navigates away.
 export const createTag = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
