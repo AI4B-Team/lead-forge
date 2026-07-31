@@ -13,7 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search } from "lucide-react";
 import { toast } from "sonner";
-import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobLeads, listJobs } from "@/lib/jobs.functions";
+import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs } from "@/lib/jobs.functions";
+import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 
 export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
@@ -49,6 +50,7 @@ function JobDetail() {
   const navigate = useNavigate();
   const fetchReview = useServerFn(getJobReview);
   const fetchBucket = useServerFn(getLeadsByBucket);
+  const fetchEvents = useServerFn(listJobEvents);
 
   const { data, isLoading } = useQuery({
     queryKey: ["job-review", jobId],
@@ -57,6 +59,12 @@ function JobDetail() {
       const s = q.state.data?.job?.status;
       return s && s !== "ready" && s !== "failed" ? 2000 : false;
     },
+  });
+
+  const { data: eventData } = useQuery({
+    queryKey: ["job-events", jobId],
+    queryFn: () => fetchEvents({ data: { jobId } }),
+    refetchInterval: (q) => (data?.job?.status === "ready" || data?.job?.status === "failed" ? false : 2000),
   });
 
   if (isLoading || !data) {
@@ -95,6 +103,51 @@ function JobDetail() {
         <Stat label="Enriched" value={job.rows_enriched ?? 0} />
         <Stat label="Skip Traced" value={job.rows_skiptraced ?? 0} />
       </div>
+
+      <Card className="mt-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base font-display">Pipeline</CardTitle>
+          {isReady && (
+            <div className="font-display text-2xl font-black text-primary">
+              {counts.clean.toLocaleString()} Clean, Textable Leads
+            </div>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <PipelineFunnel
+            stages={{
+              found: job.rows_in ?? 0,
+              deduped: job.rows_deduped ?? 0,
+              textable: counts.mobile,
+              scrubbed: counts.total,
+              clean: counts.clean,
+            }}
+          />
+          <div className="rounded-xl border border-border bg-muted/40 p-4">
+            <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
+              Live Progress
+            </div>
+            <ul className="mt-3 space-y-2">
+              {(eventData?.events ?? []).map((e) => (
+                <li key={e.id} className="flex gap-3 text-sm text-foreground">
+                  <span className="text-xs text-muted-foreground tabular-nums pt-0.5 shrink-0">
+                    {new Date(e.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                  </span>
+                  <span>{e.message}</span>
+                </li>
+              ))}
+              {!(eventData?.events ?? []).length && (
+                <li className="text-sm text-muted-foreground">Waiting For The First Stage To Report…</li>
+              )}
+            </ul>
+            {!isReady && (
+              <div className="mt-3 text-xs text-muted-foreground">
+                You Can Close This Tab — The Job Keeps Running On Our Servers.
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid md:grid-cols-3 gap-4 mt-6">
         <BucketCard
