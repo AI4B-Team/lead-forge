@@ -366,6 +366,51 @@ export type Database = {
           },
         ]
       }
+      job_events: {
+        Row: {
+          count: number | null
+          created_at: string
+          id: string
+          job_id: string
+          message: string
+          stage: string
+          workspace_id: string
+        }
+        Insert: {
+          count?: number | null
+          created_at?: string
+          id?: string
+          job_id: string
+          message: string
+          stage: string
+          workspace_id: string
+        }
+        Update: {
+          count?: number | null
+          created_at?: string
+          id?: string
+          job_id?: string
+          message?: string
+          stage?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           created_at: string
