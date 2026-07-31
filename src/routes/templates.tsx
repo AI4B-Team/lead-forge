@@ -1,9 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown, Check, SlidersHorizontal } from "lucide-react";
 import { MarketingNav, MarketingFooter } from "@/components/marketing/marketing-layout";
 import { TemplateCard } from "@/components/marketing/template-card";
 import { TEMPLATES, type TemplateCategory } from "@/lib/templates";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Filter = "all" | TemplateCategory;
 
@@ -24,6 +30,23 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: "sports", label: "Sports" },
   { key: "records", label: "Public Records" },
   { key: "upload", label: "Upload" },
+];
+
+/** Shown inline; everything else lives behind the More dropdown. */
+const PRIMARY_COUNT = 8;
+
+type Sort = "relevance" | "popular" | "alpha";
+
+const SORTS: { key: Sort; label: string }[] = [
+  { key: "relevance", label: "Relevance" },
+  { key: "popular", label: "Popular" },
+  { key: "alpha", label: "Name A–Z" },
+];
+
+/** Curated "popular" ordering — the sources people ask for most. */
+const POPULAR_IDS = [
+  "google-maps", "google-search", "google-local", "contact-details", "yelp",
+  "yellow-pages", "linkedin", "instagram-hashtag", "facebook-pages", "bbb",
 ];
 
 export const Route = createFileRoute("/templates")({
