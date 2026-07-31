@@ -6,6 +6,21 @@
 // suppressed leads, and never launches anything. A human clicks Run.
 
 import { jobSpecSchema, type JobSpec, type AssistantMessage } from "./assistant.shared";
+import { countiesForState, formatCounty, parseCounty } from "./us-geo";
+
+/** Snap model-provided county names onto real counties in the spec's state. */
+function normalizeCounties(counties: string[], state: string | null): string[] {
+  if (!state) return counties;
+  const all = countiesForState(state);
+  const out: string[] = [];
+  for (const raw of counties) {
+    const bare = parseCounty(raw).county.replace(/\b(county|parish|borough)\b/gi, "").trim();
+    const hit = all.find((c) => c.toLowerCase() === bare.toLowerCase());
+    const label = formatCounty(hit ?? bare, state);
+    if (!out.some((v) => v.toLowerCase() === label.toLowerCase())) out.push(label);
+  }
+  return out;
+}
 
 const NON_COMPLIANT = [
   { re: /\b(text|message|send)\b[^.?!]{0,40}\b(dnc|do not call|litigator|suppressed|opted[- ]out)\b/i, why: "Only Clean-File Leads Are Campaignable. DNC, Litigator And Suppressed Numbers Are Never Sent To." },
@@ -94,9 +109,12 @@ export async function askAssistant(opts: {
   }
 
   const merged = jobSpecSchema.safeParse({ ...opts.spec, ...(out.specPatch ?? {}) });
+  const spec = merged.success
+    ? { ...merged.data, counties: normalizeCounties(merged.data.counties, merged.data.state) }
+    : opts.spec;
   return {
     reply: out.reply?.trim() || "Updated The Job Spec On The Right.",
-    spec: merged.success ? merged.data : opts.spec,
+    spec,
     suggestedTemplates: (out.suggestedTemplates ?? []).slice(0, 4),
   };
 }
