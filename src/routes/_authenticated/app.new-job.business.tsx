@@ -183,6 +183,7 @@ function Wizard() {
   return (
     <div className="max-w-3xl">
       <PageHeader title="Scrape A Niche" description="Door A · Business Scrape" />
+      <ProviderStatusBanner watch={["scrape", "lookup", "scrub"]} workspaceId={workspaceId ?? undefined} />
       {prompt && (
         <div className="mb-4 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
           <div className="text-xs font-semibold uppercase tracking-wider text-primary">Your Prompt</div>
