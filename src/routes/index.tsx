@@ -284,29 +284,115 @@ function HowItWorksSection() {
 }
 
 function FeaturesSection() {
-  const features = [
-    { icon: Search, title: "Niche Scraper", body: "Type A Trade And A State. Get Every Small Business, Franchises Removed." },
-    { icon: Landmark, title: "Public Records", body: "Probates, Code Violations, Pre-Foreclosures, Tax Defaults, Vacancy Notices." },
-    { icon: Upload, title: "Bring Your Own List", body: "Already Have Data? Drop A CSV And Skip Straight To Cleaning." },
-    { icon: UserSearch, title: "Auto Skip Trace", body: "Missing Phone Numbers Filled In Automatically." },
-    { icon: ShieldCheck, title: "Built-In Scrubbing", body: "DNC And Litigators Removed. Three Files, Every Time." },
-    { icon: MessageSquare, title: "Smart Campaigns", body: "Geo-Matched Numbers, Message Rotation, Reply-Stop Drips." },
-    { icon: Activity, title: "List Quality Score", body: "See How Hot A List Is Before You Spend A Credit." },
-    { icon: Lock, title: "Compliance First", body: "10DLC Guided Setup, STOP Handling, Audit Logs." },
+  type Feature = {
+    icon: typeof Search;
+    title: string;
+    body: string;
+    chips: string[];
+    featured?: boolean;
+  };
+  const features: Feature[] = [
+    {
+      icon: Search,
+      title: "Business Search",
+      body: "Generate targeted business lists from multiple data sources in seconds.",
+      chips: ["50 States", "12+ Sources", "Built On Demand"],
+      featured: true,
+    },
+    {
+      icon: Landmark,
+      title: "Public Records",
+      body: "Pull probates, code violations, pre-foreclosures, tax defaults, and vacancies.",
+      chips: ["County Data", "Refreshed Weekly"],
+    },
+    {
+      icon: Upload,
+      title: "Upload Your List",
+      body: "Upload a CSV or CRM export and start with your own data.",
+      chips: ["CSV", "CRM Export", "Field Mapping"],
+    },
+    {
+      icon: Activity,
+      title: "Contact Enrichment",
+      body: "Standardize records and score list quality before you spend a credit.",
+      chips: ["Dedupe", "Line Type", "Quality Score"],
+    },
+    {
+      icon: UserSearch,
+      title: "Auto Skip Trace",
+      body: "Append missing phone numbers and emails when available.",
+      chips: ["Phone", "Email", "Address"],
+    },
+    {
+      icon: ShieldCheck,
+      title: "List Cleaning",
+      body: "DNC and litigator records removed before anything reaches your outreach.",
+      chips: ["DNC", "Litigators", "Audit Proof"],
+    },
+    {
+      icon: Lock,
+      title: "SMS Compliance",
+      body: "Guided 10DLC registration, quiet hours, and full audit logs.",
+      chips: ["10DLC", "Quiet Hours", "Audit Logs"],
+    },
+    {
+      icon: MessageSquare,
+      title: "SMS Campaigns",
+      body: "Launch outreach with local numbers, message rotation, and reply-stop drips.",
+      chips: ["SMS", "Reply Detection", "STOP Handling"],
+      featured: true,
+    },
   ];
+
+  const FeatureCard = ({ f }: { f: Feature }) => (
+    <div
+      className={`rounded-2xl border bg-surface p-7 transition-colors hover:border-primary/40 ${
+        f.featured ? "border-primary/30 shadow-lg md:col-span-2" : "border-border"
+      }`}
+    >
+      <div className={`flex items-start gap-4 ${f.featured ? "md:items-center" : ""}`}>
+        <span
+          className={`grid shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ${
+            f.featured ? "h-14 w-14" : "h-12 w-12"
+          }`}
+        >
+          <f.icon className={f.featured ? "h-7 w-7" : "h-6 w-6"} />
+        </span>
+        <div className="min-w-0">
+          <div
+            className={`font-display font-bold text-foreground ${
+              f.featured ? "text-2xl" : "text-lg"
+            }`}
+          >
+            {f.title}
+          </div>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.body}</p>
+        </div>
+      </div>
+      <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
+        {f.chips.map((c) => (
+          <span
+            key={c}
+            className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+          >
+            {c}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <section className="bg-surface-muted py-24">
       <div className="mx-auto max-w-7xl px-6">
-        <SectionHeading eyebrow="Features" title="Everything The Pipeline Needs. Nothing It Doesn't." />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-12">
+        <SectionHeading
+          eyebrow="Features"
+          title="Everything Between Raw Data And Ready-To-Contact."
+          subtitle="Bring data in from anywhere, let LeadTrace clean and verify it automatically, then launch compliant outreach — in that order."
+        />
+        <div className="mt-12 grid gap-4 md:grid-cols-2">
           {features.map((f) => (
-            <div key={f.title} className="rounded-2xl border border-border bg-surface p-6">
-              <div className="grid place-items-center h-10 w-10 rounded-lg bg-primary/10 text-primary">
-                <f.icon className="h-5 w-5" />
-              </div>
-              <div className="mt-4 font-display font-bold text-foreground">{f.title}</div>
-              <p className="mt-2 text-sm text-muted-foreground">{f.body}</p>
-            </div>
+            <FeatureCard key={f.title} f={f} />
           ))}
         </div>
       </div>
@@ -379,13 +465,22 @@ function PricingPreview() {
   );
 }
 
-function SectionHeading({ eyebrow, title }: { eyebrow: string; title: string }) {
+function SectionHeading({
+  eyebrow,
+  title,
+  subtitle,
+}: {
+  eyebrow: string;
+  title: string;
+  subtitle?: string;
+}) {
   return (
     <div className="text-center max-w-3xl mx-auto">
       <div className="text-primary text-xs font-semibold uppercase tracking-[0.18em]">{eyebrow}</div>
       <h2 className="mt-3 font-display text-4xl md:text-5xl font-black text-foreground leading-tight">
         {title}
       </h2>
+      {subtitle && <p className="mt-4 text-base text-muted-foreground">{subtitle}</p>}
     </div>
   );
 }
