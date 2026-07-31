@@ -314,10 +314,10 @@ function LeadsIndexBody() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-10 text-center">
             <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
-              More Than Just Lead Lists
+              Start With Your Data. Or Ours.
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
-              Choose what you want LeadTrace to do.
+              Two ways in — both end with an outreach-ready list.
             </p>
           </div>
 
@@ -329,30 +329,24 @@ function LeadsIndexBody() {
               </div>
               <h3 className="mt-5 font-display text-xl font-black text-foreground">Upload & Clean</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Already have leads? Upload your CSV, CRM export, or purchased list and let LeadTrace clean,
-                enrich, verify, and prepare it for outreach.
+                Upload a CSV, CRM export, or existing lead list. We'll clean, enrich, verify, and prepare
+                it for outreach.
+              </p>
+              <p className="mt-3 text-xs font-semibold text-foreground">
+                Supports CSV, XLSX, And CRM Exports — Thousands Of Records In Minutes.
               </p>
 
-              <div className="mt-6 rounded-2xl border border-border bg-surface p-4">
+              <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   How It Works
                 </div>
-                <div className="mt-4 flex items-center justify-between gap-2 text-xs font-semibold text-foreground">
-                  <span className="flex flex-col items-center gap-2">
-                    <FileSpreadsheet className="h-5 w-5 text-primary" />
-                    CSV
-                  </span>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="flex flex-col items-center gap-2">
-                    <Settings className="h-5 w-5 text-primary" />
-                    LeadTrace
-                  </span>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="flex flex-col items-center gap-2">
-                    <CircleCheck className="h-5 w-5 text-primary" />
-                    Clean List
-                  </span>
-                </div>
+                <MiniWorkflow
+                  steps={[
+                    { icon: <FileSpreadsheet className="h-6 w-6" />, label: "CSV" },
+                    { icon: <Settings className="h-6 w-6" />, label: "LeadTrace" },
+                    { icon: <CircleCheck className="h-6 w-6" />, label: "Clean List" },
+                  ]}
+                />
               </div>
 
               <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-2 text-xs font-semibold text-foreground">
@@ -367,7 +361,7 @@ function LeadsIndexBody() {
                 <span className="text-primary">Ready For Outreach</span>
               </div>
 
-              <Button asChild size="lg" className="mt-8 w-full rounded-full">
+              <Button asChild size="lg" variant="outline" className="mt-8 w-full rounded-full">
                 <Link to="/auth">
                   Upload CSV <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
@@ -375,35 +369,34 @@ function LeadsIndexBody() {
             </div>
 
             {/* Generate card */}
-            <div className="flex flex-col rounded-3xl border border-border bg-background p-6 transition-colors hover:border-primary md:p-8">
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
-                <Globe className="h-5 w-5" />
+            <div className="relative flex flex-col rounded-3xl border-2 border-primary bg-background p-6 shadow-lg md:p-8">
+              <div className="flex items-center justify-between gap-3">
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                  <Globe className="h-5 w-5" />
+                </div>
+                <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary-foreground">
+                  Most Popular
+                </span>
               </div>
               <h3 className="mt-5 font-display text-xl font-black text-foreground">Generate & Launch</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Find businesses, clean & verify contacts, then launch SMS outreach — all from one platform.
+                Find businesses, prepare every contact automatically, then launch compliant SMS campaigns.
+              </p>
+              <p className="mt-3 text-xs font-semibold text-foreground">
+                Search Millions Of Businesses Across Multiple Data Sources — Nationwide.
               </p>
 
-              <div className="mt-6 rounded-2xl border border-border bg-surface p-4">
+              <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   How It Works
                 </div>
-                <div className="mt-4 flex items-center justify-between gap-2 text-xs font-semibold text-foreground">
-                  <span className="flex flex-col items-center gap-2">
-                    <Database className="h-5 w-5 text-primary" />
-                    Lead List
-                  </span>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="flex flex-col items-center gap-2">
-                    <Smartphone className="h-5 w-5 text-primary" />
-                    SMS
-                  </span>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="flex flex-col items-center gap-2">
-                    <MessageCircle className="h-5 w-5 text-primary" />
-                    Replies
-                  </span>
-                </div>
+                <MiniWorkflow
+                  steps={[
+                    { icon: <Search className="h-6 w-6" />, label: "Business Search" },
+                    { icon: <Settings className="h-6 w-6" />, label: "LeadTrace" },
+                    { icon: <MessageCircle className="h-6 w-6" />, label: "SMS Campaign" },
+                  ]}
+                />
               </div>
 
               <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-2 text-xs font-semibold text-foreground">
