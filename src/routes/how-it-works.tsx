@@ -1,7 +1,8 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowDown, ArrowRight, Building2, CheckCircle2, MapPin, Send, ShieldCheck, Smartphone } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
-import { LivePipeline } from "@/components/marketing/live-pipeline";
+import { LivePipeline, SCENARIOS } from "@/components/marketing/live-pipeline";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/how-it-works")({
@@ -29,8 +30,8 @@ export const Route = createFileRoute("/how-it-works")({
 const STAGES = [
   {
     icon: MapPin,
-    name: "Find Businesses",
-    body: "Pull businesses from Google Maps, public records, or upload your own list.",
+    name: "Bring In Records",
+    body: "Pull records from multiple data sources, public records, or upload a list you already own.",
     time: "~15 seconds",
   },
   {
@@ -42,7 +43,7 @@ const STAGES = [
   {
     icon: Smartphone,
     name: "Fill Missing Data",
-    body: "Carrier lookup identifies mobile numbers, and missing phones or emails are appended when available.",
+    body: "Carrier lookup sorts mobile, landline, and email. Optional skip trace appends missing contact data when you need it.",
     time: "~40 seconds",
   },
   {
@@ -70,28 +71,11 @@ function HowItWorks() {
             From Raw Data To Ready-To-Contact Leads
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            One request. Five verification steps. You type a niche and a location; you get back a list of
-            mobile numbers you can text today.
+            Generate a new list, upload one you already have, or mix sources. Every record runs the same
+            verification pipeline and comes back ready to contact.
           </p>
 
-          <div className="mt-12 grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
-            <div className="rounded-2xl border border-border bg-surface p-6">
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Input</div>
-              <div className="mt-3 font-display text-2xl font-black text-foreground">Roofers in Texas</div>
-              <div className="mt-1 text-sm text-muted-foreground">1,240 businesses found</div>
-            </div>
-            <div className="grid place-items-center text-muted-foreground">
-              <ArrowDown className="h-6 w-6 md:hidden" />
-              <ArrowRight className="hidden h-6 w-6 md:block" />
-            </div>
-            <div className="rounded-2xl border border-primary bg-primary/5 p-6">
-              <div className="text-xs font-semibold uppercase tracking-widest text-primary">Output</div>
-              <div className="mt-3 font-display text-2xl font-black text-foreground">
-                554 clean mobile contacts
-              </div>
-              <div className="mt-1 text-sm text-muted-foreground">Ready to text · about 90 seconds</div>
-            </div>
-          </div>
+          <HeroTransform />
         </div>
       </section>
 
@@ -99,11 +83,11 @@ function HowItWorks() {
       <section className="border-y border-border bg-surface-muted py-16">
         <div className="mx-auto max-w-3xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
-            Watch A List Get Clean
+            Watch LeadTrace Clean A List
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            This is the same run behind every number on our site — 1,240 businesses in, 554 textable
-            contacts out.
+            The same pipeline runs whether the list came from our data sources, public records, or a CSV you
+            uploaded. Watch it cycle through real scenarios.
           </p>
           <LivePipeline className="mt-8" />
         </div>
@@ -146,8 +130,8 @@ function HowItWorks() {
           <div className="mt-10 flex items-start gap-3 rounded-2xl border border-primary bg-primary/5 p-6">
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
             <p className="text-base font-semibold text-foreground">
-              Nothing is delivered until every record completes every step — so quality is the same on
-              every list, every time.
+              Every record passes every required step before delivery — so every export meets the same
+              quality standard, whether you generated the list or uploaded it.
             </p>
           </div>
 
@@ -164,5 +148,44 @@ function HowItWorks() {
         </div>
       </section>
     </MarketingLayout>
+  );
+}
+
+/** Cycles through input → output scenarios so the hero shows every workflow. */
+function HeroTransform() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setI((v) => (v + 1) % SCENARIOS.length), 3500);
+    return () => clearInterval(t);
+  }, []);
+  const s = SCENARIOS[i]!;
+  const SourceIcon = s.sourceIcon;
+  const out = s.counts[s.counts.length - 1]!;
+
+  return (
+    <div className="mt-12 grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
+      <div key={`in-${i}`} className="animate-fade-in rounded-2xl border border-border bg-surface p-6">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          <SourceIcon className="h-3.5 w-3.5 text-primary" /> Input · {s.sourceLabel}
+        </div>
+        <div className="mt-3 font-display text-2xl font-black text-foreground">{s.request}</div>
+        <div className="mt-1 text-sm text-muted-foreground">
+          {s.counts[0]!.toLocaleString()} records received
+        </div>
+      </div>
+      <div className="grid place-items-center text-muted-foreground">
+        <ArrowDown className="h-6 w-6 md:hidden" />
+        <ArrowRight className="hidden h-6 w-6 md:block" />
+      </div>
+      <div key={`out-${i}`} className="animate-fade-in rounded-2xl border border-primary bg-primary/5 p-6">
+        <div className="text-xs font-semibold uppercase tracking-widest text-primary">Output</div>
+        <div className="mt-3 font-display text-2xl font-black text-foreground">
+          {out.toLocaleString()} ready-to-contact records
+        </div>
+        <div className="mt-1 text-sm text-muted-foreground">
+          Verified · DNC scrubbed{s.skipTrace ? " · Skip traced" : ""}
+        </div>
+      </div>
+    </div>
   );
 }
