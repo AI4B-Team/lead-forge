@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { checkLineType } from "@/lib/free-tools.functions";
 
 export const Route = createFileRoute("/tools/line-type-checker")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    phone: typeof search.phone === "string" ? search.phone : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Free Line Type Checker — Mobile, Landline Or VoIP | LeadTrace" },
@@ -20,8 +23,10 @@ export const Route = createFileRoute("/tools/line-type-checker")({
 
 function LineTypeChecker() {
   const check = useServerFn(checkLineType);
+  const { phone } = Route.useSearch();
   return (
     <ToolShell
+      initialPhone={phone ?? ""}
       eyebrow="Free Tool"
       title="Line Type Checker"
       blurb="Landline, mobile, or VoIP. Texting landlines wastes credits and drags down your sender reputation, so check before you send."
