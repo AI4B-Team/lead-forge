@@ -207,12 +207,12 @@ function LeadsIndex() {
               <table className="w-full min-w-[720px] table-fixed text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    <th className="w-[28%] px-4 py-3">Business</th>
-                    <th className="w-[15%] px-4 py-3">Phone</th>
+                    <th className="w-[20%] px-4 py-3">Business</th>
+                    <th className="w-[18%] px-4 py-3">Phone</th>
                     <th className="w-[22%] px-4 py-3">Email</th>
                     <th className="w-[15%] px-4 py-3">Website</th>
                     <th className="w-[10%] px-4 py-3">Verified</th>
-                    <th className="w-[10%] px-4 py-3">City</th>
+                    <th className="w-[15%] px-4 py-3">City</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -223,10 +223,10 @@ function LeadsIndex() {
                       .split("/")[0];
                     return (
                       <tr key={r.business} className="border-b border-border/60 last:border-0">
-                        <td className="w-[28%] px-4 py-3 font-medium text-foreground">
+                        <td className="w-[20%] px-4 py-3 font-medium text-foreground">
                           <span className="block truncate" title={r.business}>{r.business}</span>
                         </td>
-                        <td className="w-[15%] px-4 py-3 tabular-nums text-foreground">
+                        <td className="w-[18%] px-4 py-3 tabular-nums text-foreground">
                           <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                             <Smartphone className="h-3.5 w-3.5 shrink-0 text-primary" />
                             {r.phone}
@@ -255,7 +255,7 @@ function LeadsIndex() {
                             </TooltipContent>
                           </Tooltip>
                         </td>
-                        <td className="w-[10%] px-4 py-3 text-muted-foreground">{r.city}</td>
+                        <td className="w-[15%] px-4 py-3 text-muted-foreground">{r.city}</td>
                       </tr>
                     );
                   })}
