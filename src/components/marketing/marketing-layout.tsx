@@ -76,25 +76,25 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           : "border-b border-border bg-background"
       }
     >
-      <div className="w-full px-6 h-16 flex items-center justify-between">
+      <div className="w-full px-6 h-16 grid grid-cols-[1fr_auto_1fr] items-center">
         <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg">
           <span className="grid place-items-center h-8 w-8 rounded-lg bg-primary text-primary-foreground">
             <Radar className="h-5 w-5" />
           </span>
           {BRAND_NAME}
         </Link>
-        <div className="flex items-center gap-2 sm:gap-4">
-          <nav className="hidden md:flex items-center gap-5 text-sm font-medium">
-            {NAV_LINKS.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                className={dark ? "text-ink-foreground/90 hover:text-ink-foreground" : "text-foreground hover:text-primary"}
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
+        <nav className="hidden md:flex items-center gap-5 text-sm font-medium justify-self-center">
+          {NAV_LINKS.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className={dark ? "text-ink-foreground/90 hover:text-ink-foreground" : "text-foreground hover:text-primary"}
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="flex items-center gap-2 sm:gap-4 justify-self-end">
           {!loading && signedIn ? (
             <>
               <button
