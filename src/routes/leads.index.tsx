@@ -146,8 +146,10 @@ function LeadsIndex() {
           </h2>
           <PipelineFlow stages={REFERENCE_FUNNEL} className="mt-8" />
           <p className="mx-auto mt-6 max-w-3xl text-sm text-muted-foreground">
-            A real reference search. The 554 delivered records are the ones you text — the 686 removed
-            records are why you don't get complaints or demand letters.
+            A real reference search. The 554 delivered records are the ones you text.
+          </p>
+          <p className="mx-auto mt-2 max-w-3xl text-sm text-muted-foreground">
+            The 686 removed records are why you don't get complaints or demand letters.
           </p>
         </div>
       </section>
