@@ -102,7 +102,7 @@ function Onboarding() {
       toast.success("Workspace Ready.");
       const stashed = (() => { try { return sessionStorage.getItem("leadtrace_prompt"); } catch { return null; } })();
       if (stashed) {
-        navigate({ to: "/app/new-job/business" });
+        navigate({ to: "/app/assistant" });
       } else {
         navigate({ to: "/app/dashboard" });
       }
