@@ -11,6 +11,7 @@ import {
   Inbox,
   BarChart3,
   BrainCircuit,
+  Sparkles,
 } from "lucide-react";
 import {
   Sidebar,
