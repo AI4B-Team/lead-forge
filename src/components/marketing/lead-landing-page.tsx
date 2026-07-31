@@ -142,6 +142,23 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
       <section className="bg-background py-16">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">Who This Is For</h2>
+          {page.nicheLabel && (
+            <div className="mt-8 rounded-2xl border border-border bg-surface p-7 md:flex md:items-center md:justify-between md:gap-8">
+              <div>
+                <div className="font-display text-xl font-black text-foreground">
+                  Don't Want To Run It Yourself? We'll Run It For You.
+                </div>
+                <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                  Tell us the niche and the geography. We deliver all three files — Clean List, DNC List,
+                  Litigator List — and can launch the texting campaign for you. Same pipeline, same audit
+                  trail, none of the clicking.
+                </p>
+              </div>
+              <Button asChild size="lg" variant="outline" className="mt-5 shrink-0 rounded-full md:mt-0">
+                <Link to="/pricing">See Done-For-You Pricing</Link>
+              </Button>
+            </div>
+          )}
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             {page.personas.map((p) => (
               <div key={p.title} className="rounded-2xl border border-border bg-surface p-6">
