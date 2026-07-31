@@ -231,6 +231,22 @@ function LeadsIndex() {
         </div>
       </section>
 
+      {/* Ready to reach out? */}
+      <section className="border-t border-border bg-surface-muted py-14">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">Ready To Reach Out?</h2>
+          <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
+            Your list doesn't stop at export. Launch compliant SMS campaigns with local numbers, automated
+            follow-ups, and built-in STOP handling.
+          </p>
+          <Button asChild size="lg" variant="outline" className="mt-6 rounded-full">
+            <Link to="/leads/$slug" params={{ slug: "sms-lead-outreach" }}>
+              Learn About SMS <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
       {/* Already have a list? */}
       <section className="border-t border-border bg-surface-muted py-14">
         <div className="mx-auto max-w-6xl px-6">
