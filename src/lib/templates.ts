@@ -511,3 +511,56 @@ export const TEMPLATES: Template[] = [
   { id: "sofascore", title: "Sofascore", subtitle: "Live Scores And Player Stats.", category: "sports", prompt: "Scrape Sofascore Premier League match results and player stats", icon: Trophy, tint: "bg-emerald-500/10 text-emerald-700", logoDomain: "sofascore.com" },
   { id: "flashscore", title: "Flashscore", subtitle: "Live Scores Across All Sports.", category: "sports", prompt: "Scrape Flashscore results for soccer leagues this weekend", icon: Trophy, tint: "bg-red-500/10 text-red-600", logoDomain: "flashscore.com" },
 ];
+export const CATEGORY_LABELS: Record<TemplateCategory, string> = {
+  business: "Business & Local",
+  directories: "Directories",
+  records: "Public Records",
+  social: "Social",
+  ecommerce: "E-commerce",
+  jobs: "Jobs",
+  reviews: "Reviews",
+  realestate: "Real Estate",
+  travel: "Travel",
+  finance: "Finance",
+  education: "Education",
+  news: "News",
+  sports: "Sports",
+  search: "Search Engine",
+  upload: "Upload",
+};
+
+/** Look up a template by its id. */
+export function getTemplate(id: string): Template | undefined {
+  return TEMPLATES.find((t) => t.id === id);
+}
+
+/** Other templates in the same category (excluding the given one). */
+export function relatedTemplates(t: Template, limit = 6): Template[] {
+  return TEMPLATES.filter((x) => x.category === t.category && x.id !== t.id).slice(0, limit);
+}
+
+/** Fields the pipeline returns for a template's category. */
+export function templateFields(t: Template): string[] {
+  const base = ["Name", "Phone", "Email", "Website", "Source URL"];
+  switch (t.category) {
+    case "business":
+    case "directories":
+      return ["Business Name", "Owner / Contact", "Phone", "Email", "Address", "Category", "Website", "Rating"];
+    case "records":
+      return ["Owner Name", "Mailing Address", "Property Address", "Filing Date", "Case / Doc Number", "Phone (Skip Traced)"];
+    case "realestate":
+      return ["Owner Name", "Property Address", "List Price", "Status", "Agent", "Phone", "Email"];
+    case "social":
+      return ["Handle", "Display Name", "Bio", "Followers", "Link In Bio", "Email", "Phone (Skip Traced)"];
+    case "ecommerce":
+      return ["Store / Product", "Price", "Seller Name", "Reviews", "Store URL", "Email", "Phone"];
+    case "jobs":
+      return ["Company", "Job Title", "Location", "Posted Date", "Hiring Contact", "Phone", "Email"];
+    case "reviews":
+      return ["Business Name", "Rating", "Review Count", "Latest Review", "Phone", "Email"];
+    case "upload":
+      return ["Your Columns (Mapped)", "Normalized Phone", "Line Type", "DNC Status", "Skip Traced Phone"];
+    default:
+      return base;
+  }
+}
