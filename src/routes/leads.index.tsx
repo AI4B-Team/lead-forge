@@ -167,20 +167,27 @@ function LeadsIndex() {
               <thead>
                 <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <th className="px-4 py-3">Business</th>
+                  <th className="px-4 py-3">Owner</th>
                   <th className="px-4 py-3">Mobile Phone</th>
                   <th className="px-4 py-3">Line Type</th>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Website</th>
                   <th className="px-4 py-3">DNC</th>
                   <th className="px-4 py-3">Litigator</th>
-                  <th className="px-4 py-3">Rating</th>
                   <th className="px-4 py-3">City</th>
+                  <th className="px-4 py-3">Source</th>
+                  <th className="px-4 py-3">Last Verified</th>
                 </tr>
               </thead>
               <tbody>
                 {sample.map((r) => (
                   <tr key={r.business} className="border-b border-border/60 last:border-0">
                     <td className="px-4 py-3 font-medium text-foreground">{r.business}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.owner}</td>
                     <td className="px-4 py-3 tabular-nums text-foreground">{r.phone}</td>
                     <td className="px-4 py-3 text-muted-foreground">{r.lineType}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.email}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.website}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <Check className="h-3.5 w-3.5 text-primary" /> {r.dnc}
@@ -191,13 +198,39 @@ function LeadsIndex() {
                         <Check className="h-3.5 w-3.5 text-primary" /> {r.litigator}
                       </span>
                     </td>
-                    <td className="px-4 py-3 tabular-nums text-foreground">{r.rating}</td>
                     <td className="px-4 py-3 text-muted-foreground">{r.city}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.source}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{r.lastVerified}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      {/* Already have a list? */}
+      <section className="border-t border-border bg-surface-muted py-14">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
+            Already Have A Lead List?
+          </h2>
+          <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
+            Upload your CSV and let LeadTrace do the cleanup — CRM exports, trade show lists, purchased
+            lists, or an old database you gave up on.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
+            {UPLOAD_BENEFITS.map((b) => (
+              <span key={b} className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <Check className="h-4 w-4 text-primary" /> {b}
+              </span>
+            ))}
+          </div>
+          <Button asChild size="lg" className="mt-8 rounded-full">
+            <Link to="/auth">
+              Upload A List <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </section>
 
