@@ -187,8 +187,10 @@ function LeadsIndex() {
             See Exactly What You Get
           </h2>
           <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
-            Every row arrives verified and export-ready. Sample rows are illustrative — fabricated names
-            and 555 numbers.
+            Illustrative sample only. Every exported row is verified, compliant, and ready for outreach.
+          </p>
+          <p className="mt-2 max-w-3xl text-xs text-muted-foreground">
+            LeadTrace combines records from multiple trusted data sources before delivery.
           </p>
           <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-surface">
             <table className="w-full min-w-[720px] text-sm">
