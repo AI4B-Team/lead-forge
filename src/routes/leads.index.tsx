@@ -190,11 +190,11 @@ function LeadsIndex() {
                   </div>
                   <div className="flex justify-between gap-3">
                     <dt>Numbers</dt>
-                    <dd className="font-semibold text-foreground">Mobile verified</dd>
+                    <dd className="font-semibold text-foreground">Mobile Verified</dd>
                   </div>
                   <div className="flex justify-between gap-3">
                     <dt>Built</dt>
-                    <dd className="font-semibold text-foreground">On demand</dd>
+                    <dd className="font-semibold text-foreground">On Demand</dd>
                   </div>
                 </dl>
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
