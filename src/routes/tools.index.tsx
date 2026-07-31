@@ -60,7 +60,7 @@ function ToolCard({ tool }: { tool: (typeof TOOLS)[number] }) {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const open = () =>
-    navigate({ to: tool.to, search: phone.trim() ? { phone: phone.trim() } : {} });
+    navigate({ to: tool.to, search: { phone: phone.trim() || undefined } });
 
   return (
     <Card className="h-full transition-colors hover:border-primary">
