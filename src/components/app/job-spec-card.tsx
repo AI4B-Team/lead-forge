@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { INDUSTRIES, RECORD_TYPES, COUNTIES } from "@/lib/mock-data";
 import type { Coverage, JobSpec } from "@/lib/assistant.shared";
+import { CountyMultiSelect } from "@/components/app/county-multi-select";
+import { US_STATES, countiesForState } from "@/lib/us-geo";
 
 const COVERAGE_STYLE: Record<Coverage, string> = {
   live: "border-success/40 text-success",
@@ -88,13 +90,19 @@ export function JobSpecCard({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>State</Label>
-            <Input
-              className="mt-1"
+            <Select
               value={spec.state ?? ""}
-              maxLength={2}
-              onChange={(e) => set("state", e.target.value.toUpperCase() || null)}
-              placeholder="FL"
-            />
+              onValueChange={(v) =>
+                onChange({ ...spec, state: v, counties: spec.state === v ? spec.counties : [] })
+              }
+            >
+              <SelectTrigger className="mt-1"><SelectValue placeholder="Pick A State" /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                {US_STATES.map((s) => (
+                  <SelectItem key={s.code} value={s.code}>{s.code} · {s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label>Recency (Days)</Label>
@@ -112,26 +120,20 @@ export function JobSpecCard({
 
         <div>
           <Label>Counties</Label>
-          <Input
-            className="mt-1"
-            value={spec.counties.join(", ")}
-            onChange={(e) =>
-              set("counties", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))
-            }
-            placeholder="Hillsborough, FL"
+          <CountyMultiSelect
+            state={spec.state}
+            value={spec.counties}
+            onChange={(next) => set("counties", next)}
+            renderBadgeClassName={(c) => COVERAGE_STYLE[covFor(c)]}
+            renderBadgeLabel={(c) => `${c} · ${COVERAGE_LABEL[covFor(c)]}`}
           />
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {spec.counties.map((c) => (
-              <Badge key={c} variant="outline" className={`text-[10px] uppercase ${COVERAGE_STYLE[covFor(c)]}`}>
-                {c} · {COVERAGE_LABEL[covFor(c)]}
-              </Badge>
-            ))}
-            {!spec.counties.length && (
-              <span className="text-[11px] text-muted-foreground">
-                Covered Now: {COUNTIES.filter((c) => c.coverage === "live").map((c) => c.name).join(", ")}
-              </span>
-            )}
-          </div>
+          {!spec.counties.length && (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              {spec.state
+                ? `Select One Or More Of The ${countiesForState(spec.state).length} Counties In ${spec.state}. Leave Empty To Cover The Whole State.`
+                : `Covered Now: ${COUNTIES.filter((c) => c.coverage === "live").map((c) => c.name).join(", ")}`}
+            </p>
+          )}
         </div>
 
         <div>
