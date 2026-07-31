@@ -39,6 +39,17 @@ export type Template = {
 };
 
 export const TEMPLATES: Template[] = [
+  // ---------- Upload (pinned first) ----------
+  {
+    id: "upload",
+    title: "Upload My List",
+    subtitle: "Drop A CSV, Skip Trace And Scrub It.",
+    category: "upload",
+    prompt: "Upload my CSV list, map the columns, skip trace missing numbers, and scrub it",
+    icon: Upload,
+    tint: "bg-yellow-500/10 text-yellow-700",
+  },
+
   // ---------- Business & Local ----------
   {
     id: "gmaps",
@@ -412,17 +423,6 @@ export const TEMPLATES: Template[] = [
     icon: Home,
     tint: "bg-slate-500/10 text-slate-600",
     beta: true,
-  },
-
-  // ---------- Upload ----------
-  {
-    id: "upload",
-    title: "Upload My List",
-    subtitle: "Drop A CSV, Skip Trace And Scrub It.",
-    category: "upload",
-    prompt: "Upload my CSV list, map the columns, skip trace missing numbers, and scrub it",
-    icon: Upload,
-    tint: "bg-yellow-500/10 text-yellow-700",
   },
 
   // ---------- E-Commerce (expanded) ----------
