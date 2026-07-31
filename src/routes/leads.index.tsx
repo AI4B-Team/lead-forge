@@ -2,14 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Building2,
-  Check,
   CircleCheck,
   Clock,
   Database,
+  FileSpreadsheet,
   Globe,
+  MessageCircle,
+  Search,
   Settings,
   ShieldCheck,
   Smartphone,
+  Upload,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
