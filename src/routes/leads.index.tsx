@@ -252,43 +252,120 @@ function LeadsIndex() {
       </section>
 
       {/* Ready to reach out? */}
+      {/* Choose your starting point */}
       <section className="border-t border-border bg-surface-muted py-14">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">Ready To Reach Out?</h2>
-          <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
-            Your list doesn't stop at export. Launch compliant SMS campaigns with local numbers, automated
-            follow-ups, and built-in STOP handling.
-          </p>
-          <Button asChild size="lg" variant="outline" className="mt-6 rounded-full">
-            <Link to="/leads/$slug" params={{ slug: "sms-lead-outreach" }}>
-              Launch A Campaign <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      </section>
-
-      {/* Already have a list? */}
-      <section className="border-t border-border bg-surface-muted py-14">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
-            Already Have A Lead List?
-          </h2>
-          <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
-            Upload your CSV and let LeadTrace do the cleanup — CRM exports, trade show lists, purchased
-            lists, or an old database you gave up on.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
-            {UPLOAD_BENEFITS.map((b) => (
-              <span key={b} className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <Check className="h-4 w-4 text-primary" /> {b}
-              </span>
-            ))}
+          <div className="mb-10 text-center">
+            <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
+              More Than Just Lead Lists
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
+              Choose what you want LeadTrace to do.
+            </p>
           </div>
-          <Button asChild size="lg" className="mt-8 rounded-full">
-            <Link to="/auth">
-              Upload A List <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Upload card */}
+            <div className="flex flex-col rounded-3xl border border-border bg-background p-6 transition-colors hover:border-primary md:p-8">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                <Upload className="h-5 w-5" />
+              </div>
+              <h3 className="mt-5 font-display text-xl font-black text-foreground">Upload & Clean</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Already have leads? Upload your CSV, CRM export, or purchased list and let LeadTrace clean,
+                enrich, verify, and prepare it for outreach.
+              </p>
+
+              <div className="mt-6 rounded-2xl border border-border bg-surface p-4">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  How It Works
+                </div>
+                <div className="mt-4 flex items-center justify-between gap-2 text-xs font-semibold text-foreground">
+                  <span className="flex flex-col items-center gap-2">
+                    <FileSpreadsheet className="h-5 w-5 text-primary" />
+                    CSV
+                  </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="flex flex-col items-center gap-2">
+                    <Settings className="h-5 w-5 text-primary" />
+                    LeadTrace
+                  </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="flex flex-col items-center gap-2">
+                    <CircleCheck className="h-5 w-5 text-primary" />
+                    Clean List
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-2 text-xs font-semibold text-foreground">
+                <span>Deduplicate</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <span>Verify</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <span>Skip Trace (Optional)</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <span>Compliance Check</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <span className="text-primary">Ready For Outreach</span>
+              </div>
+
+              <Button asChild size="lg" className="mt-8 w-full rounded-full">
+                <Link to="/auth">
+                  Upload CSV <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+
+            {/* Generate card */}
+            <div className="flex flex-col rounded-3xl border border-border bg-background p-6 transition-colors hover:border-primary md:p-8">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                <Globe className="h-5 w-5" />
+              </div>
+              <h3 className="mt-5 font-display text-xl font-black text-foreground">Generate & Launch</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Find businesses, clean & verify contacts, then launch SMS outreach — all from one platform.
+              </p>
+
+              <div className="mt-6 rounded-2xl border border-border bg-surface p-4">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  How It Works
+                </div>
+                <div className="mt-4 flex items-center justify-between gap-2 text-xs font-semibold text-foreground">
+                  <span className="flex flex-col items-center gap-2">
+                    <Database className="h-5 w-5 text-primary" />
+                    Lead List
+                  </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="flex flex-col items-center gap-2">
+                    <Smartphone className="h-5 w-5 text-primary" />
+                    SMS
+                  </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="flex flex-col items-center gap-2">
+                    <MessageCircle className="h-5 w-5 text-primary" />
+                    Replies
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-2 text-xs font-semibold text-foreground">
+                <span>Find Businesses</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <span>Clean & Verify</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <span>Launch Outreach</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <span className="text-primary">Start Conversations</span>
+              </div>
+
+              <Button asChild size="lg" className="mt-8 w-full rounded-full">
+                <Link to="/auth">
+                  Build My List <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 
