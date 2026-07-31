@@ -15,7 +15,7 @@ export const Route = createFileRoute("/tools/line-type-checker")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: LineTypeChecker;
+  component: LineTypeChecker,
 });
 
 function LineTypeChecker() {
