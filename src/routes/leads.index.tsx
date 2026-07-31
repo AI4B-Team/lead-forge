@@ -3,14 +3,13 @@ import {
   ArrowRight,
   Building2,
   Check,
+  CircleCheck,
   Clock,
   Database,
-  FileSpreadsheet,
   Globe,
-  Phone,
+  Settings,
   ShieldCheck,
   Smartphone,
-  Upload,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -92,16 +91,6 @@ const BENEFITS: Record<string, { title: string; body: string }> = {
     body: "Send straight from the clean list — merge fields, quiet hours, and automatic opt-out handling included, no export required.",
   },
 };
-
-const SOURCES = [
-  { icon: Database, label: "Public Business Data" },
-  { icon: FileSpreadsheet, label: "Public Records" },
-  { icon: Upload, label: "Multiple Data Sources" },
-  { icon: Phone, label: "Carrier Data" },
-  { icon: ShieldCheck, label: "Compliance Data" },
-];
-
-const PROMISES = ["Freshly Generated", "Never Resold", "Built On Demand", "Export Ready"];
 
 function LeadsIndex() {
   const niches = LEAD_PAGES.filter((p) => p.kind === "niche");
@@ -373,36 +362,80 @@ function LeadsIndex() {
         </div>
       </section>
 
-      {/* Trust / social proof */}
+      {/* Three pillars: source → processing → result */}
       <section className="border-t border-border bg-surface-muted py-14">
-        <div className="mx-auto max-w-6xl px-6 grid gap-10 md:grid-cols-2">
-          <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Built From</h2>
-            <div className="mt-5 grid grid-cols-2 gap-4">
-              {SOURCES.map((s) => (
-                <div key={s.label} className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
-                  <s.icon className="h-5 w-5 shrink-0 text-primary" /> {s.label}
-                </div>
-              ))}
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="font-display text-center text-2xl md:text-3xl font-black text-foreground">
+            From Sources To Outreach In One Platform
+          </h2>
+          <div className="mt-10 grid items-start gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-background p-6">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                <Database className="h-4 w-4" />
+              </div>
+              <h3 className="mt-4 font-display text-lg font-black text-foreground">Built From</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Multiple trusted sources: business directories, public records, carrier data, and
+                compliance databases.
+              </p>
             </div>
-          </div>
-          <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Every List Is</h2>
-            <div className="mt-5 grid grid-cols-2 gap-4">
-              {PROMISES.map((p) => (
-                <div key={p} className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
-                  <Check className="h-5 w-5 shrink-0 text-primary" /> {p}
-                </div>
-              ))}
+            <div className="flex items-center justify-center md:hidden">
+              <ArrowRight className="h-5 w-5 rotate-90 text-muted-foreground" />
+            </div>
+            <div className="hidden md:flex items-center justify-center pt-8">
+              <ArrowRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="rounded-2xl border border-border bg-background p-6">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                <Settings className="h-4 w-4" />
+              </div>
+              <h3 className="mt-4 font-display text-lg font-black text-foreground">Processed By</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                The LeadTrace pipeline: deduplication, mobile verification, enrichment, optional skip
+                tracing, and compliance checks.
+              </p>
+            </div>
+            <div className="flex items-center justify-center md:hidden">
+              <ArrowRight className="h-5 w-5 rotate-90 text-muted-foreground" />
+            </div>
+            <div className="hidden md:flex items-center justify-center pt-8">
+              <ArrowRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="rounded-2xl border border-border bg-background p-6">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                <CircleCheck className="h-4 w-4" />
+              </div>
+              <h3 className="mt-4 font-display text-lg font-black text-foreground">Delivered As</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Outreach-ready lists: freshly generated, export-ready, never resold, and built on
+                demand.
+              </p>
             </div>
           </div>
         </div>
-        <div className="mx-auto mt-10 max-w-6xl px-6">
-          <Button asChild size="lg" className="rounded-full">
-            <Link to="/auth">
-              Build My List <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
+      </section>
+
+      {/* Final conversion */}
+      <section className="border-t border-border bg-background py-14">
+        <div className="mx-auto max-w-6xl px-6 text-center">
+          <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
+            Ready To Build Your First List?
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
+            Generate a new list, upload your own data, or launch outreach — all from one platform.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Button asChild size="lg" className="rounded-full">
+              <Link to="/auth">
+                Build My List <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="rounded-full">
+              <Link to="#sample-list">
+                See Sample Export
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
     </MarketingLayout>
