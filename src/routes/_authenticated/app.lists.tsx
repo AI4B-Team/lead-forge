@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { listJobs } from "@/lib/jobs.functions";
+import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import type { JobStatus } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/app/lists")({
@@ -103,6 +104,7 @@ function Lists() {
                 <th className="p-4">Name</th>
                 <th className="p-4">Source</th>
                 <th className="p-4">Rows</th>
+                <th className="p-4 w-[160px]">Funnel</th>
                 <th className="p-4">Clean / DNC / Litigator</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Created</th>
@@ -110,10 +112,10 @@ function Lists() {
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Loading Lists…</td></tr>
+                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading Lists…</td></tr>
               )}
               {!isLoading && rows.length === 0 && (
-                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">
+                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">
                   No Lists Match. <Link to="/app/new-job" className="text-primary underline">Start A New Job</Link>.
                 </td></tr>
               )}
@@ -126,6 +128,18 @@ function Lists() {
                   </td>
                   <td className="p-4 text-muted-foreground">{SOURCE_LABEL[j.source_type] ?? j.source_type}</td>
                   <td className="p-4 text-foreground">{(j.rows_in ?? 0).toLocaleString()}</td>
+                  <td className="p-4">
+                    <PipelineFunnel
+                      size="sm"
+                      stages={{
+                        found: j.rows_in ?? 0,
+                        deduped: j.rows_deduped ?? 0,
+                        textable: j.counts.clean + j.counts.dnc + j.counts.litigator,
+                        scrubbed: j.counts.clean + j.counts.dnc + j.counts.litigator,
+                        clean: j.counts.clean,
+                      }}
+                    />
+                  </td>
                   <td className="p-4 text-muted-foreground">
                     <span className="text-success font-medium">{j.counts.clean.toLocaleString()}</span> /{" "}
                     <span className="text-warn font-medium">{j.counts.dnc.toLocaleString()}</span> /{" "}
