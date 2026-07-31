@@ -15,6 +15,7 @@ export function ToolShell<T>({
   render,
   notes,
   related,
+  initialPhone = "",
 }: {
   eyebrow: string;
   title: string;
@@ -23,8 +24,9 @@ export function ToolShell<T>({
   render: (result: T) => ReactNode;
   notes: string[];
   related: { to: string; label: string }[];
+  initialPhone?: string;
 }) {
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(initialPhone);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<T | null>(null);
 
