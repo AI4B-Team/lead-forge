@@ -1,5 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check, Clock, Database, FileSpreadsheet, Phone, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Clock,
+  Database,
+  FileSpreadsheet,
+  Globe,
+  Phone,
+  ShieldCheck,
+  Smartphone,
+  Upload,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { PipelineFlow } from "@/components/marketing/pipeline-flow";
@@ -27,7 +39,27 @@ export const Route = createFileRoute("/leads/")({
   component: LeadsIndex,
 });
 
-const BADGES = ["Mobile Verified", "DNC Scrubbed", "Duplicate Free", "Ready To Import"];
+const BADGES = [
+  "Multi-Source Data",
+  "Upload Your Own Lists",
+  "Mobile Verified",
+  "Skip Trace Available",
+  "DNC Scrubbed",
+];
+
+const NICHE_FACTS = [
+  { icon: Globe, label: "Nationwide" },
+  { icon: Smartphone, label: "Mobile Verified" },
+  { icon: Zap, label: "Built On Demand" },
+];
+
+const UPLOAD_BENEFITS = [
+  "Remove Duplicates",
+  "Verify Mobile Numbers",
+  "Skip Trace Missing Contacts",
+  "Scrub DNC",
+  "Export A Cleaner List",
+];
 
 /** Outcome-framed headings for the pipeline-stage pages (presentation only). */
 const BENEFITS: Record<string, { title: string; body: string }> = {
@@ -40,7 +72,7 @@ const BENEFITS: Record<string, { title: string; body: string }> = {
     body: "Every number is carrier-checked, so your texts land on phones people actually carry instead of dying on office landlines.",
   },
   "dnc-list-scrubbing": {
-    title: "Fewer Complaints",
+    title: "Better Deliverability",
     body: "Numbers on the National Do Not Call Registry are removed before delivery, with a timestamped record of every check.",
   },
   "litigator-scrub": {
@@ -54,10 +86,11 @@ const BENEFITS: Record<string, { title: string; body: string }> = {
 };
 
 const SOURCES = [
-  { icon: Database, label: "Google Maps" },
+  { icon: Database, label: "Public Business Data" },
   { icon: FileSpreadsheet, label: "Public Records" },
+  { icon: Upload, label: "Multiple Data Sources" },
   { icon: Phone, label: "Carrier Data" },
-  { icon: ShieldCheck, label: "National DNC" },
+  { icon: ShieldCheck, label: "Compliance Data" },
 ];
 
 const PROMISES = ["Freshly Generated", "Never Resold", "Built On Demand", "Export Ready"];
@@ -76,9 +109,9 @@ function LeadsIndex() {
             Lead Lists You Can Actually Contact.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-relaxed text-muted-foreground">
-            Every list is deduplicated, mobile verified, scrubbed against the National DNC Registry, and
-            filtered for known litigators before it reaches you. You get names and numbers you can text
-            today — not a spreadsheet you have to clean first.
+            Build a new lead list from multiple data sources or upload your own. Every list can be cleaned,
+            enriched, mobile verified, skip-traced, scrubbed against the National DNC Registry, and prepared
+            for outreach before you ever contact a prospect.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -109,7 +142,7 @@ function LeadsIndex() {
       <section className="border-y border-border bg-surface-muted py-14 text-center">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
-            What Happens To 1,240 Businesses Before You Get Them
+            How Every List Gets Prepared
           </h2>
           <PipelineFlow stages={REFERENCE_FUNNEL} className="mt-8" />
           <p className="mx-auto mt-6 max-w-3xl text-sm text-muted-foreground">
