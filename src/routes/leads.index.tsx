@@ -443,51 +443,45 @@ function LeadsIndex() {
       <section className="border-t border-border bg-surface-muted py-14">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="font-display text-center text-2xl md:text-3xl font-black text-foreground">
-            From Sources To Outreach In One Platform
+            One Pipeline. From Source To Send.
           </h2>
-          <div className="mt-10 grid items-start gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-background p-6">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                <Database className="h-4 w-4" />
-              </div>
-              <h3 className="mt-4 font-display text-lg font-black text-foreground">Built From</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Multiple trusted sources: business directories, public records, carrier data, and
-                compliance databases.
-              </p>
-            </div>
-            <div className="flex items-center justify-center md:hidden">
-              <ArrowRight className="h-5 w-5 rotate-90 text-muted-foreground" />
-            </div>
-            <div className="hidden md:flex items-center justify-center pt-8">
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div className="rounded-2xl border border-border bg-background p-6">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                <Settings className="h-4 w-4" />
-              </div>
-              <h3 className="mt-4 font-display text-lg font-black text-foreground">Processed By</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                The LeadTrace pipeline: deduplication, mobile verification, enrichment, optional skip
-                tracing, and compliance checks.
-              </p>
-            </div>
-            <div className="flex items-center justify-center md:hidden">
-              <ArrowRight className="h-5 w-5 rotate-90 text-muted-foreground" />
-            </div>
-            <div className="hidden md:flex items-center justify-center pt-8">
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div className="rounded-2xl border border-border bg-background p-6">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                <CircleCheck className="h-4 w-4" />
-              </div>
-              <h3 className="mt-4 font-display text-lg font-black text-foreground">Delivered As</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Outreach-ready lists: freshly generated, export-ready, never resold, and built on
-                demand.
-              </p>
-            </div>
+          <div className="mt-10 grid items-stretch gap-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4">
+            <PillarCard
+              icon={<Database className="h-5 w-5" />}
+              title="Built From"
+              footLabel="+12 Sources"
+              items={[
+                { icon: <Landmark className="h-4 w-4" />, label: "Public Records" },
+                { icon: <Building2 className="h-4 w-4" />, label: "Business Directories" },
+                { icon: <Smartphone className="h-4 w-4" />, label: "Carrier Data" },
+                { icon: <Upload className="h-4 w-4" />, label: "Customer Uploads" },
+              ]}
+            />
+            <PillarArrow />
+            <PillarCard
+              highlight
+              icon={<Settings className="h-5 w-5" />}
+              title="Processed By"
+              footLabel="Automatic On Every List"
+              items={[
+                { icon: <Check className="h-4 w-4" />, label: "Deduplication" },
+                { icon: <Check className="h-4 w-4" />, label: "Mobile Verification" },
+                { icon: <Check className="h-4 w-4" />, label: "Optional Skip Trace" },
+                { icon: <Check className="h-4 w-4" />, label: "DNC Compliance" },
+              ]}
+            />
+            <PillarArrow />
+            <PillarCard
+              icon={<CircleCheck className="h-5 w-5" />}
+              title="Delivered As"
+              footLabel="554 Records Ready"
+              items={[
+                { icon: <Smartphone className="h-4 w-4" />, label: "Mobile Verified" },
+                { icon: <FileSpreadsheet className="h-4 w-4" />, label: "Export Ready" },
+                { icon: <Star className="h-4 w-4" />, label: "Never Resold" },
+                { icon: <Send className="h-4 w-4" />, label: "SMS Campaign Ready" },
+              ]}
+            />
           </div>
         </div>
       </section>
