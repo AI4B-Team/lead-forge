@@ -124,14 +124,14 @@ function LeadsIndex() {
             ))}
           </div>
 
-          <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+          <div className="mt-5 inline-flex flex-wrap items-center gap-2 text-sm font-semibold text-muted-foreground">
             {WORKFLOW_STEPS.map((step, i) => (
-              <>
-                <span key={step} className="text-foreground">{step}</span>
+              <span key={step} className="inline-flex items-center gap-2 last:mr-0">
+                <span className="text-foreground">{step}</span>
                 {i < WORKFLOW_STEPS.length - 1 && (
                   <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
                 )}
-              </>
+              </span>
             ))}
           </div>
 
