@@ -178,15 +178,15 @@ function LeadsIndex() {
           </p>
           <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-surface">
             <TooltipProvider>
-              <table className="w-full min-w-[560px] text-sm">
+              <table className="w-full min-w-[720px] table-fixed text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    <th className="w-[40%] min-w-[220px] px-4 py-3">Business</th>
-                    <th className="px-4 py-3">Phone</th>
-                    <th className="px-4 py-3">Email</th>
-                    <th className="px-4 py-3">Website</th>
-                    <th className="px-4 py-3">Ready</th>
-                    <th className="px-4 py-3">City</th>
+                    <th className="w-[28%] px-4 py-3">Business</th>
+                    <th className="w-[15%] px-4 py-3">Phone</th>
+                    <th className="w-[25%] px-4 py-3">Email</th>
+                    <th className="w-[15%] px-4 py-3">Website</th>
+                    <th className="w-[7%] px-4 py-3">Ready</th>
+                    <th className="w-[10%] px-4 py-3">City</th>
                   </tr>
                 </thead>
                 <tbody>
