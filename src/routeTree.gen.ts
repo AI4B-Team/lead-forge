@@ -35,7 +35,10 @@ import { Route as AgencyRouteImport } from './routes/agency'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ToolsIndexRouteImport } from './routes/tools.index'
 import { Route as LeadsIndexRouteImport } from './routes/leads.index'
+import { Route as ToolsLineTypeCheckerRouteImport } from './routes/tools.line-type-checker'
+import { Route as ToolsDncCheckerRouteImport } from './routes/tools.dnc-checker'
 import { Route as LeadsSlugRouteImport } from './routes/leads.$slug'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
@@ -195,9 +198,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsIndexRoute = ToolsIndexRouteImport.update({
+  id: '/tools/',
+  path: '/tools/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LeadsIndexRoute = LeadsIndexRouteImport.update({
   id: '/leads/',
   path: '/leads/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsLineTypeCheckerRoute = ToolsLineTypeCheckerRouteImport.update({
+  id: '/tools/line-type-checker',
+  path: '/tools/line-type-checker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsDncCheckerRoute = ToolsDncCheckerRouteImport.update({
+  id: '/tools/dnc-checker',
+  path: '/tools/dnc-checker',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeadsSlugRoute = LeadsSlugRouteImport.update({
@@ -389,7 +407,10 @@ export interface FileRoutesByFullPath {
   '/templates': typeof TemplatesRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/leads/$slug': typeof LeadsSlugRoute
+  '/tools/dnc-checker': typeof ToolsDncCheckerRoute
+  '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
   '/leads/': typeof LeadsIndexRoute
+  '/tools/': typeof ToolsIndexRoute
   '/app/account': typeof AuthenticatedAppAccountRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/assistant': typeof AuthenticatedAppAssistantRoute
@@ -445,7 +466,10 @@ export interface FileRoutesByTo {
   '/start': typeof StartRoute
   '/templates': typeof TemplatesRoute
   '/leads/$slug': typeof LeadsSlugRoute
+  '/tools/dnc-checker': typeof ToolsDncCheckerRoute
+  '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
   '/leads': typeof LeadsIndexRoute
+  '/tools': typeof ToolsIndexRoute
   '/app/account': typeof AuthenticatedAppAccountRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/assistant': typeof AuthenticatedAppAssistantRoute
@@ -504,7 +528,10 @@ export interface FileRoutesById {
   '/templates': typeof TemplatesRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/leads/$slug': typeof LeadsSlugRoute
+  '/tools/dnc-checker': typeof ToolsDncCheckerRoute
+  '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
   '/leads/': typeof LeadsIndexRoute
+  '/tools/': typeof ToolsIndexRoute
   '/_authenticated/app/account': typeof AuthenticatedAppAccountRoute
   '/_authenticated/app/admin': typeof AuthenticatedAppAdminRoute
   '/_authenticated/app/assistant': typeof AuthenticatedAppAssistantRoute
@@ -563,7 +590,10 @@ export interface FileRouteTypes {
     | '/templates'
     | '/app'
     | '/leads/$slug'
+    | '/tools/dnc-checker'
+    | '/tools/line-type-checker'
     | '/leads/'
+    | '/tools/'
     | '/app/account'
     | '/app/admin'
     | '/app/assistant'
@@ -619,7 +649,10 @@ export interface FileRouteTypes {
     | '/start'
     | '/templates'
     | '/leads/$slug'
+    | '/tools/dnc-checker'
+    | '/tools/line-type-checker'
     | '/leads'
+    | '/tools'
     | '/app/account'
     | '/app/admin'
     | '/app/assistant'
@@ -677,7 +710,10 @@ export interface FileRouteTypes {
     | '/templates'
     | '/_authenticated/app'
     | '/leads/$slug'
+    | '/tools/dnc-checker'
+    | '/tools/line-type-checker'
     | '/leads/'
+    | '/tools/'
     | '/_authenticated/app/account'
     | '/_authenticated/app/admin'
     | '/_authenticated/app/assistant'
@@ -735,7 +771,10 @@ export interface RootRouteChildren {
   StartRoute: typeof StartRoute
   TemplatesRoute: typeof TemplatesRoute
   LeadsSlugRoute: typeof LeadsSlugRoute
+  ToolsDncCheckerRoute: typeof ToolsDncCheckerRoute
+  ToolsLineTypeCheckerRoute: typeof ToolsLineTypeCheckerRoute
   LeadsIndexRoute: typeof LeadsIndexRoute
+  ToolsIndexRoute: typeof ToolsIndexRoute
   ApiPublicHooksInboundSmsRoute: typeof ApiPublicHooksInboundSmsRoute
   ApiPublicHooksTelnyxDlrRoute: typeof ApiPublicHooksTelnyxDlrRoute
   ApiPublicHooksTelnyxInboundRoute: typeof ApiPublicHooksTelnyxInboundRoute
@@ -926,11 +965,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools/': {
+      id: '/tools/'
+      path: '/tools'
+      fullPath: '/tools/'
+      preLoaderRoute: typeof ToolsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leads/': {
       id: '/leads/'
       path: '/leads'
       fullPath: '/leads/'
       preLoaderRoute: typeof LeadsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/line-type-checker': {
+      id: '/tools/line-type-checker'
+      path: '/tools/line-type-checker'
+      fullPath: '/tools/line-type-checker'
+      preLoaderRoute: typeof ToolsLineTypeCheckerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/dnc-checker': {
+      id: '/tools/dnc-checker'
+      path: '/tools/dnc-checker'
+      fullPath: '/tools/dnc-checker'
+      preLoaderRoute: typeof ToolsDncCheckerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leads/$slug': {
@@ -1246,7 +1306,10 @@ const rootRouteChildren: RootRouteChildren = {
   StartRoute: StartRoute,
   TemplatesRoute: TemplatesRoute,
   LeadsSlugRoute: LeadsSlugRoute,
+  ToolsDncCheckerRoute: ToolsDncCheckerRoute,
+  ToolsLineTypeCheckerRoute: ToolsLineTypeCheckerRoute,
   LeadsIndexRoute: LeadsIndexRoute,
+  ToolsIndexRoute: ToolsIndexRoute,
   ApiPublicHooksInboundSmsRoute: ApiPublicHooksInboundSmsRoute,
   ApiPublicHooksTelnyxDlrRoute: ApiPublicHooksTelnyxDlrRoute,
   ApiPublicHooksTelnyxInboundRoute: ApiPublicHooksTelnyxInboundRoute,

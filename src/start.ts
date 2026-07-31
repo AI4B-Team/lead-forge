@@ -19,7 +19,10 @@ const attachSupabaseAuth = createMiddleware({ type: "function" }).client(
         const { data: refreshed } = await supabase.auth.refreshSession();
         token = refreshed.session?.access_token;
       }
-      if (!token && !window.location.pathname.startsWith("/auth")) {
+      // Public pages (e.g. the free tools) call unauthenticated server fns, so
+      // only bounce to /auth when the caller is inside the signed-in app.
+      const inApp = window.location.pathname.startsWith("/app");
+      if (!token && inApp && !window.location.pathname.startsWith("/auth")) {
         window.location.replace("/auth");
         await new Promise(() => {}); // page is navigating away
       }

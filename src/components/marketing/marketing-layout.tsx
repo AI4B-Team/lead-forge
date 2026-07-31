@@ -54,6 +54,13 @@ export function MarketingLayout({ children }: { children: ReactNode }) {
   );
 }
 
+const NAV_LINKS = [
+  { to: "/leads", label: "Lead Lists" },
+  { to: "/how-it-works", label: "How It Works" },
+  { to: "/tools", label: "Free Tools" },
+  { to: "/pricing", label: "Pricing" },
+] as const;
+
 export { ComplianceStrip, MarketingFooter };
 
 export function MarketingNav({ dark = false }: { dark?: boolean }) {
@@ -77,6 +84,17 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           {BRAND_NAME}
         </Link>
         <div className="flex items-center gap-2 sm:gap-4">
+          <nav className="hidden md:flex items-center gap-5 text-sm font-medium">
+            {NAV_LINKS.map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                className={dark ? "text-ink-foreground/90 hover:text-ink-foreground" : "text-foreground hover:text-primary"}
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
           {!loading && signedIn ? (
             <>
               <button
@@ -177,6 +195,8 @@ function MarketingFooter() {
         </div>
         <div className="flex justify-center gap-6">
           <Link to="/leads">Lead Lists</Link>
+          <Link to="/how-it-works">How It Works</Link>
+          <Link to="/tools">Free Tools</Link>
           <Link to="/pricing">Pricing</Link>
           <Link to="/compliance">Compliance</Link>
           <Link to="/sign-in">Sign In</Link>
