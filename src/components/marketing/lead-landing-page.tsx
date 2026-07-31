@@ -3,7 +3,7 @@ import { ArrowRight, Check, Clock, Download, MessageSquare, Search, ShieldCheck,
 import { Button } from "@/components/ui/button";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
-import { CONTENT_UPDATED, REFERENCE_FUNNEL, crossLinks, type LeadPage } from "@/lib/lead-pages";
+import { CONTENT_UPDATED, REFERENCE_FUNNEL, crossLinks, startSearchLink, type LeadPage } from "@/lib/lead-pages";
 
 /**
  * The single skeleton every programmatic landing page renders through
@@ -11,6 +11,8 @@ import { CONTENT_UPDATED, REFERENCE_FUNNEL, crossLinks, type LeadPage } from "@/
  */
 export function LeadLandingPage({ page }: { page: LeadPage }) {
   const links = crossLinks(page);
+  const ctaSearch = startSearchLink(page);
+  const ctaLabel = page.nicheLabel ? `Start Free — ${page.nicheLabel} Search` : "Start Free";
 
   return (
     <MarketingLayout>
@@ -40,8 +42,8 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" className="rounded-full">
-              <Link to="/auth" search={{ mode: "signup" }}>
-                Start Free <ArrowRight className="ml-1 h-4 w-4" />
+              <Link to="/auth" search={ctaSearch}>
+                {ctaLabel} <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-full">
