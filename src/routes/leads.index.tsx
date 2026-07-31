@@ -209,9 +209,9 @@ function LeadsIndex() {
                   <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <th className="w-[28%] px-4 py-3">Business</th>
                     <th className="w-[15%] px-4 py-3">Phone</th>
-                    <th className="w-[25%] px-4 py-3">Email</th>
+                    <th className="w-[22%] px-4 py-3">Email</th>
                     <th className="w-[15%] px-4 py-3">Website</th>
-                    <th className="w-[7%] px-4 py-3">Ready</th>
+                    <th className="w-[10%] px-4 py-3">Verified</th>
                     <th className="w-[10%] px-4 py-3">City</th>
                   </tr>
                 </thead>
@@ -232,21 +232,26 @@ function LeadsIndex() {
                             {r.phone}
                           </span>
                         </td>
-                        <td className="w-[25%] px-4 py-3 text-muted-foreground">
+                        <td className="w-[22%] px-4 py-3 text-muted-foreground">
                           <span className="block truncate" title={r.email}>{r.email}</span>
                         </td>
                         <td className="w-[15%] px-4 py-3 text-muted-foreground">
                           <span className="block truncate" title={r.website}>{domain}</span>
                         </td>
-                        <td className="w-[7%] px-4 py-3">
+                        <td className="w-[10%] px-4 py-3">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="inline-flex cursor-default items-center justify-center rounded-full bg-primary/10 p-1.5">
-                                <Check className="h-4 w-4 text-primary" />
+                              <span className="inline-flex cursor-default items-center gap-1.5 whitespace-nowrap">
+                                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 p-1.5">
+                                  <Smartphone className="h-3.5 w-3.5 text-primary" />
+                                </span>
+                                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 p-1.5">
+                                  <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                                </span>
                               </span>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Mobile verified, DNC checked, litigator checked.</p>
+                              <p>Mobile verified · DNC scrubbed · Litigator checked</p>
                             </TooltipContent>
                           </Tooltip>
                         </td>
@@ -271,7 +276,7 @@ function LeadsIndex() {
           </p>
           <Button asChild size="lg" variant="outline" className="mt-6 rounded-full">
             <Link to="/leads/$slug" params={{ slug: "sms-lead-outreach" }}>
-              Learn About SMS <ArrowRight className="ml-1 h-4 w-4" />
+              Launch A Campaign <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
         </div>
@@ -306,26 +311,32 @@ function LeadsIndex() {
       <section className="border-y border-border bg-surface py-14">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">Lead Lists By Niche</h2>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">Every List:</span>
+            {NICHE_FACTS.map((f) => (
+              <span key={f.label} className="inline-flex items-center gap-1.5">
+                <f.icon className="h-4 w-4 shrink-0 text-primary" /> {f.label}
+              </span>
+            ))}
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             {niches.map((p) => (
               <Link
                 key={p.slug}
                 to="/leads/$slug"
                 params={{ slug: p.slug }}
-                className="rounded-2xl border border-border bg-background p-6 transition-colors hover:border-primary"
+                className="group flex items-center gap-3 rounded-2xl border border-border bg-background p-4 transition-colors hover:border-primary"
               >
-                <div className="font-display text-lg font-black text-foreground">
-                  {p.nicheLabel ?? p.title}
-                </div>
-                <ul className="mt-3 space-y-1.5 text-sm">
-                  {NICHE_FACTS.map((f) => (
-                    <li key={f.label} className="flex items-center gap-2 font-semibold text-foreground">
-                      <f.icon className="h-4 w-4 shrink-0 text-primary" /> {f.label}
-                    </li>
-                  ))}
-                </ul>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                  View Leads <ArrowRight className="h-3.5 w-3.5" />
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <Building2 className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-display text-base font-black text-foreground">
+                    {p.nicheLabel ?? p.title}
+                  </span>
+                  <span className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                    View Leads <ArrowRight className="h-3 w-3" />
+                  </span>
                 </span>
               </Link>
             ))}
