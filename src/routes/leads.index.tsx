@@ -124,6 +124,17 @@ function LeadsIndex() {
             ))}
           </div>
 
+          <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+            {WORKFLOW_STEPS.map((step, i) => (
+              <>
+                <span key={step} className="text-foreground">{step}</span>
+                {i < WORKFLOW_STEPS.length - 1 && (
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+              </>
+            ))}
+          </div>
+
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="rounded-full">
               <Link to="/auth">
