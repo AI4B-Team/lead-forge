@@ -700,6 +700,65 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_alerts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          notified_at: string | null
+          provider_key: string
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          notified_at?: string | null
+          provider_key: string
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          notified_at?: string | null
+          provider_key?: string
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_alerts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_status: {
+        Row: {
+          key: string
+          message: string | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          message?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          message?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       quick_replies: {
         Row: {
           body: string
