@@ -126,14 +126,6 @@ function MiniWorkflow({
   );
 }
 
-function PillarArrowLegacy() {
-  return (
-    <div className="flex items-center justify-center py-1 md:py-0">
-      <ArrowRight className="arrow-nudge h-6 w-6 rotate-90 text-primary md:h-8 md:w-8 md:rotate-0" />
-    </div>
-  );
-}
-
 function PillarCard({
   icon,
   title,
