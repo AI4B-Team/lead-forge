@@ -37,7 +37,7 @@ const STAGES = [
   {
     icon: Building2,
     name: "Verify Contacts",
-    body: "Remove duplicates, filter out franchise locations, and standardize every record.",
+    body: "Remove duplicates, identify mobile and landline numbers, standardize every record, and prepare the list for the next step.",
     time: "~20 seconds",
   },
   {
