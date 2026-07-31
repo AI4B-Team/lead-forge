@@ -431,7 +431,7 @@ function LeadsIndex() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-full">
-              <Link to="#sample">
+              <Link to="#sample-list">
                 See Sample Export
               </Link>
             </Button>
