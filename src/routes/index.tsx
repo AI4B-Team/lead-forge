@@ -24,7 +24,7 @@ import { MarketingNav, ComplianceStrip, MarketingFooter } from "@/components/mar
 import { PromptHero } from "@/components/marketing/prompt-hero";
 import { TemplateCard } from "@/components/marketing/template-card";
 import { TEMPLATES } from "@/lib/templates";
-import { INDUSTRIES } from "@/lib/mock-data";
+import { IndustryPreview } from "@/components/marketing/industry-preview";
 
 export const Route = createFileRoute("/")({
   head: () => ({
