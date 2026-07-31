@@ -11,6 +11,7 @@ import {
   Inbox,
   BarChart3,
   BrainCircuit,
+  Sparkles,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,6 +31,7 @@ import { unreadCount } from "@/lib/inbox.functions";
 
 const ITEMS = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/app/assistant", label: "AI Assistant", icon: Sparkles },
   { to: "/app/new-job", label: "New Job", icon: Plus },
   { to: "/app/lists", label: "Lists", icon: ListChecks },
   { to: "/app/brands", label: "Brands", icon: BrainCircuit },

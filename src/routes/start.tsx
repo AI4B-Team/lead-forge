@@ -12,7 +12,7 @@ function StartRedirect() {
     (async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        navigate({ to: "/app/new-job/business", replace: true });
+        navigate({ to: "/app/assistant", replace: true });
       } else {
         const returning = (() => {
           try {

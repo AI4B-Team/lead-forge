@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app/page-header";
-import { Search, Landmark, Upload, ArrowRight } from "lucide-react";
+import { Search, Landmark, Upload, ArrowRight, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/new-job")({
   head: () => ({ meta: [{ title: "New Job — LeadTrace" }] }),
@@ -14,6 +14,12 @@ function NewJob() {
   if (!isRoot) return <Outlet />;
 
   const doors = [
+    {
+      to: "/app/assistant",
+      icon: Sparkles,
+      title: "Ask The AI Assistant",
+      body: "Describe The Leads You Want. It Assembles The Job, You Review And Run.",
+    },
     {
       to: "/app/new-job/business",
       icon: Search,
@@ -40,7 +46,7 @@ function NewJob() {
         title="Start A New Job"
         description="Three doors in. One compliant pipeline out. Pick a source to begin."
       />
-      <div className="grid md:grid-cols-3 gap-5">
+      <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5">
         {doors.map((d) => (
           <Link
             key={d.to}
