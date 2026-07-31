@@ -35,6 +35,8 @@ import { Route as AgencyRouteImport } from './routes/agency'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LeadsIndexRouteImport } from './routes/leads.index'
+import { Route as LeadsSlugRouteImport } from './routes/leads.$slug'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
@@ -191,6 +193,16 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeadsIndexRoute = LeadsIndexRouteImport.update({
+  id: '/leads/',
+  path: '/leads/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeadsSlugRoute = LeadsSlugRouteImport.update({
+  id: '/leads/$slug',
+  path: '/leads/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
@@ -376,6 +388,8 @@ export interface FileRoutesByFullPath {
   '/start': typeof StartRoute
   '/templates': typeof TemplatesRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/leads/$slug': typeof LeadsSlugRoute
+  '/leads/': typeof LeadsIndexRoute
   '/app/account': typeof AuthenticatedAppAccountRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/assistant': typeof AuthenticatedAppAssistantRoute
@@ -430,6 +444,8 @@ export interface FileRoutesByTo {
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
   '/templates': typeof TemplatesRoute
+  '/leads/$slug': typeof LeadsSlugRoute
+  '/leads': typeof LeadsIndexRoute
   '/app/account': typeof AuthenticatedAppAccountRoute
   '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/assistant': typeof AuthenticatedAppAssistantRoute
@@ -487,6 +503,8 @@ export interface FileRoutesById {
   '/start': typeof StartRoute
   '/templates': typeof TemplatesRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/leads/$slug': typeof LeadsSlugRoute
+  '/leads/': typeof LeadsIndexRoute
   '/_authenticated/app/account': typeof AuthenticatedAppAccountRoute
   '/_authenticated/app/admin': typeof AuthenticatedAppAdminRoute
   '/_authenticated/app/assistant': typeof AuthenticatedAppAssistantRoute
@@ -544,6 +562,8 @@ export interface FileRouteTypes {
     | '/start'
     | '/templates'
     | '/app'
+    | '/leads/$slug'
+    | '/leads/'
     | '/app/account'
     | '/app/admin'
     | '/app/assistant'
@@ -598,6 +618,8 @@ export interface FileRouteTypes {
     | '/solar'
     | '/start'
     | '/templates'
+    | '/leads/$slug'
+    | '/leads'
     | '/app/account'
     | '/app/admin'
     | '/app/assistant'
@@ -654,6 +676,8 @@ export interface FileRouteTypes {
     | '/start'
     | '/templates'
     | '/_authenticated/app'
+    | '/leads/$slug'
+    | '/leads/'
     | '/_authenticated/app/account'
     | '/_authenticated/app/admin'
     | '/_authenticated/app/assistant'
@@ -710,6 +734,8 @@ export interface RootRouteChildren {
   SolarRoute: typeof SolarRoute
   StartRoute: typeof StartRoute
   TemplatesRoute: typeof TemplatesRoute
+  LeadsSlugRoute: typeof LeadsSlugRoute
+  LeadsIndexRoute: typeof LeadsIndexRoute
   ApiPublicHooksInboundSmsRoute: typeof ApiPublicHooksInboundSmsRoute
   ApiPublicHooksTelnyxDlrRoute: typeof ApiPublicHooksTelnyxDlrRoute
   ApiPublicHooksTelnyxInboundRoute: typeof ApiPublicHooksTelnyxInboundRoute
@@ -898,6 +924,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leads/': {
+      id: '/leads/'
+      path: '/leads'
+      fullPath: '/leads/'
+      preLoaderRoute: typeof LeadsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leads/$slug': {
+      id: '/leads/$slug'
+      path: '/leads/$slug'
+      fullPath: '/leads/$slug'
+      preLoaderRoute: typeof LeadsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app': {
@@ -1205,6 +1245,8 @@ const rootRouteChildren: RootRouteChildren = {
   SolarRoute: SolarRoute,
   StartRoute: StartRoute,
   TemplatesRoute: TemplatesRoute,
+  LeadsSlugRoute: LeadsSlugRoute,
+  LeadsIndexRoute: LeadsIndexRoute,
   ApiPublicHooksInboundSmsRoute: ApiPublicHooksInboundSmsRoute,
   ApiPublicHooksTelnyxDlrRoute: ApiPublicHooksTelnyxDlrRoute,
   ApiPublicHooksTelnyxInboundRoute: ApiPublicHooksTelnyxInboundRoute,
