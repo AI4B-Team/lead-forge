@@ -387,7 +387,7 @@ function FeaturesSection() {
         <SectionHeading
           eyebrow="Features"
           title="Everything Between Raw Data And Ready-To-Contact."
-          subtitle="Bring data in from anywhere, let LeadTrace clean and verify it automatically, then launch compliant outreach — in that order."
+          subtitle="Bring data in from anywhere, let LeadTrace clean and verify it automatically, then launch compliant outreach."
         />
         <div className="mt-12 grid gap-4 md:grid-cols-2">
           {features.map((f) => (
@@ -479,7 +479,7 @@ function SectionHeading({
       <h2 className="mt-3 font-display text-4xl md:text-5xl font-black text-foreground leading-tight">
         {title}
       </h2>
-      {subtitle && <p className="mt-4 text-base text-muted-foreground">{subtitle}</p>}
+      {subtitle && <p className="mt-4 text-base text-muted-foreground whitespace-nowrap">{subtitle}</p>}
     </div>
   );
 }
