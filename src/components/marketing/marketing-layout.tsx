@@ -54,6 +54,24 @@ export function MarketingLayout({ children }: { children: ReactNode }) {
   );
 }
 
+const NAV_LINKS = [
+  { to: "/leads", label: "Lead Lists" },
+  { to: "/how-it-works", label: "How It Works" },
+  { to: "/tools", label: "Free Tools" },
+  { to: "/pricing", label: "Pricing" },
+] as const;
+
+function Unused() {
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <MarketingNav />
+      <main className="flex-1">{children}</main>
+      <ComplianceStrip />
+      <MarketingFooter />
+    </div>
+  );
+}
+
 export { ComplianceStrip, MarketingFooter };
 
 export function MarketingNav({ dark = false }: { dark?: boolean }) {
