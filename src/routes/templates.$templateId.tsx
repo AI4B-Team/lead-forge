@@ -11,7 +11,7 @@ import {
   templateFields,
 } from "@/lib/templates";
 
-export const Route = createFileRoute("/templates/")({
+export const Route = createFileRoute("/templates/$templateId")({
   loader: ({ params }) => {
     const template = getTemplate(params.templateId);
     if (!template) throw notFound();

@@ -39,6 +39,7 @@ import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as LeadsIndexRouteImport } from './routes/leads.index'
 import { Route as ToolsLineTypeCheckerRouteImport } from './routes/tools.line-type-checker'
 import { Route as ToolsDncCheckerRouteImport } from './routes/tools.dnc-checker'
+import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as LeadsSlugRouteImport } from './routes/leads.$slug'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
@@ -216,6 +217,11 @@ const ToolsLineTypeCheckerRoute = ToolsLineTypeCheckerRouteImport.update({
 const ToolsDncCheckerRoute = ToolsDncCheckerRouteImport.update({
   id: '/tools/dnc-checker',
   path: '/tools/dnc-checker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
+  id: '/templates/$templateId',
+  path: '/templates/$templateId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeadsSlugRoute = LeadsSlugRouteImport.update({
@@ -406,6 +412,7 @@ export interface FileRoutesByFullPath {
   '/start': typeof StartRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/leads/$slug': typeof LeadsSlugRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
   '/leads/': typeof LeadsIndexRoute
@@ -465,6 +472,7 @@ export interface FileRoutesByTo {
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
   '/leads/$slug': typeof LeadsSlugRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
   '/leads': typeof LeadsIndexRoute
@@ -527,6 +535,7 @@ export interface FileRoutesById {
   '/start': typeof StartRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/leads/$slug': typeof LeadsSlugRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
   '/leads/': typeof LeadsIndexRoute
@@ -589,6 +598,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/app'
     | '/leads/$slug'
+    | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
     | '/leads/'
@@ -648,6 +658,7 @@ export interface FileRouteTypes {
     | '/solar'
     | '/start'
     | '/leads/$slug'
+    | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
     | '/leads'
@@ -709,6 +720,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/_authenticated/app'
     | '/leads/$slug'
+    | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
     | '/leads/'
@@ -770,6 +782,7 @@ export interface RootRouteChildren {
   SolarRoute: typeof SolarRoute
   StartRoute: typeof StartRoute
   LeadsSlugRoute: typeof LeadsSlugRoute
+  TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsDncCheckerRoute: typeof ToolsDncCheckerRoute
   ToolsLineTypeCheckerRoute: typeof ToolsLineTypeCheckerRoute
   LeadsIndexRoute: typeof LeadsIndexRoute
@@ -991,6 +1004,13 @@ declare module '@tanstack/react-router' {
       path: '/tools/dnc-checker'
       fullPath: '/tools/dnc-checker'
       preLoaderRoute: typeof ToolsDncCheckerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates/$templateId': {
+      id: '/templates/$templateId'
+      path: '/templates/$templateId'
+      fullPath: '/templates/$templateId'
+      preLoaderRoute: typeof TemplatesTemplateIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leads/$slug': {
@@ -1305,6 +1325,7 @@ const rootRouteChildren: RootRouteChildren = {
   SolarRoute: SolarRoute,
   StartRoute: StartRoute,
   LeadsSlugRoute: LeadsSlugRoute,
+  TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsDncCheckerRoute: ToolsDncCheckerRoute,
   ToolsLineTypeCheckerRoute: ToolsLineTypeCheckerRoute,
   LeadsIndexRoute: LeadsIndexRoute,
