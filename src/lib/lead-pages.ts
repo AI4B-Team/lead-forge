@@ -20,6 +20,8 @@ export type LeadPage = {
   slug: string;
   kind: "niche" | "stage";
   title: string;
+  /** Niche label used to prefill the New Search screen (spec §9.5). */
+  nicheLabel?: string;
   tags: string[];
   valueProp: string;
   rows: SampleRow[];
