@@ -387,7 +387,7 @@ function FeaturesSection() {
                   Step {gi + 1} · {g.caption}
                 </span>
               </div>
-              <div className="mt-5 grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="mt-5 grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {g.features.map((f) => (
                   <FeatureCard key={f.title} f={f} />
                 ))}
