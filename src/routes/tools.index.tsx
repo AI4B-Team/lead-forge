@@ -47,13 +47,11 @@ const TOOLS = [
 
 const UPCOMING = [
   "Carrier Lookup",
-  "Area Code Lookup",
   "Email Domain Checker",
   "Phone Number Formatter",
   "SMS Segment Calculator",
   "CSV Cleaner",
   "Duplicate Checker",
-  "Business Name Normalizer",
 ] as const;
 
 function ToolCard({ tool }: { tool: (typeof TOOLS)[number] }) {
