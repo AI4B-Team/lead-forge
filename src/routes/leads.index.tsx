@@ -108,21 +108,8 @@ function LeadsIndex() {
           <h1 className="font-display text-4xl md:text-6xl font-black leading-[1.05] text-foreground">
             Lead Lists You Can Actually Contact.
           </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-relaxed text-muted-foreground">
-            Build a new lead list from multiple data sources or upload your own. Every list can be cleaned,
-            enriched, mobile verified, skip-traced, scrubbed against the National DNC Registry, and prepared
-            for outreach before you ever contact a prospect.
-          </p>
 
-          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
-            {BADGES.map((b) => (
-              <span key={b} className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <Check className="h-4 w-4 text-primary" /> {b}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-5 inline-flex flex-wrap items-center gap-2 text-sm font-semibold text-muted-foreground">
+          <div className="mt-6 inline-flex flex-wrap items-center gap-2 text-sm font-semibold text-muted-foreground">
             {WORKFLOW_STEPS.map((step, i) => (
               <span key={step} className="inline-flex items-center gap-2 last:mr-0">
                 <span className="text-foreground">{step}</span>
@@ -132,6 +119,11 @@ function LeadsIndex() {
               </span>
             ))}
           </div>
+
+          <p className="mt-5 max-w-3xl text-lg leading-relaxed text-muted-foreground">
+            Build a new lead list from multiple data sources or upload your own.
+            LeadTrace cleans, enriches, verifies, and prepares every list for outreach.
+          </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="rounded-full">
