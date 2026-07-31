@@ -71,10 +71,10 @@ export function ProviderStatusBanner({
       {down.map((p) => (
         <div
           key={p.key}
-          className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm"
+          className="rounded-2xl border border-warn/40 bg-warn/10 p-4 text-sm"
         >
           <div className="flex items-start gap-3">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warn" />
             <div className="flex-1">
               <div className="font-semibold text-foreground">
                 {LABELS[p.key] ?? p.key} Is {p.state === "down" ? "Under Maintenance" : "Running Slow"}
