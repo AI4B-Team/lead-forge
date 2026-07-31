@@ -2,10 +2,10 @@ import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { Button } from "@/components/ui/button";
-import { Bell, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { ProfileDropdown } from "@/components/app/profile-dropdown";
-import { ThemeToggle } from "@/components/app/theme-toggle";
+import { NotificationBell } from "@/components/app/notification-bell";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -27,10 +27,7 @@ function AppLayout() {
               <Button asChild size="sm" variant="outline" className="rounded-full">
                 <Link to="/app/billing"><Zap className="mr-1 h-3.5 w-3.5" /> Top Up Credits</Link>
               </Button>
-              <Button size="icon" variant="ghost">
-                <Bell className="h-4 w-4" />
-              </Button>
-              <ThemeToggle />
+              <NotificationBell />
               <ProfileDropdown />
             </div>
           </header>
