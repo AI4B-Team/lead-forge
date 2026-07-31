@@ -50,6 +50,21 @@ export const listJobs = createServerFn({ method: "GET" })
   });
 
 // Paginated lead browser for the Job Detail drawer.
+// Live narration feed for the job progress screen.
+export const listJobEvents = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ jobId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: events, error } = await context.supabase
+      .from("job_events")
+      .select("id, stage, message, count, created_at")
+      .eq("job_id", data.jobId)
+      .order("created_at", { ascending: true })
+      .limit(200);
+    if (error) throw error;
+    return { events: events ?? [] };
+  });
+
 export const listJobLeads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
