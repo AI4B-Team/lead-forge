@@ -494,7 +494,7 @@ const NICHE_SEEDS: NicheSeed[] = [
     entries: [
       ["Bayline Capital Funding", "baylinecapital.com"],
       ["Ironwood Bridge Loans", "ironwoodbridge.com"],
-      ["Summit Ridge Lending Group", "summitridge lending.com"],
+      ["Summit Ridge Lending Group", "summitridge-lending.com"],
       ["Palm Harbor Private Capital", "palmharborpc.com"],
       ["Clearwater Equity Lending", "clearwaterequity.com"],
     ],
