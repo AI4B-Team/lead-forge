@@ -158,6 +158,13 @@ function LeadsIndex() {
             How Every List Gets Prepared
           </h2>
           <PipelineFlow stages={REFERENCE_FUNNEL} className="mt-8" />
+          <div className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center justify-center gap-3 text-sm font-semibold text-foreground">
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">{REFERENCE_FUNNEL.clean} Ready To Contact</span>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            <span className="rounded-full border border-border bg-surface px-3 py-1">Launch SMS Campaign</span>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            <span className="rounded-full border border-border bg-surface px-3 py-1">Replies Start Coming In</span>
+          </div>
           <p className="mx-auto mt-6 max-w-3xl text-sm text-muted-foreground">
             A real reference search. The 554 delivered records are the ones you text.
           </p>
