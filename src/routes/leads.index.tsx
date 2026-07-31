@@ -106,13 +106,13 @@ function LeadsIndex() {
       </section>
 
       {/* Pipeline flow */}
-      <section className="border-y border-border bg-surface-muted py-14">
+      <section className="border-y border-border bg-surface-muted py-14 text-center">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
             What Happens To 1,240 Businesses Before You Get Them
           </h2>
           <PipelineFlow stages={REFERENCE_FUNNEL} className="mt-8" />
-          <p className="mt-6 max-w-3xl text-sm text-muted-foreground">
+          <p className="mx-auto mt-6 max-w-3xl text-sm text-muted-foreground">
             A real reference search. The 554 delivered records are the ones you text — the 686 removed
             records are why you don't get complaints or demand letters.
           </p>

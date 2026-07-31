@@ -30,7 +30,7 @@ export function PipelineFlow({
           <div
             key={s.key}
             className={cn(
-              "relative rounded-2xl border p-5",
+              "relative flex flex-col items-center rounded-2xl border p-5 text-center",
               last ? "border-primary bg-primary/5" : "border-border bg-surface",
             )}
           >
