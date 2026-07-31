@@ -165,6 +165,7 @@ function Assistant() {
       <PageHeader
         title="AI Lead Assistant"
         description="Describe The Leads You Want. Watch The Job Spec Build Itself On The Right, And Edit Anything Before You Run."
+        descriptionClassName="whitespace-nowrap"
       />
 
       <div className="grid lg:grid-cols-[1fr_380px] gap-6 items-start">
