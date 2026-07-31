@@ -95,16 +95,6 @@ const BENEFITS: Record<string, { title: string; body: string }> = {
   },
 };
 
-const SOURCES = [
-  { icon: Database, label: "Public Business Data" },
-  { icon: FileSpreadsheet, label: "Public Records" },
-  { icon: Upload, label: "Multiple Data Sources" },
-  { icon: Phone, label: "Carrier Data" },
-  { icon: ShieldCheck, label: "Compliance Data" },
-];
-
-const PROMISES = ["Freshly Generated", "Never Resold", "Built On Demand", "Export Ready"];
-
 function LeadsIndex() {
   const niches = LEAD_PAGES.filter((p) => p.kind === "niche");
   const stages = LEAD_PAGES.filter((p) => p.kind === "stage").sort(
