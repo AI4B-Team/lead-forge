@@ -16,6 +16,9 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  Database,
+  Settings2,
+  Rocket,
 } from "lucide-react";
 import { MarketingNav, ComplianceStrip, MarketingFooter } from "@/components/marketing/marketing-layout";
 import { PromptHero } from "@/components/marketing/prompt-hero";
