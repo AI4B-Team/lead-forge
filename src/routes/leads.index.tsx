@@ -44,8 +44,10 @@ const BADGES = [
   "Upload Your Own Lists",
   "Mobile Verified",
   "Skip Trace Available",
-  "DNC Scrubbed",
+  "Outreach Ready",
 ];
+
+const WORKFLOW_STEPS = ["Generate Lists", "Clean & Verify", "Launch Outreach"];
 
 const NICHE_FACTS = [
   { icon: Globe, label: "Nationwide" },
