@@ -83,7 +83,7 @@ function TemplateTeaser() {
         <div className="flex items-end justify-between gap-4 mb-6">
           <div className="flex flex-col items-start gap-1">
             <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">
-              Not Sure Where To Start? Try One Of These…
+              Not Sure Where to Start? Try One of These…
             </h2>
             <Link to="/templates" className="text-sm font-semibold text-primary hover:underline">
               View All Templates →

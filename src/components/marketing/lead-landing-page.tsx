@@ -57,7 +57,7 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
       <section className="border-y border-border bg-surface py-14">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
-            Here's Exactly What A Clean List Looks Like
+            Here's Exactly What a Clean List Looks Like
           </h2>
           <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-background">
             <table className="w-full min-w-[860px] text-sm">
@@ -119,7 +119,7 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
       <section className="border-y border-border bg-surface py-14">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <h2 className="font-display text-3xl md:text-4xl font-black text-foreground">
-            Type A Niche And A County. Get A Clean List In Minutes.
+            Type a Niche and a County. Get a Clean List in Minutes.
           </h2>
           <Button asChild size="lg" className="mt-7 rounded-full">
             <Link to="/auth" search={ctaSearch}>
@@ -177,7 +177,7 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
             <ShieldCheck className="h-3.5 w-3.5 text-primary" /> The Moat
           </div>
           <h2 className="mt-5 font-display text-3xl md:text-4xl font-black text-foreground">
-            Compliant By Default — Not By Discipline.
+            Compliant by Default — Not by Discipline.
           </h2>
           <p className="mt-5 text-base leading-relaxed text-muted-foreground">
             Every list is scrubbed against the National DNC Registry and a continuously updated
@@ -261,7 +261,7 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
             </ul>
           </div>
           <div>
-            <h2 className="font-display text-xl font-black text-foreground">How The Pipeline Works</h2>
+            <h2 className="font-display text-xl font-black text-foreground">How the Pipeline Works</h2>
             <ul className="mt-4 space-y-2 text-sm">
               {links.stages.map((p) => (
                 <li key={p.slug}>

@@ -213,7 +213,7 @@ function LeadsIndex() {
       <section className="border-t border-border bg-surface-muted py-14">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
-            Already Have A Lead List?
+            Already Have a Lead List?
           </h2>
           <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
             Upload your CSV and let LeadTrace do the cleanup — CRM exports, trade show lists, purchased
@@ -237,7 +237,7 @@ function LeadsIndex() {
       {/* Niches */}
       <section className="border-y border-border bg-surface py-14">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">Lead Lists By Niche</h2>
+          <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">Lead Lists by Niche</h2>
           <div className="mt-8 grid gap-5 md:grid-cols-3">
             {niches.map((p) => (
               <Link

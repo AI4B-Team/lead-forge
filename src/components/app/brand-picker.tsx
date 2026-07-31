@@ -85,7 +85,7 @@ export function BrandPicker({
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="font-display">Create A Brand</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-display">Create a Brand</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div>
                 <Label>Brand / Product / Service Name</Label>

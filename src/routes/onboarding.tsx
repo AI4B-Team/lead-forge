@@ -126,7 +126,7 @@ function Onboarding() {
       <MarketingNav />
       <main className="flex-1">
         <section className="mx-auto max-w-2xl px-6 py-14">
-          <h1 className="font-display text-4xl font-black text-foreground">Set Up Your Workspace.</h1>
+          <h1 className="font-display text-4xl font-black text-foreground">Set up Your Workspace.</h1>
           <p className="text-muted-foreground mt-2">
             Pick Your Industry To Unlock Preset Templates And Starter Credits.
           </p>

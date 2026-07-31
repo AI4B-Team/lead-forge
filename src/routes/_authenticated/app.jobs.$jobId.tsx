@@ -312,7 +312,7 @@ function LeadsBrowser({ jobId, disabled }: { jobId: string; disabled: boolean })
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="font-display">Leads In This List</SheetTitle>
+          <SheetTitle className="font-display">Leads in This List</SheetTitle>
         </SheetHeader>
         <div className="mt-4 flex gap-2">
           <div className="relative flex-1">

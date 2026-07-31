@@ -28,7 +28,7 @@ function Compliance() {
       <section className="mx-auto max-w-6xl px-6 py-20">
         <div className="text-primary text-xs font-semibold uppercase tracking-[0.18em]">Compliance</div>
         <h1 className="mt-3 font-display text-5xl font-black text-foreground leading-tight max-w-3xl">
-          Compliance Is Not Fine Print. It Is The Product.
+          Compliance Is Not Fine Print. It Is the Product.
         </h1>
         <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
           LeadTrace is the platform and carries the liability. That is why every guardrail below is
