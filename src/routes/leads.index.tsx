@@ -93,6 +93,59 @@ const BENEFITS: Record<string, { title: string; body: string }> = {
 };
 
 function LeadsIndex() {
+  return <LeadsIndexBody />;
+}
+
+function PillarArrow() {
+  return (
+    <div className="flex items-center justify-center py-1 md:py-0">
+      <ArrowRight className="arrow-nudge h-6 w-6 rotate-90 text-primary md:h-8 md:w-8 md:rotate-0" />
+    </div>
+  );
+}
+
+function PillarCard({
+  icon,
+  title,
+  items,
+  footLabel,
+  highlight = false,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  items: { icon: React.ReactNode; label: string }[];
+  footLabel: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`flex h-full flex-col rounded-2xl border bg-background p-6 ${
+        highlight ? "border-primary/40 shadow-lg" : "border-border"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+          {icon}
+        </div>
+        <h3 className="font-display text-lg font-black text-foreground">{title}</h3>
+      </div>
+      <div className="mt-4 h-px w-full bg-border" />
+      <ul className="mt-4 space-y-2.5">
+        {items.map((item) => (
+          <li key={item.label} className="flex items-center gap-2.5 text-sm text-foreground">
+            <span className="text-primary">{item.icon}</span>
+            <span className="min-w-0 truncate">{item.label}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-auto pt-5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {footLabel}
+      </div>
+    </div>
+  );
+}
+
+function LeadsIndexBody() {
   const niches = LEAD_PAGES.filter((p) => p.kind === "niche");
   const stages = LEAD_PAGES.filter((p) => p.kind === "stage").sort(
     (a, b) => BENEFIT_ORDER.indexOf(a.slug) - BENEFIT_ORDER.indexOf(b.slug),
