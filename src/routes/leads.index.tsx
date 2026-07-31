@@ -44,8 +44,10 @@ const BADGES = [
   "Upload Your Own Lists",
   "Mobile Verified",
   "Skip Trace Available",
-  "DNC Scrubbed",
+  "Outreach Ready",
 ];
+
+const WORKFLOW_STEPS = ["Generate Lists", "Clean & Verify", "Launch Outreach"];
 
 const NICHE_FACTS = [
   { icon: Globe, label: "Nationwide" },
@@ -122,6 +124,17 @@ function LeadsIndex() {
             ))}
           </div>
 
+          <div className="mt-5 inline-flex flex-wrap items-center gap-2 text-sm font-semibold text-muted-foreground">
+            {WORKFLOW_STEPS.map((step, i) => (
+              <span key={step} className="inline-flex items-center gap-2 last:mr-0">
+                <span className="text-foreground">{step}</span>
+                {i < WORKFLOW_STEPS.length - 1 && (
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+              </span>
+            ))}
+          </div>
+
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="rounded-full">
               <Link to="/auth">
@@ -145,6 +158,13 @@ function LeadsIndex() {
             How Every List Gets Prepared
           </h2>
           <PipelineFlow stages={REFERENCE_FUNNEL} className="mt-8" />
+          <div className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center justify-center gap-3 text-sm font-semibold text-foreground">
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">{REFERENCE_FUNNEL.clean} Ready To Contact</span>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            <span className="rounded-full border border-border bg-surface px-3 py-1">Launch SMS Campaign</span>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            <span className="rounded-full border border-border bg-surface px-3 py-1">Replies Start Coming In</span>
+          </div>
           <p className="mx-auto mt-6 max-w-3xl text-sm text-muted-foreground">
             A real reference search. The 554 delivered records are the ones you text.
           </p>
@@ -208,6 +228,22 @@ function LeadsIndex() {
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      {/* Ready to reach out? */}
+      <section className="border-t border-border bg-surface-muted py-14">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">Ready To Reach Out?</h2>
+          <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
+            Your list doesn't stop at export. Launch compliant SMS campaigns with local numbers, automated
+            follow-ups, and built-in STOP handling.
+          </p>
+          <Button asChild size="lg" variant="outline" className="mt-6 rounded-full">
+            <Link to="/leads/$slug" params={{ slug: "sms-lead-outreach" }}>
+              Learn About SMS <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </section>
 
