@@ -154,7 +154,10 @@ export const runJob = createServerFn({ method: "POST" })
     await supabase.from("jobs").update({ status: "scraping" }).eq("id", jobId);
     await say("scraping", "Searching the source for matching records…");
     const adapter = selectAdapter(job.source_type);
-    const raw = await adapter.run(params);
+    const sourced = await adapter.run(params);
+    // Max Results is the user's spend cap (spec §9.5) — enforce it server-side.
+    const maxResults = Number(params.max_results) > 0 ? Number(params.max_results) : null;
+    const raw = maxResults ? sourced.slice(0, maxResults) : sourced;
     await supabase.from("jobs").update({ rows_in: raw.length }).eq("id", jobId);
     await say("scraping", `Found ${raw.length.toLocaleString()} records.`, raw.length);
 
