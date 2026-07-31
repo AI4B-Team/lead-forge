@@ -68,7 +68,7 @@ function HowItWorks() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">How It Works</div>
           <h1 className="mt-3 font-display text-4xl md:text-6xl font-black leading-[1.05] text-foreground">
-            From Raw Data To Ready-To-Contact Leads
+            From Raw Data To Ready Leads
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
             Generate a new list, upload one you already have, or mix sources. Every record runs the same
