@@ -6,13 +6,10 @@ import {
   CircleCheck,
   Clock,
   Database,
-  FileSpreadsheet,
   Globe,
-  Phone,
   Settings,
   ShieldCheck,
   Smartphone,
-  Upload,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
