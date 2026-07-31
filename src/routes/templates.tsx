@@ -100,9 +100,8 @@ function TemplatesPage() {
           <h1 className="mt-6 font-display text-4xl md:text-5xl font-black text-foreground">
             Template Library
           </h1>
-          <p className="mt-3 text-lg text-muted-foreground max-w-2xl">
-            Pick A Source To Start A Job. Every Template Runs The Same Skip Trace, Scrub, And
-            Campaign Pipeline.
+          <p className="mt-3 whitespace-nowrap text-lg text-muted-foreground">
+            Pick A Source To Start A Job. Every Template Runs The Same Skip Trace, Scrub, And Campaign Pipeline.
           </p>
           <div className="mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
             <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1">
