@@ -122,13 +122,19 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
             Type A Niche And A County. Get A Clean List In Minutes.
           </h2>
           <Button asChild size="lg" className="mt-7 rounded-full">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              Start Free <ArrowRight className="ml-1 h-4 w-4" />
+            <Link to="/auth" search={ctaSearch}>
+              {ctaLabel} <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
           <p className="mt-4 text-sm text-muted-foreground">
             No download. No credit card for your first search.
           </p>
+          {page.nicheLabel && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              We open your search with <strong className="text-foreground">{page.nicheLabel}</strong> already
+              filled in — pick your county and run it.
+            </p>
+          )}
         </div>
       </section>
 
