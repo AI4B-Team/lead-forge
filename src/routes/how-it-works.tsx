@@ -99,6 +99,9 @@ function HowItWorks() {
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
             Every List Follows The Same Five Steps
           </h2>
+          <p className="mt-3 text-base font-semibold text-foreground">
+            Raw List To Ready In About 90 Seconds.
+          </p>
           <div className="mt-10 space-y-4">
             {STAGES.map((s, i) => (
               <div key={s.name}>
@@ -166,11 +169,11 @@ function HeroTransform() {
     <div className="mt-12 grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
       <div key={`in-${i}`} className="animate-fade-in rounded-2xl border border-border bg-surface p-6">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          <SourceIcon className="h-3.5 w-3.5 text-primary" /> Input · {s.sourceLabel}
+          <SourceIcon className="h-3.5 w-3.5 text-primary" /> Input · Multi-Source
         </div>
         <div className="mt-3 font-display text-2xl font-black text-foreground">{s.request}</div>
         <div className="mt-1 text-sm text-muted-foreground">
-          {s.counts[0]!.toLocaleString()} records received
+          {s.counts[0]!.toLocaleString()} records received · e.g. {s.sourceLabel}
         </div>
       </div>
       <div className="grid place-items-center text-muted-foreground">

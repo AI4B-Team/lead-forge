@@ -242,10 +242,6 @@ export function LivePipeline({ className }: { className?: string }) {
         </div>
       </div>
 
-      <p className="mt-6 text-sm text-muted-foreground">
-        Every record passes every required step before delivery — so every export meets the same quality
-        standard.
-      </p>
     </div>
   );
 }
@@ -348,7 +344,12 @@ function StageRow({
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
           {stage.sub && <span>{stage.sub}</span>}
           {skipTraceNote && (
-            <span className={cn("font-semibold", dimNote ? "text-muted-foreground/70" : "text-primary")}>
+            <span
+              className={cn(
+                "rounded-full border border-border bg-foreground/5 px-2 py-0.5 font-semibold",
+                dimNote ? "text-muted-foreground/70" : "text-foreground",
+              )}
+            >
               {skipTraceNote}
             </span>
           )}
