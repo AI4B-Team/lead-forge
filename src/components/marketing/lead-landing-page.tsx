@@ -3,7 +3,7 @@ import { ArrowRight, Check, Clock, Download, MessageSquare, Search, ShieldCheck,
 import { Button } from "@/components/ui/button";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
-import { CONTENT_UPDATED, REFERENCE_FUNNEL, crossLinks, type LeadPage } from "@/lib/lead-pages";
+import { CONTENT_UPDATED, REFERENCE_FUNNEL, crossLinks, startSearchLink, type LeadPage } from "@/lib/lead-pages";
 
 /**
  * The single skeleton every programmatic landing page renders through
@@ -11,6 +11,8 @@ import { CONTENT_UPDATED, REFERENCE_FUNNEL, crossLinks, type LeadPage } from "@/
  */
 export function LeadLandingPage({ page }: { page: LeadPage }) {
   const links = crossLinks(page);
+  const ctaSearch = startSearchLink(page);
+  const ctaLabel = page.nicheLabel ? `Start Free — ${page.nicheLabel} Search` : "Start Free";
 
   return (
     <MarketingLayout>
@@ -40,8 +42,8 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" className="rounded-full">
-              <Link to="/auth" search={{ mode: "signup" }}>
-                Start Free <ArrowRight className="ml-1 h-4 w-4" />
+              <Link to="/auth" search={ctaSearch}>
+                {ctaLabel} <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-full">
@@ -120,13 +122,19 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
             Type A Niche And A County. Get A Clean List In Minutes.
           </h2>
           <Button asChild size="lg" className="mt-7 rounded-full">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              Start Free <ArrowRight className="ml-1 h-4 w-4" />
+            <Link to="/auth" search={ctaSearch}>
+              {ctaLabel} <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
           <p className="mt-4 text-sm text-muted-foreground">
             No download. No credit card for your first search.
           </p>
+          {page.nicheLabel && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              We open your search with <strong className="text-foreground">{page.nicheLabel}</strong> already
+              filled in — pick your county and run it.
+            </p>
+          )}
         </div>
       </section>
 
@@ -134,6 +142,23 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
       <section className="bg-background py-16">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">Who This Is For</h2>
+          {page.nicheLabel && (
+            <div className="mt-8 rounded-2xl border border-border bg-surface p-7 md:flex md:items-center md:justify-between md:gap-8">
+              <div>
+                <div className="font-display text-xl font-black text-foreground">
+                  Don't Want To Run It Yourself? We'll Run It For You.
+                </div>
+                <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                  Tell us the niche and the geography. We deliver all three files — Clean List, DNC List,
+                  Litigator List — and can launch the texting campaign for you. Same pipeline, same audit
+                  trail, none of the clicking.
+                </p>
+              </div>
+              <Button asChild size="lg" variant="outline" className="mt-5 shrink-0 rounded-full md:mt-0">
+                <Link to="/pricing">See Done-For-You Pricing</Link>
+              </Button>
+            </div>
+          )}
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             {page.personas.map((p) => (
               <div key={p.title} className="rounded-2xl border border-border bg-surface p-6">

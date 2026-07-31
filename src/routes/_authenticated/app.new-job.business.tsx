@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
 import { PageHeader } from "@/components/app/page-header";
+import { ProviderStatusBanner } from "@/components/app/provider-status-banner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -14,6 +16,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
 
 export const Route = createFileRoute("/_authenticated/app/new-job/business")({
+  validateSearch: z.object({ niche: z.string().optional() }),
   head: () => ({ meta: [{ title: "Scrape A Niche — LeadTrace" }] }),
   component: Wizard,
 });
@@ -33,9 +36,10 @@ const STATE_NAMES: Record<string, string> = {
 
 function Wizard() {
   const navigate = useNavigate();
+  const { niche: nicheParam } = Route.useSearch();
   const { workspaceId } = useWorkspaceId();
   const runJobFn = useServerFn(runJob);
-  const [picked, setPicked] = useState<string[]>(["HVAC"]);
+  const [picked, setPicked] = useState<string[]>([nicheParam?.trim() || "HVAC"]);
   const [customNiche, setCustomNiche] = useState("");
   const [state, setState] = useState("FL");
   const [counties, setCounties] = useState<string[]>([]);
@@ -44,9 +48,25 @@ function Wizard() {
   const [dedupe, setDedupe] = useState(true);
   const [mobileOnly, setMobileOnly] = useState(true);
   const [avoidMetros, setAvoidMetros] = useState(false);
+  const [maxResults, setMaxResults] = useState("1000");
+  const [scrapeBalance, setScrapeBalance] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [prompt, setPrompt] = useState<string | null>(null);
   const [autoCounty, setAutoCounty] = useState<string | null>(null);
+
+  // Credit balance for the live pre-run estimate (spec §9.5).
+  useEffect(() => {
+    if (!workspaceId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("credit_balances")
+        .select("balance")
+        .eq("workspace_id", workspaceId)
+        .eq("kind", "scrape")
+        .maybeSingle();
+      setScrapeBalance(data?.balance ?? 0);
+    })();
+  }, [workspaceId]);
 
   useEffect(() => {
     try {
@@ -112,8 +132,19 @@ function Wizard() {
     setCustomNiche("");
   };
 
+  // Live credit estimate: batch cap doubles as the user's spend control.
+  const cap = Math.max(50, Math.min(50_000, parseInt(maxResults, 10) || 0));
+  const areas = pickedCounties.length || 6;
+  const rawYield = Math.max(1, picked.length) * areas * 120;
+  const estimate = Math.min(cap, rawYield);
+  const overdrawn = scrapeBalance !== null && estimate > scrapeBalance;
+
   const run = async () => {
     if (!workspaceId) return;
+    if (overdrawn) {
+      toast.error("This Search Would Overdraw Your Credits. Top Up Or Lower Max Results.");
+      return;
+    }
     setBusy(true);
     try {
       const { data, error } = await supabase
@@ -131,6 +162,7 @@ function Wizard() {
             dedupe,
             mobile_only: mobileOnly,
             avoid_metros: avoidMetros,
+            max_results: cap,
           },
         })
         .select("id")
@@ -151,6 +183,7 @@ function Wizard() {
   return (
     <div className="max-w-3xl">
       <PageHeader title="Scrape A Niche" description="Door A · Business Scrape" />
+      <ProviderStatusBanner watch={["scrape", "lookup", "scrub"]} workspaceId={workspaceId ?? undefined} />
       {prompt && (
         <div className="mb-4 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
           <div className="text-xs font-semibold uppercase tracking-wider text-primary">Your Prompt</div>
@@ -245,13 +278,48 @@ function Wizard() {
             <ToggleRow label="Require Mobile-Reachable" checked={mobileOnly} onChange={setMobileOnly} />
             <ToggleRow label="Focus On Smaller Counties" checked={avoidMetros} onChange={setAvoidMetros} />
           </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor="max-results">Max Results (Spend Cap)</Label>
+              <Input
+                id="max-results"
+                inputMode="numeric"
+                value={maxResults}
+                onChange={(e) => setMaxResults(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="1000"
+                className="mt-1 max-w-[10rem]"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                We stop at this many records, so a search can never cost more than you expect.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-surface p-4">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Estimated Cost
+              </div>
+              <div className="mt-1 text-sm text-foreground">
+                ≈ <span className="font-semibold text-primary">{estimate.toLocaleString()} credits</span>
+                {scrapeBalance !== null && <> · you have {scrapeBalance.toLocaleString()}</>}
+              </div>
+              {overdrawn && (
+                <div className="mt-2 space-y-2">
+                  <p className="text-xs text-danger">
+                    This search would overdraw your balance. Top up or lower Max Results.
+                  </p>
+                  <Button asChild size="sm" variant="outline" className="rounded-full">
+                    <Link to="/app/billing">Top Up Credits</Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="flex gap-2 justify-end">
             <Button asChild variant="outline" className="rounded-full">
               <Link to="/app/new-job">Back</Link>
             </Button>
             <Button
               onClick={run}
-              disabled={busy || !workspaceId || picked.length === 0}
+              disabled={busy || !workspaceId || picked.length === 0 || overdrawn}
               className="rounded-full"
             >
               {busy ? "Queuing…" : "Run Job"}
