@@ -183,7 +183,7 @@ function HeroTransform() {
           {out.toLocaleString()} ready-to-contact records
         </div>
         <div className="mt-1 text-sm text-muted-foreground">
-          Verified · DNC scrubbed{s.skipTrace ? " · Skip traced" : ""}
+          Verified · DNC Scrubbed{s.skipTrace ? " · Skip Traced" : ""}
         </div>
       </div>
     </div>
