@@ -193,48 +193,60 @@ function LeadsIndex() {
             LeadTrace combines records from multiple trusted data sources before delivery.
           </p>
           <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-surface">
-            <table className="w-full min-w-[720px] text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <th className="px-4 py-3">Business</th>
-                  <th className="px-4 py-3">Owner</th>
-                  <th className="px-4 py-3">Mobile Phone</th>
-                  <th className="px-4 py-3">Line Type</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Website</th>
-                  <th className="px-4 py-3">DNC</th>
-                  <th className="px-4 py-3">Litigator</th>
-                  <th className="px-4 py-3">City</th>
-                  <th className="px-4 py-3">Source</th>
-                  <th className="px-4 py-3">Last Verified</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sample.map((r) => (
-                  <tr key={r.business} className="border-b border-border/60 last:border-0">
-                    <td className="px-4 py-3 font-medium text-foreground">{r.business}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{r.owner}</td>
-                    <td className="px-4 py-3 tabular-nums text-foreground">{r.phone}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{r.lineType}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{r.email}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{r.website}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <Check className="h-3.5 w-3.5 text-primary" /> {r.dnc}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <Check className="h-3.5 w-3.5 text-primary" /> {r.litigator}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{r.city}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{r.source}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{r.lastVerified}</td>
+            <TooltipProvider>
+              <table className="w-full min-w-[560px] text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <th className="w-[40%] min-w-[220px] px-4 py-3">Business</th>
+                    <th className="px-4 py-3">Phone</th>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">Website</th>
+                    <th className="px-4 py-3">Ready</th>
+                    <th className="px-4 py-3">City</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {sample.map((r) => {
+                    const domain = r.website
+                      .replace(/^https?:\/\//, "")
+                      .replace(/^www\./, "")
+                      .split("/")[0];
+                    return (
+                      <tr key={r.business} className="border-b border-border/60 last:border-0">
+                        <td className="w-[40%] min-w-[220px] px-4 py-3 font-medium text-foreground">
+                          {r.business}
+                        </td>
+                        <td className="px-4 py-3 tabular-nums text-foreground">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Smartphone className="h-3.5 w-3.5 text-primary" />
+                            {r.phone}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{r.email}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          <span className="inline-block max-w-[120px] truncate" title={r.website}>
+                            {domain}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-flex cursor-default items-center justify-center rounded-full bg-primary/10 p-1.5">
+                                <Check className="h-4 w-4 text-primary" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Mobile verified, DNC checked, litigator checked.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{r.city}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </TooltipProvider>
           </div>
         </div>
       </section>
