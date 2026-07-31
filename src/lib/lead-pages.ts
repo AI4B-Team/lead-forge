@@ -439,6 +439,72 @@ const NICHE_SEEDS: NicheSeed[] = [
       { title: "Brokerage Recruiters", body: "Find producing agents by review volume." },
     ],
   },
+  {
+    slug: "real-estate-investors",
+    title: "Real Estate Investor Leads",
+    noun: "real estate investors",
+    tags: ["Real Estate", "Investors", "SMS-Ready"],
+    valueProp:
+      'Type "real estate investors" and a county. Cash buyers, landlords, and flippers from public records and business directories — deduplicated, mobile-verified, and DNC and litigator scrubbed before delivery.',
+    size: "Investor density varies by market: a metro county often returns 400–1,200 investor-related contacts before cleaning. Mobile rates are high because most investors run their deals from a cell phone.",
+    entries: [
+      ["Summit Capital Holdings", "summitcapitalhold.com"],
+      ["Tampa Bay Home Buyers", "tampabayhomebuyers.com"],
+      ["Brickhouse Property Group", "brickhousepg.com"],
+      ["Meridian Equity Partners", "meridianequity.com"],
+      ["Oak Stream Investments", "oakstreaminvest.com"],
+    ],
+    personas: [
+      { title: "Wholesalers Offloading Deals", body: "Reach active cash buyers in any county with one list." },
+      { title: "Real Estate Coaches & Masterminds", body: "Investors are the audience that pays for education and systems." },
+      { title: "Hard Money Lenders & Private Capital", body: "Lend to the operators closing deals every month." },
+      { title: "Title & Closing Services", body: "Investors repeat frequently; a relationship is worth the first deal." },
+    ],
+  },
+  {
+    slug: "property-management",
+    title: "Property Management Leads",
+    noun: "property management companies",
+    tags: ["Real Estate", "Property Management", "SMS-Ready"],
+    valueProp:
+      'Type "property management" and a county. Every residential and commercial property manager on Google Maps — deduplicated, mobile-verified, and DNC and litigator scrubbed.',
+    size: "Metro counties typically return 150–400 property management companies before cleaning. Many are small shops with owner-operator mobile numbers.",
+    entries: [
+      ["Harbor Key Property Management", "harborkeypm.com"],
+      ["Pinnacle Residential Management", "pinnacleresidential.com"],
+      ["Bayfront Property Group", "bayfrontpg.com"],
+      ["Sterling Park Management", "sterlingparkmgmt.com"],
+      ["Coastal Ridge Property Co.", "coastalridgepm.com"],
+    ],
+    personas: [
+      { title: "Maintenance & Repair Vendors", body: "Property managers are the gatekeepers to every unit in their portfolio." },
+      { title: "Landlord Insurance Providers", body: "Portfolio owners and the managers they trust." },
+      { title: "PropTech & Software Vendors", body: "Accounting, portals, and inspection tools sell to managers first." },
+      { title: "Real Estate Investors", body: "Find managers who work with out-of-state owners and off-market inventory." },
+    ],
+  },
+  {
+    slug: "hard-money-lenders",
+    title: "Hard Money Lender Leads",
+    noun: "hard money lenders",
+    tags: ["Real Estate", "Lenders", "SMS-Ready"],
+    valueProp:
+      'Type "hard money lenders" and a county. Private and hard-money lenders from public records and business directories — deduplicated, mobile-verified, and DNC and litigator scrubbed.',
+    size: "Hard money lenders are concentrated in active markets: expect 80–250 lenders and capital groups per metro county before cleaning.",
+    entries: [
+      ["Bayline Capital Funding", "baylinecapital.com"],
+      ["Ironwood Bridge Loans", "ironwoodbridge.com"],
+      ["Summit Ridge Lending Group", "summitridge lending.com"],
+      ["Palm Harbor Private Capital", "palmharborpc.com"],
+      ["Clearwater Equity Lending", "clearwaterequity.com"],
+    ],
+    personas: [
+      { title: "Real Estate Investors", body: "Connect with private capital for fix-and-flips, BRRRRs, and rentals." },
+      { title: "Wholesalers", body: "Send your deals to lenders who can close your buyer fast." },
+      { title: "Note Buyers & Brokers", body: "Lenders are the source of performing and non-performing paper." },
+      { title: "Real Estate Attorney & Title Firms", body: "The closers lenders work with repeatedly." },
+    ],
+  },
 ];
 
 type StageSeed = {
