@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
 import { getThemePref, setThemePref } from "@/lib/tags.functions";
 
 const KEY = "leadtrace_theme";
 
 // Light is the default. Dark is an explicit, per-user opt-in that persists to
 // user_prefs so it follows the operator across devices.
-export function ThemeToggle() {
+export function useTheme() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const load = useServerFn(getThemePref);
   const save = useServerFn(setThemePref);
@@ -27,11 +25,7 @@ export function ThemeToggle() {
     save({ data: { theme: next } }).catch(() => {});
   };
 
-  return (
-    <Button size="icon" variant="ghost" onClick={toggle} aria-label="Toggle Dark Mode">
-      {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-    </Button>
-  );
+  return { theme, toggle };
 }
 
 function apply(theme: "light" | "dark", set: (t: "light" | "dark") => void) {
