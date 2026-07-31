@@ -31,19 +31,19 @@ const STAGES = [
   {
     icon: MapPin,
     name: "Bring In Records",
-    body: "Pull records from multiple data sources, public records, or upload a list you already own.",
+    body: "Build a new list from multiple data sources or upload a list you already own.",
     time: "~15 seconds",
   },
   {
     icon: Building2,
     name: "Verify Contacts",
-    body: "Remove duplicates, filter out franchise locations, and standardize every record.",
+    body: "Remove duplicates, identify mobile and landline numbers, standardize every record, and prepare the list for the next step.",
     time: "~20 seconds",
   },
   {
     icon: Smartphone,
     name: "Fill Missing Data",
-    body: "Carrier lookup sorts mobile, landline, and email. Optional skip trace appends missing contact data when you need it.",
+    body: "Carrier lookup identifies mobile and landline numbers. Optional skip tracing appends missing phone numbers and email addresses when available.",
     time: "~40 seconds",
   },
   {
@@ -86,8 +86,8 @@ function HowItWorks() {
             Watch LeadTrace Clean A List
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            The same pipeline runs whether the list came from our data sources, public records, or a CSV you
-            uploaded. Watch it cycle through real scenarios.
+            The same pipeline runs whether you built a new list or uploaded a CSV of your own. Watch it cycle
+            through real scenarios.
           </p>
           <LivePipeline className="mt-8" />
         </div>
