@@ -531,6 +531,7 @@ export const LEAD_PAGES: LeadPage[] = [
     slug: n.slug,
     kind: "niche",
     title: n.title,
+    nicheLabel: n.title.replace(/\s+Leads$/i, ""),
     tags: n.tags,
     valueProp: n.valueProp,
     rows: rows(n.entries),
@@ -559,6 +560,20 @@ export const LEAD_PAGES: LeadPage[] = [
 
 export function getLeadPage(slug: string): LeadPage | undefined {
   return LEAD_PAGES.find((p) => p.slug === slug);
+}
+
+/**
+ * Landing-to-app funnel (spec §9.5): every niche CTA deep-links into New Search
+ * with the niche prefilled. Unauthenticated visitors sign up first and land on
+ * the same half-completed search — never a generic signup dead end.
+ */
+export function startSearchLink(page: LeadPage) {
+  const niche = page.nicheLabel;
+  if (!niche) return { mode: "signup" as const };
+  return {
+    mode: "signup" as const,
+    redirect: `/app/new-job/business?niche=${encodeURIComponent(niche)}`,
+  };
 }
 
 /** Three sibling niche pages + the pipeline-stage pages, for block [10]. */
