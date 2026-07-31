@@ -21,7 +21,7 @@ export const assistantChat = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data }) => {
     const { askAssistant, estimate, precheckCompliance } = await import("@/lib/assistant.server");
     const { COUNTIES, NICHES, RECORD_TYPES } = await import("@/lib/mock-data");
 
