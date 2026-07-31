@@ -278,13 +278,48 @@ function Wizard() {
             <ToggleRow label="Require Mobile-Reachable" checked={mobileOnly} onChange={setMobileOnly} />
             <ToggleRow label="Focus On Smaller Counties" checked={avoidMetros} onChange={setAvoidMetros} />
           </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor="max-results">Max Results (Spend Cap)</Label>
+              <Input
+                id="max-results"
+                inputMode="numeric"
+                value={maxResults}
+                onChange={(e) => setMaxResults(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="1000"
+                className="mt-1 max-w-[10rem]"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                We stop at this many records, so a search can never cost more than you expect.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-surface p-4">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Estimated Cost
+              </div>
+              <div className="mt-1 text-sm text-foreground">
+                ≈ <span className="font-semibold text-primary">{estimate.toLocaleString()} credits</span>
+                {scrapeBalance !== null && <> · you have {scrapeBalance.toLocaleString()}</>}
+              </div>
+              {overdrawn && (
+                <div className="mt-2 space-y-2">
+                  <p className="text-xs text-danger">
+                    This search would overdraw your balance. Top up or lower Max Results.
+                  </p>
+                  <Button asChild size="sm" variant="outline" className="rounded-full">
+                    <Link to="/app/billing">Top Up Credits</Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="flex gap-2 justify-end">
             <Button asChild variant="outline" className="rounded-full">
               <Link to="/app/new-job">Back</Link>
             </Button>
             <Button
               onClick={run}
-              disabled={busy || !workspaceId || picked.length === 0}
+              disabled={busy || !workspaceId || picked.length === 0 || overdrawn}
               className="rounded-full"
             >
               {busy ? "Queuing…" : "Run Job"}
