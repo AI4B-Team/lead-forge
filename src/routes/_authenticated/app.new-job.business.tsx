@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
 import { PageHeader } from "@/components/app/page-header";
+import { ProviderStatusBanner } from "@/components/app/provider-status-banner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -14,6 +16,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
 
 export const Route = createFileRoute("/_authenticated/app/new-job/business")({
+  validateSearch: z.object({ niche: z.string().optional() }),
   head: () => ({ meta: [{ title: "Scrape A Niche — LeadTrace" }] }),
   component: Wizard,
 });
@@ -33,9 +36,10 @@ const STATE_NAMES: Record<string, string> = {
 
 function Wizard() {
   const navigate = useNavigate();
+  const { niche: nicheParam } = Route.useSearch();
   const { workspaceId } = useWorkspaceId();
   const runJobFn = useServerFn(runJob);
-  const [picked, setPicked] = useState<string[]>(["HVAC"]);
+  const [picked, setPicked] = useState<string[]>([nicheParam?.trim() || "HVAC"]);
   const [customNiche, setCustomNiche] = useState("");
   const [state, setState] = useState("FL");
   const [counties, setCounties] = useState<string[]>([]);
@@ -44,9 +48,25 @@ function Wizard() {
   const [dedupe, setDedupe] = useState(true);
   const [mobileOnly, setMobileOnly] = useState(true);
   const [avoidMetros, setAvoidMetros] = useState(false);
+  const [maxResults, setMaxResults] = useState("1000");
+  const [scrapeBalance, setScrapeBalance] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [prompt, setPrompt] = useState<string | null>(null);
   const [autoCounty, setAutoCounty] = useState<string | null>(null);
+
+  // Credit balance for the live pre-run estimate (spec §9.5).
+  useEffect(() => {
+    if (!workspaceId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("credit_balances")
+        .select("balance")
+        .eq("workspace_id", workspaceId)
+        .eq("kind", "scrape")
+        .maybeSingle();
+      setScrapeBalance(data?.balance ?? 0);
+    })();
+  }, [workspaceId]);
 
   useEffect(() => {
     try {
