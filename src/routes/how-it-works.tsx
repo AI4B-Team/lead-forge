@@ -71,8 +71,9 @@ function HowItWorks() {
             From Raw Data To Ready Leads
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            Generate a new list, upload one you already have, or mix sources. Every record runs the same
-            verification pipeline and comes back ready to contact.
+            Generate a new list, upload one you already have, or mix sources.
+            <br />
+            Every record runs the same verification pipeline and comes back ready to contact.
           </p>
 
           <HeroTransform />
