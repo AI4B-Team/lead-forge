@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getBilling } from "@/lib/billing.functions";
-import { getRegistration } from "@/lib/numbers.functions";
+import { getComplianceState } from "@/lib/compliance.functions";
+import { computeCompliance } from "@/lib/compliance.shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 
@@ -23,7 +24,7 @@ const CREDITS: Array<{ key: "scrape" | "skip_trace" | "sms"; label: string }> = 
 export function SettingsSummary({ ownerName }: { ownerName: string }) {
   const { workspaceId, workspaceName } = useWorkspaceId();
   const fetchBilling = useServerFn(getBilling);
-  const fetchRegistration = useServerFn(getRegistration);
+  const fetchCompliance = useServerFn(getComplianceState);
 
   const { data: billing } = useQuery({
     queryKey: ["billing", workspaceId],
@@ -31,9 +32,9 @@ export function SettingsSummary({ ownerName }: { ownerName: string }) {
     enabled: !!workspaceId,
   });
 
-  const { data: registration } = useQuery({
-    queryKey: ["registration", workspaceId],
-    queryFn: () => fetchRegistration({ data: { workspaceId: workspaceId! } }),
+  const { data: compliance } = useQuery({
+    queryKey: ["compliance-state", workspaceId],
+    queryFn: () => fetchCompliance({ data: { workspaceId: workspaceId! } }),
     enabled: !!workspaceId,
   });
 
@@ -49,9 +50,17 @@ export function SettingsSummary({ ownerName }: { ownerName: string }) {
     enabled: !!workspaceId,
   });
 
-  const approved = registration?.registration?.campaign_status === "approved";
-  const brandApproved = registration?.registration?.brand_status === "approved";
-  const health = (approved ? 60 : 0) + (brandApproved ? 30 : 0) + 10;
+  // Same computed state the Compliance Center renders — never a second formula.
+  const state = computeCompliance({
+    brandStatus: compliance?.registration.brand_status ?? null,
+    campaignStatus: compliance?.registration.campaign_status ?? null,
+    stopHandling: true,
+    replyDetection: true,
+    lastScrubAt: compliance?.lastScrubAt ?? null,
+    suppressionTotal: compliance?.suppression.total ?? 0,
+  });
+  const health = state.score;
+  const scrubOk = state.checks.some((c) => c.label === "DNC Database Current" && c.ok);
 
   return (
     <div className="space-y-4">
@@ -126,7 +135,7 @@ export function SettingsSummary({ ownerName }: { ownerName: string }) {
             </div>
             <span
               className={`inline-flex items-center gap-1.5 text-sm font-bold ${
-                health >= 90 ? "text-success" : health >= 50 ? "text-warn" : "text-danger"
+                health >= 90 ? "text-success" : health >= 70 ? "text-warn" : "text-danger"
               }`}
             >
               <ShieldCheck className="h-4 w-4" />
@@ -136,20 +145,24 @@ export function SettingsSummary({ ownerName }: { ownerName: string }) {
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">
             <div
               className={`h-full rounded-full ${
-                health >= 90 ? "bg-success" : health >= 50 ? "bg-warn" : "bg-danger"
+                health >= 90 ? "bg-success" : health >= 70 ? "bg-warn" : "bg-danger"
               }`}
               style={{ width: `${health}%` }}
             />
           </div>
           <div className="space-y-2 text-sm">
-            <Row label="10DLC">
-              <StatusText ok={approved} okLabel="Approved" pendingLabel="Pending" />
+            <Row label="Texting Brand">
+              <StatusText
+                ok={state.stage === "live"}
+                okLabel="Registered"
+                pendingLabel={state.tenDlcLabel}
+              />
             </Row>
             <Row label="STOP Handling">
               <StatusText ok okLabel="Enabled" pendingLabel="Off" />
             </Row>
             <Row label="DNC Scrub">
-              <StatusText ok okLabel="Current" pendingLabel="Stale" />
+              <StatusText ok={scrubOk} okLabel="Current" pendingLabel="Stale" />
             </Row>
           </div>
           <Button asChild variant="outline" size="sm" className="w-full rounded-full">
