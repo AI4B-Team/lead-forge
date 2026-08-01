@@ -177,6 +177,18 @@ function JobDetail() {
         <Stat label="Skip Traced" value={job.rows_skiptraced ?? 0} />
       </div>
 
+      {scrubFreshness.stale && isReady && (
+        <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <span className="text-sm font-semibold text-foreground">
+            {scrubFreshness.scrubbedAt
+              ? `This List Was Scrubbed ${scrubFreshness.ageDays} Days Ago.`
+              : "This List Has No Recorded Scrub."}{" "}
+            Re-Scrub Before Launching — Campaigns Require A Scrub Newer Than {RESCRUB_DAYS} Days.
+          </span>
+        </div>
+      )}
+
       <Card className="mt-6">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base font-display">Pipeline</CardTitle>
@@ -218,6 +230,26 @@ function JobDetail() {
                 You Can Close This Tab — The Job Keeps Running On Our Servers.
               </div>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <MiniStat label="Elapsed" value={fmtDuration(elapsedMs)} />
+            <MiniStat label="Rate" value={perMin > 0 ? `${perMin.toLocaleString()} records/min` : "—"} />
+            <MiniStat
+              label="Est. Time Left"
+              value={isRunning ? (etaMs > 0 ? `~${fmtDuration(etaMs)}` : "Finishing Up") : "Complete"}
+            />
+            <MiniStat
+              label="Last Scrub"
+              value={
+                scrubFreshness.scrubbedAt
+                  ? new Date(scrubFreshness.scrubbedAt).toLocaleString([], {
+                      month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+                    })
+                  : "Not Scrubbed"
+              }
+              tone={scrubFreshness.stale ? "danger" : "default"}
+            />
           </div>
         </CardContent>
       </Card>
