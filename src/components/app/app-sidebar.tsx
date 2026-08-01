@@ -70,7 +70,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {ITEMS.map((item) => {
                 const active = pathname === item.to || pathname.startsWith(item.to + "/");
-                const showBadge = item.to === "/app/inbox" && (unread?.count ?? 0) > 0;
+                const showBadge = false;
                 return (
                   <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton asChild isActive={active} data-tour={`nav-${item.to.replace("/app/", "")}`}>
