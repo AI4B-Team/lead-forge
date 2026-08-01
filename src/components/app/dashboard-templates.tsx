@@ -4,6 +4,7 @@ import { ArrowUpRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TEMPLATES, type Template, type TemplateCategory } from "@/lib/templates";
+import { TemplateLogo } from "@/components/marketing/template-logo";
 import { cn } from "@/lib/utils";
 
 type TabKey = "all" | "records" | "business" | "social";
@@ -72,17 +73,13 @@ export function DashboardTemplates() {
           ))}
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {items.map((t, i) => {
-            const Icon = t.icon;
-            return (
+          {items.map((t, i) => (
               <Link
                 key={t.id}
                 {...templateLink(t)}
                 className="group flex flex-col rounded-2xl border border-border bg-surface p-5 transition hover:border-primary hover:shadow-md"
               >
-                <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${t.tint}`}>
-                  <Icon className="h-5 w-5" />
-                </span>
+                <TemplateLogo template={t} className="h-11 w-11" imgClassName="h-6 w-6" />
                 <span className="mt-4 block font-display text-base font-bold leading-snug text-foreground">
                   {t.title}
                 </span>
@@ -100,8 +97,7 @@ export function DashboardTemplates() {
                   )}
                 </span>
               </Link>
-            );
-          })}
+          ))}
         </div>
       </CardContent>
     </Card>
