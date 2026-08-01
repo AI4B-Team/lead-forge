@@ -225,6 +225,28 @@ function AccountPage() {
                       Send Reset Email
                     </Button>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Last Updated {passwordUpdatedLabel} · Use At Least 12 Characters With A Number And Symbol.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base font-display">
+                    <Mail className="h-4 w-4 text-muted-foreground" /> Recovery Email
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-foreground">{user?.email ?? "—"}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {user?.email_confirmed_at ? "Verified — Used For Password Resets" : "Not Verified Yet"}
+                    </div>
+                  </div>
+                  <Button variant="outline" className="rounded-full" onClick={sendReset}>
+                    Verify
+                  </Button>
                 </CardContent>
               </Card>
 
