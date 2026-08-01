@@ -7,38 +7,60 @@ export const Route = createFileRoute("/_authenticated/app/new-job")({
   component: NewJob,
 });
 
+const generateDoors = [
+  {
+    to: "/app/assistant",
+    icon: Sparkles,
+    title: "AI Assistant",
+    body: "Describe your ideal leads. AI builds the search for you.",
+  },
+  {
+    to: "/app/new-job/business",
+    icon: Search,
+    title: "Business Search",
+    body: "Find businesses by industry and location.",
+  },
+  {
+    to: "/app/new-job/records",
+    icon: Landmark,
+    title: "Public Records",
+    body: "Search probates, code violations, tax defaults, and more.",
+  },
+] as const;
+
+const importDoors = [
+  {
+    to: "/app/new-job/upload",
+    icon: Upload,
+    title: "Import List",
+    body: "Import your CSV for cleaning, enrichment, and outreach.",
+  },
+] as const;
+
+function DoorCard({ door }: { door: (typeof generateDoors)[number] | (typeof importDoors)[number] }) {
+  return (
+    <Link
+      key={door.to}
+      to={door.to}
+      className="group rounded-2xl border border-border bg-surface p-8 hover:border-primary transition"
+    >
+      <div className="grid place-items-center h-12 w-12 rounded-xl bg-primary/10 text-primary">
+        <door.icon className="h-5 w-5" />
+      </div>
+      <div className="mt-5 font-display font-bold text-xl text-foreground">{door.title}</div>
+      <p className="mt-2 text-sm text-muted-foreground">{door.body}</p>
+      <div className="mt-6 flex items-center gap-1 text-sm font-medium text-primary">
+        Start <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+      </div>
+    </Link>
+  );
+}
+
 function NewJob() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isRoot = pathname === "/app/new-job";
 
   if (!isRoot) return <Outlet />;
-
-  const doors = [
-    {
-      to: "/app/assistant",
-      icon: Sparkles,
-      title: "Ask The AI Assistant",
-      body: "Describe The Leads You Want. It Assembles The Job, You Review And Run.",
-    },
-    {
-      to: "/app/new-job/business",
-      icon: Search,
-      title: "Scrape A Niche",
-      body: "Type A Trade And A State. We Pull Every Small Business, Franchises Removed.",
-    },
-    {
-      to: "/app/new-job/records",
-      icon: Landmark,
-      title: "Scrape Public Records",
-      body: "Probates, Code Violations, Pre-Foreclosures, Tax Defaults, Vacancy Notices.",
-    },
-    {
-      to: "/app/new-job/upload",
-      icon: Upload,
-      title: "Upload My List",
-      body: "Already Have Data? Drop A CSV. Skip Straight To Cleaning And Campaign.",
-    },
-  ] as const;
 
   return (
     <div>
@@ -46,23 +68,24 @@ function NewJob() {
         title="Start A New Job"
         description="Three doors in. One compliant pipeline out. Pick a source to begin."
       />
-      <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5">
-        {doors.map((d) => (
-          <Link
-            key={d.to}
-            to={d.to}
-            className="group rounded-2xl border border-border bg-surface p-8 hover:border-primary transition"
-          >
-            <div className="grid place-items-center h-12 w-12 rounded-xl bg-primary/10 text-primary">
-              <d.icon className="h-5 w-5" />
-            </div>
-            <div className="mt-5 font-display font-bold text-xl text-foreground">{d.title}</div>
-            <p className="mt-2 text-sm text-muted-foreground">{d.body}</p>
-            <div className="mt-6 flex items-center gap-1 text-sm font-medium text-primary">
-              Start <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-            </div>
-          </Link>
-        ))}
+      <div className="space-y-10">
+        <section>
+          <h2 className="font-display font-bold text-lg text-foreground mb-4">Generate New Leads</h2>
+          <div className="grid md:grid-cols-3 gap-5">
+            {generateDoors.map((d) => (
+              <DoorCard key={d.to} door={d} />
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="font-display font-bold text-lg text-foreground mb-4">Use Existing Data</h2>
+          <div className="grid md:grid-cols-3 gap-5">
+            {importDoors.map((d) => (
+              <DoorCard key={d.to} door={d} />
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
