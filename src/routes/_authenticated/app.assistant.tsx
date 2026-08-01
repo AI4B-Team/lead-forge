@@ -509,7 +509,9 @@ function Assistant() {
         {!input.trim() && (
           <div className="pointer-events-none absolute inset-x-5 top-5 flex items-center gap-2 pl-0.5 text-base text-muted-foreground">
             <Sparkles className="h-5 w-5 shrink-0 text-primary" />
-            <span className="whitespace-nowrap">Tell Me Who You Want To Reach</span>
+            <span className="truncate">
+              {selectedTemplate?.placeholderHint ?? "Tell Me Who You Want To Reach"}
+            </span>
           </div>
         )}
         <Textarea
@@ -543,7 +545,11 @@ function Assistant() {
                 <Mic className="h-4 w-4" />
               </Button>
             )}
-            <Button className="rounded-full px-5" disabled={busy || !input.trim()} onClick={() => send(input)}>
+            <Button
+              className="rounded-full px-5"
+              disabled={busy || (!input.trim() && !selectedTemplate)}
+              onClick={() => send(input)}
+            >
               Build List <Send className="ml-1.5 h-4 w-4" />
             </Button>
           </div>
