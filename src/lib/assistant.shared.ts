@@ -14,7 +14,8 @@ export const jobSpecSchema = z.object({
   states: z.array(z.string().length(2)).max(10).default([]),
   counties: z.array(z.string().max(80)).max(20).default([]),
   recencyDays: z.number().int().min(1).max(3650).nullable().default(null),
-  removeFranchises: z.boolean().default(true),
+  /** Opt-in only: business sources start with franchises included. */
+  removeFranchises: z.boolean().default(false),
   dedupe: z.boolean().default(true),
   mobileOnly: z.boolean().default(true),
   skipTrace: z.boolean().default(true),

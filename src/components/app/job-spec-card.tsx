@@ -263,7 +263,15 @@ export function JobSpecCard({
           <FieldLabel confidence={99} show={Boolean(spec.sourceType) && inf("sourceType")}>Source</FieldLabel>
           <Select
             value={spec.sourceType ?? ""}
-            onValueChange={(v) => set("sourceType", v as JobSpec["sourceType"])}
+            onValueChange={(v) => {
+              const sourceType = v as JobSpec["sourceType"];
+              // Franchise removal only exists for business sources — drop it on switch.
+              onChange({
+                ...spec,
+                sourceType,
+                removeFranchises: sourceType === "business" ? spec.removeFranchises : false,
+              });
+            }}
           >
             <SelectTrigger className="mt-1"><SelectValue placeholder="Not Chosen Yet" /></SelectTrigger>
             <SelectContent>
