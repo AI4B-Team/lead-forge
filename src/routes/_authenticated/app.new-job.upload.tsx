@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { UploadCloud } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaceId } from "@/hooks/use-workspace";
