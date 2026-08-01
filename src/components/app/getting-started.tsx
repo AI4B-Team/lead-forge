@@ -1,0 +1,190 @@
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { getOnboarding, setOnboardingPref } from "@/lib/onboarding.functions";
+import { ProductTour } from "@/components/app/product-tour";
+import {
+  Check, ChevronDown, ChevronUp, X, Sparkles, Search, ListChecks, ShieldCheck, Phone, Send,
+} from "lucide-react";
+
+type Step = {
+  key: string;
+  title: string;
+  body: string;
+  icon: React.ReactNode;
+  to: string;
+  cta: string;
+  done: boolean;
+};
+
+/** Persistent activation checklist: nothing SMS-related blocks the first clean list. */
+export function GettingStarted({ workspaceId }: { workspaceId: string | null }) {
+  const load = useServerFn(getOnboarding);
+  const save = useServerFn(setOnboardingPref);
+  const qc = useQueryClient();
+  const [tourOpen, setTourOpen] = useState(false);
+
+  const { data } = useQuery({
+    queryKey: ["onboarding", workspaceId],
+    queryFn: () => load({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId,
+  });
+
+  const mutate = useMutation({
+    mutationFn: (patch: { welcomeDismissed?: boolean; checklistCollapsed?: boolean }) =>
+      save({ data: patch }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["onboarding", workspaceId] }),
+  });
+
+  if (!data) return null;
+
+  const steps: Step[] = [
+    {
+      key: "search",
+      title: "Run Your First Search — Or Upload A List",
+      body: "Pick a niche and a county, or bring a CSV you already own.",
+      icon: <Search className="h-4 w-4" />,
+      to: "/app/new-job",
+      cta: "Start A Job",
+      done: data.hasJob,
+    },
+    {
+      key: "review",
+      title: "Review Your Clean List",
+      body: "See what survived dedupe, line-type filtering, DNC, and litigator scrub.",
+      icon: <ListChecks className="h-4 w-4" />,
+      to: "/app/lists",
+      cta: "Open Lists",
+      done: data.reviewedCleanList,
+    },
+    {
+      key: "brand",
+      title: "Register Your Texting Brand",
+      body: "Carrier approval can take a few days — start now so it's ready when your list is.",
+      icon: <ShieldCheck className="h-4 w-4" />,
+      to: "/app/brands",
+      cta: "Set Up Brand",
+      done: data.hasBrand,
+    },
+    {
+      key: "numbers",
+      title: "Add Sending Numbers",
+      body: "Local numbers with rotation, health monitoring, and automatic cooldown.",
+      icon: <Phone className="h-4 w-4" />,
+      to: "/app/numbers",
+      cta: "Add Numbers",
+      done: data.hasNumbers,
+    },
+    {
+      key: "campaign",
+      title: "Launch Your First Campaign",
+      body: "Quiet hours, STOP handling, and litigator blocking are on by default.",
+      icon: <Send className="h-4 w-4" />,
+      to: "/app/campaigns/new",
+      cta: "Build Campaign",
+      done: data.hasCampaign,
+    },
+  ];
+
+  const doneCount = steps.filter((s) => s.done).length;
+  if (doneCount === steps.length) return null;
+
+  const collapsed = data.checklistCollapsed;
+  const next = steps.find((s) => !s.done);
+
+  return (
+    <>
+      <ProductTour open={tourOpen} onClose={() => setTourOpen(false)} />
+
+      {!data.welcomeDismissed && (
+        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3">
+          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <div className="flex-1 text-sm">
+            <span className="font-display font-bold text-foreground">Welcome To LeadTrace</span>
+            <span className="text-muted-foreground">
+              {" "}— knock out the steps below, or{" "}
+              <button type="button" onClick={() => setTourOpen(true)} className="font-medium text-primary underline underline-offset-2">
+                take the 60-second tour
+              </button>
+              .
+            </span>
+          </div>
+          <button
+            type="button"
+            aria-label="Dismiss welcome"
+            onClick={() => mutate.mutate({ welcomeDismissed: true })}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="font-display text-base font-bold text-foreground">Getting Started</h2>
+                <span className="text-xs font-medium text-muted-foreground">{doneCount} Of {steps.length} Complete</span>
+              </div>
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-500"
+                  style={{ width: `${(doneCount / steps.length) * 100}%` }}
+                />
+              </div>
+              {collapsed && next && (
+                <div className="mt-2 text-xs text-muted-foreground">Next: {next.title}</div>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full"
+              onClick={() => mutate.mutate({ checklistCollapsed: !collapsed })}
+            >
+              {collapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </Button>
+          </div>
+
+          {!collapsed && (
+            <ol className="mt-5 divide-y divide-border">
+              {steps.map((s, i) => (
+                <li key={s.key} className="flex items-center gap-4 py-3">
+                  <div
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      s.done ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {s.done ? <Check className="h-4 w-4" /> : i + 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className={`flex items-center gap-2 text-sm font-medium ${s.done ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                      <span className="text-muted-foreground">{s.icon}</span> {s.title}
+                    </div>
+                    {!s.done && <div className="mt-0.5 text-xs text-muted-foreground">{s.body}</div>}
+                  </div>
+                  {!s.done && (
+                    <Button asChild size="sm" variant={s.key === next?.key ? "default" : "outline"} className="rounded-full">
+                      <Link to={s.to}>{s.cta}</Link>
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ol>
+          )}
+
+          {!collapsed && (
+            <div className="mt-4 rounded-xl bg-surface-muted px-4 py-3 text-xs text-muted-foreground">
+              Finish Setup This Week → 500 Bonus Lead Credits.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
+  );
+}

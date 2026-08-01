@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,8 @@ import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loa
 import { toast } from "sonner";
 import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs } from "@/lib/jobs.functions";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
+import { PhoneLink } from "@/components/app/phone-link";
+import { setOnboardingPref } from "@/lib/onboarding.functions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 
 export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
@@ -331,6 +333,10 @@ function LeadsBrowser({ jobId, disabled, open, onOpenChange, bucket, onBucketCha
   const [q, setQ] = useState("");
   const [active, setActive] = useState<LeadRow | null>(null);
   const fetchLeads = useServerFn(listJobLeads);
+  const markReviewed = useServerFn(setOnboardingPref);
+  useEffect(() => {
+    if (open) markReviewed({ data: { reviewedCleanList: true } }).catch(() => {});
+  }, [open, markReviewed]);
   const { data, isFetching } = useQuery({
     queryKey: ["job-leads", jobId, bucket, q],
     queryFn: () => fetchLeads({ data: { jobId, bucket, search: q || undefined, limit: 100 } }),
@@ -388,7 +394,12 @@ function LeadsBrowser({ jobId, disabled, open, onOpenChange, bucket, onBucketCha
                 </Badge>
               </div>
               <div className="mt-1 text-xs text-muted-foreground space-x-3">
-                {l.phone && <span>{l.phone}{l.phone_type ? ` · ${l.phone_type}` : ""}</span>}
+                {l.phone && (
+                  <span>
+                    <PhoneLink phone={l.phone} />
+                    {l.phone_type ? ` · ${l.phone_type}` : ""}
+                  </span>
+                )}
                 {l.email && <span>{l.email}</span>}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
@@ -419,7 +430,10 @@ function ContactDetailDialog({ lead, onClose }: { lead: LeadRow | null; onClose:
         <dl className="grid grid-cols-3 gap-y-3 text-sm">
           <DetailRow label="Name" value={lead?.full_name} />
           <DetailRow label="Business" value={lead?.business_name} />
-          <DetailRow label="Phone" value={lead?.phone} />
+          <dt className="col-span-1 text-xs uppercase tracking-wider font-semibold text-muted-foreground pt-0.5">Phone</dt>
+          <dd className="col-span-2 text-foreground break-words">
+            <PhoneLink phone={lead?.phone} />
+          </dd>
           <DetailRow label="Line Type" value={lead?.phone_type} />
           <DetailRow label="Email" value={lead?.email} />
           <DetailRow label="Address" value={lead?.address} />
