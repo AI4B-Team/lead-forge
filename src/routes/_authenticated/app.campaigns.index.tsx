@@ -202,15 +202,18 @@ function CampaignList({ campaigns, stats, tags, workspaceId }: { campaigns: any[
                 <th className="px-4 py-3 font-semibold">Tag</th>
                 <th className="px-4 py-3 font-semibold text-right">Recipients</th>
                 <th className="px-4 py-3 font-semibold text-right">Sent</th>
+                <th className="px-4 py-3 font-semibold text-right">Delivered</th>
                 <th className="px-4 py-3 font-semibold text-right">Replies</th>
+                <th className="px-4 py-3 font-semibold text-right">AI Chats</th>
+                <th className="px-4 py-3 font-semibold text-right">Needs Human</th>
                 <th className="px-4 py-3 font-semibold text-right">Opt-Outs</th>
-                <th className="px-4 py-3 font-semibold text-right">Cap</th>
+                <th className="px-4 py-3 font-semibold text-right">Health</th>
                 <th className="px-4 py-3 font-semibold text-center">Bot</th>
               </tr>
             </thead>
             <tbody>
               {campaigns.map((c) => {
-                const s = stats[c.id] ?? { sent: 0, replies: 0, optOuts: 0, recipients: 0 };
+                const s = stats[c.id] ?? emptyStats();
                 const tag = c.tag_id ? tags[c.tag_id] : undefined;
                 return (
                   <tr key={c.id} className="border-b border-border last:border-0 hover:bg-surface-muted/50 transition">
@@ -220,7 +223,7 @@ function CampaignList({ campaigns, stats, tags, workspaceId }: { campaigns: any[
                       </Link>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant="outline" className="uppercase text-[10px]">{c.status ?? "draft"}</Badge>
+                      <CampaignStatusBadge status={c.status} />
                     </td>
                     <td className="px-4 py-3">
                       {workspaceId ? (
@@ -233,9 +236,12 @@ function CampaignList({ campaigns, stats, tags, workspaceId }: { campaigns: any[
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">{(s.recipients ?? 0).toLocaleString()}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{(s.sent ?? 0).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{s.deliveryRate ?? 0}%</td>
                     <td className="px-4 py-3 text-right tabular-nums">{(s.replies ?? 0).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{(s.aiChats ?? 0).toLocaleString()}</td>
+                    <td className={`px-4 py-3 text-right tabular-nums ${(s.needsHuman ?? 0) > 0 ? "font-bold text-warn" : ""}`}>{(s.needsHuman ?? 0).toLocaleString()}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{(s.optOuts ?? 0).toLocaleString()}</td>
-                    <td className="px-4 py-3 text-right text-muted-foreground">{c.daily_cap ?? 500}/Day</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{s.health ?? 0}%</td>
                     <td className="px-4 py-3 text-center">
                       {c.bot_enabled ? <Bot className="h-4 w-4 text-primary mx-auto" /> : <span className="text-muted-foreground">—</span>}
                     </td>
