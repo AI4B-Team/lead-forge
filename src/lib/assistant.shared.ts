@@ -10,6 +10,8 @@ export const jobSpecSchema = z.object({
   niches: z.array(z.string().max(60)).max(20).default([]),
   recordType: z.string().max(80).nullable().default(null),
   state: z.string().max(2).nullable().default(null),
+  /** Multiple states can be worked at once; `state` mirrors the first one. */
+  states: z.array(z.string().length(2)).max(10).default([]),
   counties: z.array(z.string().max(80)).max(20).default([]),
   recencyDays: z.number().int().min(1).max(3650).nullable().default(null),
   removeFranchises: z.boolean().default(true),
@@ -22,6 +24,18 @@ export const jobSpecSchema = z.object({
 });
 
 export type JobSpec = z.infer<typeof jobSpecSchema>;
+
+/** Every state the spec covers, tolerating older single-state specs. */
+export function specStates(spec: JobSpec): string[] {
+  if (spec.states.length) return spec.states;
+  return spec.state ? [spec.state] : [];
+}
+
+/** Keep `states` and the legacy `state` field in sync on every edit. */
+export function withStates(spec: JobSpec, states: string[]): JobSpec {
+  const next = states.map((s) => s.toUpperCase());
+  return { ...spec, states: next, state: next[0] ?? null };
+}
 
 export const EMPTY_SPEC: JobSpec = jobSpecSchema.parse({});
 
@@ -43,10 +57,11 @@ export type AssistantReply = {
 export function describeSpec(spec: JobSpec): string {
   if (!spec.sourceType) return "No Source Chosen Yet";
   if (spec.sourceType === "upload") return "Upload Your Own List";
+  const geo = spec.counties.join(", ") || specStates(spec).join(", ") || "No Geography";
   if (spec.sourceType === "records") {
-    return [spec.recordType ?? "Public Records", spec.counties.join(", ") || spec.state || "No Geography"]
+    return [spec.recordType ?? "Public Records", geo]
       .join(" · ");
   }
-  return [spec.niches.join(", ") || "No Niche", spec.counties.join(", ") || spec.state || "No Geography"]
+  return [spec.niches.join(", ") || "No Niche", geo]
     .join(" · ");
 }
