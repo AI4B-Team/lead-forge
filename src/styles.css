@@ -51,6 +51,7 @@
   --color-warn: var(--warn);
   --color-danger: var(--danger);
   --color-info: var(--info);
+  --color-review: var(--review);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -101,6 +102,7 @@
   --warn: oklch(0.75 0.16 65);                /* #F59E0B */
   --danger: oklch(0.58 0.22 27);              /* #DC2626 */
   --info: oklch(0.55 0.19 258);               /* #2563EB welcome blue */
+  --review: oklch(0.52 0.2 295);              /* purple — needs review */
   --destructive: oklch(0.58 0.22 27);
   --destructive-foreground: oklch(0.99 0 0);
 
@@ -148,6 +150,7 @@
   --warn: oklch(0.78 0.16 65);
   --danger: oklch(0.62 0.22 27);
   --info: oklch(0.65 0.17 258);
+  --review: oklch(0.66 0.17 295);
   --destructive: oklch(0.62 0.22 27);
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(1 0 0 / 12%);
