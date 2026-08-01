@@ -120,6 +120,7 @@ function Assistant() {
   const sentPrompt = useRef(false);
   const restored = useRef(false);
   const composer = useRef<HTMLTextAreaElement>(null);
+  const specScroll = useOverflow<HTMLDivElement>();
 
   const started = thread.length > 0;
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
@@ -564,7 +565,13 @@ function Assistant() {
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {gridTemplates.map((t) => (
-            <TemplateCard key={t.id} template={t} variant="insert" onSelect={insertTemplate} />
+            <TemplateCard
+              key={t.id}
+              template={t}
+              variant="insert"
+              selected={selectedTemplate?.id === t.id}
+              onSelect={selectTemplate}
+            />
           ))}
         </div>
       </div>
@@ -582,7 +589,13 @@ function Assistant() {
                 </div>
                 <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {list.map((t) => (
-                    <TemplateCard key={t.id} template={t} variant="insert" onSelect={insertTemplate} />
+                    <TemplateCard
+                      key={t.id}
+                      template={t}
+                      variant="insert"
+                      selected={selectedTemplate?.id === t.id}
+                      onSelect={selectTemplate}
+                    />
                   ))}
                 </div>
               </div>
