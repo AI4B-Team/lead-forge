@@ -563,6 +563,20 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
+// Compact run telemetry used under the funnel: elapsed, rate, ETA, scrub stamp.
+function MiniStat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "danger" }) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-3">
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+        <Clock className="h-3 w-3" /> {label}
+      </div>
+      <div className={`mt-1 text-sm font-semibold tabular-nums ${tone === "danger" ? "text-destructive" : "text-foreground"}`}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
 function BucketCard({ tone, icon, title, count, note, ready, onDownload, onView }: {
   tone: "success" | "warn" | "danger";
   icon: React.ReactNode;
