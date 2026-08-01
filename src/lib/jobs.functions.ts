@@ -12,7 +12,9 @@ export const listJobs = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data: jobs, error } = await supabase
       .from("jobs")
-      .select("id, source_type, record_type, status, rows_in, rows_deduped, params, created_at, schedule, next_run_at, last_run_at")
+      .select(
+        "id, source_type, record_type, status, rows_in, rows_deduped, rows_enriched, rows_skiptraced, params, created_at, schedule, next_run_at, last_run_at",
+      )
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: false });
     if (error) throw error;
@@ -20,9 +22,19 @@ export const listJobs = createServerFn({ method: "GET" })
     const ids = (jobs ?? []).map((j) => j.id);
     const counts = new Map<string, { clean: number; dnc: number; litigator: number }>();
     for (const id of ids) counts.set(id, { clean: 0, dnc: 0, litigator: 0 });
+    // Latest progress event per job — powers the stuck-job watchdog (§23).
+    const lastEventAt = new Map<string, string>();
     // Records added since the previous recurring run (§ recurring search diffing).
     const newSince = new Map<string, number>();
     if (ids.length) {
+      const { data: events } = await supabase
+        .from("job_events")
+        .select("job_id, created_at")
+        .in("job_id", ids)
+        .order("created_at", { ascending: false });
+      for (const e of events ?? []) {
+        if (e.job_id && !lastEventAt.has(e.job_id)) lastEventAt.set(e.job_id, e.created_at);
+      }
       const { data: rows } = await supabase
         .from("leads")
         .select("job_id, scrub_status, created_at")
@@ -65,7 +77,10 @@ export const listJobs = createServerFn({ method: "GET" })
           status: j.status,
           rows_in: j.rows_in ?? 0,
           rows_deduped: j.rows_deduped ?? 0,
+          rows_enriched: j.rows_enriched ?? 0,
+          rows_skiptraced: j.rows_skiptraced ?? 0,
           created_at: j.created_at,
+          last_event_at: lastEventAt.get(j.id) ?? null,
           record_type: j.record_type ?? "business",
           schedule: j.schedule ?? "one_time",
           next_run_at: j.next_run_at,
