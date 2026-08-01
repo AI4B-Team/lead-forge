@@ -16,7 +16,9 @@ export const getComplianceState = createServerFn({ method: "GET" })
         .maybeSingle(),
       supabase
         .from("scrub_runs")
-        .select("id, created_at, provider, total, clean_count, dnc_count, litigator_count, proof, job_id, jobs(name)")
+        .select(
+          "id, created_at, provider, total, clean_count, dnc_count, litigator_count, proof, job_id, jobs(name, source_type, params)",
+        )
         .eq("workspace_id", data.workspaceId)
         .order("created_at", { ascending: false })
         .limit(200),
@@ -45,7 +47,7 @@ export const getComplianceState = createServerFn({ method: "GET" })
       clean_count: r.clean_count ?? 0,
       dnc_count: r.dnc_count ?? 0,
       litigator_count: r.litigator_count ?? 0,
-      job_name: (r as { jobs?: { name?: string } | null }).jobs?.name ?? "Scrub Run",
+      job_name: jobLabel(r as { jobs?: JobRef | null }),
       proof_ref:
         (r.proof && typeof r.proof === "object" && "reference_id" in r.proof
           ? String((r.proof as Record<string, unknown>).reference_id)
