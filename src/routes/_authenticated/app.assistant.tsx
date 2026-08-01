@@ -29,7 +29,11 @@ import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@
 import { takeStashedPrompt, clearStashedPrompt } from "@/lib/prompt-handoff";
 
 export const Route = createFileRoute("/_authenticated/app/assistant")({
-  validateSearch: z.object({ prompt: z.string().optional(), fill: z.string().optional() }),
+  validateSearch: z.object({
+    prompt: z.string().optional(),
+    fill: z.string().optional(),
+    template: z.string().optional(),
+  }),
   head: () => ({
     meta: [
       { title: "AI Lead Assistant — LeadTrace" },
@@ -303,6 +307,14 @@ function Assistant() {
   // short-lived sessionStorage stash as the only fallback.
   useEffect(() => {
     if (sentPrompt.current || !workspaceId) return;
+    // In-app template pick: select it as context (no composer text).
+    if (search.template) {
+      const picked = TEMPLATES.find((t) => t.id === search.template);
+      sentPrompt.current = true;
+      navigate({ to: "/app/assistant", search: {}, replace: true });
+      if (picked) selectTemplate(picked);
+      return;
+    }
     const fromUrl = search.prompt?.trim();
     const stashed = takeStashedPrompt();
     const initial = fromUrl || stashed;
@@ -316,7 +328,7 @@ function Assistant() {
     }
     void send(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId, search.prompt]);
+  }, [workspaceId, search.prompt, search.template]);
 
   const uncovered = coverage.filter((c) => c.coverage === "requested" || c.coverage === "unknown");
 
