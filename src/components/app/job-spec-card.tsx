@@ -176,7 +176,7 @@ export function JobSpecCard({
             <>
               <div className="font-medium text-foreground">Coverage + Cost Preview</div>
               <div className="mt-1">
-                About {estimate.rows.toLocaleString()} Rows · ~{estimate.scrapeCredits.toLocaleString()} Scrape Credits
+                About {estimate.rows.toLocaleString()} Rows · ~{estimate.scrapeCredits.toLocaleString()} Lead Credits
                 {estimate.skipTraceCredits ? ` · ~${estimate.skipTraceCredits.toLocaleString()} Skip-Trace Credits` : ""}
               </div>
               <div className="mt-1">Estimates Only. Nothing Is Charged Until You Run The Job.</div>

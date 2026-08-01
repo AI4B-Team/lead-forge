@@ -432,7 +432,7 @@ function AdminPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="sms">SMS Segments</SelectItem>
-                  <SelectItem value="scrape">Scrape Records</SelectItem>
+                  <SelectItem value="scrape">Lead Credits</SelectItem>
                   <SelectItem value="skip_trace">Skip Traces</SelectItem>
                 </SelectContent>
               </Select>

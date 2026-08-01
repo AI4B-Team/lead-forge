@@ -146,7 +146,7 @@ const STACK_TOTAL = STACK.reduce((sum, [, v]) => sum + v, 0);
 
 const FAQ = [
   {
-    q: "How Do Scrape Credits Work?",
+    q: "How Do Lead Credits Work?",
     a: "One credit covers one record pulled from a data source during a job. Credits included with your plan reset monthly, and you can top up at any time without changing plans.",
   },
   {
