@@ -13,8 +13,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import {
   Users, ListChecks, MessageSquare, CreditCard, Plus, ArrowUpRight, Landmark, MapPin,
-  Upload, TrendingUp,
+  Upload, TrendingUp, Info,
 } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/_authenticated/app/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — LeadTrace" }] }),
@@ -163,7 +164,7 @@ function Dashboard() {
       />
 
       {/* Hero metric */}
-      <div className="mb-6 rounded-2xl border border-border bg-ink text-ink-foreground p-6 sm:flex sm:items-end sm:justify-between sm:gap-8">
+      <div className="mb-6 rounded-2xl border border-border bg-ink text-ink-foreground p-6 sm:flex sm:items-center sm:justify-between sm:gap-8">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-70">Contacts Ready</div>
           <div className="mt-1 font-display text-5xl font-black leading-none">
@@ -173,14 +174,16 @@ function Dashboard() {
             Enough for a full 4-message drip sequence — <span className="font-semibold opacity-100">≈{dripMessages.toLocaleString()} messages</span>
           </p>
         </div>
-        <div className="mt-5 flex items-center gap-6 sm:mt-0">
-          <HeroStat label="Added Today" value={`+${metrics.leadsToday.toLocaleString()}`} />
-          <HeroStat
-            label="Deliverability"
-            value={metrics.deliverability ? `${metrics.deliverability}%` : "—"}
-            sub={metrics.deliverability ? undefined : "Starts with your first campaign."}
-          />
-          <HeroStat label="Credits" value={totalCredits.toLocaleString()} />
+        <div className="mt-5 flex items-start gap-12 sm:mt-0">
+          <TooltipProvider delayDuration={150}>
+            <HeroStat label="Added Today" value={`+${metrics.leadsToday.toLocaleString()}`} />
+            <HeroStat
+              label="Deliverability"
+              value={metrics.deliverability ? `${metrics.deliverability}%` : "—"}
+              info={metrics.deliverability ? undefined : "Starts tracking with your first campaign"}
+            />
+            <HeroStat label="Credits" value={totalCredits.toLocaleString()} />
+          </TooltipProvider>
         </div>
       </div>
 
@@ -311,12 +314,23 @@ function Dashboard() {
   );
 }
 
-function HeroStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function HeroStat({ label, value, info }: { label: string; value: string; info?: string }) {
   return (
-    <div>
-      <div className="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-60">{label}</div>
-      <div className="mt-1 font-display text-xl font-bold">{value}</div>
-      {sub && <div className="mt-0.5 text-[11px] opacity-60 max-w-[9rem] leading-tight">{sub}</div>}
+    <div className="min-w-0 shrink-0">
+      <div className="flex items-center gap-1.5 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <span className="truncate">{label}</span>
+        {info && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-3.5 w-3.5 shrink-0 cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent side="top">{info}</TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+      <div className="mt-1 font-display text-xl font-bold tabular-nums whitespace-nowrap">
+        {value}
+      </div>
     </div>
   );
 }
