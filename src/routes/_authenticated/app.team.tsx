@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Copy, Trash2, UserPlus, Mail, Users, Clock, Armchair } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
-import { AccountTabs } from "@/components/app/account-tabs";
+import { SettingsShell } from "@/components/app/settings-shell";
 import { StatTile } from "@/components/app/stat-tile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -82,9 +82,9 @@ function TeamPage() {
   };
 
   return (
-    <div>
+    <div className="mx-auto max-w-[1400px]">
+      <SettingsShell current="team">
       <PageHeader title="Team" description="Invite Teammates To Collaborate In This Workspace." />
-      <AccountTabs current="team" />
 
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         <StatTile label="Members" value={members.length} icon={Users} hint="Active In This Workspace" />
@@ -263,6 +263,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-center justify-between gap-3 border-t border-border pt-3 first:border-0 first:pt-0">
       <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
       <span className="truncate text-sm font-medium text-foreground">{value}</span>
+      </SettingsShell>
     </div>
   );
 }

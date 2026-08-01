@@ -18,7 +18,7 @@ import {
   getRegistration, advanceRegistration, submitBrandToProvider,
   submitCampaignToProvider, listNumbers, buyNumbers,
 } from "@/lib/numbers.functions";
-import { AccountTabs } from "@/components/app/account-tabs";
+import { SettingsShell } from "@/components/app/settings-shell";
 
 export const Route = createFileRoute("/_authenticated/app/registration")({
   head: () => ({
@@ -213,8 +213,8 @@ function RegistrationPage() {
   const completed = STEPS.filter((s) => stepDone(s.id)).length;
 
   return (
-    <div>
-      <AccountTabs current="registration" />
+    <div className="mx-auto max-w-[1400px]">
+      <SettingsShell current="registration">
       <div className="flex flex-col gap-3 mb-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">Brand & SMS Setup</h1>
@@ -410,6 +410,7 @@ function RegistrationPage() {
           )}
         </div>
       </div>
+      </SettingsShell>
     </div>
   );
 }

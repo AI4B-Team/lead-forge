@@ -22,7 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { AccountTabs } from "@/components/app/account-tabs";
+import { SettingsShell } from "@/components/app/settings-shell";
 import { SettingsSummary } from "@/components/app/settings-summary";
 
 const searchSchema = z.object({ tab: z.enum(["profile", "security"]).optional() });
@@ -99,12 +99,12 @@ function AccountPage() {
     .join("");
 
   return (
-    <div className="mx-auto max-w-[1100px]">
+    <div className="mx-auto max-w-[1400px]">
+      <SettingsShell current={tab ?? "profile"}>
       <PageHeader
         title="Settings"
         description="Manage Your Profile, Workspace, Billing, Compliance, And Team."
       />
-      <AccountTabs current={tab ?? "profile"} />
       <Tabs
         value={tab ?? "profile"}
         onValueChange={(v) => navigate({ search: { tab: v as "profile" | "security" }, replace: true })}
@@ -324,6 +324,7 @@ function PrefRow({
         <div className="text-xs text-muted-foreground">{hint}</div>
       </div>
       <Switch checked={checked} onCheckedChange={onChange} />
+      </SettingsShell>
     </div>
   );
 }
