@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/app/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { Zap, Inbox } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { useWorkspaceId } from "@/hooks/use-workspace";
+import { WorkspaceSwitcher } from "@/components/app/workspace-switcher";
 import { ProfileDropdown } from "@/components/app/profile-dropdown";
 import { NotificationBell } from "@/components/app/notification-bell";
 import { HelpMenu } from "@/components/app/help-menu";
@@ -15,7 +15,6 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 function AppLayout() {
-  const { workspaceName } = useWorkspaceId();
   const tour = useProductTour();
   return (
     <SidebarProvider>
@@ -25,7 +24,7 @@ function AppLayout() {
           <header className="h-14 flex items-center justify-between border-b border-border bg-background px-4">
             <div className="flex items-center gap-2">
               <SidebarTrigger />
-              <div className="text-sm text-muted-foreground hidden md:block">{workspaceName ?? "Workspace"}</div>
+              <div className="hidden md:block"><WorkspaceSwitcher /></div>
             </div>
             <TooltipProvider delayDuration={150}>
               <div className="flex items-center gap-1">
