@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { Template } from "@/lib/templates";
+import { TemplateLogo } from "@/components/marketing/template-logo";
 
 export function TemplateCard({
   template,
@@ -14,30 +15,11 @@ export function TemplateCard({
   variant?: "detail" | "prompt" | "insert";
   onSelect?: (template: Template) => void;
 }) {
-  const Icon = template.icon;
-  const logoUrl = template.logoDomain
-    ? `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(template.logoDomain)}`
-    : null;
   const className =
     "group flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 hover:border-primary hover:shadow-sm transition text-left w-full";
   const body = (
     <>
-      <span className={`grid place-items-center h-12 w-12 rounded-xl shrink-0 overflow-hidden bg-white border border-border ${logoUrl ? "" : template.tint}`}>
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt=""
-            className="h-7 w-7 object-contain"
-            loading="lazy"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-              const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
-              if (fallback) fallback.style.display = "block";
-            }}
-          />
-        ) : null}
-        <Icon className={`h-5 w-5 ${logoUrl ? "hidden" : ""}`} />
-      </span>
+      <TemplateLogo template={template} />
       <span className="min-w-0">
         <span className="flex items-center gap-2">
           <span className="font-display font-bold text-foreground truncate">{template.title}</span>
