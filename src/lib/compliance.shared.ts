@@ -149,3 +149,39 @@ export function removedCount(r: {
   const total = r.total ?? 0;
   return Math.max(0, total - (r.clean_count ?? 0) - (r.dnc_count ?? 0) - (r.litigator_count ?? 0));
 }
+
+/** A scrub run row's related job, used to label audit rows. */
+export type JobRef = {
+  name?: string | null;
+  source_type?: string | null;
+  params?: unknown;
+};
+
+const SOURCE_LABELS: Record<string, string> = {
+  upload: "Uploaded List",
+  business_search: "Business Search",
+  public_records: "Public Records",
+  assistant: "AI Assistant",
+};
+
+/**
+ * Human label for a scrub audit row: the job's name when it has one, otherwise
+ * a niche/geography label derived from its params, otherwise the source type.
+ */
+export function jobLabel(row: { jobs?: JobRef | null }): string {
+  const job = row.jobs;
+  if (!job) return "Scrub Run";
+  if (job.name && job.name.trim()) return job.name.trim();
+  const p = (job.params ?? {}) as Record<string, unknown>;
+  const niche = typeof p["niche"] === "string" ? (p["niche"] as string) : "";
+  const geo =
+    typeof p["geography"] === "string"
+      ? (p["geography"] as string)
+      : typeof p["state"] === "string"
+        ? (p["state"] as string)
+        : "";
+  const parts = [niche, geo].filter(Boolean);
+  if (parts.length > 0) return parts.join(" – ");
+  const src = job.source_type ?? "";
+  return SOURCE_LABELS[src] ?? "Scrub Run";
+}
