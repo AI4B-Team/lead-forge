@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsShell } from "@/components/app/settings-shell";
+import { StatTile } from "@/components/app/stat-tile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,24 @@ function Billing() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const balances = data?.balances;
+  const totalCredits =
+    (balances?.scrape ?? 0) + (balances?.skip_trace ?? 0) + (balances?.sms ?? 0);
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const monthLedger = (data?.ledger ?? []).filter(
+    (r) => new Date(r.created_at) >= monthStart && r.delta < 0,
+  );
+  const usedThisMonth = monthLedger.reduce((sum, r) => sum + Math.abs(r.delta), 0);
+  const usageByKind = monthLedger.reduce<Record<string, number>>((acc, r) => {
+    acc[r.kind] = (acc[r.kind] ?? 0) + Math.abs(r.delta);
+    return acc;
+  }, {});
+  const renewDate = new Date(monthStart);
+  renewDate.setMonth(renewDate.getMonth() + 1);
+  const renewLabel = renewDate.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
   return (
     <div className="mx-auto max-w-[1400px]">
