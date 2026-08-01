@@ -230,6 +230,7 @@ export function JobSpecCard({
   const isBusiness = spec.sourceType === "business";
   const isUpload = spec.sourceType === "upload";
   const hasGeo = isRecords || isBusiness;
+  const states = specStates(spec);
 
   const toggles = isUpload
     ? ([
@@ -335,7 +336,10 @@ export function JobSpecCard({
                     onChange({
                       ...withStates(spec, next),
                       // Drop counties whose state is no longer selected.
-                      counties: spec.counties.filter((c) => keep.has(parseCounty(c).state)),
+                      counties: spec.counties.filter((c) => {
+                        const st = parseCounty(c).state;
+                        return st ? keep.has(st) : false;
+                      }),
                     });
                   }}
                 />
