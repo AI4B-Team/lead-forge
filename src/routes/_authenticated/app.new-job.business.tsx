@@ -168,7 +168,8 @@ function Wizard() {
           source_type: "business",
           status: "queued",
           params: {
-            name: `${picked.join(", ") || "Niche Scrape"} · ${state}`,
+            // §9.5 auto-name format: {Niche} – {Geography} – {Mon DD}
+            name: `${picked.join(", ") || "Niche Scrape"} – ${state} – ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
             niches: picked,
             state,
             counties: pickedCounties,
