@@ -237,6 +237,18 @@ function Assistant() {
       setConfirmed(false);
       if (started) {
         setThread((m) => [...m, { role: "system", content: `You Attached: ${next.name}` }]);
+      } else {
+        // Attaching from the hero opens the working view so the panel is visible.
+        setThread([
+          { role: "system", content: `You Attached: ${next.name}` },
+          {
+            role: "assistant",
+            content: next.parseable && next.mapped
+              ? `Got ${next.name} — ${next.rowCount.toLocaleString()} rows. Review the mapping and settings on the right, then generate the list.`
+              : `Got ${next.name}. Map your columns on the right and I'll clean, verify, and scrub it.`,
+            spec: { ...spec, sourceType: "upload" },
+          },
+        ]);
       }
       if (next.parseable && !next.mapped) setMapOpen(true);
       else if (next.parseable) {
@@ -675,7 +687,7 @@ function Assistant() {
         </div>
         <Button
           className="rounded-full px-5"
-          disabled={busy || (!input.trim() && !selectedTemplate)}
+          disabled={busy || (!input.trim() && !selectedTemplate && !upload)}
           onClick={() => send(input)}
         >
           <Sparkles className="mr-1 h-4 w-4" /> {started ? "Send" : "Generate Job"}
@@ -861,7 +873,7 @@ function Assistant() {
                                 steps={buildTraceSteps(m.spec ?? EMPTY_SPEC)}
                                 revealed={buildTraceSteps(m.spec ?? EMPTY_SPEC).length}
                                 thinking={false}
-                                open={openSlots(m.spec ?? EMPTY_SPEC)}
+                                open={openSlots(m.spec ?? EMPTY_SPEC, uploadReady)}
                               />
                             )}
                           </div>
