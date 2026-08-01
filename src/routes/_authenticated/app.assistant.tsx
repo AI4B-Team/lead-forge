@@ -421,24 +421,29 @@ function Assistant() {
         </p>
       </div>
 
-      <div className="rounded-2xl border border-primary bg-card p-5 shadow-sm">
-        <div className="flex items-start gap-2">
-          <Sparkles className="mt-1.5 h-5 w-5 shrink-0 text-primary" />
-          <Textarea
-            ref={composer}
-            rows={10}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void send(input);
-              }
-            }}
-            placeholder="Tell Me Who You Want To Reach"
-            className="min-h-[220px] resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
-          />
-        </div>
+      <div className="relative rounded-2xl border border-primary bg-card p-5 shadow-sm">
+        {/* Visual placeholder: icon + label always render as a single aligned row */}
+        {!input.trim() && (
+          <div className="pointer-events-none absolute inset-x-5 top-5 flex items-center gap-2 text-base text-muted-foreground">
+            <Sparkles className="h-5 w-5 shrink-0 text-primary" />
+            <span className="whitespace-nowrap">Tell Me Who You Want To Reach</span>
+          </div>
+        )}
+        <Textarea
+          ref={composer}
+          rows={10}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              void send(input);
+            }
+          }}
+          placeholder=""
+          aria-label="Tell Me Who You Want To Reach"
+          className="min-h-[220px] resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
+        />
         <div className="mt-4 flex items-center justify-between gap-3">
           <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground">
             <Paperclip className="mr-1.5 h-4 w-4" /> Attach Files
