@@ -264,3 +264,18 @@
 @utility trace-in {
   animation: trace-in 0.35s ease-out both;
 }
+
+/* §20 Content density: internal app pages render at 80% density.
+   Sidebar + top bar stay 100%. Uses `zoom` (reflows) — never transform: scale. */
+@supports (zoom: 0.8) {
+  .app-density {
+    zoom: 0.8;
+    width: 125%;
+  }
+  /* Portal-rendered overlays density-matched to the zoomed content */
+  [role="dialog"][data-slot="dialog-content"],
+  [role="alertdialog"],
+  [data-sonner-toaster] {
+    zoom: 0.8;
+  }
+}
