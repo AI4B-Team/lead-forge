@@ -23,6 +23,7 @@ export type SampleRow = {
 export type LeadPage = {
   slug: string;
   kind: "niche" | "stage";
+  category?: "business" | "property";
   title: string;
   /** Niche label used to prefill the New Search screen (spec §9.5). */
   nicheLabel?: string;
