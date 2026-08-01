@@ -59,7 +59,7 @@ function AppLayout() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex"><ProfileDropdown /></span>
+                    <span className="inline-flex ml-1.5"><ProfileDropdown /></span>
                   </TooltipTrigger>
                   <TooltipContent>Account</TooltipContent>
                 </Tooltip>
