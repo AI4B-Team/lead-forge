@@ -261,8 +261,8 @@ export const getWorkspacePerformance = createServerFn({ method: "GET" })
     const inboundRows = inWindow.filter((m) => m.direction === "inbound");
     const leadIds = Array.from(new Set(inboundRows.map((m) => m.lead_id).filter((v): v is string => !!v))).slice(0, 40);
     const { data: leadRows } = leadIds.length
-      ? await context.supabase.from("leads").select("id, first_name, last_name, city, state").in("id", leadIds)
-      : { data: [] as Array<{ id: string; first_name: string | null; last_name: string | null; city: string | null; state: string | null }> };
+      ? await context.supabase.from("leads").select("id, full_name, business_name, city, state").in("id", leadIds)
+      : { data: [] as Array<{ id: string; full_name: string | null; business_name: string | null; city: string | null; state: string | null }> };
     const leadMap = new Map((leadRows ?? []).map((l) => [l.id, l]));
     const recent: Array<{ id: string; name: string; place: string; body: string; intent: string; at: string }> = [];
     for (const m of inboundRows) {
@@ -272,7 +272,7 @@ export const getWorkspacePerformance = createServerFn({ method: "GET" })
       const lead = m.lead_id ? leadMap.get(m.lead_id) : undefined;
       recent.push({
         id: m.id,
-        name: [lead?.first_name, lead?.last_name].filter(Boolean).join(" ") || "Unknown Lead",
+        name: lead?.full_name ?? lead?.business_name ?? "Unknown Lead",
         place: [lead?.city, lead?.state].filter(Boolean).join(", "),
         body: m.body ?? "",
         intent: classifyIntent(m.body, m.is_optout),
