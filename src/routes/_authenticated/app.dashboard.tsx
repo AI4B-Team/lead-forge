@@ -191,7 +191,7 @@ function Dashboard() {
         />
         <Metric
           icon={<ListChecks className="h-4 w-4" />}
-          label="Active Lists"
+          label="Active Jobs"
           value={metrics.lists.toString()}
           note={metrics.processing ? `${metrics.processing} Processing` : "All Processed"}
         />
