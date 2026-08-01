@@ -169,10 +169,16 @@ function Numbers() {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <StatCard label="Total Numbers" value={numbers.length.toString()} />
-        <StatCard label="Active" value={active.toString()} />
-        <StatCard label="Avg Health" value={numbers.length ? `${avg}/100` : "—"} tone="success" />
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <StatTile label="Total Numbers" value={numbers.length} hint="In This Workspace" />
+        <StatTile label="Active" value={active} hint="Eligible To Send" />
+        <StatTile label="Rotating" value={rotating} hint="In Live Campaigns" />
+        <StatTile
+          label="Pool Health"
+          value={numbers.length ? `${avg}%` : "—"}
+          hint={flagged ? `${flagged} Flagged For Cooling` : "No Numbers Flagged"}
+        />
+        <StatTile label="Carrier" value="Telnyx" hint={campaignApproved ? "10DLC Approved" : "10DLC Pending"} />
       </div>
       {flagged > 0 && (
         <div className="mb-6 rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
