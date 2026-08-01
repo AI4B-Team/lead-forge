@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { listThreads, getThread, markThreadRead, sendReply } from "@/lib/inbox.functions";
 import { listQuickReplies, createQuickReply } from "@/lib/tags.functions";
+import { PhoneLink } from "@/components/app/phone-link";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
   head: () => ({ meta: [{ title: "Inbox — LeadTrace" }] }),
@@ -197,7 +198,8 @@ function InboxPage() {
                   </div>
                   <div className="text-xs text-muted-foreground flex items-center flex-wrap gap-x-2">
                     <span className="inline-flex items-center gap-1">
-                      <UserRound className="h-3 w-3" /> Lead {threadQ.data?.lead?.phone}
+                      <UserRound className="h-3 w-3" /> Lead{" "}
+                      <PhoneLink phone={threadQ.data?.lead?.phone} showIcon={false} />
                     </span>
                     {threadQ.data?.number && (
                       <span className="inline-flex items-center gap-1">
