@@ -199,7 +199,12 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
   {
     slug: "mortgage",
     industry: "Mortgage & Lending",
-    icon: DollarSign,
+    icon: Landmark,
+    card: {
+      tagline: "Build borrower lists instead of buying them.",
+      bullets: ["Public Records", "Homeowners", "Equity Signals", "Refi Triggers"],
+      pills: ["Public Records", "Equity Filters"],
+    },
     hero: {
       eyebrow: "For Loan Officers And Mortgage Brokers",
       title: "Fund More Loans.",
@@ -234,6 +239,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "auto",
     industry: "Auto Dealers & Detailing",
     icon: Car,
+    card: {
+      tagline: "Find local car owners that match your offer.",
+      bullets: ["Vehicle Owners", "Lease Expiring", "Service Area", "Fleet Accounts"],
+      pills: ["Vehicle Owners", "Lease Expiring"],
+    },
     hero: {
       eyebrow: "For Dealerships, Detailers, And Mobile Mechanics",
       title: "Move More Inventory.",
@@ -266,6 +276,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "medical",
     industry: "Medical & Wellness",
     icon: HeartPulse,
+    card: {
+      tagline: "Fill appointment slots with local, compliant outreach.",
+      bullets: ["Demographics", "Radius Targeting", "DNC Scrubbed", "No PHI Stored"],
+      pills: ["Radius Targeting", "Demographics"],
+    },
     hero: {
       eyebrow: "For Clinics, Med Spas, Dentists, And Practices",
       title: "Fill The Chairs.",
@@ -298,6 +313,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "b2b",
     industry: "B2B / SaaS",
     icon: Briefcase,
+    card: {
+      tagline: "Build prospect lists without the enterprise data stack.",
+      bullets: ["Any Industry", "NAICS + Trade", "Emails + Phones", "CSV Export"],
+      pills: ["NAICS Filters", "Enriched Contacts"],
+    },
     hero: {
       eyebrow: "For SDRs, Founders, And Growth Teams",
       title: "Skip The $60K Data Stack.",
