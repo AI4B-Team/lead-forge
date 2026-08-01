@@ -44,14 +44,15 @@ const CATEGORY_LABEL: Partial<Record<TemplateCategory, string>> = {
 export function DashboardTemplates() {
   const [tab, setTab] = useState<TabKey>("all");
   const active = TABS.find((t) => t.key === tab)!;
-  const items = (tab === "all" ? TEMPLATES : TEMPLATES.filter((t) => active.match.includes(t.category))).slice(0, 8);
+  // 9 keeps the grid a full 3×3 at xl.
+  const items = (tab === "all" ? TEMPLATES : TEMPLATES.filter((t) => active.match.includes(t.category))).slice(0, 9);
 
   return (
     <Card className="mt-6">
       <CardHeader className="flex flex-row items-center justify-between gap-4">
         <CardTitle className="text-base font-display">Start From A Template</CardTitle>
         <Button asChild variant="ghost" size="sm">
-          <Link to="/templates">See All <ArrowUpRight className="ml-1 h-3.5 w-3.5" /></Link>
+          <Link to="/app/templates">See All <ArrowUpRight className="ml-1 h-3.5 w-3.5" /></Link>
         </Button>
       </CardHeader>
       <CardContent>
