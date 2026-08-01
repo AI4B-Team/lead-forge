@@ -370,7 +370,7 @@ function Assistant() {
           }
         }}
         placeholder="Describe The Leads You Want. E.g. Roofing Companies In Hillsborough County With Mobile Numbers."
-        className="resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
+        className="resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
       />
       <div className="mt-3 flex items-center justify-between gap-3">
         <div className="hidden flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground sm:flex">
@@ -444,9 +444,8 @@ function Assistant() {
               void send(input);
             }
           }}
-          placeholder=""
           aria-label="Tell Me Who You Want To Reach"
-          className="min-h-[220px] resize-none border-0 bg-transparent px-0.5 py-0 text-base shadow-none focus-visible:ring-0"
+          className="min-h-[220px] resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
         />
         <div className="mt-4 flex items-center justify-between gap-3">
           <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground">
