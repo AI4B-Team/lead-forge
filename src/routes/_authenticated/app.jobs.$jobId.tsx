@@ -63,6 +63,8 @@ function JobDetail() {
   const fetchReview = useServerFn(getJobReview);
   const fetchBucket = useServerFn(getLeadsByBucket);
   const fetchEvents = useServerFn(listJobEvents);
+  const doPause = useServerFn(pauseJob);
+  const doResume = useServerFn(resumeJob);
   const [browserOpen, setBrowserOpen] = useState(false);
   const [browserBucket, setBrowserBucket] = useState<"clean" | "dnc" | "litigator" | "all">("clean");
 
@@ -71,7 +73,7 @@ function JobDetail() {
     queryFn: () => fetchReview({ data: { jobId } }),
     refetchInterval: (q) => {
       const s = q.state.data?.job?.status;
-      return s && s !== "ready" && s !== "failed" ? 2000 : false;
+      return s && s !== "ready" && s !== "failed" && s !== "paused" ? 2000 : false;
     },
   });
 
@@ -86,14 +88,57 @@ function JobDetail() {
   }
 
   const { job, counts, quality } = data;
+  const scrubFreshness = data.scrubFreshness;
   const isReady = job.status === "ready";
+  const isRunning = !isReady && job.status !== "failed" && job.status !== "paused";
   const params = (job.params ?? {}) as Record<string, unknown>;
   const jobName = String(params.name ?? params.file_name ?? `${job.source_type} · ${job.id.slice(0, 8)}`);
+
+  // Elapsed / throughput / ETA from the job clock and the rows already processed.
+  const startedAt = new Date(job.created_at as string).getTime();
+  const endedAt = isRunning ? Date.now() : new Date((job.updated_at as string) ?? job.created_at as string).getTime();
+  const elapsedMs = Math.max(1000, endedAt - startedAt);
+  const processed = counts.total || (job.rows_deduped ?? 0) || (job.rows_in ?? 0);
+  const perMin = Math.round(processed / (elapsedMs / 60000));
+  const target = Math.max(processed, job.rows_in ?? 0);
+  const etaMs = perMin > 0 && target > processed ? ((target - processed) / perMin) * 60000 : 0;
+
+  const toggleRun = async () => {
+    try {
+      if (job.status === "paused" || job.status === "failed") {
+        await doResume({ data: { jobId } });
+        toast.success("Job Resumed");
+      } else {
+        await doPause({ data: { jobId } });
+        toast.success("Job Paused");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Update Job");
+    }
+  };
 
   const onDownload = async (bucket: "clean" | "dnc" | "litigator") => {
     const res = await fetchBucket({ data: { jobId, bucket } });
     if (!res.rows.length) return toast.info("No Rows In This Bucket.");
     downloadCsv(`${jobName.replace(/\s+/g, "_")}_${bucket}.csv`, toCsv(res.rows));
+  };
+
+  // Scrub audit trail: provider, timestamp and per-bucket outcome, exportable.
+  const onExportAudit = () => {
+    const s = data.scrub as Record<string, unknown> | null;
+    if (!s) return toast.info("No Scrub Run Recorded Yet.");
+    downloadCsv(
+      `${jobName.replace(/\s+/g, "_")}_scrub_audit.csv`,
+      toCsv([{
+        job: jobName,
+        provider: s.provider ?? "internal",
+        scrubbed_at: s.created_at,
+        total: s.total ?? counts.total,
+        clean: s.clean_count ?? counts.clean,
+        dnc: s.dnc_count ?? counts.dnc,
+        litigator: s.litigator_count ?? counts.litigator,
+      }]),
+    );
   };
 
   return (
@@ -106,6 +151,11 @@ function JobDetail() {
             <Badge variant="outline" className="text-sm">
               {STATUS_LABEL[job.status ?? "queued"] ?? job.status}
             </Badge>
+            {(isRunning || job.status === "paused" || job.status === "failed") && (
+              <Button variant="outline" className="rounded-full" onClick={toggleRun}>
+                {isRunning ? <><Pause className="mr-1 h-4 w-4" /> Pause</> : <><Play className="mr-1 h-4 w-4" /> Resume</>}
+              </Button>
+            )}
             <LeadsBrowser
               jobId={jobId}
               disabled={!isReady}
