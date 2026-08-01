@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
+import { AccountTabs } from "@/components/app/account-tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -98,6 +99,7 @@ function Numbers() {
 
   return (
     <div>
+      <AccountTabs current="numbers" />
       <PageHeader
         title="Number Pool"
         description="Geo-Matched By Region. Auto-Retirement When Opt-Out Rate Climbs."
