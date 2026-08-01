@@ -364,30 +364,22 @@ export const unreadCount = createServerFn({ method: "GET" })
 // AI layer: conversation summary + suggested replies (grounded in the thread).
 // ---------------------------------------------------------------------------
 
-const threadTurns = async (
-  supabase: Awaited<ReturnType<typeof requireSupabaseAuth.options.server>> extends never ? never : any,
-  workspaceId: string,
-  threadKey: string,
-) => {
-  const { data: rows } = await supabase
-    .from("messages")
-    .select("direction, body, created_at")
-    .eq("workspace_id", workspaceId)
-    .eq("thread_key", threadKey)
-    .order("created_at", { ascending: true })
-    .limit(40);
-  return ((rows ?? []) as Array<{ direction: string; body: string | null }>)
-    .filter((m) => !!m.body)
-    .map((m) => ({ role: m.direction === "inbound" ? ("user" as const) : ("assistant" as const), content: m.body! }));
-};
-
 export const summarizeThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z.object({ workspaceId: z.string().uuid(), threadKey: z.string().min(1) }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const turns = await threadTurns(context.supabase, data.workspaceId, data.threadKey);
+    const { data: rows } = await context.supabase
+      .from("messages")
+      .select("direction, body, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .eq("thread_key", data.threadKey)
+      .order("created_at", { ascending: true })
+      .limit(40);
+    const turns = (rows ?? [])
+      .filter((m) => !!m.body)
+      .map((m) => ({ role: m.direction === "inbound" ? ("user" as const) : ("assistant" as const), content: m.body! }));
     if (!turns.length) return { summary: null };
     const { summarizeConversation } = await import("@/lib/inbox.server");
     return { summary: await summarizeConversation(turns) };
@@ -404,7 +396,16 @@ export const suggestThreadReplies = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const turns = await threadTurns(context.supabase, data.workspaceId, data.threadKey);
+    const { data: rows } = await context.supabase
+      .from("messages")
+      .select("direction, body, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .eq("thread_key", data.threadKey)
+      .order("created_at", { ascending: true })
+      .limit(40);
+    const turns = (rows ?? [])
+      .filter((m) => !!m.body)
+      .map((m) => ({ role: m.direction === "inbound" ? ("user" as const) : ("assistant" as const), content: m.body! }));
     if (!turns.length) return { suggestions: [] };
 
     // Ground suggestions in the campaign's brand when one is linked.
