@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { MarketingNav, MarketingFooter } from "@/components/marketing/marketing-layout";
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Shield, Home, Sun, Wrench, Briefcase, MoreHorizontal } from "lucide-react";
+import { safeRedirect } from "@/lib/prompt-handoff";
 
 const INDUSTRIES = [
   { key: "insurance",     label: "Insurance",         icon: Shield },
@@ -20,6 +22,7 @@ const INDUSTRIES = [
 const TRIAL_CREDITS = { scrape: 1000, skip_trace: 500, sms: 250 };
 
 export const Route = createFileRoute("/onboarding")({
+  validateSearch: z.object({ redirect: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "Set Up Your Workspace — LeadTrace" },
@@ -33,6 +36,8 @@ export const Route = createFileRoute("/onboarding")({
 
 function Onboarding() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
+  const target = safeRedirect(search.redirect);
   const [name, setName] = useState("");
   const [industry, setIndustry] = useState<string>("insurance");
   const [busy, setBusy] = useState(false);
@@ -50,7 +55,8 @@ function Onboarding() {
         .select("workspace_id")
         .limit(1);
       if (memberships && memberships.length > 0) {
-        navigate({ to: "/app/dashboard" });
+        if (target) window.location.replace(target);
+        else navigate({ to: "/app/dashboard" });
         return;
       }
       const email = userRes.user.email ?? "";
@@ -100,12 +106,8 @@ function Onboarding() {
       );
 
       toast.success("Workspace Ready.");
-      const stashed = (() => { try { return sessionStorage.getItem("leadtrace_prompt"); } catch { return null; } })();
-      if (stashed) {
-        navigate({ to: "/app/assistant" });
-      } else {
-        navigate({ to: "/app/dashboard" });
-      }
+      if (target) window.location.replace(target);
+      else navigate({ to: "/app/dashboard" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Setup Failed");
     } finally {
