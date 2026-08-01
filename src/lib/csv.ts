@@ -36,7 +36,7 @@ export type CsvLead = {
 };
 
 // Map a header string to a canonical lead field, or null to skip.
-function canonicalField(h: string): keyof CsvLead | null {
+export function canonicalField(h: string): keyof CsvLead | null {
   const s = h.toLowerCase().replace(/[^a-z0-9]+/g, "");
   if (["fullname", "name", "contactname", "ownername"].includes(s)) return "full_name";
   if (["businessname", "company", "companyname", "business"].includes(s)) return "business_name";
