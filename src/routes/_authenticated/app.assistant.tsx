@@ -924,6 +924,17 @@ function Assistant() {
         <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>
       </div>
       )}
+
+      {upload?.parseable && (
+        <ColumnMapperDialog
+          open={mapOpen}
+          onOpenChange={setMapOpen}
+          fileName={upload.name}
+          headers={upload.headers}
+          value={upload.map}
+          onConfirm={saveMapping}
+        />
+      )}
     </div>
   );
 }
