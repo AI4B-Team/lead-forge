@@ -35,7 +35,7 @@ const ITEMS = [
   { to: "/app/leads", label: "Leads", icon: Users },
   { to: "/app/brands", label: "AI Brands", icon: BrainCircuit },
   { to: "/app/campaigns", label: "Campaigns", icon: MessageSquare },
-  { to: "/app/reports", label: "Reports", icon: BarChart3 },
+  { to: "/app/reports", label: "Performance", icon: BarChart3 },
 ] as const;
 
 type Counts = { lists: number; leads: number; campaigns: number };

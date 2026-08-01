@@ -45,7 +45,7 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     anchor: "nav-reports",
-    title: "Reports & Audit Trail",
+    title: "Performance & Audit Trail",
     body: "Track delivery, replies, and opt-outs, and pull the timestamped scrub records behind every list you send.",
   },
   {
