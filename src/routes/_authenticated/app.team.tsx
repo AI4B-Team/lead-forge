@@ -3,9 +3,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Trash2, UserPlus, Mail } from "lucide-react";
+import { Copy, Trash2, UserPlus, Mail, Users, Clock, Armchair } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { AccountTabs } from "@/components/app/account-tabs";
+import { StatTile } from "@/components/app/stat-tile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,23 @@ function TeamPage() {
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["team", workspaceId] });
 
+  const members = data?.members ?? [];
+  const invites = (data?.invites ?? []) as any[];
+  const SEATS = 5;
+  const owner = members.find((m) => m.role === "owner");
+  const relative = (iso: string | null) => {
+    if (!iso) return "Never";
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return "Just Now";
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h Ago`;
+    const days = Math.floor(hrs / 24);
+    if (days === 1) return "Yesterday";
+    if (days < 30) return `${days}d Ago`;
+    return new Date(iso).toLocaleDateString();
+  };
+
   const submitInvite = async () => {
     if (!workspaceId || !email) return;
     setBusy(true);
@@ -64,10 +82,23 @@ function TeamPage() {
   };
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div>
       <PageHeader title="Team" description="Invite Teammates To Collaborate In This Workspace." />
       <AccountTabs current="team" />
 
+      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+        <StatTile label="Members" value={members.length} icon={Users} hint="Active In This Workspace" />
+        <StatTile label="Pending" value={invites.length} icon={Mail} hint="Invites Awaiting Acceptance" />
+        <StatTile
+          label="Seats"
+          value={`${members.length} / ${SEATS}`}
+          icon={Armchair}
+          hint={`${Math.max(0, SEATS - members.length)} Available`}
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-display flex items-center gap-2">
@@ -110,17 +141,22 @@ function TeamPage() {
       <Card>
         <CardHeader><CardTitle className="text-base font-display">Members</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          {(data?.members ?? []).map((m) => (
-            <div key={m.user_id} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+          {members.map((m) => (
+            <div key={m.user_id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="grid place-items-center h-8 w-8 rounded-full bg-muted text-xs font-bold uppercase">
+                <div className="grid place-items-center h-9 w-9 rounded-full bg-muted text-xs font-bold uppercase">
                   {m.email.slice(0, 2)}
                 </div>
                 <div>
                   <div className="text-sm font-medium">
                     {m.email || m.user_id.slice(0, 8)} {m.is_me && <span className="text-muted-foreground text-xs">(you)</span>}
                   </div>
-                  <div className="text-xs text-muted-foreground">Joined {new Date(m.created_at).toLocaleDateString()}</div>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" /> Last Active {relative(m.last_visit_at)}
+                    </span>
+                    <span>Joined {new Date(m.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -146,7 +182,7 @@ function TeamPage() {
               </div>
             </div>
           ))}
-          {(data?.members?.length ?? 0) === 0 && (
+          {members.length === 0 && (
             <div className="text-sm text-muted-foreground py-8 text-center">No members yet.</div>
           )}
         </CardContent>
@@ -155,7 +191,7 @@ function TeamPage() {
       <Card>
         <CardHeader><CardTitle className="text-base font-display">Pending Invites</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          {(data?.invites ?? []).map((inv: any) => (
+          {invites.map((inv: any) => (
             <div key={inv.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-muted-foreground" />
@@ -188,11 +224,45 @@ function TeamPage() {
               </div>
             </div>
           ))}
-          {(data?.invites?.length ?? 0) === 0 && (
+          {invites.length === 0 && (
             <div className="text-sm text-muted-foreground py-8 text-center">No pending invites.</div>
           )}
         </CardContent>
       </Card>
+        </div>
+
+        <div className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-base font-display">Seat Summary</CardTitle></CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Seats Used</span>
+                  <span className="tabular-nums">{members.length} / {SEATS}</span>
+                </div>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${Math.min(100, (members.length / SEATS) * 100)}%` }}
+                  />
+                </div>
+              </div>
+              <SummaryRow label="Owner" value={owner?.email || "—"} />
+              <SummaryRow label="Pending Invites" value={String(invites.length)} />
+              <SummaryRow label="Available Seats" value={String(Math.max(0, SEATS - members.length))} />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-t border-border pt-3 first:border-0 first:pt-0">
+      <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="truncate text-sm font-medium text-foreground">{value}</span>
     </div>
   );
 }

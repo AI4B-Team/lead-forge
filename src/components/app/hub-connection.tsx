@@ -5,6 +5,7 @@ import { Link2, Link2Off, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useWorkspaceId } from "@/hooks/use-workspace";
@@ -53,6 +54,22 @@ export function HubConnection() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground">Status</span>
+          <Badge
+            variant="outline"
+            className={data?.linked ? "border-success/30 text-success" : "text-muted-foreground"}
+          >
+            {data?.linked ? "Connected" : "Not Connected"}
+          </Badge>
+        </div>
+        <ul className="space-y-1.5 text-sm text-muted-foreground">
+          {["Shared Login Across The Suite", "Shared Contacts And Lists", "Shared Automations And Events"].map((b) => (
+            <li key={b} className="flex items-center gap-2">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary" /> {b}
+            </li>
+          ))}
+        </ul>
         {data?.linked ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm text-foreground">

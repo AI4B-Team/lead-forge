@@ -16,10 +16,13 @@ export const listTeam = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: members } = await supabaseAdmin
       .from("workspace_members")
-      .select("user_id, role, created_at")
+      .select("user_id, role, created_at, last_visit_at")
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: true });
-    const enriched: Array<{ user_id: string; email: string; role: string; created_at: string; is_me: boolean }> = [];
+    const enriched: Array<{
+      user_id: string; email: string; role: string; created_at: string;
+      last_visit_at: string | null; is_me: boolean;
+    }> = [];
     for (const m of members ?? []) {
       const { data: u } = await supabaseAdmin.auth.admin.getUserById(m.user_id);
       enriched.push({
@@ -27,6 +30,7 @@ export const listTeam = createServerFn({ method: "GET" })
         email: u?.user?.email ?? "",
         role: m.role,
         created_at: m.created_at,
+        last_visit_at: m.last_visit_at ?? null,
         is_me: m.user_id === context.userId,
       });
     }
