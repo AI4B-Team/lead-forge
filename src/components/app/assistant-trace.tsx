@@ -50,7 +50,10 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
   if (spec.recencyDays) steps.push({ label: "Recency Window", value: `Last ${spec.recencyDays} Days` });
   if (spec.mobileOnly) steps.push({ label: "Filtering For Mobile Numbers", value: "Enabled" });
   if (spec.skipTrace) steps.push({ label: "Skip Tracing Missing Numbers", value: "Enabled" });
-  if (spec.removeFranchises) steps.push({ label: "Removing Franchises", value: "Enabled" });
+  // Franchise removal only applies to scraped business data.
+  if (spec.removeFranchises && spec.sourceType === "business") {
+    steps.push({ label: "Removing Franchises", value: "Enabled" });
+  }
   if (spec.dedupe) steps.push({ label: "Deduping Against Past Lists", value: "Enabled" });
   if (spec.industry) steps.push({ label: "Recommended Playbook", value: spec.industry });
   return steps;
