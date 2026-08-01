@@ -14,6 +14,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
+import { queueJob } from "@/lib/job-submit";
 
 export const Route = createFileRoute("/_authenticated/app/new-job/business")({
   validateSearch: z.object({ niche: z.string().optional(), location: z.string().optional() }),
