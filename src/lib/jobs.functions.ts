@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { RESCRUB_DAYS, SCRUB_STALE_MESSAGE, isScrubStale, scrubAgeDays } from "@/lib/compliance-rules";
+import { assignJobNames, cadenceBadge } from "@/lib/job-naming";
 
 // List every job for a workspace with lead-bucket counts for the Lists page.
 export const listJobs = createServerFn({ method: "GET" })
@@ -44,10 +45,12 @@ export const listJobs = createServerFn({ method: "GET" })
 
     return {
       jobs: (jobs ?? []).map((j) => {
-        const params = (j.params ?? {}) as { name?: string; file_name?: string };
+        const names = nameMap;
         return {
           id: j.id,
-          name: params.name ?? params.file_name ?? `${j.source_type} · ${j.id.slice(0, 8)}`,
+          name: names.get(j.id)?.name ?? `${j.source_type} · ${j.id.slice(0, 8)}`,
+          run_index: names.get(j.id)?.runIndex ?? 1,
+          cadence_badge: cadenceBadge(j.schedule),
           source_type: j.source_type,
           status: j.status,
           rows_in: j.rows_in ?? 0,
