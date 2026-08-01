@@ -476,6 +476,7 @@ export type Database = {
           created_by: string | null
           error: string | null
           id: string
+          idempotency_key: string | null
           last_run_at: string | null
           name: string | null
           next_run_at: string | null
@@ -496,6 +497,7 @@ export type Database = {
           created_by?: string | null
           error?: string | null
           id?: string
+          idempotency_key?: string | null
           last_run_at?: string | null
           name?: string | null
           next_run_at?: string | null
@@ -516,6 +518,7 @@ export type Database = {
           created_by?: string | null
           error?: string | null
           id?: string
+          idempotency_key?: string | null
           last_run_at?: string | null
           name?: string | null
           next_run_at?: string | null

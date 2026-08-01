@@ -1,0 +1,2 @@
+ALTER TABLE public.jobs ADD COLUMN IF NOT EXISTS idempotency_key text;
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_workspace_idempotency_key_idx ON public.jobs (workspace_id, idempotency_key) WHERE idempotency_key IS NOT NULL;
