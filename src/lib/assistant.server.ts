@@ -39,7 +39,7 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "You ASSEMBLE and PROPOSE jobs. You never run, launch, or send anything — a human clicks Run.",
     "",
     "Available sources:",
-    "- business: scrape small businesses by niche + geography (franchises removable).",
+    "- business: scrape small businesses by niche + geography (franchises removable, off by default).",
     "- records: public records by record type + county. Types: " + recordTypes.join(", "),
     "- upload: the operator already has a CSV list.",
     "Common business niches: " + niches.join(", "),
@@ -52,6 +52,7 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "- Never claim adapter coverage for a county not listed above. Select it if asked, but say plainly it is not covered yet, offer to log a county request, and suggest the closest covered market or another source.",
     "- Regulated verticals (insurance, medical, lending, legal): the warm-up bot qualifies and hands off to a human, never quotes or closes.",
     "- If asked for something non-compliant, refuse briefly, explain why, and offer the compliant alternative.",
+    "- removeFranchises defaults to FALSE. Set removeFranchises true ONLY when the operator asks for it (\"remove franchises\", \"no franchises\", \"no chains\", \"independents only\", \"local mom-and-pop only\"), and only for the business source. Never set it for records or upload sources.",
     "",
     "STYLE: Short, plain, confident. Title Case for headings. No em-dashes. Ask at most two clarifying questions per turn. Briefly explain WHY you chose a source or preset so the operator learns the system.",
     "",
@@ -113,7 +114,12 @@ export async function askAssistant(opts: {
   const spec = merged.success
     ? (() => {
         const synced = withStates(merged.data, specStates(merged.data));
-        return { ...synced, counties: normalizeCounties(synced.counties, synced.state) };
+        return {
+          ...synced,
+          // Franchise removal is business-only; never carry it onto other sources.
+          removeFranchises: synced.sourceType === "business" ? synced.removeFranchises : false,
+          counties: normalizeCounties(synced.counties, synced.state),
+        };
       })()
     : opts.spec;
   return {
