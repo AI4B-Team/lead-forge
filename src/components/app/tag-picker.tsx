@@ -36,6 +36,27 @@ export function TagPicker({
   const [color, setColor] = useState(SWATCHES[0]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [custom, setCustom] = useState<string[]>([]);
+  const [customDraft, setCustomDraft] = useState("#");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CUSTOM_KEY);
+      if (raw) setCustom((JSON.parse(raw) as string[]).filter(isHex).slice(0, 24));
+    } catch { /* ignore */ }
+  }, []);
+
+  const addCustom = (hex: string) => {
+    const v = hex.startsWith("#") ? hex.toLowerCase() : `#${hex.toLowerCase()}`;
+    if (!isHex(v)) return toast.error("Enter A Hex Color Like #1F2937");
+    setColor(v);
+    if (!SWATCHES.includes(v) && !custom.includes(v)) {
+      const next = [v, ...custom].slice(0, 24);
+      setCustom(next);
+      try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+    }
+    setCustomDraft("#");
+  };
 
   const { data } = useQuery({
     queryKey: ["tags", workspaceId],
