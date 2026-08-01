@@ -17,7 +17,30 @@ import { getRegistration } from "@/lib/numbers.functions";
 import { TagPicker } from "@/components/app/tag-picker";
 import { BrandPicker } from "@/components/app/brand-picker";
 import { BotTrainer } from "@/components/app/bot-trainer";
-import { ShieldCheck, BrainCircuit, Zap, CalendarClock, BadgeCheck, ArrowRight } from "lucide-react";
+import { BrainCircuit, Zap, CalendarClock, BadgeCheck, ArrowRight, Users, Database, Upload, Bot, Landmark, Search, Check } from "lucide-react";
+import {
+  WizardProgress,
+  CampaignHealthPanel,
+  CampaignSummaryPanel,
+  AiSuggestionsPanel,
+  PhonePreview,
+  SequenceAnalytics,
+  LaunchReview,
+} from "@/components/app/campaign-builder-rail";
+import {
+  projectCampaign,
+  healthChecks,
+  deliverability,
+  aiSuggestions,
+  personalizationScore,
+  readingSeconds,
+  spamScore,
+  replyLift,
+  totalReplyRate,
+  renderSample,
+} from "@/lib/campaign-insights";
+import { humanDelay } from "@/components/app/drip-editor";
+import { listNumbers } from "@/lib/numbers.functions";
 import { DEFAULT_DROP_TIMES, formatTime12 } from "@/lib/drops";
 import { TimePicker12h } from "@/components/app/time-picker-12h";
 import { DripEditor, type DripStep } from "@/components/app/drip-editor";
@@ -73,7 +96,7 @@ function NewCampaign() {
     queryFn: async () => {
       const { data } = await supabase
         .from("jobs")
-        .select("id, source_type, status, rows_deduped, created_at, params")
+        .select("id, source_type, record_type, status, rows_in, rows_deduped, rows_skiptraced, created_at, params")
         .eq("workspace_id", workspaceId!)
         .eq("status", "ready")
         .order("created_at", { ascending: false });
@@ -162,11 +185,70 @@ function NewCampaign() {
     }
   };
 
+
+  const fetchNumbers = useServerFn(listNumbers);
+  const { data: numbers } = useQuery({
+    queryKey: ["numbers", workspaceId],
+    queryFn: () => fetchNumbers({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId,
+  });
+  const activeNumbers = (numbers ?? []).filter((n: { status?: string | null }) => n.status !== "cooling").length;
+
+  const { data: brands } = useQuery({
+    queryKey: ["brand-names", workspaceId],
+    queryFn: async () => {
+      const { data } = await supabase.from("brands").select("id, name").eq("workspace_id", workspaceId!);
+      return data ?? [];
+    },
+    enabled: !!workspaceId,
+  });
+
+  const cleanSteps = steps.filter((s) => s.body.trim().length > 0);
+  const bodies = cleanSteps.map((s) => s.body);
+  const selectedJobRow = jobs?.find((j) => j.id === selectedJob);
+  const listName = selectedJobRow
+    ? ((selectedJobRow.params ?? {}) as { name?: string }).name ?? `Job ${selectedJobRow.id.slice(0, 8)}`
+    : "";
+  const brandName = brands?.find((b) => b.id === brandId)?.name ?? "";
+  const recipients = preview?.recipients ?? selectedJobRow?.rows_deduped ?? 0;
+  const totalDelayMinutes = cleanSteps.reduce((n, s) => n + s.delay_minutes, 0);
+  const projection = projectCampaign({ recipients, bodies, dailyCap, totalDelayMinutes });
+  const spam = bodies.length
+    ? bodies.map((b) => spamScore(b)).sort((a, b) => (a.level === "High" ? -1 : b.level === "High" ? 1 : 0))[0]!
+    : { level: "Low" as const, reasons: [] };
+  const quietValid = quietStart !== quietEnd;
+  const dropTimesValid = dropTimes.every((t) => Number(t.slice(0, 2)) < 18 && Number(t.slice(0, 2)) >= 8);
+  const checks = healthChecks({
+    registered: !!regReady,
+    brandPicked: !!brandId,
+    listPicked: !!selectedJob,
+    numbersAvailable: activeNumbers,
+    quietValid,
+    dropTimesValid,
+  });
+  const deliverabilityPct = deliverability(checks, spam.level);
+  const suggestions = aiSuggestions({ touches: cleanSteps, bodies, dailyCap, recipients });
+  const replyRate = totalReplyRate(cleanSteps.length);
+  const sampleLead = { first_name: "John", city: "Tampa", state: "FL", niche: "Roof", address: "412 Maple St" };
+  const previewMessages = cleanSteps.slice(0, 4).map((s, i) => ({
+    label: i === 0 ? "Touch 1 · Immediately" : `Touch ${i + 1} · ${humanDelay(s.delay_minutes)}`,
+    body: renderSample(s.body, sampleLead),
+  }));
+  const wizardSteps = [
+    { id: "name", label: "Campaign Name", done: name.trim().length > 0 },
+    { id: "brand", label: "Choose Brand", done: !!brandId },
+    { id: "list", label: "Choose List", done: !!selectedJob },
+    { id: "sending", label: "Configure Sending", done: dropTimes.length > 0 && dailyCap > 0 },
+    { id: "sequence", label: "Review Sequence", done: cleanSteps.length > 0 },
+    { id: "launch", label: "Launch", done: false },
+  ];
+  const activeStepId = wizardSteps.find((s) => !s.done)?.id ?? "launch";
+
   return (
     <div>
       <PageHeader
         title="New Campaign"
-        description="Only Clean Leads Are Loaded. STOP Suppresses The Number Forever."
+        description="Name It, Teach It, Load A Clean List — Then Launch."
         actions={<Button asChild variant="outline" className="rounded-full"><Link to="/app/campaigns">Cancel</Link></Button>}
       />
 
@@ -183,239 +265,310 @@ function NewCampaign() {
         </div>
       )}
 
-      <Step n={1} title="Brand & Bot Training" hint="The Bot Only Speaks From Approved Brand Material.">
-        <Card>
-          <CardContent className="pt-6 space-y-4">
-            {workspaceId && <BrandPicker workspaceId={workspaceId} value={brandId} onChange={setBrandId} />}
-            {brandId ? (
-              <BotTrainer key={brandId} brandId={brandId} heading="Train This Brand" />
-            ) : (
-              <div className="rounded-xl border border-dashed border-border p-6 text-center">
-                <BrainCircuit className="h-5 w-5 text-primary mx-auto" />
-                <div className="font-display font-bold text-foreground mt-2">Start With Your Brand</div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  Select A Brand Above, Or Create One — Then Train The Bot With Text, Dictation, Files Or URLs.
+      <div className="grid xl:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+        <div className="min-w-0">
+          <Step id="name" n={1} title="Campaign Name" hint="Name It First — Everything Else Attaches To This Campaign.">
+            <Card>
+              <CardContent className="pt-6 grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Name</Label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Q1 Roof Homeowners — Tampa" />
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </Step>
+                {workspaceId && <TagPicker workspaceId={workspaceId} value={tagId} onChange={setTagId} />}
+              </CardContent>
+            </Card>
+          </Step>
 
-      <Step n={2} title="Pick A Ready List" hint="Only Clean, Scrubbed Lists Can Be Loaded.">
-        <Card>
-          <CardContent className="pt-6">
-            {!jobs?.length ? (
-              <div className="text-sm text-muted-foreground">No Ready Lists Yet. Run A Job First.</div>
-            ) : (
-              <div className="grid md:grid-cols-2 gap-3">
-                {jobs.map((j) => {
-                  const active = j.id === selectedJob;
-                  const params = (j.params ?? {}) as { name?: string };
-                  return (
-                    <button
-                      key={j.id}
-                      onClick={() => setSelectedJob(j.id)}
-                      className={`text-left rounded-xl border p-4 transition ${active ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="uppercase text-[10px]">{j.source_type}</Badge>
-                        <span className="text-xs text-muted-foreground">{j.rows_deduped ?? 0} Rows</span>
-                      </div>
-                      <div className="font-display font-bold mt-2 text-foreground">{params.name ?? `Job ${j.id.slice(0, 8)}`}</div>
-                      <div className="text-xs text-muted-foreground">{new Date(j.created_at).toLocaleString()}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </Step>
-
-      <Step n={3} title="Campaign Setup" hint="Naming, Tagging, Pacing And Quiet Hours.">
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader><CardTitle className="text-base font-display">Basics</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Q1 Roof Homeowners — Tampa" />
-              </div>
-              {workspaceId && <TagPicker workspaceId={workspaceId} value={tagId} onChange={setTagId} />}
-              <div>
-                <Label>Daily Cap (Per Campaign)</Label>
-                <Input type="number" min={1} max={5000} value={dailyCap} onChange={(e) => setDailyCap(Number(e.target.value) || 0)} />
-              </div>
-              <div>
-                <Label>Drop Size</Label>
-                <Input type="number" min={50} max={5000} step={50} value={dropSize} onChange={(e) => setDropSize(Number(e.target.value) || 500)} />
-                <div className="text-[11px] text-muted-foreground mt-1">Operator-Proven Default: 500 Contacts Per Drop.</div>
-              </div>
-              <div>
-                <Label>Duplicates</Label>
-                <div className="mt-1 flex flex-wrap gap-2">
-                  {(["skip", "resend"] as const).map((p) => (
-                    <Button
-                      key={p}
-                      type="button"
-                      size="sm"
-                      variant={duplicatePolicy === p ? "default" : "outline"}
-                      className="rounded-full h-8"
-                      onClick={() => setDuplicatePolicy(p)}
-                    >
-                      {p === "skip" ? "Skip Already-Messaged" : "Allow Resend"}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label>When To Send</Label>
-                <div className="mt-1 flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={sendMode === "now" ? "default" : "outline"}
-                    className="rounded-full h-8"
-                    onClick={() => setSendMode("now")}
-                  >
-                    <Zap className="h-3.5 w-3.5 mr-1" /> Send Instantly
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={sendMode === "schedule" ? "default" : "outline"}
-                    className="rounded-full h-8"
-                    onClick={() => setSendMode("schedule")}
-                  >
-                    <CalendarClock className="h-3.5 w-3.5 mr-1" /> Schedule Drop
-                  </Button>
-                </div>
-                {sendMode === "now" ? (
-                  <div className="text-[11px] text-muted-foreground mt-2">
-                    First Drop Goes Out Right Away. Remaining Drops Follow Your Drop Times Below.
-                  </div>
+          <Step id="brand" n={2} title="Choose Brand" hint="The Bot Only Speaks From Approved Brand Material.">
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                {workspaceId && <BrandPicker workspaceId={workspaceId} value={brandId} onChange={setBrandId} />}
+                {brandId ? (
+                  <BotTrainer key={brandId} brandId={brandId} heading="Train This Brand" />
                 ) : (
-                  <div className="mt-3 space-y-2 rounded-xl border border-border p-3">
-                    <Label className="text-xs">First Drop Date & Time</Label>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="h-8 w-[160px]"
-                      />
-                      <TimePicker12h value={startTime} onChange={setStartTime} />
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      Starts {formatTime12(startTime)} Local · Compliant Outreach Runs 8:00 AM – 8:00 PM Recipient Local
-                      Time, And A New Drop Never Starts After 6:00 PM.
+                  <div className="rounded-xl border border-dashed border-border p-6 text-center">
+                    <BrainCircuit className="h-5 w-5 text-primary mx-auto" />
+                    <div className="font-display font-bold text-foreground mt-2">Start With Your Brand</div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      Select A Brand Above, Or Create One — Then Train The Bot With Text, Dictation, Files Or URLs.
                     </div>
                   </div>
                 )}
-              </div>
-              <div>
-                <Label>Drop Times (Local)</Label>
-                <div className="mt-1 grid gap-2">
-                  {dropTimes.map((t, i) => (
-                    <TimePicker12h
-                      key={i}
-                      value={t}
-                      onChange={(v) => setDropTimes(dropTimes.map((x, idx) => (idx === i ? v : x)))}
-                    />
-                  ))}
-                </div>
-                <div className="text-[11px] text-muted-foreground mt-1">New Drops Never Start After 6:00 PM Recipient Local Time.</div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Quiet Start</Label>
-                  <TimePicker12h value={quietStart} onChange={setQuietStart} className="mt-1" />
-                </div>
-                <div>
-                  <Label>Quiet End</Label>
-                  <TimePicker12h value={quietEnd} onChange={setQuietEnd} className="mt-1" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Step>
 
-          <Card>
-            <CardHeader><CardTitle className="text-base font-display flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-success" /> Compliance</CardTitle></CardHeader>
-            <CardContent className="text-sm text-muted-foreground space-y-2">
-              <div>· Only Leads With <span className="text-foreground font-semibold">scrub_status = clean</span> Are Loaded.</div>
-              <div>· Sending Blocked Until 10DLC Campaign Is Approved.</div>
-              <div>· Inbound STOP Adds The Number To Suppression Instantly.</div>
-              <div>· Sending Numbers Auto-Cool Above 5% Opt-Out Rate.</div>
-              <div>· A New Drop Never Starts After 6:00 PM Recipient Local Time.</div>
-              <div>· Outreach Hours: 8:00 AM – 8:00 PM Recipient Local Time (TCPA).</div>
-              <div className="pt-1">
-                <Link to="/app/numbers" className="font-medium text-primary underline underline-offset-2">
-                  Manage Pool →
-                </Link>
+          <Step id="list" n={3} title="Choose List" hint="Only Clean, Scrubbed Lists Can Be Loaded.">
+            {!jobs?.length ? (
+              <Card><CardContent className="pt-6 text-sm text-muted-foreground">No Ready Lists Yet. Run A Job First.</CardContent></Card>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-3">
+                {jobs.map((j) => (
+                  <ListCard key={j.id} job={j} active={j.id === selectedJob} onSelect={() => setSelectedJob(j.id)} />
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </Step>
+            )}
+          </Step>
 
-      <Step n={4} title="Drip Sequence" hint="Each Touch Waits Its Own Duration Before Sending.">
-        <DripEditor steps={steps} onChange={setSteps} />
-      </Step>
-
-      {preview && (
-        <Step n={5} title="Review · Cost & Drop Plan" hint="Exact Recipients, Duplicates Removed And Credit Estimate.">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Metric label="Recipients" value={preview.recipients.toLocaleString()} />
-                <Metric label="Duplicates Removed" value={preview.duplicates.toLocaleString()} />
-                <Metric label="Segments" value={preview.cost.segments.toLocaleString()} />
-                <Metric label="Est. Credits" value={preview.cost.credits.toLocaleString()} />
-              </div>
-              <div className="mt-4 rounded-xl border border-border p-4">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                  {preview.drops.length} Drop{preview.drops.length === 1 ? "" : "s"} · {dropSize} Contacts Each
-                </div>
-                <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                  {preview.drops.slice(0, 12).map((d) => (
-                    <div key={d.drop_index} className="rounded-lg bg-surface-muted px-3 py-2">
-                      <div className="font-semibold text-foreground">Drop {d.drop_index}</div>
-                      <div className="text-muted-foreground">{new Date(d.scheduled_at).toLocaleString()} · {d.size}</div>
+          <Step id="sending" n={4} title="Configure Sending" hint="Pacing, Drop Times And Quiet Hours.">
+            <Card>
+              <CardContent className="pt-6 grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label>Daily Cap (Per Campaign)</Label>
+                    <Input type="number" min={1} max={5000} value={dailyCap} onChange={(e) => setDailyCap(Number(e.target.value) || 0)} />
+                  </div>
+                  <div>
+                    <Label>Drop Size</Label>
+                    <Input type="number" min={50} max={5000} step={50} value={dropSize} onChange={(e) => setDropSize(Number(e.target.value) || 500)} />
+                    <div className="text-[11px] text-muted-foreground mt-1">Operator-Proven Default: 500 Contacts Per Drop.</div>
+                  </div>
+                  <div>
+                    <Label>Duplicates</Label>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {(["skip", "resend"] as const).map((p) => (
+                        <Button
+                          key={p}
+                          type="button"
+                          size="sm"
+                          variant={duplicatePolicy === p ? "default" : "outline"}
+                          className="rounded-full h-8"
+                          onClick={() => setDuplicatePolicy(p)}
+                        >
+                          {p === "skip" ? "Skip Already-Messaged" : "Allow Resend"}
+                        </Button>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                  <div>
+                    <Label>When To Send</Label>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      <Button type="button" size="sm" variant={sendMode === "now" ? "default" : "outline"} className="rounded-full h-8" onClick={() => setSendMode("now")}>
+                        <Zap className="h-3.5 w-3.5 mr-1" /> Send Instantly
+                      </Button>
+                      <Button type="button" size="sm" variant={sendMode === "schedule" ? "default" : "outline"} className="rounded-full h-8" onClick={() => setSendMode("schedule")}>
+                        <CalendarClock className="h-3.5 w-3.5 mr-1" /> Schedule Drop
+                      </Button>
+                    </div>
+                    {sendMode === "now" ? (
+                      <div className="text-[11px] text-muted-foreground mt-2">
+                        First Drop Goes Out Right Away. Remaining Drops Follow Your Drop Times Below.
+                      </div>
+                    ) : (
+                      <div className="mt-3 space-y-2 rounded-xl border border-border p-3">
+                        <Label className="text-xs">First Drop Date & Time</Label>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-8 w-[160px]" />
+                          <TimePicker12h value={startTime} onChange={setStartTime} />
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          Starts {formatTime12(startTime)} Local · Compliant Outreach Runs 8:00 AM – 8:00 PM Recipient
+                          Local Time, And A New Drop Never Starts After 6:00 PM.
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </Step>
-      )}
+                <div className="space-y-4">
+                  <div>
+                    <Label>Drop Times (Local)</Label>
+                    <div className="mt-1 grid gap-2">
+                      {dropTimes.map((t, i) => (
+                        <TimePicker12h key={i} value={t} onChange={(v) => setDropTimes(dropTimes.map((x, idx) => (idx === i ? v : x)))} />
+                      ))}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-1">New Drops Never Start After 6:00 PM Recipient Local Time.</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Quiet Start</Label>
+                      <TimePicker12h value={quietStart} onChange={setQuietStart} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label>Quiet End</Label>
+                      <TimePicker12h value={quietEnd} onChange={setQuietEnd} className="mt-1" />
+                    </div>
+                  </div>
+                  {preview && (
+                    <div className="rounded-xl border border-border p-3">
+                      <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                        {preview.drops.length} Drop{preview.drops.length === 1 ? "" : "s"} · {dropSize} Contacts Each ·{" "}
+                        {preview.duplicates.toLocaleString()} Duplicates Removed
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-2 text-xs">
+                        {preview.drops.slice(0, 6).map((d) => (
+                          <div key={d.drop_index} className="rounded-lg bg-surface-muted px-3 py-2">
+                            <div className="font-semibold text-foreground">Drop {d.drop_index}</div>
+                            <div className="text-muted-foreground">{new Date(d.scheduled_at).toLocaleString()} · {d.size}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </Step>
 
-      <div className="mt-6 flex flex-wrap justify-end gap-2">
-        <Button asChild variant="outline" className="rounded-full"><Link to="/app/campaigns">Cancel</Link></Button>
-        <Button
-          variant="outline"
-          className="rounded-full"
-          onClick={() => {
-            setSendMode("schedule");
-            void submit("schedule");
-          }}
-          disabled={saving}
-        >
-          <CalendarClock className="h-4 w-4 mr-1" /> {saving ? "Working…" : "Schedule Drop"}
-        </Button>
-        <Button className="rounded-full" onClick={() => submit("now")} disabled={saving}>
-          <Zap className="h-4 w-4 mr-1" /> {saving ? "Working…" : "Send Now"}
-        </Button>
+          <Step id="sequence" n={5} title="Review Sequence" hint="Each Touch Waits Its Own Duration Before Sending.">
+            <DripEditor steps={steps} onChange={setSteps} />
+            {cleanSteps.length > 0 && (
+              <SequenceAnalytics
+                touches={cleanSteps.map((s, i) => ({
+                  label: `Touch ${i + 1}`,
+                  delay: s.delay_minutes,
+                  lift: replyLift(i),
+                  chars: s.body.trim().length,
+                }))}
+              />
+            )}
+          </Step>
+
+          <Step id="launch" n={6} title="Launch" hint="Everything Is Checked Before The First Message Leaves.">
+            <LaunchReview
+              projection={projection}
+              checks={checks}
+              saving={saving}
+              onLaunch={() => submit("now")}
+              onSchedule={() => {
+                setSendMode("schedule");
+                void submit("schedule");
+              }}
+              scheduleLabel={saving ? "Working…" : "Schedule Drop Instead"}
+            />
+          </Step>
+        </div>
+
+        <aside className="space-y-4 xl:sticky xl:top-24">
+          <WizardProgress steps={wizardSteps} active={activeStepId} />
+          <CampaignSummaryPanel
+            name={name}
+            brandName={brandName}
+            listName={listName}
+            projection={projection}
+            replyRate={replyRate}
+          />
+          <CampaignHealthPanel
+            checks={checks}
+            deliverability={deliverabilityPct}
+            perDay={projection.perDay}
+            durationDays={projection.durationDays}
+          />
+          <AiSuggestionsPanel suggestions={suggestions} replyRate={replyRate} />
+          <PhonePreview
+            messages={previewMessages}
+            lead={{ name: "John Miller", context: `${listName || "Cook County Probate"} · Tampa, FL` }}
+            readingSeconds={readingSeconds(bodies)}
+            spam={spam.level}
+            personalization={personalizationScore(bodies)}
+          />
+        </aside>
       </div>
     </div>
   );
 }
 
-/** Numbered section wrapper so the builder reads top-to-bottom. */
-function Step({ n, title, hint, children }: { n: number; title: string; hint?: string; children: React.ReactNode }) {
+const SOURCE_ICONS: Record<string, typeof Database> = {
+  records: Landmark,
+  business: Search,
+  upload: Upload,
+  assistant: Bot,
+};
+
+/** Rich list card: volume, source, freshness and quality signals. */
+function ListCard({
+  job,
+  active,
+  onSelect,
+}: {
+  job: {
+    id: string;
+    source_type: string;
+    record_type?: string | null;
+    rows_in?: number | null;
+    rows_deduped?: number | null;
+    rows_skiptraced?: number | null;
+    created_at: string;
+    params?: unknown;
+  };
+  active: boolean;
+  onSelect: () => void;
+}) {
+  const params = (job.params ?? {}) as { name?: string };
+  const rowsIn = job.rows_in ?? job.rows_deduped ?? 0;
+  const clean = job.rows_deduped ?? 0;
+  const cleanPct = rowsIn ? Math.round((clean / rowsIn) * 100) : 100;
+  const traced = job.rows_skiptraced ?? 0;
+  const tracedPct = clean ? Math.round((traced / clean) * 100) : 0;
+  const Icon = SOURCE_ICONS[job.source_type] ?? Database;
   return (
-    <section className="mb-8">
+    <button
+      onClick={onSelect}
+      className={`text-left rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-md ${active ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="font-display font-bold text-foreground truncate">
+            {params.name ?? `Job ${job.id.slice(0, 8)}`}
+          </div>
+          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+            <Icon className="h-3.5 w-3.5" />
+            <span className="capitalize">{job.source_type}</span>
+            <span>·</span>
+            <span>{formatWhen(job.created_at)}</span>
+          </div>
+        </div>
+        <Badge variant="outline" className="rounded-full border-success/40 text-success gap-1 shrink-0">
+          {active ? <Check className="h-3 w-3" /> : null} Ready
+        </Badge>
+      </div>
+      <div className="mt-3 flex items-baseline gap-2">
+        <span className="font-display text-2xl font-black text-foreground">{clean.toLocaleString()}</span>
+        <span className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3.5 w-3.5" /> Clean Leads</span>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+        <QualityChip label="Clean" value={`${cleanPct}%`} />
+        <QualityChip label="Skip Traced" value={`${tracedPct}%`} />
+        <QualityChip label="DNC Removed" value={(rowsIn - clean).toLocaleString()} />
+      </div>
+    </button>
+  );
+}
+
+function QualityChip({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg bg-surface-muted px-2 py-1.5">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-xs font-display font-bold text-foreground">{value}</div>
+    </div>
+  );
+}
+
+function formatWhen(iso: string): string {
+  const d = new Date(iso);
+  const diff = Date.now() - d.getTime();
+  const day = 24 * 60 * 60 * 1000;
+  if (diff < day) return `Today, ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  if (diff < 2 * day) return `Yesterday, ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  return d.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
+}
+
+/** Numbered section wrapper so the builder reads top-to-bottom. */
+function Step({
+  id,
+  n,
+  title,
+  hint,
+  children,
+}: {
+  id: string;
+  n: number;
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={`step-${id}`} className="mb-8 scroll-mt-24">
       <div className="flex items-center gap-3 mb-3">
         <span className="grid place-items-center h-7 w-7 rounded-full bg-primary text-primary-foreground font-display font-bold text-xs shrink-0">
           {n}
@@ -427,14 +580,5 @@ function Step({ n, title, hint, children }: { n: number; title: string; hint?: s
       </div>
       {children}
     </section>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-border p-4">
-      <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">{label}</div>
-      <div className="mt-1 font-display text-2xl font-black text-foreground">{value}</div>
-    </div>
   );
 }
