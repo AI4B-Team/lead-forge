@@ -100,6 +100,7 @@ function faqs(sizeAnswer: string, noun: string) {
 
 type NicheSeed = {
   slug: string;
+  category: "business" | "property";
   title: string;
   noun: string;
   tags: string[];
