@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { Radar, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { safeRedirect } from "@/lib/prompt-handoff";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: z.object({
@@ -46,19 +47,16 @@ function AuthPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
-        const stashed = (() => { try { return sessionStorage.getItem("leadtrace_prompt"); } catch { return null; } })();
-        if (stashed) {
-          window.location.href = "/app/assistant";
-          return;
-        }
-        if (search.redirect && search.redirect.startsWith("/")) {
-          window.location.href = search.redirect;
-        } else {
-          navigate({ to: "/app/dashboard" });
-        }
+        const target = safeRedirect(search.redirect);
+        if (target) window.location.href = target;
+        else navigate({ to: "/app/dashboard" });
       }
     });
   }, [navigate, search.redirect]);
+
+  // Onboarding forwards the destination on, so new signups also land on it.
+  const target = safeRedirect(search.redirect);
+  const onboardingUrl = `/onboarding${target ? `?redirect=${encodeURIComponent(target)}` : ""}`;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +66,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/onboarding" },
+          options: { emailRedirectTo: window.location.origin + onboardingUrl },
         });
         if (error) throw error;
         toast.success("Check Your Email To Confirm Your Account.");
@@ -76,16 +74,8 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         try { localStorage.setItem("leadtrace_returning", "1"); } catch { /* ignore */ }
-        const stashed = (() => { try { return sessionStorage.getItem("leadtrace_prompt"); } catch { return null; } })();
-        if (stashed) {
-          navigate({ to: "/app/assistant" });
-          return;
-        }
-        if (search.redirect && search.redirect.startsWith("/")) {
-          window.location.href = search.redirect;
-        } else {
-          navigate({ to: "/onboarding" });
-        }
+        if (target) window.location.href = target;
+        else navigate({ to: "/onboarding" });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something Went Wrong");
@@ -97,11 +87,13 @@ function AuthPage() {
   const signInWithGoogle = async () => {
     setGoogleBusy(true);
     try {
+      // /start re-checks the session and forwards to the saved destination,
+      // so the prompt survives the OAuth round trip.
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: window.location.origin + (target ? `/start${promptSearchFrom(target)}` : ""),
       });
       if (result.error) throw result.error;
-      if (!result.redirected) navigate({ to: "/onboarding" });
+      if (!result.redirected) window.location.href = target ?? onboardingUrl;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google Sign-In Failed");
     } finally {
@@ -118,7 +110,7 @@ function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: window.location.origin + "/onboarding" },
+        options: { emailRedirectTo: window.location.origin + onboardingUrl },
       });
       if (error) throw error;
       toast.success("Magic Link Sent. Check Your Email.");
