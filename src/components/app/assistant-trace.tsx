@@ -1,5 +1,5 @@
 import { Check, Loader2 } from "lucide-react";
-import type { JobSpec } from "@/lib/assistant.shared";
+import { specStates, type JobSpec } from "@/lib/assistant.shared";
 import { US_STATES } from "@/lib/us-geo";
 
 export type TraceStep = { label: string; value: string };
@@ -17,7 +17,7 @@ export function openSlots(spec: JobSpec, uploadReady = false): string[] {
   }
   if (spec.sourceType === "records" && !spec.recordType) open.push("Record Type");
   if (spec.sourceType === "business" && !spec.niches.length) open.push("Niche");
-  if (!spec.state && !spec.counties.length) open.push("Location");
+  if (!specStates(spec).length && !spec.counties.length) open.push("Location");
   return open;
 }
 
@@ -37,15 +37,17 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
   if (spec.sourceType) steps.push({ label: "Identified Source", value: SOURCE_LABEL[spec.sourceType] ?? spec.sourceType });
   if (spec.recordType) steps.push({ label: "Record Type", value: spec.recordType });
   if (spec.niches.length) steps.push({ label: "Industry", value: spec.niches.join(", ") });
-  const stateName = spec.state ? US_STATES.find((s) => s.code === spec.state)?.name ?? spec.state : null;
+  const states = specStates(spec);
+  const stateNames = states.map((code) => US_STATES.find((s) => s.code === code)?.name ?? code);
   if (spec.counties.length) {
     // Counties often already carry their state suffix ("Hillsborough, FL") — don't double it.
-    const suffix = spec.state && !spec.counties.some((c) => c.toUpperCase().endsWith(spec.state!.toUpperCase()))
-      ? `, ${spec.state}`
-      : "";
+    const suffix =
+      states.length === 1 && !spec.counties.some((c) => c.toUpperCase().endsWith(states[0]!.toUpperCase()))
+        ? `, ${states[0]}`
+        : "";
     steps.push({ label: "Location", value: `${spec.counties.join(", ")}${suffix}` });
-  } else if (stateName) {
-    steps.push({ label: "Location", value: stateName });
+  } else if (stateNames.length) {
+    steps.push({ label: "Location", value: stateNames.join(", ") });
   }
   if (spec.recencyDays) steps.push({ label: "Recency Window", value: `Last ${spec.recencyDays} Days` });
   if (spec.mobileOnly) steps.push({ label: "Filtering For Mobile Numbers", value: "Enabled" });
