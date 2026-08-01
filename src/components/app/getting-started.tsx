@@ -100,13 +100,13 @@ export function GettingStarted({ workspaceId }: { workspaceId: string | null }) 
       <ProductTour open={tourOpen} onClose={() => setTourOpen(false)} />
 
       {!data.welcomeDismissed && (
-        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3">
-          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-info/25 bg-info/5 px-4 py-3">
+          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-info" />
           <div className="flex-1 text-sm">
             <span className="font-display font-bold text-foreground">Welcome To LeadTrace</span>
             <span className="text-muted-foreground">
               {" "}— knock out the steps below, or{" "}
-              <button type="button" onClick={() => setTourOpen(true)} className="font-medium text-primary underline underline-offset-2">
+              <button type="button" onClick={() => setTourOpen(true)} className="font-medium text-info underline underline-offset-2">
                 take the 60-second tour
               </button>
               .
@@ -152,36 +152,54 @@ export function GettingStarted({ workspaceId }: { workspaceId: string | null }) 
           </div>
 
           {!collapsed && (
-            <ol className="mt-5 divide-y divide-border">
-              {steps.map((s, i) => (
-                <li key={s.key} className="flex items-center gap-4 py-3">
-                  <div
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                      s.done ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
-                    }`}
+            <>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                {doneCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDone((v) => !v)}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success transition-colors hover:bg-success/15"
                   >
-                    {s.done ? <Check className="h-4 w-4" /> : i + 1}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className={`flex items-center gap-2 text-sm font-medium ${s.done ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                      <span className="text-muted-foreground">{s.icon}</span> {s.title}
+                    <Check className="h-3.5 w-3.5" /> {doneCount} Completed
+                    {showDone ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  </button>
+                )}
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Remaining ({steps.length - doneCount})
+                </span>
+                <span className="ml-auto text-xs text-muted-foreground">
+                  Finish Setup This Week → 500 Bonus Lead Credits.
+                </span>
+              </div>
+
+              {showDone && doneCount > 0 && (
+                <ul className="mt-3 space-y-1.5">
+                  {steps.filter((s) => s.done).map((s) => (
+                    <li key={s.key} className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Check className="h-3.5 w-3.5 shrink-0 text-success" />
+                      <span className="truncate line-through">{s.title}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <ol className="mt-3 divide-y divide-border">
+                {steps.filter((s) => !s.done).map((s) => (
+                  <li key={s.key} className="flex items-center gap-4 py-3">
+                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
+                      {s.icon}
                     </div>
-                    {!s.done && <div className="mt-0.5 text-xs text-muted-foreground">{s.body}</div>}
-                  </div>
-                  {!s.done && (
-                    <Button asChild size="sm" variant={s.key === next?.key ? "default" : "outline"} className="rounded-full">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-foreground">{s.title}</div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">{s.body}</div>
+                    </div>
+                    <Button asChild size="sm" variant={s.key === next?.key ? "default" : "outline"} className="rounded-full shrink-0">
                       <Link to={s.to}>{s.cta}</Link>
                     </Button>
-                  )}
-                </li>
-              ))}
-            </ol>
-          )}
-
-          {!collapsed && (
-            <div className="mt-4 rounded-xl bg-surface-muted px-4 py-3 text-xs text-muted-foreground">
-              Finish Setup This Week → 500 Bonus Lead Credits.
-            </div>
+                  </li>
+                ))}
+              </ol>
+            </>
           )}
         </CardContent>
       </Card>
