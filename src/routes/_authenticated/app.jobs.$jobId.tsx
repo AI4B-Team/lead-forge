@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search } from "lucide-react";
+import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs } from "@/lib/jobs.functions";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
@@ -51,6 +51,8 @@ function JobDetail() {
   const fetchReview = useServerFn(getJobReview);
   const fetchBucket = useServerFn(getLeadsByBucket);
   const fetchEvents = useServerFn(listJobEvents);
+  const [browserOpen, setBrowserOpen] = useState(false);
+  const [browserBucket, setBrowserBucket] = useState<"clean" | "dnc" | "litigator" | "all">("clean");
 
   const { data, isLoading } = useQuery({
     queryKey: ["job-review", jobId],
@@ -92,7 +94,14 @@ function JobDetail() {
             <Badge variant="outline" className="text-sm">
               {STATUS_LABEL[job.status ?? "queued"] ?? job.status}
             </Badge>
-            <LeadsBrowser jobId={jobId} disabled={!isReady} />
+            <LeadsBrowser
+              jobId={jobId}
+              disabled={!isReady}
+              open={browserOpen}
+              onOpenChange={setBrowserOpen}
+              bucket={browserBucket}
+              onBucketChange={setBrowserBucket}
+            />
           </>
         }
       />
@@ -158,6 +167,7 @@ function JobDetail() {
           note="Ready To Send"
           ready={isReady}
           onDownload={() => onDownload("clean")}
+          onView={() => { setBrowserBucket("clean"); setBrowserOpen(true); }}
         />
         <BucketCard
           tone="warn"
@@ -167,6 +177,7 @@ function JobDetail() {
           note="Download For Suppression"
           ready={isReady}
           onDownload={() => onDownload("dnc")}
+          onView={() => { setBrowserBucket("dnc"); setBrowserOpen(true); }}
         />
         <BucketCard
           tone="danger"
@@ -176,6 +187,7 @@ function JobDetail() {
           note="Download For Analytics"
           ready={isReady}
           onDownload={() => onDownload("litigator")}
+          onView={() => { setBrowserBucket("litigator"); setBrowserOpen(true); }}
         />
       </div>
 
