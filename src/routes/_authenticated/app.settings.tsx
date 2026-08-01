@@ -9,6 +9,7 @@ import { INDUSTRIES } from "@/lib/mock-data";
 import { useState } from "react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { WebhookEndpoints } from "@/components/app/webhook-endpoints";
+import { HubConnection } from "@/components/app/hub-connection";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   head: () => ({ meta: [{ title: "Settings — LeadTrace" }] }),
@@ -76,6 +77,8 @@ function Settings() {
         </Card>
 
         <WebhookEndpoints />
+
+        <HubConnection />
       </div>
     </div>
   );

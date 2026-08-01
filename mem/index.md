@@ -9,3 +9,4 @@ Skip tracing is included free on Growth and up within daily/monthly fair-use cap
 ## Memories
 - [Product positioning](mem://product/positioning.md) — Copy rules: multi-source data, uploaded lists, optional skip trace, outcome-first messaging
 - [Pricing model](mem://pricing/model.md) — Tier allowances, flat SMS rates, included skip trace with fair-use caps, annual −20%, stack-replacement math
+- [Real Elite identity spine](mem://product/identity-spine.md) — Federated SSO handoff, canonical org/user IDs, hub event payloads

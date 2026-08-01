@@ -1164,6 +1164,7 @@ export type Database = {
       user_prefs: {
         Row: {
           checklist_collapsed: boolean
+          real_elite_user_id: string | null
           reviewed_clean_list: boolean
           theme: string
           tour_status: string | null
@@ -1173,6 +1174,7 @@ export type Database = {
         }
         Insert: {
           checklist_collapsed?: boolean
+          real_elite_user_id?: string | null
           reviewed_clean_list?: boolean
           theme?: string
           tour_status?: string | null
@@ -1182,6 +1184,7 @@ export type Database = {
         }
         Update: {
           checklist_collapsed?: boolean
+          real_elite_user_id?: string | null
           reviewed_clean_list?: boolean
           theme?: string
           tour_status?: string | null
@@ -1338,6 +1341,8 @@ export type Database = {
           monthly_sms_cap: number | null
           name: string
           plan: string
+          real_elite_linked_at: string | null
+          real_elite_org_id: string | null
         }
         Insert: {
           billing_plan?: string
@@ -1347,6 +1352,8 @@ export type Database = {
           monthly_sms_cap?: number | null
           name: string
           plan?: string
+          real_elite_linked_at?: string | null
+          real_elite_org_id?: string | null
         }
         Update: {
           billing_plan?: string
@@ -1356,6 +1363,8 @@ export type Database = {
           monthly_sms_cap?: number | null
           name?: string
           plan?: string
+          real_elite_linked_at?: string | null
+          real_elite_org_id?: string | null
         }
         Relationships: []
       }

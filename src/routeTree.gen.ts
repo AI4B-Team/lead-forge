@@ -43,6 +43,7 @@ import { Route as ToolsLineTypeCheckerRouteImport } from './routes/tools.line-ty
 import { Route as ToolsDncCheckerRouteImport } from './routes/tools.dnc-checker'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as LeadsSlugRouteImport } from './routes/leads.$slug'
+import { Route as AuthHubRouteImport } from './routes/auth.hub'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
@@ -62,6 +63,7 @@ import { Route as AuthenticatedAppAssistantRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
 import { Route as AuthenticatedAppAccountRouteImport } from './routes/_authenticated/app.account'
 import { Route as AuthenticatedAppCampaignsIndexRouteImport } from './routes/_authenticated/app.campaigns.index'
+import { Route as ApiPublicHubCallbackRouteImport } from './routes/api/public/hub/callback'
 import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
 import { Route as ApiPublicHooksTelnyxInboundRouteImport } from './routes/api/public/hooks/telnyx-inbound'
 import { Route as ApiPublicHooksTelnyxDlrRouteImport } from './routes/api/public/hooks/telnyx-dlr'
@@ -242,6 +244,11 @@ const LeadsSlugRoute = LeadsSlugRouteImport.update({
   path: '/leads/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthHubRoute = AuthHubRouteImport.update({
+  id: '/hub',
+  path: '/hub',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -343,6 +350,11 @@ const AuthenticatedAppCampaignsIndexRoute =
     path: '/campaigns/',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const ApiPublicHubCallbackRoute = ApiPublicHubCallbackRouteImport.update({
+  id: '/api/public/hub/callback',
+  path: '/api/public/hub/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksTickCampaignsRoute =
   ApiPublicHooksTickCampaignsRouteImport.update({
     id: '/api/public/hooks/tick-campaigns',
@@ -407,7 +419,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
   '/compliance': typeof ComplianceRoute
@@ -431,6 +443,7 @@ export interface FileRoutesByFullPath {
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
@@ -465,13 +478,14 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
   '/compliance': typeof ComplianceRoute
@@ -494,6 +508,7 @@ export interface FileRoutesByTo {
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
+  '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
@@ -528,6 +543,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/app/campaigns': typeof AuthenticatedAppCampaignsIndexRoute
 }
 export interface FileRoutesById {
@@ -536,7 +552,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
   '/compliance': typeof ComplianceRoute
@@ -560,6 +576,7 @@ export interface FileRoutesById {
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
@@ -594,6 +611,7 @@ export interface FileRoutesById {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/_authenticated/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
 }
 export interface FileRouteTypes {
@@ -626,6 +644,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/tutorials'
     | '/app'
+    | '/auth/hub'
     | '/leads/$slug'
     | '/templates/$templateId'
     | '/tools/dnc-checker'
@@ -660,6 +679,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/api/public/hub/callback'
     | '/app/campaigns/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -689,6 +709,7 @@ export interface FileRouteTypes {
     | '/solar'
     | '/start'
     | '/tutorials'
+    | '/auth/hub'
     | '/leads/$slug'
     | '/templates/$templateId'
     | '/tools/dnc-checker'
@@ -723,6 +744,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/api/public/hub/callback'
     | '/app/campaigns'
   id:
     | '__root__'
@@ -754,6 +776,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/tutorials'
     | '/_authenticated/app'
+    | '/auth/hub'
     | '/leads/$slug'
     | '/templates/$templateId'
     | '/tools/dnc-checker'
@@ -788,6 +811,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/api/public/hub/callback'
     | '/_authenticated/app/campaigns/'
   fileRoutesById: FileRoutesById
 }
@@ -796,7 +820,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
   AgencyRoute: typeof AgencyRoute
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   AutoRoute: typeof AutoRoute
   B2bRoute: typeof B2bRoute
   ComplianceRoute: typeof ComplianceRoute
@@ -830,6 +854,7 @@ export interface RootRouteChildren {
   ApiPublicHooksTelnyxDlrRoute: typeof ApiPublicHooksTelnyxDlrRoute
   ApiPublicHooksTelnyxInboundRoute: typeof ApiPublicHooksTelnyxInboundRoute
   ApiPublicHooksTickCampaignsRoute: typeof ApiPublicHooksTickCampaignsRoute
+  ApiPublicHubCallbackRoute: typeof ApiPublicHubCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1072,6 +1097,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeadsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/hub': {
+      id: '/auth/hub'
+      path: '/hub'
+      fullPath: '/auth/hub'
+      preLoaderRoute: typeof AuthHubRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_authenticated/app': {
       id: '/_authenticated/app'
       path: '/app'
@@ -1204,6 +1236,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/campaigns/'
       preLoaderRoute: typeof AuthenticatedAppCampaignsIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/api/public/hub/callback': {
+      id: '/api/public/hub/callback'
+      path: '/api/public/hub/callback'
+      fullPath: '/api/public/hub/callback'
+      preLoaderRoute: typeof ApiPublicHubCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/tick-campaigns': {
       id: '/api/public/hooks/tick-campaigns'
@@ -1359,12 +1398,22 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthHubRoute: typeof AuthHubRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthHubRoute: AuthHubRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
   AgencyRoute: AgencyRoute,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   AutoRoute: AutoRoute,
   B2bRoute: B2bRoute,
   ComplianceRoute: ComplianceRoute,
@@ -1398,6 +1447,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksTelnyxDlrRoute: ApiPublicHooksTelnyxDlrRoute,
   ApiPublicHooksTelnyxInboundRoute: ApiPublicHooksTelnyxInboundRoute,
   ApiPublicHooksTickCampaignsRoute: ApiPublicHooksTickCampaignsRoute,
+  ApiPublicHubCallbackRoute: ApiPublicHubCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
