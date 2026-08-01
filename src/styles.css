@@ -234,3 +234,23 @@
     }
   }
 }
+
+/* Assistant workspace: spec panel slides in once the AI has assembled a job. */
+@keyframes spec-slide-in {
+  0% { opacity: 0; transform: translateX(24px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@utility spec-slide-in {
+  animation: spec-slide-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Reasoning trace rows appear one after another as the assistant works. */
+@keyframes trace-in {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@utility trace-in {
+  animation: trace-in 0.35s ease-out both;
+}
