@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/public/v1/jobs/$jobId")({
         const { data: job } = await admin
           .from("jobs")
           .select(
-            "id, workspace_id, source_type, status, rows_in, rows_deduped, rows_enriched, rows_out, params, created_at",
+            "id, workspace_id, source_type, status, rows_in, rows_deduped, rows_enriched, rows_skiptraced, params, created_at",
           )
           .eq("id", params.jobId)
           .maybeSingle();

@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/v1/jobs")({
 
         const { data, error } = await apiAdminClient()
           .from("jobs")
-          .select("id, source_type, status, rows_in, rows_out, params, created_at")
+          .select("id, source_type, status, rows_in, rows_skiptraced, params, created_at")
           .eq("workspace_id", workspaceId)
           .order("created_at", { ascending: false })
           .limit(100);
