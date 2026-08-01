@@ -93,6 +93,20 @@ function Wizard() {
     } catch { /* ignore */ }
   }, []);
 
+  // Dashboard quick-run bar passes a free-text location; reuse the same
+  // state/county resolution the prompt path uses.
+  useEffect(() => {
+    const loc = locationParam?.trim();
+    if (!loc) return;
+    const named = Object.entries(STATE_NAMES).find(([name]) => new RegExp(`\\b${name}\\b`, "i").test(loc));
+    if (named) setState(named[1]);
+    else {
+      const code = loc.match(/\b([A-Z]{2})\b/);
+      if (code) setState(code[1]);
+    }
+    setPrompt((p) => p ?? loc);
+  }, [locationParam]);
+
   const toggle = (n: string) =>
     setPicked((p) => (p.includes(n) ? p.filter((x) => x !== n) : [...p, n]));
   const toggleCounty = (c: string) =>
