@@ -80,6 +80,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "insurance",
     industry: "Insurance",
     icon: Shield,
+    card: {
+      tagline: "Build fresh prospect lists in any ZIP code.",
+      bullets: ["Age", "Homeowners", "Auto", "Business Owners"],
+      pills: ["ZIP Targeting", "Skip Trace"],
+    },
     hero: {
       eyebrow: "Built For Medicare, Life, Auto, And Final Expense",
       title: "Book More Policies.",
@@ -115,6 +120,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "solar",
     industry: "Solar & Roofing",
     icon: Sun,
+    card: {
+      tagline: "Target homeowners ready for an estimate.",
+      bullets: ["Roof Age", "Storm Areas", "Property Filters", "Owner Occupied"],
+      pills: ["Roof Age", "Owner Occupied"],
+    },
     hero: {
       eyebrow: "For Solar Installers, Roofers, And EPC Partners",
       title: "Book Roof Inspections.",
@@ -150,6 +160,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "home-services",
     industry: "Home Services",
     icon: Wrench,
+    card: {
+      tagline: "Own every neighborhood you service.",
+      bullets: ["Trade + City", "Qualified Homeowners", "Radius Targeting", "Seasonal Sync"],
+      pills: ["Trade Search", "Radius Targeting"],
+    },
     hero: {
       eyebrow: "For HVAC, Plumbing, Electrical, And Contractors",
       title: "Fill The Truck.",
