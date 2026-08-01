@@ -191,14 +191,14 @@ function Jobs() {
       </Card>
 
       <Card>
-        <CardContent className="p-0">
-          <table className="w-full text-sm">
+        <CardContent className="overflow-x-auto p-0">
+          <table className="w-full min-w-[1150px] text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="p-4">Name</th>
                 <th className="p-4">Source</th>
                 <th className="p-4">Pipeline</th>
-                <th className="p-4">Clean / DNC / Litigator</th>
+                <th className="whitespace-nowrap p-4">Clean / DNC / Litigator</th>
                 <th className="p-4">Rescan</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Created</th>
@@ -225,7 +225,7 @@ function Jobs() {
                   className="group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-muted"
                 >
                   <td className="p-4">
-                    <span className="font-medium text-foreground group-hover:text-primary">{j.name}</span>
+                    <span className="whitespace-nowrap font-medium text-foreground group-hover:text-primary">{j.name}</span>
                   </td>
                   <td className="p-4">
                     <span className="inline-flex items-center gap-2 whitespace-nowrap text-muted-foreground">
@@ -243,7 +243,7 @@ function Jobs() {
                       }}
                     />
                   </td>
-                  <td className="p-4 text-muted-foreground">
+                  <td className="whitespace-nowrap p-4 text-muted-foreground">
                     <span className="text-success font-medium">{j.counts.clean.toLocaleString()}</span> /{" "}
                     <span className="text-warn font-medium">{j.counts.dnc.toLocaleString()}</span> /{" "}
                     <span className="text-danger font-medium">{j.counts.litigator.toLocaleString()}</span>
