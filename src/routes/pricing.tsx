@@ -69,13 +69,14 @@ const TIERS = [
     included: [
       ["5", "User Seats"],
       ["15", "Sending Numbers Included"],
+      ["Included", "Skip Tracing — 300 / Day, 3,000 / Mo"],
       ["Free", "10DLC Brand & Campaign Registration"],
       ["Priority", "Support & Processing Queue"],
     ],
     usage: [
       ["$0.011", "Per SMS Segment — Flat, Never Multiplied"],
       ["$18", "Per 1,000 Lead Credit Overage"],
-      ["$0.05", "Per Skip Trace Lookup (Optional)"],
+      ["$0.05", "Per Skip Trace Beyond Your Included Limits"],
       ["$1.50", "Per Additional Number / Mo, No Cap"],
     ],
   },
@@ -90,13 +91,14 @@ const TIERS = [
     included: [
       ["Unlimited", "User Seats"],
       ["50", "Sending Numbers Included"],
+      ["Included", "Skip Tracing — 1,000 / Day, 10,000 / Mo"],
       ["Free", "10DLC Brand & Campaign Registration"],
       ["Dedicated", "Account Manager"],
     ],
     usage: [
       ["$0.010", "Per SMS Segment — Flat, Never Multiplied"],
       ["$15", "Per 1,000 Lead Credit Overage"],
-      ["$0.04", "Per Skip Trace Lookup (Optional)"],
+      ["$0.04", "Per Skip Trace Beyond Your Included Limits"],
       ["$1.50", "Per Additional Number / Mo, No Cap"],
     ],
   },
@@ -149,11 +151,11 @@ const FAQ = [
   },
   {
     q: "What Counts As A Skip Trace?",
-    a: "A skip trace is one lookup that appends contact details — mobile numbers and emails — to a record you already have. Skip tracing is always optional, so you only spend credits on the lists you choose to enrich.",
+    a: "A skip trace is one lookup that appends contact details — mobile numbers and emails — to a record you already have. On Growth and Scale it is included with fair-use limits: 300 lookups a day and 3,000 a month on Growth, 1,000 a day and 10,000 a month on Scale. Anything past that is metered at your plan rate, and Starter is metered from the first lookup.",
   },
   {
     q: "Can I Upload My Own Lists?",
-    a: "Yes, on every plan. Uploaded lists run the same pipeline as generated ones: deduplication, mobile verification, DNC and litigator scrubbing, and optional skip trace.",
+    a: "Yes, on every plan. Uploaded lists run the same pipeline as generated ones: deduplication, mobile verification, DNC and litigator scrubbing, and skip trace.",
   },
   {
     q: "Are SMS Messages Included?",
@@ -173,7 +175,7 @@ const FAQ = [
   },
   {
     q: "What Does Annual Billing Save?",
-    a: "Annual billing takes 20% off every tier. Metered usage — SMS, lead overage, skip trace, additional numbers — stays at the same published rate.",
+    a: "Annual billing takes 20% off every tier. Metered usage — SMS, lead overage, skip trace beyond your included limits, additional numbers — stays at the same published rate.",
   },
 ] as const;
 
@@ -225,7 +227,8 @@ function Pricing() {
           </p>
           <p className="mt-3 text-center text-xs text-muted-foreground">
             One lead credit = one record fully processed: sourcing, normalization, deduplication, line-type
-            lookup, and DNC plus litigator scrubbing. Skip trace is always optional and metered separately.
+            lookup, and DNC plus litigator scrubbing. Skip tracing is included on Growth and Scale within
+            daily and monthly fair-use limits, and metered beyond them.
           </p>
         </div>
 
