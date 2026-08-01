@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
 import { csvToLeads, type CsvLead } from "@/lib/csv";
+import { queueJob } from "@/lib/job-submit";
 
 export const Route = createFileRoute("/_authenticated/app/new-job/upload")({
   head: () => ({ meta: [{ title: "Upload My List — LeadTrace" }] }),
@@ -57,27 +58,24 @@ function Wizard() {
     }
     setBusy(true);
     try {
-      const { data, error } = await supabase
-        .from("jobs")
-        .insert({
-          workspace_id: workspaceId,
-          source_type: "upload",
-          status: "queued",
-          params: {
-            name: file.name,
-            file_name: file.name,
-            file_size: file.size,
-            mapping,
-            skip_trace: skipTrace,
-            rows: parsed?.rows ?? null,
-          },
-        })
-        .select("id")
-        .single();
-      if (error || !data) throw error ?? new Error("Could Not Queue Job");
+      const { id, duplicate } = await queueJob(supabase, {
+        workspaceId,
+        sourceType: "upload",
+        params: {
+          file_name: file.name,
+          file_size: file.size,
+          mapping,
+          skip_trace: skipTrace,
+          rows: parsed?.rows ?? null,
+        },
+      });
+      navigate({ to: "/app/jobs/$jobId", params: { jobId: id } });
+      if (duplicate) {
+        toast.info("This File Was Already Queued — Opening That Run.");
+        return;
+      }
       toast.success("Job Queued. Running Pipeline…");
-      navigate({ to: "/app/jobs/$jobId", params: { jobId: data.id } });
-      runJobFn({ data: { jobId: data.id } }).catch((e) =>
+      runJobFn({ data: { jobId: id } }).catch((e) =>
         toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
       );
     } catch (err) {
