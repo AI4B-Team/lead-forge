@@ -156,12 +156,12 @@ export function IndustryLandingPage({ data }: { data: IndustryLanding }) {
 
       {/* CTA */}
       <section className="bg-background pb-24">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="mx-auto max-w-7xl px-6">
           <div className="rounded-3xl bg-primary text-primary-foreground p-12 md:p-16 text-center">
-            <h2 className="font-display text-4xl md:text-5xl font-black leading-tight">
+            <h2 className="font-display text-4xl md:text-5xl font-black leading-tight whitespace-nowrap">
               Ready To Fill Your {data.industry} Pipeline?
             </h2>
-            <p className="mt-4 text-primary-foreground/80 max-w-xl mx-auto">
+            <p className="mt-4 text-primary-foreground/80 max-w-2xl mx-auto">
               Start free. Upgrade when the leads start closing. No card required.
             </p>
             <div className="mt-8 flex justify-center">
