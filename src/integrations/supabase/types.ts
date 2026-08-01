@@ -366,6 +366,27 @@ export type Database = {
           },
         ]
       }
+      feedback: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       job_events: {
         Row: {
           count: number | null
@@ -991,16 +1012,19 @@ export type Database = {
       user_prefs: {
         Row: {
           theme: string
+          tour_status: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           theme?: string
+          tour_status?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           theme?: string
+          tour_status?: string | null
           updated_at?: string
           user_id?: string
         }
