@@ -285,7 +285,7 @@ function Dashboard() {
                       {w.count || ""}
                     </span>
                     <div
-                      className="w-full rounded-t-md bg-primary/80 transition-all"
+                      className="w-full shrink-0 rounded-t-md bg-primary/80 transition-all"
                       style={{ height: `${Math.max(4, (w.count / peak) * 88)}%` }}
                     />
                     <span className="text-[10px] text-muted-foreground">{w.day}</span>
