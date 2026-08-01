@@ -224,7 +224,14 @@ function Jobs() {
                   className="group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-muted"
                 >
                   <td className="p-4">
-                    <span className="whitespace-nowrap font-medium text-foreground group-hover:text-primary">{j.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="whitespace-nowrap font-medium text-foreground group-hover:text-primary">{j.name}</span>
+                      {j.new_since_last_run > 0 && (
+                        <span className="whitespace-nowrap rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                          +{j.new_since_last_run.toLocaleString()} New
+                        </span>
+                      )}
+                    </div>
                     <div className="mt-0.5 whitespace-nowrap text-xs text-muted-foreground">
                       <span className="text-success">{j.counts.clean.toLocaleString()} Clean</span>
                       {" · "}
