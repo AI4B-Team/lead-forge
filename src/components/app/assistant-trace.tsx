@@ -4,18 +4,25 @@ import { US_STATES } from "@/lib/us-geo";
 
 export type TraceStep = { label: string; value: string };
 
-/** Required slots for a runnable job: source + subject + geography. */
-export function openSlots(spec: JobSpec): string[] {
+/**
+ * Required slots for a runnable job: source + subject + geography, or for
+ * uploads, an attached file with its columns mapped.
+ */
+export function openSlots(spec: JobSpec, uploadReady = false): string[] {
   const open: string[] = [];
   if (!spec.sourceType) open.push("Source");
+  if (spec.sourceType === "upload") {
+    if (!uploadReady) open.push("File");
+    return open;
+  }
   if (spec.sourceType === "records" && !spec.recordType) open.push("Record Type");
   if (spec.sourceType === "business" && !spec.niches.length) open.push("Niche");
   if (spec.sourceType !== "upload" && !spec.state && !spec.counties.length) open.push("Location");
   return open;
 }
 
-export function specSlotsComplete(spec: JobSpec): boolean {
-  return Boolean(spec.sourceType) && openSlots(spec).length === 0;
+export function specSlotsComplete(spec: JobSpec, uploadReady = false): boolean {
+  return Boolean(spec.sourceType) && openSlots(spec, uploadReady).length === 0;
 }
 
 const SOURCE_LABEL: Record<string, string> = {
