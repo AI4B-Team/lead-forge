@@ -51,12 +51,16 @@ export function JobSpecCard({
   spec,
   onChange,
   coverage,
+  inferred,
 }: {
   spec: JobSpec;
   onChange: (next: JobSpec) => void;
   coverage: Array<{ county: string; coverage: Coverage }>;
+  /** Fields the assistant inferred in this conversation — only these get a % badge. */
+  inferred?: Set<keyof JobSpec>;
 }) {
   const set = <K extends keyof JobSpec>(key: K, value: JobSpec[K]) => onChange({ ...spec, [key]: value });
+  const inf = (key: keyof JobSpec) => Boolean(inferred?.has(key));
   const covFor = (county: string): Coverage =>
     coverage.find((c) => c.county.toLowerCase() === county.toLowerCase())?.coverage ?? "unknown";
 
@@ -93,7 +97,7 @@ export function JobSpecCard({
         </div>
 
         <div>
-          <FieldLabel confidence={99} show={Boolean(spec.sourceType)}>Source</FieldLabel>
+          <FieldLabel confidence={99} show={Boolean(spec.sourceType) && inf("sourceType")}>Source</FieldLabel>
           <Select
             value={spec.sourceType ?? ""}
             onValueChange={(v) => set("sourceType", v as JobSpec["sourceType"])}
@@ -109,7 +113,7 @@ export function JobSpecCard({
 
         {isRecords && (
           <div>
-            <FieldLabel confidence={96} show={Boolean(spec.recordType)}>Record Type</FieldLabel>
+            <FieldLabel confidence={96} show={Boolean(spec.recordType) && inf("recordType")}>Record Type</FieldLabel>
             <Select value={spec.recordType ?? ""} onValueChange={(v) => set("recordType", v)}>
               <SelectTrigger className="mt-1"><SelectValue placeholder="Pick A Record Type" /></SelectTrigger>
               <SelectContent>
@@ -121,14 +125,14 @@ export function JobSpecCard({
 
         {isBusiness && (
           <div>
-            <FieldLabel confidence={97} show={spec.niches.length > 0}>Niches</FieldLabel>
+            <FieldLabel confidence={97} show={spec.niches.length > 0 && inf("niches")}>Niches</FieldLabel>
             <Input
               className="mt-1"
               value={spec.niches.join(", ")}
               onChange={(e) =>
                 set("niches", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))
               }
-              placeholder="HVAC, Roofer"
+              placeholder="e.g. HVAC, Roofer"
             />
           </div>
         )}
@@ -147,7 +151,7 @@ export function JobSpecCard({
           <>
             <div className={isRecords ? "grid grid-cols-2 gap-3" : ""}>
               <div>
-                <FieldLabel confidence={95} show={Boolean(spec.state)}>State</FieldLabel>
+                <FieldLabel confidence={95} show={Boolean(spec.state) && inf("state")}>State</FieldLabel>
                 <Select
                   value={spec.state ?? ""}
                   onValueChange={(v) =>
@@ -179,7 +183,7 @@ export function JobSpecCard({
             </div>
 
             <div>
-              <FieldLabel confidence={98} show={spec.counties.length > 0}>Counties</FieldLabel>
+              <FieldLabel confidence={98} show={spec.counties.length > 0 && inf("counties")}>Counties</FieldLabel>
               <CountyMultiSelect
                 state={spec.state}
                 value={spec.counties}
