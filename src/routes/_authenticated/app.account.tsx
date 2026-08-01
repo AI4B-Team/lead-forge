@@ -2,23 +2,40 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import {
+  Camera,
+  KeyRound,
+  Smartphone,
+  MonitorSmartphone,
+  History,
+  Terminal,
+  Bell,
+} from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AccountTabs } from "@/components/app/account-tabs";
+import { SettingsSummary } from "@/components/app/settings-summary";
 
 const searchSchema = z.object({ tab: z.enum(["profile", "security"]).optional() });
 
 export const Route = createFileRoute("/_authenticated/app/account")({
-  head: () => ({ meta: [{ title: "Account — LeadTrace" }] }),
+  head: () => ({ meta: [{ title: "Settings — LeadTrace" }] }),
   validateSearch: searchSchema,
   component: AccountPage,
 });
+
+type NotifyPrefs = { jobComplete: boolean; campaignAlerts: boolean; billingEmails: boolean };
+
+const DEFAULT_PREFS: NotifyPrefs = { jobComplete: true, campaignAlerts: true, billingEmails: true };
 
 function AccountPage() {
   const { tab } = Route.useSearch();
@@ -27,6 +44,7 @@ function AccountPage() {
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [prefs, setPrefs] = useState<NotifyPrefs>(DEFAULT_PREFS);
   const [savingProfile, setSavingProfile] = useState(false);
 
   const [newPassword, setNewPassword] = useState("");
@@ -37,16 +55,18 @@ function AccountPage() {
     if (!user) return;
     setFullName((user.user_metadata?.full_name as string) ?? "");
     setPhone((user.user_metadata?.phone as string) ?? "");
+    const stored = user.user_metadata?.notify as Partial<NotifyPrefs> | undefined;
+    setPrefs({ ...DEFAULT_PREFS, ...(stored ?? {}) });
   }, [user]);
 
   const saveProfile = async () => {
     setSavingProfile(true);
     const { error } = await supabase.auth.updateUser({
-      data: { full_name: fullName, phone },
+      data: { full_name: fullName, phone, notify: prefs },
     });
     setSavingProfile(false);
     if (error) return toast.error(error.message);
-    toast.success("Profile updated");
+    toast.success("Settings Saved");
   };
 
   const savePassword = async () => {
@@ -70,80 +90,240 @@ function AccountPage() {
     toast.success("Reset email sent");
   };
 
+  const displayName = fullName || user?.email?.split("@")[0] || "You";
+  const initials = displayName
+    .split(/[\s.@_-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+
   return (
-    <div className="max-w-3xl">
-      <PageHeader title="Account" description="Manage Your Profile, Security, And Preferences." />
+    <div className="mx-auto max-w-[1100px]">
+      <PageHeader
+        title="Settings"
+        description="Manage Your Profile, Workspace, Billing, Compliance, And Team."
+      />
       <AccountTabs current={tab ?? "profile"} />
       <Tabs
         value={tab ?? "profile"}
         onValueChange={(v) => navigate({ search: { tab: v as "profile" | "security" }, replace: true })}
       >
-        <TabsContent value="profile" className="mt-4 space-y-4">
-          <Card>
-            <CardHeader><CardTitle className="text-base font-display">Profile</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" value={user?.email ?? ""} disabled className="mt-1" />
-              </div>
-              <div>
-                <Label htmlFor="full-name">Full Name</Label>
-                <Input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1" />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1" placeholder="+1 555 555 5555" />
-              </div>
+        <TabsContent value="profile" className="mt-0">
+          <div className="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader><CardTitle className="text-base font-display">Profile</CardTitle></CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-lg font-display font-bold text-primary-foreground">
+                      {initials || "LT"}
+                    </div>
+                    <div>
+                      <div className="font-display font-bold text-foreground">{displayName}</div>
+                      <div className="text-xs text-muted-foreground">Owner</div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 rounded-full"
+                        onClick={() => toast.info("Photo Upload Is Coming Soon.")}
+                      >
+                        <Camera className="mr-1.5 h-3.5 w-3.5" /> Change Photo
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label htmlFor="full-name">Full Name</Label>
+                      <Input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1" placeholder="+1 555 555 5555" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" value={user?.email ?? ""} disabled className="mt-1" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base font-display">
+                    <Bell className="h-4 w-4 text-muted-foreground" /> Notifications
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="divide-y">
+                  <PrefRow
+                    label="Job Complete"
+                    hint="Email Me When A Lead Job Finishes Cleaning."
+                    checked={prefs.jobComplete}
+                    onChange={(v) => setPrefs((p) => ({ ...p, jobComplete: v }))}
+                  />
+                  <PrefRow
+                    label="Campaign Alerts"
+                    hint="Replies, Opt-Outs, And Number Health Warnings."
+                    checked={prefs.campaignAlerts}
+                    onChange={(v) => setPrefs((p) => ({ ...p, campaignAlerts: v }))}
+                  />
+                  <PrefRow
+                    label="Billing Emails"
+                    hint="Receipts, Credit Top-Ups, And Low-Balance Warnings."
+                    checked={prefs.billingEmails}
+                    onChange={(v) => setPrefs((p) => ({ ...p, billingEmails: v }))}
+                  />
+                </CardContent>
+              </Card>
+
               <Button className="rounded-full" onClick={saveProfile} disabled={savingProfile}>
                 {savingProfile ? "Saving..." : "Save Changes"}
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+
+            <SettingsSummary ownerName={displayName} />
+          </div>
         </TabsContent>
 
-        <TabsContent value="security" className="mt-4 space-y-4">
-          <Card>
-            <CardHeader><CardTitle className="text-base font-display">Change Password</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="new-pass">New Password</Label>
-                <Input id="new-pass" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="mt-1" />
-              </div>
-              <div>
-                <Label htmlFor="confirm-pass">Confirm Password</Label>
-                <Input id="confirm-pass" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="mt-1" />
-              </div>
-              <div className="flex gap-2">
-                <Button className="rounded-full" onClick={savePassword} disabled={savingPassword}>
-                  {savingPassword ? "Updating..." : "Update Password"}
-                </Button>
-                <Button variant="outline" className="rounded-full" onClick={sendReset}>
-                  Send Reset Email
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="security" className="mt-0">
+          <div className="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base font-display">
+                    <KeyRound className="h-4 w-4 text-muted-foreground" /> Password
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label htmlFor="new-pass">New Password</Label>
+                      <Input id="new-pass" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label htmlFor="confirm-pass">Confirm Password</Label>
+                      <Input id="confirm-pass" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="mt-1" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button className="rounded-full" onClick={savePassword} disabled={savingPassword}>
+                      {savingPassword ? "Updating..." : "Update Password"}
+                    </Button>
+                    <Button variant="outline" className="rounded-full" onClick={sendReset}>
+                      Send Reset Email
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader><CardTitle className="text-base font-display">Sessions</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Sign out of this device. You can sign back in anytime with your credentials.
-              </p>
-              <Button
-                variant="outline"
-                className="rounded-full"
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  window.location.href = "/auth";
-                }}
-              >
-                Sign Out
-              </Button>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base font-display">
+                    <Smartphone className="h-4 w-4 text-muted-foreground" /> Two-Factor Authentication
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-between gap-4">
+                  <p className="text-sm text-muted-foreground">
+                    Require A One-Time Code From Your Phone On Every New Sign-In.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => toast.info("Two-Factor Setup Is Coming Soon.")}
+                  >
+                    Enable
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base font-display">
+                    <MonitorSmartphone className="h-4 w-4 text-muted-foreground" /> Active Sessions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between gap-4 rounded-xl border border-border p-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        This Device <Badge variant="secondary">Current</Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {typeof navigator !== "undefined" ? navigator.platform || "Browser" : "Browser"} ·
+                        {" "}Signed In {user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : "Recently"}
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        window.location.href = "/auth";
+                      }}
+                    >
+                      Sign Out
+                    </Button>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <History className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    Last Sign-In{" "}
+                    {user?.last_sign_in_at
+                      ? new Date(user.last_sign_in_at).toLocaleString()
+                      : "Unavailable"}{" "}
+                    · Account Created{" "}
+                    {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base font-display">
+                    <Terminal className="h-4 w-4 text-muted-foreground" /> API Keys
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-between gap-4">
+                  <p className="text-sm text-muted-foreground">
+                    Push Leads And Campaign Events Into Your Own Stack. Manage Keys And Webhooks In Workspace Settings.
+                  </p>
+                  <Button variant="outline" className="rounded-full" asChild>
+                    <a href="/app/settings">Open</a>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <SettingsSummary ownerName={displayName} />
+          </div>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function PrefRow({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+      <div>
+        <div className="text-sm font-medium text-foreground">{label}</div>
+        <div className="text-xs text-muted-foreground">{hint}</div>
+      </div>
+      <Switch checked={checked} onCheckedChange={onChange} />
     </div>
   );
 }
