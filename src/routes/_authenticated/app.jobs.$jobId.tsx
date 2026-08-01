@@ -305,10 +305,31 @@ function LaunchCampaignDialog({ defaultJobId, defaultJobName }: { defaultJobId: 
   );
 }
 
-function LeadsBrowser({ jobId, disabled }: { jobId: string; disabled: boolean }) {
-  const [open, setOpen] = useState(false);
-  const [bucket, setBucket] = useState<"clean" | "dnc" | "litigator" | "all">("clean");
+type Bucket = "clean" | "dnc" | "litigator" | "all";
+
+type LeadRow = {
+  id: string;
+  full_name: string | null;
+  business_name: string | null;
+  phone: string | null;
+  phone_type: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  scrub_status: string | null;
+};
+
+function LeadsBrowser({ jobId, disabled, open, onOpenChange, bucket, onBucketChange }: {
+  jobId: string;
+  disabled: boolean;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  bucket: Bucket;
+  onBucketChange: (b: Bucket) => void;
+}) {
   const [q, setQ] = useState("");
+  const [active, setActive] = useState<LeadRow | null>(null);
   const fetchLeads = useServerFn(listJobLeads);
   const { data, isFetching } = useQuery({
     queryKey: ["job-leads", jobId, bucket, q],
@@ -316,7 +337,7 @@ function LeadsBrowser({ jobId, disabled }: { jobId: string; disabled: boolean })
     enabled: open,
   });
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
         <Button variant="outline" className="rounded-full" disabled={disabled}>
           <Users className="mr-1 h-4 w-4" /> Browse Leads
@@ -331,7 +352,7 @@ function LeadsBrowser({ jobId, disabled }: { jobId: string; disabled: boolean })
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, phone, email…" className="pl-9" />
           </div>
-          <Select value={bucket} onValueChange={(v) => setBucket(v as typeof bucket)}>
+          <Select value={bucket} onValueChange={(v) => onBucketChange(v as Bucket)}>
             <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="clean">Clean</SelectItem>
@@ -347,7 +368,12 @@ function LeadsBrowser({ jobId, disabled }: { jobId: string; disabled: boolean })
             <div className="text-sm text-muted-foreground text-center py-6">No Leads Match.</div>
           )}
           {data?.leads.map((l) => (
-            <div key={l.id} className="rounded-xl border border-border p-3">
+            <button
+              key={l.id}
+              type="button"
+              onClick={() => setActive(l as LeadRow)}
+              className="w-full text-left rounded-xl border border-border p-3 transition-colors hover:border-primary/40 hover:bg-muted/50"
+            >
               <div className="flex items-center justify-between">
                 <div className="font-semibold text-sm text-foreground">{l.full_name ?? l.business_name ?? "—"}</div>
                 <Badge
@@ -362,20 +388,59 @@ function LeadsBrowser({ jobId, disabled }: { jobId: string; disabled: boolean })
                 </Badge>
               </div>
               <div className="mt-1 text-xs text-muted-foreground space-x-3">
-                {l.phone && <span>📞 {l.phone}{l.phone_type ? ` (${l.phone_type})` : ""}</span>}
-                {l.email && <span>✉ {l.email}</span>}
+                {l.phone && <span>{l.phone}{l.phone_type ? ` · ${l.phone_type}` : ""}</span>}
+                {l.email && <span>{l.email}</span>}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
                 {[l.address, l.city, l.state].filter(Boolean).join(", ") || "—"}
               </div>
-            </div>
+            </button>
           ))}
           {(data?.leads.length ?? 0) === 100 && (
             <div className="text-xs text-muted-foreground text-center pt-2">Showing First 100 · Refine Search To See More.</div>
           )}
         </div>
+        <ContactDetailDialog lead={active} onClose={() => setActive(null)} />
       </SheetContent>
     </Sheet>
+  );
+}
+
+function ContactDetailDialog({ lead, onClose }: { lead: LeadRow | null; onClose: () => void }) {
+  return (
+    <Dialog open={!!lead} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="font-display">
+            {lead?.full_name ?? lead?.business_name ?? "Contact Details"}
+          </DialogTitle>
+          <DialogDescription>Full Record As Delivered After Enrichment And Scrubbing.</DialogDescription>
+        </DialogHeader>
+        <dl className="grid grid-cols-3 gap-y-3 text-sm">
+          <DetailRow label="Name" value={lead?.full_name} />
+          <DetailRow label="Business" value={lead?.business_name} />
+          <DetailRow label="Phone" value={lead?.phone} />
+          <DetailRow label="Line Type" value={lead?.phone_type} />
+          <DetailRow label="Email" value={lead?.email} />
+          <DetailRow label="Address" value={lead?.address} />
+          <DetailRow label="City" value={lead?.city} />
+          <DetailRow label="State" value={lead?.state} />
+          <DetailRow label="Scrub Status" value={lead?.scrub_status} />
+        </dl>
+        <DialogFooter>
+          <Button variant="outline" className="rounded-full" onClick={onClose}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <>
+      <dt className="col-span-1 text-xs uppercase tracking-wider font-semibold text-muted-foreground pt-0.5">{label}</dt>
+      <dd className="col-span-2 text-foreground break-words">{value || "—"}</dd>
+    </>
   );
 }
 
@@ -390,7 +455,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function BucketCard({ tone, icon, title, count, note, ready, onDownload }: {
+function BucketCard({ tone, icon, title, count, note, ready, onDownload, onView }: {
   tone: "success" | "warn" | "danger";
   icon: React.ReactNode;
   title: string;
@@ -398,6 +463,7 @@ function BucketCard({ tone, icon, title, count, note, ready, onDownload }: {
   note: string;
   ready: boolean;
   onDownload: () => void;
+  onView: () => void;
 }) {
   const toneClasses = {
     success: "border-success/30 bg-success/5",
@@ -414,9 +480,14 @@ function BucketCard({ tone, icon, title, count, note, ready, onDownload }: {
         {ready ? count.toLocaleString() : "—"}
       </div>
       <div className="mt-1 text-sm text-muted-foreground">{note}</div>
-      <Button size="sm" variant="outline" className="mt-4 rounded-full" disabled={!ready || count === 0} onClick={onDownload}>
-        <Download className="mr-1 h-3.5 w-3.5" /> Download File
-      </Button>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button size="sm" variant="outline" className="rounded-full" disabled={!ready || count === 0} onClick={onView}>
+          <Eye className="mr-1 h-3.5 w-3.5" /> View Online
+        </Button>
+        <Button size="sm" variant="outline" className="rounded-full" disabled={!ready || count === 0} onClick={onDownload}>
+          <Download className="mr-1 h-3.5 w-3.5" /> Download File
+        </Button>
+      </div>
     </div>
   );
 }
