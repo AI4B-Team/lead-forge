@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { INDUSTRIES, RECORD_TYPES, COUNTIES } from "@/lib/mock-data";
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { INDUSTRIES, COUNTIES } from "@/lib/mock-data";
+import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
 import { StateMultiSelect } from "@/components/app/state-multi-select";
@@ -220,6 +222,8 @@ export function JobSpecCard({
   onPickFile?: (file: File) => void;
   onRemoveUpload?: () => void;
   onEditMapping?: () => void;
+  /** Logs a record type the pipeline does not support yet. */
+  onRequestRecordType?: (request: string) => Promise<void> | void;
 }) {
   const set = <K extends keyof JobSpec>(key: K, value: JobSpec[K]) => onChange({ ...spec, [key]: value });
   const inf = (key: keyof JobSpec) => Boolean(inferred?.has(key));
@@ -231,6 +235,22 @@ export function JobSpecCard({
   const isUpload = spec.sourceType === "upload";
   const hasGeo = isRecords || isBusiness;
   const states = specStates(spec);
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [requestText, setRequestText] = useState("");
+  const [requesting, setRequesting] = useState(false);
+
+  const submitRecordTypeRequest = async () => {
+    const text = requestText.trim();
+    if (!text || !onRequestRecordType) return;
+    setRequesting(true);
+    try {
+      await onRequestRecordType(text);
+      setRequestText("");
+      setRequestOpen(false);
+    } finally {
+      setRequesting(false);
+    }
+  };
 
   const toggles = isUpload
     ? ([
