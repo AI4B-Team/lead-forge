@@ -96,7 +96,9 @@ function JobDetail() {
 
   // Elapsed / throughput / ETA from the job clock and the rows already processed.
   const startedAt = new Date(job.created_at as string).getTime();
-  const endedAt = isRunning ? Date.now() : new Date((job.updated_at as string) ?? job.created_at as string).getTime();
+  const endedAt = isRunning
+    ? Date.now()
+    : new Date((scrubFreshness.scrubbedAt ?? job.last_run_at ?? job.created_at) as string).getTime();
   const elapsedMs = Math.max(1000, endedAt - startedAt);
   const processed = counts.total || (job.rows_deduped ?? 0) || (job.rows_in ?? 0);
   const perMin = Math.round(processed / (elapsedMs / 60000));
