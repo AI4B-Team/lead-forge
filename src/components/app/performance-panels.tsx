@@ -322,7 +322,7 @@ export function NumberHealthPanel({
               Buy Local Numbers To Start Rotating Traffic And Building Carrier Reputation.
             </div>
             <Button asChild size="sm" className="rounded-full mt-3">
-              <Link to="/app/settings/numbers">Manage Numbers</Link>
+              <Link to="/app/numbers">Manage Numbers</Link>
             </Button>
           </div>
         ) : (
