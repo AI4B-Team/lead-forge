@@ -314,3 +314,36 @@ export const isSendingAllowed = createServerFn({ method: "GET" })
       .maybeSingle();
     return { allowed: reg?.campaign_status === "approved" };
   });
+/** Inbound call handling: forward to a real phone, or fall back to voicemail. */
+export const updateInboundSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        numberIds: z.array(z.string().uuid()).min(1).optional(),
+        forwardCallsTo: z.string().max(20).nullable(),
+        voicemailGreeting: z.string().max(500).nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const digits = data.forwardCallsTo?.replace(/[^0-9]/g, "") ?? "";
+    if (data.forwardCallsTo && digits.length !== 10 && digits.length !== 11) {
+      throw new Error("Enter a valid 10-digit forwarding number.");
+    }
+    const forward = digits ? (digits.length === 10 ? `+1${digits}` : `+${digits}`) : null;
+
+    let q = context.supabase
+      .from("sending_numbers")
+      .update({
+        forward_calls_to: forward,
+        voicemail_greeting: data.voicemailGreeting?.trim() || null,
+      } as never)
+      .eq("workspace_id", data.workspaceId);
+    if (data.numberIds?.length) q = q.in("id", data.numberIds);
+
+    const { error } = await q;
+    if (error) throw error;
+    return { ok: true, forwardCallsTo: forward };
+  });
