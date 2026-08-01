@@ -11,6 +11,8 @@ export const Route = createFileRoute("/industries")({
       { name: "description", content: "Insurance, real estate, solar, home services, and agencies all run on the same LeadTrace pipeline, tuned to their playbook." },
       { property: "og:title", content: "LeadTrace For Every Industry" },
       { property: "og:description", content: "Same engine. Your playbook." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Industries,
