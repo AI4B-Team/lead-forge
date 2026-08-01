@@ -75,6 +75,7 @@ import { Route as AuthenticatedAppNewJobBusinessRouteImport } from './routes/_au
 import { Route as AuthenticatedAppJobsJobIdRouteImport } from './routes/_authenticated/app.jobs.$jobId'
 import { Route as AuthenticatedAppCampaignsNewRouteImport } from './routes/_authenticated/app.campaigns.new'
 import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
+import { Route as ApiPublicV1JobsJobIdRouteImport } from './routes/api/public/v1/jobs.$jobId'
 
 const TutorialsRoute = TutorialsRouteImport.update({
   id: '/tutorials',
@@ -420,6 +421,11 @@ const AuthenticatedAppCampaignsCampaignIdRoute =
     path: '/campaigns/$campaignId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const ApiPublicV1JobsJobIdRoute = ApiPublicV1JobsJobIdRouteImport.update({
+  id: '/$jobId',
+  path: '/$jobId',
+  getParentRoute: () => ApiPublicV1JobsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -485,8 +491,9 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
-  '/api/public/v1/jobs': typeof ApiPublicV1JobsRoute
+  '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
+  '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -551,8 +558,9 @@ export interface FileRoutesByTo {
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
-  '/api/public/v1/jobs': typeof ApiPublicV1JobsRoute
+  '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/app/campaigns': typeof AuthenticatedAppCampaignsIndexRoute
+  '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -620,8 +628,9 @@ export interface FileRoutesById {
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
-  '/api/public/v1/jobs': typeof ApiPublicV1JobsRoute
+  '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/_authenticated/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
+  '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -691,6 +700,7 @@ export interface FileRouteTypes {
     | '/api/public/hub/callback'
     | '/api/public/v1/jobs'
     | '/app/campaigns/'
+    | '/api/public/v1/jobs/$jobId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -757,6 +767,7 @@ export interface FileRouteTypes {
     | '/api/public/hub/callback'
     | '/api/public/v1/jobs'
     | '/app/campaigns'
+    | '/api/public/v1/jobs/$jobId'
   id:
     | '__root__'
     | '/'
@@ -825,6 +836,7 @@ export interface FileRouteTypes {
     | '/api/public/hub/callback'
     | '/api/public/v1/jobs'
     | '/_authenticated/app/campaigns/'
+    | '/api/public/v1/jobs/$jobId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -867,7 +879,7 @@ export interface RootRouteChildren {
   ApiPublicHooksTelnyxInboundRoute: typeof ApiPublicHooksTelnyxInboundRoute
   ApiPublicHooksTickCampaignsRoute: typeof ApiPublicHooksTickCampaignsRoute
   ApiPublicHubCallbackRoute: typeof ApiPublicHubCallbackRoute
-  ApiPublicV1JobsRoute: typeof ApiPublicV1JobsRoute
+  ApiPublicV1JobsRoute: typeof ApiPublicV1JobsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -1334,6 +1346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCampaignsCampaignIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/api/public/v1/jobs/$jobId': {
+      id: '/api/public/v1/jobs/$jobId'
+      path: '/$jobId'
+      fullPath: '/api/public/v1/jobs/$jobId'
+      preLoaderRoute: typeof ApiPublicV1JobsJobIdRouteImport
+      parentRoute: typeof ApiPublicV1JobsRoute
+    }
   }
 }
 
@@ -1428,6 +1447,18 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
+interface ApiPublicV1JobsRouteChildren {
+  ApiPublicV1JobsJobIdRoute: typeof ApiPublicV1JobsJobIdRoute
+}
+
+const ApiPublicV1JobsRouteChildren: ApiPublicV1JobsRouteChildren = {
+  ApiPublicV1JobsJobIdRoute: ApiPublicV1JobsJobIdRoute,
+}
+
+const ApiPublicV1JobsRouteWithChildren = ApiPublicV1JobsRoute._addFileChildren(
+  ApiPublicV1JobsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1468,7 +1499,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksTelnyxInboundRoute: ApiPublicHooksTelnyxInboundRoute,
   ApiPublicHooksTickCampaignsRoute: ApiPublicHooksTickCampaignsRoute,
   ApiPublicHubCallbackRoute: ApiPublicHubCallbackRoute,
-  ApiPublicV1JobsRoute: ApiPublicV1JobsRoute,
+  ApiPublicV1JobsRoute: ApiPublicV1JobsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
