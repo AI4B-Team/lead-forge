@@ -75,7 +75,7 @@ export function NotificationBell() {
 
         <div className="border-t border-border p-3">
           <Button asChild variant="outline" size="sm" className="w-full rounded-full">
-            <Link to="/app/inbox" onClick={() => setOpen(false)}>Open Inbox</Link>
+            <Link to="/app/inbox" onClick={() => setOpen(false)}>Open Conversations</Link>
           </Button>
         </div>
       </PopoverContent>
