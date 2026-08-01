@@ -192,7 +192,8 @@ function NewCampaign() {
     queryFn: () => fetchNumbers({ data: { workspaceId: workspaceId! } }),
     enabled: !!workspaceId,
   });
-  const activeNumbers = (numbers ?? []).filter((n: { status?: string | null }) => n.status !== "cooling").length;
+  const numberRows = Array.isArray(numbers) ? numbers : (numbers?.rows ?? []);
+  const activeNumbers = numberRows.filter((n) => n.status !== "cooling").length;
 
   const { data: brands } = useQuery({
     queryKey: ["brand-names", workspaceId],
