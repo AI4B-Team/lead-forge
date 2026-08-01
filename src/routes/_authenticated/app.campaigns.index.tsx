@@ -6,7 +6,10 @@ import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ShieldAlert, LayoutGrid, List, Bot } from "lucide-react";
+import { Plus, ShieldAlert, LayoutGrid, List, Bot, Send, MessageSquare, Rocket, Bot as BotIcon, UserRound } from "lucide-react";
+import { StatTile } from "@/components/app/stat-tile";
+import { CampaignCard, CampaignStatusBadge } from "@/components/app/campaign-card";
+import { emptyStats } from "@/lib/campaign-stats";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { getRegistration } from "@/lib/numbers.functions";
 import { listCampaigns } from "@/lib/campaigns.functions";
@@ -62,6 +65,20 @@ function Campaigns() {
     return acc;
   }, {});
   const tagList = Object.values(tags);
+  const overview = allCampaigns.reduce(
+    (acc, c) => {
+      const s = (stats as Record<string, any>)[c.id] ?? emptyStats();
+      const status = (c.status ?? "draft").toLowerCase();
+      if (status === "running" || status === "active" || status === "sending") acc.active += 1;
+      if (status === "draft") acc.draft += 1;
+      acc.sent += s.sent ?? 0;
+      acc.replies += s.replies ?? 0;
+      acc.aiChats += s.aiChats ?? 0;
+      acc.needsHuman += s.needsHuman ?? 0;
+      return acc;
+    },
+    { active: 0, draft: 0, sent: 0, replies: 0, aiChats: 0, needsHuman: 0 },
+  );
   return (
     <div>
       <PageHeader
@@ -92,6 +109,15 @@ function Campaigns() {
           </div>
         }
       />
+      {allCampaigns.length > 0 && (
+        <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <StatTile label="Campaigns" value={allCampaigns.length} hint={`${overview.active} Active · ${overview.draft} Draft`} icon={Rocket} />
+          <StatTile label="Messages Sent" value={overview.sent} icon={Send} />
+          <StatTile label="Replies" value={overview.replies} icon={MessageSquare} />
+          <StatTile label="AI Conversations" value={overview.aiChats} icon={BotIcon} />
+          <StatTile label="Needs Human" value={overview.needsHuman} hint="Handoffs Awaiting You" icon={UserRound} />
+        </div>
+      )}
       {(tagList.length > 0 || (tagCounts.untagged ?? 0) > 0) && allCampaigns.length > 0 && (
         <div className="mb-5 flex flex-wrap items-center gap-2">
           <button
@@ -151,49 +177,15 @@ function Campaigns() {
           </CardContent>
         </Card>
       ) : view === "cards" ? (
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {campaigns.map((c) => (
-            <CampaignCard key={c.id} campaign={c} stats={stats[c.id]} tag={c.tag_id ? tags[c.tag_id] : undefined} workspaceId={workspaceId} />
+            <CampaignCard key={c.id} campaign={c} stats={(stats as Record<string, any>)[c.id]} tag={c.tag_id ? tags[c.tag_id] : undefined} workspaceId={workspaceId} />
           ))}
         </div>
       ) : (
         <CampaignList campaigns={campaigns} stats={stats} tags={tags} workspaceId={workspaceId} />
       )}
     </div>
-  );
-}
-
-function CampaignCard({ campaign: c, stats: s, tag, workspaceId }: { campaign: any; stats?: any; tag?: any; workspaceId?: string | null }) {
-  const stat = s ?? { sent: 0, replies: 0, optOuts: 0, recipients: 0 };
-  return (
-    <Link to="/app/campaigns/$campaignId" params={{ campaignId: c.id }}>
-      <Card className="hover:border-primary transition">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <Badge variant="outline" className="uppercase text-[10px]">{c.status ?? "draft"}</Badge>
-            <div className="flex items-center gap-2">
-              {workspaceId ? (
-                <CampaignTagMenu workspaceId={workspaceId} campaignId={c.id} tag={tag} />
-              ) : (
-                tag && <TagBadge tag={tag} />
-              )}
-              <div className="text-xs text-muted-foreground">Cap {c.daily_cap ?? 500}/Day</div>
-            </div>
-          </div>
-          <div className="mt-3 font-display font-bold text-lg text-foreground">{c.name}</div>
-          {c.bot_enabled && (
-            <div className="mt-1 text-[11px] font-semibold text-primary flex items-center gap-1">
-              <Bot className="h-3 w-3" /> AI Warm-Up Bot On
-            </div>
-          )}
-          <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
-            <MiniStat label="Sent" value={stat.sent} />
-            <MiniStat label="Replies" value={stat.replies} />
-            <MiniStat label="Opt-Outs" value={stat.optOuts} />
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
   );
 }
 
