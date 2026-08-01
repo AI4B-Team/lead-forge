@@ -168,6 +168,17 @@ export const advanceRegistration = createServerFn({ method: "POST" })
           opt_in_flow: z.string().min(1),
         })
         .optional(),
+      business: z
+        .object({
+          legal_name: z.string(),
+          ein: z.string(),
+          website: z.string(),
+          contact_email: z.string(),
+          address: z.string(),
+        })
+        .partial()
+        .optional(),
+      wizard_step: z.number().int().min(1).max(5).optional(),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -181,6 +192,8 @@ export const advanceRegistration = createServerFn({ method: "POST" })
       ...((existing?.provider_refs as Record<string, unknown> | null) ?? {}),
       ...(data.brand ? { brand: data.brand } : {}),
       ...(data.campaign ? { campaign: data.campaign } : {}),
+      ...(data.business ? { business: data.business } : {}),
+      ...(data.wizard_step ? { wizard_step: data.wizard_step } : {}),
     };
 
     const payload = {

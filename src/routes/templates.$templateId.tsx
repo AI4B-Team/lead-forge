@@ -101,7 +101,7 @@ function TemplateDetailPage() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/app/new-job/business" search={{ prompt: template.prompt }}>
+              <Link to="/app/new-job/business" search={{ niche: template.title }}>
                 Open In App
               </Link>
             </Button>

@@ -500,7 +500,7 @@ function LeadsIndexBody() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-full">
-              <Link to="#sample-list">
+              <Link to="." hash="sample-list">
                 See Sample Export
               </Link>
             </Button>

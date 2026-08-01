@@ -65,8 +65,8 @@ export function GettingStarted({ workspaceId }: { workspaceId: string | null }) 
       title: "Register Your Texting Brand",
       body: "Carrier approval can take a few days — start now so it's ready when your list is.",
       icon: <ShieldCheck className="h-4 w-4" />,
-      to: "/app/brands",
-      cta: "Set Up Brand",
+      to: "/app/registration",
+      cta: "Start Setup",
       done: data.hasBrand,
     },
     {
