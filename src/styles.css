@@ -270,7 +270,6 @@
 @supports (zoom: 0.8) {
   .app-density {
     zoom: 0.8;
-    width: 125%;
   }
   /* Portal-rendered overlays density-matched to the zoomed content */
   [role="dialog"],
