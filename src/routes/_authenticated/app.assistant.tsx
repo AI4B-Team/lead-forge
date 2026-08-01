@@ -90,6 +90,11 @@ function Assistant() {
   const [running, setRunning] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [revealed, setRevealed] = useState(0);
+  const [recents, setRecents] = useState<RecentTemplate[]>([]);
+  const [allOpen, setAllOpen] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [micSupported, setMicSupported] = useState(false);
+  const lastTemplateId = useRef<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const sentPrompt = useRef(false);
   const restored = useRef(false);
@@ -106,6 +111,45 @@ function Assistant() {
   useEffect(() => {
     composer.current?.focus();
   }, [started]);
+
+  useEffect(() => {
+    setMicSupported(
+      typeof window !== "undefined" &&
+        Boolean((window as unknown as Record<string, unknown>).SpeechRecognition ||
+          (window as unknown as Record<string, unknown>).webkitSpeechRecognition),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    setRecents(loadRecentTemplates(workspaceId));
+  }, [workspaceId]);
+
+  /** Prefill only — the operator still reviews and presses Build List. */
+  const insertTemplate = (t: Template) => {
+    lastTemplateId.current = t.id;
+    setInput(t.prompt);
+    setAllOpen(false);
+    if (workspaceId) setRecents(touchRecentTemplate(workspaceId, t.id));
+    requestAnimationFrame(() => composer.current?.focus());
+  };
+
+  const dictate = () => {
+    const w = window as unknown as Record<string, any>;
+    const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!Ctor) return;
+    const rec = new Ctor();
+    rec.lang = "en-US";
+    rec.interimResults = false;
+    rec.onresult = (e: any) => {
+      const said = e.results?.[0]?.[0]?.transcript ?? "";
+      if (said) setInput((v) => (v ? `${v} ${said}` : said));
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    setListening(true);
+    rec.start();
+  };
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
