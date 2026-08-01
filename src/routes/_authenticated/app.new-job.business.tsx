@@ -71,10 +71,9 @@ function Wizard() {
 
   useEffect(() => {
     try {
-      const stashed = sessionStorage.getItem("leadtrace_prompt");
+      const stashed = takeStashedPrompt();
       if (!stashed) return;
       setPrompt(stashed);
-      sessionStorage.removeItem("leadtrace_prompt");
       // State: full name anywhere, else 2-letter code.
       const named = Object.entries(STATE_NAMES).find(([name]) =>
         new RegExp(`\\b${name}\\b`, "i").test(stashed),
