@@ -21,13 +21,19 @@ import { assistantChat, createJobFromSpec, requestCoverage } from "@/lib/assista
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
-import { TEMPLATES, CATEGORY_LABELS, type Template, type TemplateCategory } from "@/lib/templates";
+import { TEMPLATES, CATEGORY_LABELS, templateSourceType, type Template, type TemplateCategory } from "@/lib/templates";
 import { TemplateCard } from "@/components/marketing/template-card";
+import { useOverflow } from "@/hooks/use-overflow";
+import { US_STATES } from "@/lib/us-geo";
 import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@/lib/recent-templates";
 import { takeStashedPrompt, clearStashedPrompt } from "@/lib/prompt-handoff";
 
 export const Route = createFileRoute("/_authenticated/app/assistant")({
-  validateSearch: z.object({ prompt: z.string().optional(), fill: z.string().optional() }),
+  validateSearch: z.object({
+    prompt: z.string().optional(),
+    fill: z.string().optional(),
+    template: z.string().optional(),
+  }),
   head: () => ({
     meta: [
       { title: "AI Lead Assistant — LeadTrace" },
@@ -69,6 +75,25 @@ function diffSpec(prev: JobSpec, next: JobSpec): string[] {
     .map((k) => FIELD_LABELS[k]!);
 }
 
+const GENERIC_PLACEHOLDER =
+  "Describe The Leads You Want. E.g. Roofing Companies In Hillsborough County With Mobile Numbers.";
+
+/**
+ * Light slot check used only when a template is selected: the template already
+ * knows the source, so all we need from the operator is the "who" and "where".
+ */
+function missingSlots(text: string, spec: JobSpec) {
+  const t = text.toLowerCase();
+  const hasGeo =
+    Boolean(spec.state) ||
+    spec.counties.length > 0 ||
+    /\b(county|counties|city|zip|statewide)\b/.test(t) ||
+    US_STATES.some((s) => new RegExp(`\\b(${s.code.toLowerCase()}|${s.name.toLowerCase()})\\b`).test(t));
+  const hasSubject =
+    spec.niches.length > 0 || Boolean(spec.recordType) || text.trim().split(/\s+/).length >= 3;
+  return { geo: !hasGeo, subject: !hasSubject };
+}
+
 function Assistant() {
   const navigate = useNavigate();
   const search = Route.useSearch();
@@ -90,6 +115,7 @@ function Assistant() {
   const [confirmed, setConfirmed] = useState(false);
   const [revealed, setRevealed] = useState(0);
   const [recents, setRecents] = useState<RecentTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [allOpen, setAllOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
@@ -98,6 +124,7 @@ function Assistant() {
   const sentPrompt = useRef(false);
   const restored = useRef(false);
   const composer = useRef<HTMLTextAreaElement>(null);
+  const specScroll = useOverflow<HTMLDivElement>();
 
   const started = thread.length > 0;
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
@@ -124,11 +151,22 @@ function Assistant() {
     setRecents(loadRecentTemplates(workspaceId));
   }, [workspaceId]);
 
-  /** Prefill only — the operator still reviews and presses Build List. */
-  const insertTemplate = (t: Template) => {
-    lastTemplateId.current = t.id;
-    setInput(t.prompt);
+  /**
+   * Template selection sets context, never composer text. Picking a template
+   * marks it selected, swaps the placeholder to a fill-in example, and presets
+   * only the spec fields the template already determines (the source).
+   */
+  const selectTemplate = (t: Template) => {
     setAllOpen(false);
+    if (selectedTemplate?.id === t.id) {
+      setSelectedTemplate(null);
+      lastTemplateId.current = null;
+      requestAnimationFrame(() => composer.current?.focus());
+      return;
+    }
+    setSelectedTemplate(t);
+    lastTemplateId.current = t.id;
+    setSpec((s) => ({ ...s, sourceType: templateSourceType(t), templateId: t.id }));
     if (workspaceId) setRecents(touchRecentTemplate(workspaceId, t.id));
     requestAnimationFrame(() => composer.current?.focus());
   };
@@ -182,10 +220,42 @@ function Assistant() {
 
   const send = async (text: string) => {
     const body = text.trim();
-    if (!body || !workspaceId || busy) return;
+    if (!workspaceId || busy) return;
+    // Template selected but slots still missing: the assistant opens the
+    // conversation itself and asks only for what it doesn't have.
+    if (selectedTemplate) {
+      const miss = missingSlots(body, spec);
+      if (!body || miss.geo || miss.subject) {
+        const ask = miss.subject && miss.geo
+          ? selectedTemplate.category === "records"
+            ? "which record type should I pull, and in which county or state?"
+            : "what should I look for, and where?"
+          : miss.subject
+            ? selectedTemplate.category === "records"
+              ? "which record type should I pull?"
+              : "what should I look for?"
+            : "which county or state should I cover?";
+        if (body) setThread((m) => [...m, { role: "user", content: body }]);
+        setThread((m) => [
+          ...m,
+          { role: "assistant", content: `You picked ${selectedTemplate.title} — ${ask}`, spec },
+        ]);
+        if (body && !firstPrompt) setFirstPrompt(body);
+        setInput("");
+        setRevealed(0);
+        return;
+      }
+    }
+    if (!body) return;
     const history = thread
       .filter((m): m is ThreadItem & { role: "user" | "assistant" } => m.role !== "system")
       .map((m) => ({ role: m.role, content: m.content }));
+    if (selectedTemplate) {
+      history.push({
+        role: "user",
+        content: `Use the ${selectedTemplate.title} source template (${selectedTemplate.subtitle}).`,
+      });
+    }
     if (!firstPrompt) setFirstPrompt(body);
     setThread((m) => [...m, { role: "user", content: body }]);
     setInput("");
@@ -210,6 +280,7 @@ function Assistant() {
     clearStashedPrompt();
     if (workspaceId) clearDraft(workspaceId);
     lastTemplateId.current = null;
+    setSelectedTemplate(null);
     setThread([]);
     setInput("");
     setSpec(EMPTY_SPEC);
@@ -236,6 +307,14 @@ function Assistant() {
   // short-lived sessionStorage stash as the only fallback.
   useEffect(() => {
     if (sentPrompt.current || !workspaceId) return;
+    // In-app template pick: select it as context (no composer text).
+    if (search.template) {
+      const picked = TEMPLATES.find((t) => t.id === search.template);
+      sentPrompt.current = true;
+      navigate({ to: "/app/assistant", search: {}, replace: true });
+      if (picked) selectTemplate(picked);
+      return;
+    }
     const fromUrl = search.prompt?.trim();
     const stashed = takeStashedPrompt();
     const initial = fromUrl || stashed;
@@ -249,7 +328,7 @@ function Assistant() {
     }
     void send(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId, search.prompt]);
+  }, [workspaceId, search.prompt, search.template]);
 
   const uncovered = coverage.filter((c) => c.coverage === "requested" || c.coverage === "unknown");
 
@@ -349,8 +428,16 @@ function Assistant() {
 
   const specPanel = (
     <div className="flex min-h-0 flex-col gap-4 lg:h-full">
-      <div className="min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
-        <JobSpecCard spec={spec} onChange={editSpec} coverage={coverage} />
+      <div className="relative min-h-0 lg:flex-1">
+        <div
+          ref={specScroll.ref}
+          className={`h-full min-h-0 lg:overflow-y-auto ${specScroll.overflowing ? "thin-scroll lg:pr-1" : ""}`}
+        >
+          <JobSpecCard spec={spec} onChange={editSpec} coverage={coverage} />
+        </div>
+        {specScroll.overflowing && !specScroll.atBottom && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background to-transparent" />
+        )}
       </div>
       {runFooter}
     </div>
@@ -369,7 +456,7 @@ function Assistant() {
             void send(input);
           }
         }}
-        placeholder="Describe The Leads You Want. E.g. Roofing Companies In Hillsborough County With Mobile Numbers."
+        placeholder={selectedTemplate?.placeholderHint ?? GENERIC_PLACEHOLDER}
         className="resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
       />
       <div className="mt-3 flex items-center justify-between gap-3">
@@ -382,7 +469,11 @@ function Assistant() {
             AI May Make Mistakes. You Review Everything Before Anything Runs.
           </span>
         </div>
-        <Button className="rounded-full px-5" disabled={busy || !input.trim()} onClick={() => send(input)}>
+        <Button
+          className="rounded-full px-5"
+          disabled={busy || (!input.trim() && !selectedTemplate)}
+          onClick={() => send(input)}
+        >
           <Sparkles className="mr-1 h-4 w-4" /> {started ? "Send" : "Generate Job"}
         </Button>
       </div>
@@ -430,7 +521,9 @@ function Assistant() {
         {!input.trim() && (
           <div className="pointer-events-none absolute inset-x-5 top-5 flex items-center gap-2 pl-0.5 text-base text-muted-foreground">
             <Sparkles className="h-5 w-5 shrink-0 text-primary" />
-            <span className="whitespace-nowrap">Tell Me Who You Want To Reach</span>
+            <span className="truncate">
+              {selectedTemplate?.placeholderHint ?? "Tell Me Who You Want To Reach"}
+            </span>
           </div>
         )}
         <Textarea
@@ -464,7 +557,11 @@ function Assistant() {
                 <Mic className="h-4 w-4" />
               </Button>
             )}
-            <Button className="rounded-full px-5" disabled={busy || !input.trim()} onClick={() => send(input)}>
+            <Button
+              className="rounded-full px-5"
+              disabled={busy || (!input.trim() && !selectedTemplate)}
+              onClick={() => send(input)}
+            >
               Build List <Send className="ml-1.5 h-4 w-4" />
             </Button>
           </div>
@@ -486,7 +583,13 @@ function Assistant() {
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {gridTemplates.map((t) => (
-            <TemplateCard key={t.id} template={t} variant="insert" onSelect={insertTemplate} />
+            <TemplateCard
+              key={t.id}
+              template={t}
+              variant="insert"
+              selected={selectedTemplate?.id === t.id}
+              onSelect={selectTemplate}
+            />
           ))}
         </div>
       </div>
@@ -504,7 +607,13 @@ function Assistant() {
                 </div>
                 <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {list.map((t) => (
-                    <TemplateCard key={t.id} template={t} variant="insert" onSelect={insertTemplate} />
+                    <TemplateCard
+                      key={t.id}
+                      template={t}
+                      variant="insert"
+                      selected={selectedTemplate?.id === t.id}
+                      onSelect={selectTemplate}
+                    />
                   ))}
                 </div>
               </div>

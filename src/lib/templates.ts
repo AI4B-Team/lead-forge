@@ -36,6 +36,11 @@ export type Template = {
   beta?: boolean;
   /** Domain used to fetch the real company logo (favicon). */
   logoDomain?: string;
+  /**
+   * Composer placeholder shown while this template is selected — a fill-in
+   * example for the slots the operator still has to supply.
+   */
+  placeholderHint?: string;
 };
 
 export const TEMPLATES: Template[] = [
@@ -48,6 +53,7 @@ export const TEMPLATES: Template[] = [
     prompt: "Upload my CSV list, map the columns, skip trace missing numbers, and scrub it",
     icon: Upload,
     tint: "bg-yellow-500/10 text-yellow-700",
+    placeholderHint: "e.g. Skip trace my CSV and scrub it against DNC — mobile numbers only",
   },
 
   // ---------- Business & Local ----------
@@ -60,6 +66,7 @@ export const TEMPLATES: Template[] = [
     icon: MapPin,
     tint: "bg-primary/10 text-primary",
     logoDomain: "google.com/maps",
+    placeholderHint: "e.g. Roofers in Hillsborough County, FL — mobile numbers only",
   },
   {
     id: "gserp",
@@ -70,6 +77,7 @@ export const TEMPLATES: Template[] = [
     icon: Search,
     tint: "bg-blue-500/10 text-blue-600",
     logoDomain: "google.com",
+    placeholderHint: "e.g. Water damage restoration in Tampa, FL — emails and phones",
   },
   {
     id: "glocal",
@@ -80,6 +88,7 @@ export const TEMPLATES: Template[] = [
     icon: BadgeCheck,
     tint: "bg-emerald-500/10 text-emerald-600",
     logoDomain: "google.com",
+    placeholderHint: "e.g. Plumbers in Pinellas County, FL with phone numbers",
   },
   {
     id: "contact-details",
@@ -89,6 +98,7 @@ export const TEMPLATES: Template[] = [
     prompt: "Extract emails, phone numbers, and social media profiles from these websites",
     icon: Mail,
     tint: "bg-primary/10 text-primary",
+    placeholderHint: "e.g. Pull contacts from these 40 roofing company websites",
   },
   {
     id: "universal-crawl",
@@ -98,6 +108,7 @@ export const TEMPLATES: Template[] = [
     prompt: "Crawl this website and its subpages and extract all contact details",
     icon: Network,
     tint: "bg-indigo-500/10 text-indigo-600",
+    placeholderHint: "e.g. Crawl acmeroofing.com and every subpage for contacts",
   },
   {
     id: "yelp",
@@ -109,6 +120,7 @@ export const TEMPLATES: Template[] = [
     tint: "bg-rose-500/10 text-rose-600",
     logoDomain: "yelp.com",
     beta: true,
+    placeholderHint: "e.g. Restaurants in Chicago, IL with 4+ stars",
   },
   {
     id: "yellowpages",
@@ -385,6 +397,7 @@ export const TEMPLATES: Template[] = [
     prompt: "Pull all new probate filings in Hillsborough County FL from the last 90 days and skip trace the heirs",
     icon: Scale,
     tint: "bg-amber-500/10 text-amber-600",
+    placeholderHint: "e.g. Probate filings in Pasco County, FL from the last 90 days",
   },
   {
     id: "code",
@@ -394,6 +407,7 @@ export const TEMPLATES: Template[] = [
     prompt: "Find all code violation properties in Pinellas County FL and skip trace the owners",
     icon: FileWarning,
     tint: "bg-rose-500/10 text-rose-600",
+    placeholderHint: "e.g. Code violations in Pinellas County, FL from the last 60 days",
   },
   {
     id: "prefc",
@@ -403,6 +417,7 @@ export const TEMPLATES: Template[] = [
     prompt: "Get pre-foreclosure and lis pendens filings in Pasco County FL from the last 30 days",
     icon: Hammer,
     tint: "bg-orange-500/10 text-orange-600",
+    placeholderHint: "e.g. Pre-foreclosures in Pasco County, FL from the last 30 days",
   },
   {
     id: "tax",
@@ -613,4 +628,11 @@ export function templateFields(t: Template): string[] {
     default:
       return base;
   }
+}
+
+/** The Job Spec source a template already determines on its own. */
+export function templateSourceType(t: Template): "business" | "records" | "upload" {
+  if (t.category === "upload") return "upload";
+  if (t.category === "records") return "records";
+  return "business";
 }
