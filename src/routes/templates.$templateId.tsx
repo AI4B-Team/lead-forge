@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, ShieldCheck, Zap } from "lucide-react";
 import { MarketingNav, MarketingFooter } from "@/components/marketing/marketing-layout";
 import { TemplateCard } from "@/components/marketing/template-card";
+import { TemplateLogo } from "@/components/marketing/template-logo";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,10 +50,6 @@ const STEPS = [
 function TemplateDetailPage() {
   const { templateId } = Route.useParams();
   const template = getTemplate(templateId)!;
-  const Icon = template.icon;
-  const logoUrl = template.logoDomain
-    ? `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(template.logoDomain)}`
-    : null;
   const fields = templateFields(template);
   const related = relatedTemplates(template);
 
@@ -69,13 +66,12 @@ function TemplateDetailPage() {
           </Link>
 
           <div className="mt-6 flex flex-wrap items-center gap-4">
-            <span className="grid place-items-center h-16 w-16 rounded-2xl overflow-hidden border border-border bg-white">
-              {logoUrl ? (
-                <img src={logoUrl} alt="" className="h-9 w-9 object-contain" />
-              ) : (
-                <Icon className="h-7 w-7" />
-              )}
-            </span>
+            <TemplateLogo
+              template={template}
+              className="h-16 w-16 rounded-2xl"
+              imgClassName="h-9 w-9"
+              iconClassName="h-7 w-7"
+            />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
