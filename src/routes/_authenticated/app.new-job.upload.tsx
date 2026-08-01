@@ -12,7 +12,8 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
-import { csvToLeads, type CsvLead } from "@/lib/csv";
+import { autoMapHeaders, csvToLeads, rowsFromTable, type ColumnMap, type CsvLead } from "@/lib/csv";
+import { ColumnMapper } from "@/components/app/column-mapper";
 import { queueJob } from "@/lib/job-submit";
 
 export const Route = createFileRoute("/_authenticated/app/new-job/upload")({
@@ -32,9 +33,7 @@ function Wizard() {
   const [file, setFile] = useState<File | null>(null);
   const [parsed, setParsed] = useState<{ rows: CsvLead[]; skipped: number; headers: string[] } | null>(null);
   const [parsing, setParsing] = useState(false);
-  const [mapping, setMapping] = useState<Record<string, string>>(
-    Object.fromEntries(columns.map((c) => [c, c])),
-  );
+  const [mapping, setMapping] = useState<ColumnMap>({});
   const [skipTrace, setSkipTrace] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -46,7 +45,9 @@ function Wizard() {
     setParsing(true);
     try {
       const text = await f.text();
-      setParsed(csvToLeads(text));
+      const result = csvToLeads(text);
+      setParsed(result);
+      setMapping(autoMapHeaders(result.headers));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could Not Read CSV");
     } finally {
@@ -70,7 +71,7 @@ function Wizard() {
           file_size: file.size,
           mapping,
           skip_trace: skipTrace,
-          rows: parsed?.rows ?? null,
+          rows: parsed ? rowsFromTable([parsed.headers, ...parsed.rows.map(() => [])], mapping) : null,
         },
       });
       navigate({ to: "/app/jobs/$jobId", params: { jobId: id } });
