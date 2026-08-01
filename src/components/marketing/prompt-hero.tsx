@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MarkerHighlight } from "@/components/marketing/marker-highlight";
+import { stashPrompt } from "@/lib/prompt-handoff";
 
 const ROTATING = [
   "HVAC contractors in Georgia, remove franchises…",
@@ -86,11 +87,19 @@ export function PromptHero() {
   };
 
   const submit = () => {
-    if (!value.trim() && files.length === 0) return;
-    try {
-      if (value.trim()) sessionStorage.setItem("leadtrace_prompt", value.trim());
-    } catch { /* ignore */ }
-    navigate({ to: "/start" });
+    const text = value.trim();
+    if (!text && files.length === 0) return;
+    // The prompt travels in the URL so it survives every auth path; the
+    // sessionStorage stash is only a 10-minute fallback.
+    if (text) stashPrompt(text);
+    navigate({
+      to: "/start",
+      search: {
+        ...(text ? { prompt: text } : {}),
+        // Files cannot survive navigation, so send those users to the uploader.
+        ...(files.length > 0 ? { upload: true } : {}),
+      },
+    });
   };
 
   return (
