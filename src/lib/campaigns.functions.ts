@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { spinOnce } from "@/lib/spintax";
 import { planDrops, estimateCost } from "@/lib/drops";
 import { canStartNewDrop } from "@/lib/tcpa";
+import { emptyStats, type CampaignStats } from "@/lib/campaign-stats";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
 
