@@ -303,6 +303,9 @@ function JobDetail() {
       </Card>
 
       <div className="mt-8 flex justify-end gap-2">
+        <Button variant="outline" className="rounded-full" onClick={onExportAudit}>
+          <Download className="mr-1 h-4 w-4" /> Export Scrub Audit
+        </Button>
         <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/lists" })}>
           Back To Lists
         </Button>
