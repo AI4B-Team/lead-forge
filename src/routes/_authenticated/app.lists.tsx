@@ -240,7 +240,6 @@ function Jobs() {
               )}
               {rows.map((j) => {
                 const src = SOURCE_META[j.source_type] ?? { label: j.source_type, icon: Layers };
-                const scrubbed = j.counts.clean + j.counts.dnc + j.counts.litigator;
                 const created = formatCreated(j.created_at);
                 return (
                 <tr
@@ -276,15 +275,7 @@ function Jobs() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <JobStageFlow
-                      stages={{
-                        found: j.rows_in ?? 0,
-                        scrubbed,
-                        verified: scrubbed,
-                        skipTraced: j.counts.clean,
-                        ready: j.counts.clean,
-                      }}
-                    />
+                    <JobStageFlow stages={buildPipelineStages(j)} />
                   </td>
                   <td className="p-4" onClick={(e) => e.stopPropagation()}>
                     <CadenceSelect
@@ -301,7 +292,34 @@ function Jobs() {
                       }}
                     />
                   </td>
-                  <td className="p-4"><StatusBadge status={(j.status ?? "queued") as JobStatus} /></td>
+                  <td className="p-4">
+                    {j.stalled ? (
+                      <div className="flex flex-col items-start gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <StatusBadge status="attention" />
+                        <span className="max-w-[220px] text-[11px] leading-snug text-muted-foreground">
+                          {stallReason(j.status)}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 rounded-full px-2 text-[11px]"
+                          onClick={async () => {
+                            try {
+                              await retryJob({ data: { jobId: j.id } });
+                              toast.success("Retrying From The Last Completed Stage.");
+                              qc.invalidateQueries({ queryKey: ["jobs-list", workspaceId] });
+                            } catch (e) {
+                              toast.error(e instanceof Error ? e.message : "Could Not Retry This Job.");
+                            }
+                          }}
+                        >
+                          <RotateCw className="mr-1 h-3 w-3" /> Retry
+                        </Button>
+                      </div>
+                    ) : (
+                      <StatusBadge status={(j.status ?? "queued") as JobStatus} />
+                    )}
+                  </td>
                   <td className="p-4">
                     <div className="whitespace-nowrap text-foreground">{created.date}</div>
                     <div className="whitespace-nowrap text-xs text-muted-foreground">{created.time}</div>
