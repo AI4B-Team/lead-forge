@@ -244,7 +244,9 @@ function Compliance() {
           <div>
             <CardTitle className="text-base font-display">Scrub Audit History</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Every Scrub Is Permanently Logged For Proof Of Compliance. Total = Clean + DNC + Litigator + Removed.
+              Every Scrub Is Permanently Logged For Proof Of Compliance.
+              <br />
+              Total = Clean + DNC + Litigator + Removed.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
