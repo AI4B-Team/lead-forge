@@ -135,7 +135,7 @@ export function SettingsSummary({ ownerName }: { ownerName: string }) {
             </div>
             <span
               className={`inline-flex items-center gap-1.5 text-sm font-bold ${
-                health >= 90 ? "text-success" : health >= 50 ? "text-warn" : "text-danger"
+                health >= 90 ? "text-success" : health >= 70 ? "text-warn" : "text-danger"
               }`}
             >
               <ShieldCheck className="h-4 w-4" />
@@ -145,20 +145,24 @@ export function SettingsSummary({ ownerName }: { ownerName: string }) {
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">
             <div
               className={`h-full rounded-full ${
-                health >= 90 ? "bg-success" : health >= 50 ? "bg-warn" : "bg-danger"
+                health >= 90 ? "bg-success" : health >= 70 ? "bg-warn" : "bg-danger"
               }`}
               style={{ width: `${health}%` }}
             />
           </div>
           <div className="space-y-2 text-sm">
-            <Row label="10DLC">
-              <StatusText ok={approved} okLabel="Approved" pendingLabel="Pending" />
+            <Row label="Texting Brand">
+              <StatusText
+                ok={state.stage === "live"}
+                okLabel="Registered"
+                pendingLabel={state.tenDlcLabel}
+              />
             </Row>
             <Row label="STOP Handling">
               <StatusText ok okLabel="Enabled" pendingLabel="Off" />
             </Row>
             <Row label="DNC Scrub">
-              <StatusText ok okLabel="Current" pendingLabel="Stale" />
+              <StatusText ok={scrubOk} okLabel="Current" pendingLabel="Stale" />
             </Row>
           </div>
           <Button asChild variant="outline" size="sm" className="w-full rounded-full">
