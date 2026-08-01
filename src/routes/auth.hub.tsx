@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { connectHub } from "@/lib/hub.functions";
 
 // Real Elite hub handoff landing (spec §16). Keeps the documented /auth/hub URL
 // while the verification + session mint happen on the public endpoint.
@@ -22,9 +24,40 @@ export const Route = createFileRoute("/auth/hub")({
 function HubHandoff() {
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("token");
-    window.location.replace(
-      token ? `/api/public/hub/callback?token=${encodeURIComponent(token)}` : "/auth?hub_error=Missing%20hub%20token",
-    );
+    if (!token) {
+      window.location.replace("/auth?hub_error=Missing%20hub%20token");
+      return;
+    }
+
+    // Family standard §2: an already signed-in user returning with a valid token
+    // links their EXISTING workspace in place. Everyone else goes through the
+    // SSO callback, which resolves by canonical ID before creating anything.
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      const userId = data.session?.user.id;
+      if (!userId) {
+        window.location.replace(`/api/public/hub/callback?token=${encodeURIComponent(token)}`);
+        return;
+      }
+      const { data: member } = await supabase
+        .from("workspace_members")
+        .select("workspace_id")
+        .eq("user_id", userId)
+        .limit(1)
+        .maybeSingle();
+      if (!member?.workspace_id) {
+        window.location.replace(`/api/public/hub/callback?token=${encodeURIComponent(token)}`);
+        return;
+      }
+      try {
+        await connectHub({ data: { workspaceId: member.workspace_id, token } });
+        window.location.replace("/app/dashboard");
+      } catch (err) {
+        window.location.replace(
+          `/auth?hub_error=${encodeURIComponent(err instanceof Error ? err.message : "Could not link your account")}`,
+        );
+      }
+    })();
   }, []);
 
   return (
