@@ -262,34 +262,41 @@ function Dashboard() {
                 {jobs.map((j) => {
                   const meta = SOURCE_META[j.source_type] ?? { icon: MapPin, label: "Job" };
                   const Icon = meta.icon;
-                  const [head, ...rest] = (j.name ?? "").split(/\s+·\s+/).reverse();
                   return (
                     <Link
                       key={j.id}
                       to="/app/jobs/$jobId"
                       params={{ jobId: j.id }}
-                      className="-mx-2 flex items-center gap-4 rounded-lg px-2 py-3 hover:bg-surface-muted"
+                      className="-mx-2 flex items-start gap-4 rounded-lg px-2 py-3 hover:bg-surface-muted"
                     >
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
                         <Icon className="h-4.5 w-4.5" strokeWidth={1.5} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="truncate font-display text-sm font-bold text-foreground">
-                          {head || j.name}
+                        <div className="flex items-center gap-2">
+                          <span className="truncate font-display text-sm font-bold text-foreground">
+                            {j.name}
+                          </span>
+                          {j.cadence && (
+                            <span className="shrink-0 whitespace-nowrap rounded-full border border-border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                              {j.cadence}
+                            </span>
+                          )}
                         </div>
-                        <div className="mt-0.5 truncate text-xs text-muted-foreground">
-                          {rest.reverse().join(" · ") || meta.label}
-                        </div>
+                        <div className="mt-0.5 truncate text-xs text-muted-foreground">{meta.label}</div>
                       </div>
-                      <div className="hidden shrink-0 text-right sm:block">
-                        <div className="text-sm font-semibold text-foreground">
+                      {/* Fixed columns: Contacts / Status / Time — all top-aligned. */}
+                      <div className="hidden w-20 shrink-0 text-right sm:block">
+                        <div className="text-sm font-semibold tabular-nums text-foreground">
                           {(j.rows_in ?? 0).toLocaleString()}
                         </div>
                         <div className="text-xs text-muted-foreground">Contacts</div>
                       </div>
-                      <div className="shrink-0 text-right">
+                      <div className="w-24 shrink-0 text-right">
                         <StatusBadge status={j.status} />
-                        <div className="mt-1 text-xs text-muted-foreground">{relative(j.created_at)}</div>
+                      </div>
+                      <div className="w-20 shrink-0 whitespace-nowrap text-right text-xs text-muted-foreground">
+                        {relative(j.created_at)}
                       </div>
                     </Link>
                   );
@@ -339,9 +346,9 @@ function Dashboard() {
               <CardTitle className="text-base font-display">Credit Balance</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <CreditRow label="Lead Credits" value={credits.scrape} max={Math.max(1000, credits.scrape)} />
-              <CreditRow label="Skip Trace" value={credits.skip_trace} max={Math.max(1000, credits.skip_trace)} />
-              <CreditRow label="SMS" value={credits.sms} max={Math.max(1000, credits.sms)} />
+              <CreditRow label="Lead Credits" value={credits.scrape} max={creditTotals.scrape} />
+              <CreditRow label="Skip Trace" value={credits.skip_trace} max={creditTotals.skip_trace} />
+              <CreditRow label="SMS" value={credits.sms} max={creditTotals.sms} />
               <Button asChild className="w-full rounded-full mt-2">
                 <Link to="/app/billing">Top Up</Link>
               </Button>
@@ -403,16 +410,19 @@ function Metric({
 }
 
 function CreditRow({ label, value, max }: { label: string; value: number; max: number }) {
+  const total = Math.max(value, max, 1);
   return (
     <div>
       <div className="flex items-baseline justify-between text-sm">
         <span className="font-medium text-foreground">{label}</span>
-        <span className="text-xs text-muted-foreground">{value.toLocaleString()} Remaining</span>
+        <span className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
+          {value.toLocaleString()} of {total.toLocaleString()} Remaining
+        </span>
       </div>
       <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted">
         <div
           className="h-full rounded-full bg-primary transition-all duration-500"
-          style={{ width: `${Math.min(100, (value / max) * 100)}%` }}
+          style={{ width: `${Math.min(100, (value / total) * 100)}%` }}
         />
       </div>
     </div>
