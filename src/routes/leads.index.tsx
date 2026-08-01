@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
+  Bot,
   Building2,
   Check,
   CircleCheck,
@@ -15,6 +16,7 @@ import {
   Settings,
   ShieldCheck,
   Smartphone,
+  Sparkles,
   Star,
   Upload,
   Zap,
