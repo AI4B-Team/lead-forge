@@ -32,7 +32,7 @@ export function JobStageFlow({ stages, className }: { stages: JobStages; classNa
         const active = value > 0;
         return (
           <div key={s.key} className="flex items-center gap-1">
-            <div className="w-[62px]">
+            <div className="w-[50px]">
               <div className="flex items-center gap-1">
                 <s.icon
                   className={cn(
