@@ -29,7 +29,7 @@ export const TOUR_STEPS: TourStep[] = [
     body: "Need owner names and mobile numbers? Skip trace is metered per hit, so you only pay for what you pull.",
   },
   {
-    anchor: "nav-reports",
+    anchor: "nav-lists",
     title: "Clean & Scrub",
     body: "Every list is deduped, line-type checked, and scrubbed against DNC and litigator data — with a timestamped audit trail.",
   },
@@ -44,9 +44,9 @@ export const TOUR_STEPS: TourStep[] = [
     body: "Send from a rotating pool of local numbers, inside quiet hours, with STOP handled automatically.",
   },
   {
-    anchor: "nav-lists",
-    title: "Leads Library",
-    body: "Every record you've ever pulled lives here. Re-run a search and contact only what's new since last time.",
+    anchor: "nav-reports",
+    title: "Reports & Audit Trail",
+    body: "Track delivery, replies, and opt-outs, and pull the timestamped scrub records behind every list you send.",
   },
   {
     anchor: "help",
