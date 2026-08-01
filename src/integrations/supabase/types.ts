@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           id: string
           record_type: string | null
+          type: string
           workspace_id: string
         }
         Insert: {
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string
           id?: string
           record_type?: string | null
+          type?: string
           workspace_id: string
         }
         Update: {
@@ -34,6 +36,7 @@ export type Database = {
           created_at?: string
           id?: string
           record_type?: string | null
+          type?: string
           workspace_id?: string
         }
         Relationships: [
