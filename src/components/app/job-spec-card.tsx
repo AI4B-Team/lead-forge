@@ -10,6 +10,87 @@ import { INDUSTRIES, RECORD_TYPES, COUNTIES } from "@/lib/mock-data";
 import type { Coverage, JobSpec } from "@/lib/assistant.shared";
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
 import { US_STATES, countiesForState } from "@/lib/us-geo";
+import { UploadCloud, X, FileSpreadsheet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  attachmentMappedCount, isSpreadsheet, type UploadAttachment,
+} from "@/lib/upload-attachment";
+
+/**
+ * Inline dropzone + mapping summary. Uploads never leave the assistant page.
+ */
+function UploadPanel({
+  upload,
+  onPickFile,
+  onRemove,
+  onEditMapping,
+}: {
+  upload: UploadAttachment | null;
+  onPickFile: (file: File) => void;
+  onRemove: () => void;
+  onEditMapping: () => void;
+}) {
+  const take = (file: File | null | undefined) => {
+    if (file && isSpreadsheet(file)) onPickFile(file);
+  };
+
+  if (upload) {
+    return (
+      <div className="rounded-xl border border-border bg-surface p-3">
+        <div className="flex items-start gap-2">
+          <FileSpreadsheet className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-medium text-foreground">{upload.name}</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {upload.parseable
+                ? `${upload.rowCount.toLocaleString()} Rows · ${attachmentMappedCount(upload)} Columns Mapped${upload.mapped ? " ✓" : ""}`
+                : `${(upload.size / 1024).toFixed(1)} KB · Columns Mapped After Upload`}
+            </div>
+            {upload.parseable && (
+              <button
+                type="button"
+                onClick={onEditMapping}
+                className="mt-1 text-xs font-medium text-primary hover:underline"
+              >
+                {upload.mapped ? "Edit Mapping" : "Map Columns"}
+              </button>
+            )}
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Remove File"
+            className="h-6 w-6 rounded-full"
+            onClick={onRemove}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <label
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => { e.preventDefault(); take(e.dataTransfer.files?.[0]); }}
+      className="block cursor-pointer rounded-xl border-2 border-dashed border-border bg-surface-muted p-5 text-center transition hover:border-primary"
+    >
+      <UploadCloud className="mx-auto h-6 w-6 text-muted-foreground" />
+      <div className="mt-2 text-sm font-medium text-foreground">Drop Your File Here</div>
+      <div className="mt-0.5 text-xs text-muted-foreground">
+        CSV Or XLSX · Up To 25,000 Rows
+      </div>
+      <input
+        type="file"
+        className="hidden"
+        accept=".csv,.xlsx"
+        onChange={(e) => take(e.target.files?.[0])}
+      />
+    </label>
+  );
+}
 
 const COVERAGE_STYLE: Record<Coverage, string> = {
   live: "border-success/40 text-success",
@@ -124,12 +205,20 @@ export function JobSpecCard({
   onChange,
   coverage,
   inferred,
+  upload = null,
+  onPickFile,
+  onRemoveUpload,
+  onEditMapping,
 }: {
   spec: JobSpec;
   onChange: (next: JobSpec) => void;
   coverage: Array<{ county: string; coverage: Coverage }>;
   /** Fields the assistant inferred in this conversation — only these get a % badge. */
   inferred?: Set<keyof JobSpec>;
+  upload?: UploadAttachment | null;
+  onPickFile?: (file: File) => void;
+  onRemoveUpload?: () => void;
+  onEditMapping?: () => void;
 }) {
   const set = <K extends keyof JobSpec>(key: K, value: JobSpec[K]) => onChange({ ...spec, [key]: value });
   const inf = (key: keyof JobSpec) => Boolean(inferred?.has(key));
