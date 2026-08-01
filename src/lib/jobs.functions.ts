@@ -19,17 +19,26 @@ export const listJobs = createServerFn({ method: "GET" })
     const ids = (jobs ?? []).map((j) => j.id);
     const counts = new Map<string, { clean: number; dnc: number; litigator: number }>();
     for (const id of ids) counts.set(id, { clean: 0, dnc: 0, litigator: 0 });
+    // Records added since the previous recurring run (§ recurring search diffing).
+    const newSince = new Map<string, number>();
     if (ids.length) {
       const { data: rows } = await supabase
         .from("leads")
-        .select("job_id, scrub_status")
+        .select("job_id, scrub_status, created_at")
         .in("job_id", ids);
+      const lastRunByJob = new Map<string, string | null>(
+        (jobs ?? []).map((j) => [j.id, j.last_run_at ?? null]),
+      );
       for (const r of rows ?? []) {
         const c = counts.get(r.job_id!);
         if (!c) continue;
         if (r.scrub_status === "clean") c.clean += 1;
         else if (r.scrub_status === "dnc") c.dnc += 1;
         else if (r.scrub_status === "litigator") c.litigator += 1;
+        const lastRun = lastRunByJob.get(r.job_id!);
+        if (lastRun && r.created_at && new Date(r.created_at) > new Date(lastRun)) {
+          newSince.set(r.job_id!, (newSince.get(r.job_id!) ?? 0) + 1);
+        }
       }
     }
 
@@ -48,6 +57,7 @@ export const listJobs = createServerFn({ method: "GET" })
           schedule: j.schedule ?? "one_time",
           next_run_at: j.next_run_at,
           last_run_at: j.last_run_at,
+          new_since_last_run: newSince.get(j.id) ?? 0,
           counts: counts.get(j.id) ?? { clean: 0, dnc: 0, litigator: 0 },
         };
       }),
