@@ -467,7 +467,9 @@ function LeadsIndexBody() {
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             {NICHE_ORDER.map((n) => {
+              const page = niches.find((p) => p.slug === n.slug);
               const Icon = n.icon;
+              const label = n.display ?? page?.nicheLabel ?? page?.title ?? n.slug;
               return (
                 <Link
                   key={n.slug}
@@ -485,7 +487,7 @@ function LeadsIndexBody() {
                       </span>
                     </span>
                     <span className="mt-0.5 block truncate font-display text-base font-black text-foreground">
-                      {n.display}
+                      {label}
                     </span>
                     <span className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-primary">
                       View Leads <ArrowRight className="h-3 w-3" />
