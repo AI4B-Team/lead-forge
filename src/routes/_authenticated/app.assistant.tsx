@@ -269,6 +269,7 @@ function Assistant() {
       <PageHeader
         title="AI Lead Assistant"
         description="Describe The Leads You Want. The Assistant Interprets It, Assembles The Job, And Hands You The Controls To Review."
+        descriptionClassName="whitespace-nowrap !max-w-none"
         actions={
           started ? (
             <Button variant="outline" className="rounded-full" onClick={startOver}>
