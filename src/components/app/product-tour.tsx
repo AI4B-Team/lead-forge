@@ -35,8 +35,8 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     anchor: "nav-brands",
-    title: "Register Your Brand",
-    body: "Carrier registration is handled here at no extra cost, so your messages actually land.",
+    title: "Set Up Your Brand",
+    body: "Add your website, offers, and approved talking points here. The bot writes in your voice and only replies from material you've approved — carrier registration is handled from the same place at no extra cost.",
   },
   {
     anchor: "nav-campaigns",
