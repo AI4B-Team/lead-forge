@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { AccountTabs } from "@/components/app/account-tabs";
+import { StatTile } from "@/components/app/stat-tile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldAlert, Loader2, Trash2, Gift, Gauge } from "lucide-react";
+import {
+  ShieldAlert, Loader2, Trash2, Gift, Gauge, Search, Building2, Users, MessageSquare, Activity,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   listAllWorkspaces, setBillingPlan, listSuperAdmins, revokeSuperAdmin,
@@ -62,6 +65,36 @@ function AdminPage() {
   const [grantWs, setGrantWs] = useState<WsRow | null>(null);
   const [grantKind, setGrantKind] = useState<CreditKind>("sms");
   const [grantAmount, setGrantAmount] = useState<string>("10000");
+  const [search, setSearch] = useState("");
+  const [planFilter, setPlanFilter] = useState<string>("all");
+  const [sort, setSort] = useState<"usage" | "leads" | "name">("usage");
+
+  const all = (wsQ.data?.workspaces ?? []) as WsRow[];
+  const totals = useMemo(() => ({
+    workspaces: all.length,
+    sentMonth: all.reduce((s, w) => s + (w.stats.sent_month ?? 0), 0),
+    leads: all.reduce((s, w) => s + (w.stats.leads ?? 0), 0),
+    paid: all.filter((w) => (w.billing_plan ?? "trial") === "paid").length,
+    pastDue: all.filter((w) => (w.billing_plan ?? "trial") === "past_due").length,
+    numbers: all.reduce((s, w) => s + (w.stats.numbers ?? 0), 0),
+  }), [all]);
+
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = all.filter((w) => {
+      const plan = w.billing_plan ?? "trial";
+      if (planFilter !== "all" && plan !== planFilter) return false;
+      if (!q) return true;
+      return w.name.toLowerCase().includes(q) || (w.owner_email ?? "").toLowerCase().includes(q);
+    });
+    return [...filtered].sort((a, b) =>
+      sort === "name"
+        ? a.name.localeCompare(b.name)
+        : sort === "leads"
+          ? b.stats.leads - a.stats.leads
+          : b.stats.sent_month - a.stats.sent_month,
+    );
+  }, [all, search, planFilter, sort]);
 
   const updatePlan = async (workspaceId: string, plan: Plan) => {
     setBusyId(workspaceId);
@@ -176,9 +209,44 @@ function AdminPage() {
       />
       <AccountTabs current="admin" />
 
-      <Card className="mb-6">
-        <CardHeader>
+      <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile label="Total Workspaces" value={totals.workspaces} icon={Building2} hint={`${totals.paid} Paid · ${totals.pastDue} Past Due`} />
+        <StatTile label="Leads Stored" value={totals.leads} icon={Users} hint="Across Every Workspace" />
+        <StatTile label="SMS This Month" value={totals.sentMonth} icon={MessageSquare} hint="Outbound Segments" />
+        <StatTile label="Active Numbers" value={totals.numbers} icon={Activity} hint="Provisioned Sending Numbers" />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="space-y-6">
+      <Card>
+        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <CardTitle className="text-base font-display">All Workspaces</CardTitle>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search Workspace Or Owner"
+                className="h-9 w-56 rounded-full pl-8"
+              />
+            </div>
+            <Select value={planFilter} onValueChange={setPlanFilter}>
+              <SelectTrigger className="h-9 w-[130px] rounded-full text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Plans</SelectItem>
+                {PLANS.map((p) => <SelectItem key={p} value={p} className="capitalize">{p.replace("_", " ")}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
+              <SelectTrigger className="h-9 w-[150px] rounded-full text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="usage">Sort By Usage</SelectItem>
+                <SelectItem value="leads">Sort By Leads</SelectItem>
+                <SelectItem value="name">Sort By Name</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -195,7 +263,7 @@ function AdminPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {wsQ.data?.workspaces.map((w) => (
+              {rows.map((w) => (
                 <TableRow key={w.id}>
                   <TableCell className="font-medium">
                     <div>{w.name}</div>
@@ -250,8 +318,8 @@ function AdminPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {!wsQ.data?.workspaces.length && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">No Workspaces.</TableCell></TableRow>
+              {!rows.length && (
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">No Workspaces Match Those Filters.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
