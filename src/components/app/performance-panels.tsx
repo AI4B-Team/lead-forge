@@ -439,7 +439,7 @@ export function RecentConversations({
           <MessageSquare className="h-4 w-4 text-primary" /> Latest Conversations
         </CardTitle>
         <Button asChild variant="link" size="sm" className="h-auto p-0 text-xs">
-          <Link to="/app/inbox">Open Inbox <ArrowRight className="ml-1 h-3 w-3" /></Link>
+          <Link to="/app/inbox">Open Conversations <ArrowRight className="ml-1 h-3 w-3" /></Link>
         </Button>
       </CardHeader>
       <CardContent>

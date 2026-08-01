@@ -9,7 +9,9 @@ export const listThreads = createServerFn({ method: "GET" })
   .inputValidator((input) =>
     z.object({
       workspaceId: z.string().uuid(),
-      filter: z.enum(["all", "unread", "optouts"]).default("all"),
+      filter: z
+        .enum(["all", "needs_reply", "interested", "appointments", "ai", "unread", "optouts"])
+        .default("all"),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -17,7 +19,7 @@ export const listThreads = createServerFn({ method: "GET" })
     // can't do a DISTINCT ON via the JS client cleanly.
     let q = context.supabase
       .from("messages")
-      .select("id, thread_key, direction, body, created_at, read_at, is_optout, lead_id, sending_number_id")
+      .select("id, thread_key, direction, body, created_at, read_at, is_optout, lead_id, sending_number_id, campaign_id, is_bot, handoff_reason")
       .eq("workspace_id", data.workspaceId)
       .not("thread_key", "is", null)
       .order("created_at", { ascending: false })
@@ -27,7 +29,7 @@ export const listThreads = createServerFn({ method: "GET" })
     if (error) throw error;
 
     type Row = NonNullable<typeof rows>[number];
-    const byThread = new Map<string, {
+    type Agg = {
       thread_key: string;
       last_body: string | null;
       last_direction: string;
@@ -35,42 +37,133 @@ export const listThreads = createServerFn({ method: "GET" })
       unread: number;
       is_optout: boolean;
       lead_id: string | null;
-    }>();
+      campaign_id: string | null;
+      inbound: number;
+      outbound: number;
+      inbound_bodies: string[];
+      last_inbound_at: string | null;
+      bot_active: boolean;
+      handoff: string | null;
+    };
+    const byThread = new Map<string, Agg>();
     for (const r of (rows ?? []) as Row[]) {
       if (!r.thread_key) continue;
-      const cur = byThread.get(r.thread_key);
+      let cur = byThread.get(r.thread_key);
       if (!cur) {
-        byThread.set(r.thread_key, {
+        cur = {
           thread_key: r.thread_key,
           last_body: r.body,
           last_direction: r.direction,
           last_at: r.created_at,
-          unread: r.direction === "inbound" && !r.read_at ? 1 : 0,
-          is_optout: !!r.is_optout,
+          unread: 0,
+          is_optout: false,
           lead_id: r.lead_id ?? null,
-        });
+          campaign_id: r.campaign_id ?? null,
+          inbound: 0,
+          outbound: 0,
+          inbound_bodies: [],
+          last_inbound_at: null,
+          bot_active: false,
+          handoff: null,
+        };
+        byThread.set(r.thread_key, cur);
+      }
+      if (!cur.lead_id && r.lead_id) cur.lead_id = r.lead_id;
+      if (!cur.campaign_id && r.campaign_id) cur.campaign_id = r.campaign_id;
+      if (r.is_optout) cur.is_optout = true;
+      if (r.handoff_reason && !cur.handoff) cur.handoff = r.handoff_reason;
+      if (r.direction === "inbound") {
+        cur.inbound += 1;
+        if (!r.read_at) cur.unread += 1;
+        if (r.body) cur.inbound_bodies.push(r.body);
+        if (!cur.last_inbound_at) cur.last_inbound_at = r.created_at;
       } else {
-        if (r.direction === "inbound" && !r.read_at) cur.unread += 1;
-        if (r.is_optout) cur.is_optout = true;
+        cur.outbound += 1;
+        if (r.is_bot && !cur.bot_active) cur.bot_active = true;
       }
     }
 
+    const { classifyIntent, detectBadges, leadScore, sentimentOf } = await import("@/lib/conversation-intel");
+
     let threads = Array.from(byThread.values());
-    if (data.filter === "unread") threads = threads.filter((t) => t.unread > 0);
 
-    // Enrich with lead + phone via a second targeted select.
+    // Enrich with lead, campaign and derived intelligence.
     const leadIds = threads.map((t) => t.lead_id).filter((v): v is string => !!v);
-    const leads = leadIds.length
-      ? (await context.supabase.from("leads").select("id, full_name, phone, city, state").in("id", leadIds)).data ?? []
-      : [];
+    const campaignIds = Array.from(new Set(threads.map((t) => t.campaign_id).filter((v): v is string => !!v)));
+    const [leads, campaigns] = await Promise.all([
+      leadIds.length
+        ? context.supabase
+            .from("leads")
+            .select("id, full_name, business_name, phone, phone_type, city, state")
+            .in("id", leadIds)
+            .then((r) => r.data ?? [])
+        : Promise.resolve([]),
+      campaignIds.length
+        ? context.supabase
+            .from("campaigns")
+            .select("id, name, status")
+            .in("id", campaignIds)
+            .then((r) => r.data ?? [])
+        : Promise.resolve([]),
+    ]);
     const leadMap = new Map(leads.map((l) => [l.id, l]));
+    const campaignMap = new Map(campaigns.map((c) => [c.id, c]));
 
-    return {
-      threads: threads.map((t) => ({
+    const enriched = threads.map((t) => {
+      const lead = t.lead_id ? leadMap.get(t.lead_id) ?? null : null;
+      const intent = classifyIntent(t.inbound_bodies.join(" "), t.is_optout);
+      const badges = detectBadges(t.inbound_bodies, t.is_optout);
+      const score = leadScore({
+        inboundCount: t.inbound,
+        outboundCount: t.outbound,
+        intent,
+        lastAt: t.last_at,
+        isOptout: t.is_optout,
+        hasPhoneType: lead?.phone_type ?? null,
+      });
+      return {
         ...t,
-        lead: t.lead_id ? leadMap.get(t.lead_id) ?? null : null,
-      })),
+        lead,
+        campaign: t.campaign_id ? campaignMap.get(t.campaign_id) ?? null : null,
+        intent,
+        badges,
+        score,
+        sentiment: sentimentOf(t.inbound_bodies.join(" ")),
+        needs_reply: t.last_direction === "inbound" && !t.is_optout,
+      };
+    });
+
+    const filtered = enriched.filter((t) => {
+      switch (data.filter) {
+        case "unread":
+          return t.unread > 0;
+        case "needs_reply":
+          return t.needs_reply;
+        case "interested":
+          return t.intent === "qualified" || t.intent === "appointment";
+        case "appointments":
+          return t.intent === "appointment";
+        case "ai":
+          return t.bot_active;
+        case "optouts":
+          return t.is_optout;
+        default:
+          return true;
+      }
+    });
+
+    // Counts drive the filter chips so operators see where attention is needed.
+    const counts = {
+      all: enriched.length,
+      needs_reply: enriched.filter((t) => t.needs_reply).length,
+      interested: enriched.filter((t) => t.intent === "qualified" || t.intent === "appointment").length,
+      appointments: enriched.filter((t) => t.intent === "appointment").length,
+      ai: enriched.filter((t) => t.bot_active).length,
+      unread: enriched.filter((t) => t.unread > 0).length,
+      optouts: enriched.filter((t) => t.is_optout).length,
     };
+
+    return { threads: filtered, counts };
   });
 
 // Full message list for one thread, plus lead detail.
@@ -85,7 +178,7 @@ export const getThread = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: messages, error } = await context.supabase
       .from("messages")
-      .select("id, direction, body, status, created_at, is_optout, is_bot, handoff_reason, provider_sid, sending_number_id, lead_id, error_code")
+      .select("id, direction, body, status, created_at, is_optout, is_bot, handoff_reason, provider_sid, sending_number_id, lead_id, campaign_id, error_code, read_at")
       .eq("workspace_id", data.workspaceId)
       .eq("thread_key", data.threadKey)
       .order("created_at", { ascending: true });
@@ -93,17 +186,78 @@ export const getThread = createServerFn({ method: "GET" })
 
     const leadId = messages?.find((m) => m.lead_id)?.lead_id ?? null;
     const numberId = messages?.find((m) => m.sending_number_id)?.sending_number_id ?? null;
-    const [lead, number] = await Promise.all([
+    const campaignId = messages?.find((m) => m.campaign_id)?.campaign_id ?? null;
+    const [lead, number, campaign] = await Promise.all([
       leadId
-        ? context.supabase.from("leads").select("id, full_name, phone, email, city, state, address").eq("id", leadId).maybeSingle().then((r) => r.data)
+        ? context.supabase
+            .from("leads")
+            .select("id, full_name, business_name, phone, phone_type, email, city, state, zip, address, job_id, scrub_status, source_meta, created_at")
+            .eq("id", leadId)
+            .maybeSingle()
+            .then((r) => r.data)
         : Promise.resolve(null),
       numberId
-        ? context.supabase.from("sending_numbers").select("id, phone").eq("id", numberId).maybeSingle().then((r) => r.data)
+        ? context.supabase.from("sending_numbers").select("id, phone, area_code, health_score").eq("id", numberId).maybeSingle().then((r) => r.data)
+        : Promise.resolve(null),
+      campaignId
+        ? context.supabase
+            .from("campaigns")
+            .select("id, name, status, brand_id, tag_id, list_job_id")
+            .eq("id", campaignId)
+            .maybeSingle()
+            .then((r) => r.data)
         : Promise.resolve(null),
     ]);
 
+    // Surrounding context: source job, drip depth, brand, tag, and the
+    // cross-list rollup record for this phone.
+    const [job, steps, brand, tag, record, suppressed] = await Promise.all([
+      lead?.job_id
+        ? context.supabase.from("jobs").select("id, name, source_type, record_type, params").eq("id", lead.job_id).maybeSingle().then((r) => r.data)
+        : Promise.resolve(null),
+      campaign
+        ? context.supabase.from("campaign_steps").select("id", { count: "exact", head: true }).eq("campaign_id", campaign.id).then((r) => r.count ?? 0)
+        : Promise.resolve(0),
+      campaign?.brand_id
+        ? context.supabase.from("brands").select("id, name, description").eq("id", campaign.brand_id).maybeSingle().then((r) => r.data)
+        : Promise.resolve(null),
+      campaign?.tag_id
+        ? context.supabase.from("tags").select("id, name, color").eq("id", campaign.tag_id).maybeSingle().then((r) => r.data)
+        : Promise.resolve(null),
+      lead?.phone
+        ? context.supabase
+            .from("lead_records")
+            .select("disposition, source_types, record_types, list_count, first_seen_at")
+            .eq("workspace_id", data.workspaceId)
+            .eq("phone", lead.phone)
+            .maybeSingle()
+            .then((r) => r.data)
+        : Promise.resolve(null),
+      lead?.phone
+        ? context.supabase
+            .from("suppression")
+            .select("phone, reason")
+            .eq("workspace_id", data.workspaceId)
+            .eq("phone", lead.phone)
+            .maybeSingle()
+            .then((r) => !!r.data)
+        : Promise.resolve(false),
+    ]);
+
     const handoff = messages?.find((m) => m.handoff_reason)?.handoff_reason ?? null;
-    return { messages: messages ?? [], lead, number, handoff };
+    const touchCount = (messages ?? []).filter((m) => m.direction === "outbound").length;
+    return {
+      messages: messages ?? [],
+      lead,
+      number,
+      handoff,
+      campaign: campaign ? { ...campaign, step_count: steps, touch: touchCount } : null,
+      job,
+      brand,
+      tag,
+      record,
+      suppressed,
+    };
   });
 
 // Mark all inbound messages in a thread as read.
@@ -205,4 +359,112 @@ export const unreadCount = createServerFn({ method: "GET" })
       .eq("direction", "inbound")
       .is("read_at", null);
     return { count: count ?? 0 };
+  });
+// ---------------------------------------------------------------------------
+// AI layer: conversation summary + suggested replies (grounded in the thread).
+// ---------------------------------------------------------------------------
+
+export const summarizeThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ workspaceId: z.string().uuid(), threadKey: z.string().min(1) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: rows } = await context.supabase
+      .from("messages")
+      .select("direction, body, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .eq("thread_key", data.threadKey)
+      .order("created_at", { ascending: true })
+      .limit(40);
+    const turns = (rows ?? [])
+      .filter((m) => !!m.body)
+      .map((m) => ({ role: m.direction === "inbound" ? ("user" as const) : ("assistant" as const), content: m.body! }));
+    if (!turns.length) return { summary: null };
+    const { summarizeConversation } = await import("@/lib/inbox.server");
+    return { summary: await summarizeConversation(turns) };
+  });
+
+export const suggestThreadReplies = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      workspaceId: z.string().uuid(),
+      threadKey: z.string().min(1),
+      command: z.string().max(40).nullable().optional(),
+      draft: z.string().max(1600).nullable().optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: rows } = await context.supabase
+      .from("messages")
+      .select("direction, body, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .eq("thread_key", data.threadKey)
+      .order("created_at", { ascending: true })
+      .limit(40);
+    const turns = (rows ?? [])
+      .filter((m) => !!m.body)
+      .map((m) => ({ role: m.direction === "inbound" ? ("user" as const) : ("assistant" as const), content: m.body! }));
+    if (!turns.length) return { suggestions: [] };
+
+    // Ground suggestions in the campaign's brand when one is linked.
+    const { data: msg } = await context.supabase
+      .from("messages")
+      .select("campaign_id")
+      .eq("workspace_id", data.workspaceId)
+      .eq("thread_key", data.threadKey)
+      .not("campaign_id", "is", null)
+      .limit(1)
+      .maybeSingle();
+    let brand: string | null = null;
+    let product: string | null = null;
+    if (msg?.campaign_id) {
+      const { data: c } = await context.supabase
+        .from("campaigns")
+        .select("brand_id, bot_config")
+        .eq("id", msg.campaign_id)
+        .maybeSingle();
+      const cfg = (c?.bot_config ?? {}) as { product?: string };
+      product = cfg.product ?? null;
+      if (c?.brand_id) {
+        const { data: b } = await context.supabase.from("brands").select("name").eq("id", c.brand_id).maybeSingle();
+        brand = b?.name ?? null;
+      }
+    }
+
+    const { suggestReplies } = await import("@/lib/inbox.server");
+    const suggestions = await suggestReplies({
+      turns,
+      brand,
+      product,
+      command: data.command ?? null,
+      draft: data.draft ?? null,
+    });
+    return { suggestions };
+  });
+
+/** Add the lead's phone to workspace suppression (Blacklist quick action). */
+export const blacklistThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ workspaceId: z.string().uuid(), threadKey: z.string().min(1) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: msg } = await context.supabase
+      .from("messages")
+      .select("lead_id")
+      .eq("workspace_id", data.workspaceId)
+      .eq("thread_key", data.threadKey)
+      .not("lead_id", "is", null)
+      .limit(1)
+      .maybeSingle();
+    if (!msg?.lead_id) throw new Error("No lead on this conversation");
+    const { data: lead } = await context.supabase.from("leads").select("phone").eq("id", msg.lead_id).maybeSingle();
+    if (!lead?.phone) throw new Error("No phone on this lead");
+    const { error } = await context.supabase
+      .from("suppression")
+      .upsert({ workspace_id: data.workspaceId, phone: lead.phone, reason: "manual_blacklist" } as never);
+    if (error) throw error;
+    return { ok: true, phone: lead.phone };
   });

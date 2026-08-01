@@ -39,11 +39,11 @@ function AppLayout() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button asChild size="icon" variant="ghost" className="rounded-full" data-tour="inbox" aria-label="Inbox">
+                    <Button asChild size="icon" variant="ghost" className="rounded-full" data-tour="inbox" aria-label="Conversations">
                       <Link to="/app/inbox"><Inbox className="h-4 w-4" /></Link>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Inbox</TooltipContent>
+                  <TooltipContent>Conversations</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
