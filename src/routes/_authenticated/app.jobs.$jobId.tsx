@@ -424,8 +424,8 @@ function ContactDetailDialog({ lead, onClose }: { lead: LeadRow | null; onClose:
         <dl className="grid grid-cols-3 gap-y-3 text-sm">
           <DetailRow label="Name" value={lead?.full_name} />
           <DetailRow label="Business" value={lead?.business_name} />
-          <dt className="text-muted-foreground">Phone</dt>
-          <dd className="col-span-2 font-medium text-foreground">
+          <dt className="col-span-1 text-xs uppercase tracking-wider font-semibold text-muted-foreground pt-0.5">Phone</dt>
+          <dd className="col-span-2 text-foreground break-words">
             <PhoneLink phone={lead?.phone} />
           </dd>
           <DetailRow label="Line Type" value={lead?.phone_type} />
