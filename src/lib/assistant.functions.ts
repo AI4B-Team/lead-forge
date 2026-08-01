@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { jobSpecSchema } from "@/lib/assistant.shared";
+import { jobSpecSchema, specStates } from "@/lib/assistant.shared";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -115,11 +115,12 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
       throw new Error(`Not Covered Yet: ${blocked.join(", ")}. Request It And We'll Add It.`);
     }
 
+    const geoLabel = spec.counties.join(", ") || specStates(spec).join(", ") || "All";
     const name =
       spec.name ??
       (spec.sourceType === "records"
-        ? `${spec.recordType} · ${spec.counties.join(", ") || spec.state || "All"}`
-        : `${spec.niches.join(", ")} · ${spec.counties.join(", ") || spec.state || "All"}`);
+        ? `${spec.recordType} · ${geoLabel}`
+        : `${spec.niches.join(", ")} · ${geoLabel}`);
 
     const { queueJob } = await import("@/lib/job-submit");
     const queued = await queueJob(context.supabase, {
@@ -129,7 +130,8 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
         name,
         niches: spec.niches,
         record_type: spec.recordType,
-        state: spec.state,
+        state: specStates(spec)[0] ?? null,
+        states: specStates(spec),
         counties: spec.counties,
         county: spec.counties[0] ?? null,
         recency_days: spec.recencyDays,

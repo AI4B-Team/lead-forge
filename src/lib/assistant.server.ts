@@ -5,7 +5,7 @@
 // the model can never mark a county Live, never propose sending to DNC or
 // suppressed leads, and never launches anything. A human clicks Run.
 
-import { jobSpecSchema, type JobSpec, type AssistantMessage } from "./assistant.shared";
+import { jobSpecSchema, withStates, specStates, type JobSpec, type AssistantMessage } from "./assistant.shared";
 import { countiesForState, formatCounty, parseCounty } from "./us-geo";
 
 /** Snap model-provided county names onto real counties in the spec's state. */
@@ -56,7 +56,7 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "STYLE: Short, plain, confident. Title Case for headings. No em-dashes. Ask at most two clarifying questions per turn. Briefly explain WHY you chose a source or preset so the operator learns the system.",
     "",
     "Respond with STRICT JSON only, no markdown fence:",
-    '{"reply": string, "specPatch": { any of: sourceType("business"|"records"|"upload"), name, niches[], recordType, state(2-letter), counties[], recencyDays, removeFranchises, dedupe, mobileOnly, skipTrace, industry, messageAngle }, "suggestedTemplates": string[] }',
+    '{"reply": string, "specPatch": { any of: sourceType("business"|"records"|"upload"), name, niches[], recordType, state(2-letter), states(array of 2-letter codes when several states are wanted), counties[], recencyDays, removeFranchises, dedupe, mobileOnly, skipTrace, industry, messageAngle }, "suggestedTemplates": string[] }',
     "Only include specPatch keys you actually resolved this turn. Leave the rest out.",
   ].join("\n");
 }
@@ -109,8 +109,12 @@ export async function askAssistant(opts: {
   }
 
   const merged = jobSpecSchema.safeParse({ ...opts.spec, ...(out.specPatch ?? {}) });
+  // The model may name one state or several; keep both fields consistent.
   const spec = merged.success
-    ? { ...merged.data, counties: normalizeCounties(merged.data.counties, merged.data.state) }
+    ? (() => {
+        const synced = withStates(merged.data, specStates(merged.data));
+        return { ...synced, counties: normalizeCounties(synced.counties, synced.state) };
+      })()
     : opts.spec;
   return {
     reply: out.reply?.trim() || "Updated The List Settings On The Right.",

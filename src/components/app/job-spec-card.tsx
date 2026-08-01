@@ -7,9 +7,10 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { INDUSTRIES, RECORD_TYPES, COUNTIES } from "@/lib/mock-data";
-import type { Coverage, JobSpec } from "@/lib/assistant.shared";
+import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
-import { US_STATES, countiesForState } from "@/lib/us-geo";
+import { StateMultiSelect } from "@/components/app/state-multi-select";
+import { countiesForState, parseCounty } from "@/lib/us-geo";
 import { UploadCloud, X, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -229,6 +230,7 @@ export function JobSpecCard({
   const isBusiness = spec.sourceType === "business";
   const isUpload = spec.sourceType === "upload";
   const hasGeo = isRecords || isBusiness;
+  const states = specStates(spec);
 
   const toggles = isUpload
     ? ([
@@ -324,20 +326,23 @@ export function JobSpecCard({
           <>
             <div className={isRecords ? "grid grid-cols-2 gap-3" : ""}>
               <div>
-                <FieldLabel confidence={95} show={Boolean(spec.state) && inf("state")}>State</FieldLabel>
-                <Select
-                  value={spec.state ?? ""}
-                  onValueChange={(v) =>
-                    onChange({ ...spec, state: v, counties: spec.state === v ? spec.counties : [] })
-                  }
-                >
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Pick A State" /></SelectTrigger>
-                  <SelectContent className="max-h-72">
-                    {US_STATES.map((s) => (
-                      <SelectItem key={s.code} value={s.code}>{s.code} · {s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FieldLabel confidence={95} show={states.length > 0 && inf("state")}>
+                  {states.length > 1 ? "States" : "State"}
+                </FieldLabel>
+                <StateMultiSelect
+                  value={states}
+                  onChange={(next) => {
+                    const keep = new Set(next.map((s) => s.toUpperCase()));
+                    onChange({
+                      ...withStates(spec, next),
+                      // Drop counties whose state is no longer selected.
+                      counties: spec.counties.filter((c) => {
+                        const st = parseCounty(c).state;
+                        return st ? keep.has(st) : false;
+                      }),
+                    });
+                  }}
+                />
               </div>
               {isRecords && (
                 <div>
@@ -358,7 +363,7 @@ export function JobSpecCard({
             <div>
               <FieldLabel confidence={98} show={spec.counties.length > 0 && inf("counties")}>Counties</FieldLabel>
               <CountyMultiSelect
-                state={spec.state}
+                states={states}
                 value={spec.counties}
                 onChange={(next) => set("counties", next)}
                 renderBadgeClassName={(c) => COVERAGE_STYLE[covFor(c)]}
@@ -366,8 +371,8 @@ export function JobSpecCard({
               />
               {!spec.counties.length && (
                 <p className="mt-2 text-[11px] text-muted-foreground">
-                  {spec.state
-                    ? `Select One Or More Of The ${countiesForState(spec.state).length} Counties In ${spec.state}. Leave Empty To Cover The Whole State.`
+                  {states.length
+                    ? `Select One Or More Of The ${states.reduce((n, s) => n + countiesForState(s).length, 0)} Counties In ${states.join(", ")}. Leave Empty To Cover ${states.length > 1 ? "Every Selected State" : "The Whole State"}.`
                     : `Covered Now: ${COUNTIES.filter((c) => c.coverage === "live").map((c) => c.name).join(", ")}`}
                 </p>
               )}

@@ -5,34 +5,34 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { countiesForState, formatCounty, parseCounty } from "@/lib/us-geo";
+import { countiesForState, formatCounty } from "@/lib/us-geo";
 
 /**
- * Multi-select county picker scoped to the selected state.
+ * Multi-select county picker scoped to the selected states. Counties from every
+ * chosen state are listed together, grouped by state code.
  * Values are stored as "Hillsborough, FL" so they stay compatible with job params.
  */
 export function CountyMultiSelect({
-  state,
+  states,
   value,
   onChange,
   renderBadgeClassName,
   renderBadgeLabel,
 }: {
-  state: string | null;
+  states: string[];
   value: string[];
   onChange: (next: string[]) => void;
   renderBadgeClassName?: (county: string) => string;
   renderBadgeLabel?: (county: string) => string;
 }) {
   const [open, setOpen] = useState(false);
-  const counties = useMemo(() => countiesForState(state), [state]);
-  const selectedInState = useMemo(
-    () => value.filter((v) => !state || parseCounty(v).state === state.toUpperCase()),
-    [value, state],
+  const groups = useMemo(
+    () => states.map((s) => ({ state: s.toUpperCase(), counties: countiesForState(s) })),
+    [states],
   );
+  const total = groups.reduce((n, g) => n + g.counties.length, 0);
 
-  const toggle = (county: string) => {
-    if (!state) return;
+  const toggle = (county: string, state: string) => {
     const label = formatCounty(county, state);
     onChange(
       value.some((v) => v.toLowerCase() === label.toLowerCase())
@@ -41,8 +41,8 @@ export function CountyMultiSelect({
     );
   };
 
-  const isSelected = (county: string) =>
-    !!state && value.some((v) => v.toLowerCase() === formatCounty(county, state).toLowerCase());
+  const isSelected = (county: string, state: string) =>
+    value.some((v) => v.toLowerCase() === formatCounty(county, state).toLowerCase());
 
   return (
     <div>
@@ -51,33 +51,39 @@ export function CountyMultiSelect({
           <Button
             variant="outline"
             role="combobox"
-            disabled={!state}
+            disabled={!states.length}
             className="mt-1 w-full justify-between font-normal"
           >
             <span className="truncate text-left">
-              {!state
+              {!states.length
                 ? "Pick A State First"
-                : selectedInState.length
-                  ? `${selectedInState.length} Selected`
-                  : `All ${counties.length} Counties In ${state.toUpperCase()}`}
+                : value.length
+                  ? `${value.length} Selected`
+                  : `All ${total} Counties In ${states.map((s) => s.toUpperCase()).join(", ")}`}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
           <Command>
-            <CommandInput placeholder={`Search ${counties.length} Counties…`} />
+            <CommandInput placeholder={`Search ${total} Counties…`} />
             <CommandList>
               <CommandEmpty>No County Found.</CommandEmpty>
               <ScrollArea className="h-64">
-                <CommandGroup>
-                  {counties.map((county) => (
-                    <CommandItem key={county} value={county} onSelect={() => toggle(county)}>
-                      <Check className={`mr-2 h-4 w-4 ${isSelected(county) ? "opacity-100" : "opacity-0"}`} />
-                      {county}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
+                {groups.map((g) => (
+                  <CommandGroup key={g.state} heading={groups.length > 1 ? g.state : undefined}>
+                    {g.counties.map((county) => (
+                      <CommandItem
+                        key={`${g.state}-${county}`}
+                        value={`${county} ${g.state}`}
+                        onSelect={() => toggle(county, g.state)}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${isSelected(county, g.state) ? "opacity-100" : "opacity-0"}`} />
+                        {county}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ))}
               </ScrollArea>
             </CommandList>
           </Command>
@@ -86,7 +92,9 @@ export function CountyMultiSelect({
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => state && onChange(counties.map((c) => formatCounty(c, state)))}
+              onClick={() =>
+                onChange(groups.flatMap((g) => g.counties.map((c) => formatCounty(c, g.state))))
+              }
             >
               Select All
             </Button>

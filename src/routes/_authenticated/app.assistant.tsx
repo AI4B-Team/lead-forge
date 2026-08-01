@@ -25,7 +25,7 @@ import {
 import type { ColumnMap } from "@/lib/csv";
 import { assistantChat, createJobFromSpec, requestCoverage } from "@/lib/assistant.functions";
 import { runJob } from "@/lib/pipeline.functions";
-import { EMPTY_SPEC, describeSpec, type Coverage, type JobSpec } from "@/lib/assistant.shared";
+import { EMPTY_SPEC, describeSpec, specStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
 import { TEMPLATES, templateSourceType, type Template } from "@/lib/templates";
 import { TemplateCard } from "@/components/marketing/template-card";
@@ -92,7 +92,7 @@ const GENERIC_PLACEHOLDER =
 function missingSlots(text: string, spec: JobSpec) {
   const t = text.toLowerCase();
   const hasGeo =
-    Boolean(spec.state) ||
+    specStates(spec).length > 0 ||
     spec.counties.length > 0 ||
     /\b(county|counties|city|zip|statewide)\b/.test(t) ||
     US_STATES.some((s) => new RegExp(`\\b(${s.code.toLowerCase()}|${s.name.toLowerCase()})\\b`).test(t));
@@ -582,7 +582,7 @@ function Assistant() {
         ? "Generate List"
         : "Looks Good";
 
-  const geoResolved = Boolean(spec.state || spec.counties.length || spec.sourceType === "upload");
+  const geoResolved = Boolean(specStates(spec).length || spec.counties.length || spec.sourceType === "upload");
 
   const runFooter = (
     <div className="space-y-3 border-t border-border bg-background pt-4">
