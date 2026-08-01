@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -11,14 +12,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Sparkles, ChevronDown, Play, CornerDownLeft, SlidersHorizontal, CheckCircle2 } from "lucide-react";
+import { Sparkles, ChevronDown, Play, CornerDownLeft, SlidersHorizontal, CheckCircle2, RotateCcw } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { assistantChat, createJobFromSpec, requestCoverage } from "@/lib/assistant.functions";
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, type AssistantMessage, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { TEMPLATES } from "@/lib/templates";
+import { takeStashedPrompt, clearStashedPrompt } from "@/lib/prompt-handoff";
 
 export const Route = createFileRoute("/_authenticated/app/assistant")({
+  validateSearch: z.object({ prompt: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "AI Lead Assistant — LeadTrace" },
@@ -32,26 +35,11 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
   component: Assistant,
 });
 
-const EXAMPLES = [
-  "Roofers In Tampa With Mobile Phones",
-  "Probate Filings In Miami From The Last 30 Days",
-  "HVAC Companies In Orlando",
-  "Vacant Houses In Hillsborough County",
-];
-
-const STARTER_CHIPS = [
-  "Probate Filings",
-  "Roofers",
-  "Insurance Agents",
-  "Solar Installers",
-  "Restaurants",
-  "Auto Dealers",
-  "Code Violations",
-  "Vacant Homes",
-];
+const TRY_CHIPS = ["Probate Filings", "Roofers", "Code Violations", "Vacant Homes"];
 
 function Assistant() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const { workspaceId } = useWorkspaceId();
   const chat = useServerFn(assistantChat);
   const createJob = useServerFn(createJobFromSpec);
@@ -118,18 +106,33 @@ function Assistant() {
     }
   };
 
-  // Deep-link: the homepage prompt box carries its text straight into the chat.
+  const startOver = () => {
+    clearStashedPrompt();
+    setMessages([]);
+    setInput("");
+    setSpec(EMPTY_SPEC);
+    setFirstPrompt("");
+    setCoverage([]);
+    setEstimate(null);
+    setSuggested([]);
+    setConfirmed(false);
+    setRevealed(0);
+  };
+
+  // Deep-link: the homepage prompt box carries its text in ?prompt=, with a
+  // short-lived sessionStorage stash as the only fallback.
   useEffect(() => {
     if (sentPrompt.current || !workspaceId) return;
-    try {
-      const stashed = sessionStorage.getItem("leadtrace_prompt");
-      if (!stashed) return;
-      sessionStorage.removeItem("leadtrace_prompt");
-      sentPrompt.current = true;
-      void send(stashed);
-    } catch { /* ignore */ }
+    const fromUrl = search.prompt?.trim();
+    const stashed = takeStashedPrompt();
+    const initial = fromUrl || stashed;
+    if (!initial) return;
+    sentPrompt.current = true;
+    // Strip the param so a refresh (or a later visit) never re-sends it.
+    if (fromUrl) navigate({ to: "/app/assistant", search: {}, replace: true });
+    void send(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId]);
+  }, [workspaceId, search.prompt]);
 
   const uncovered = coverage.filter((c) => c.coverage === "requested" || c.coverage === "unknown");
 
@@ -245,9 +248,15 @@ function Assistant() {
         className="resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
       />
       <div className="mt-3 flex items-center justify-between gap-3">
-        <span className="hidden items-center gap-1.5 text-[11px] text-muted-foreground sm:flex">
-          <CornerDownLeft className="h-3 w-3" /> Enter To Send · Shift + Enter For A New Line
-        </span>
+        <div className="hidden flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground sm:flex">
+          <span className="flex items-center gap-1.5">
+            <CornerDownLeft className="h-3 w-3" /> Enter To Send · Shift + Enter For A New Line
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Badge variant="outline" className="text-[10px] uppercase">Beta</Badge>
+            AI May Make Mistakes. You Review Everything Before Anything Runs.
+          </span>
+        </div>
         <Button className="rounded-full px-5" disabled={busy || !input.trim()} onClick={() => send(input)}>
           <Sparkles className="mr-1 h-4 w-4" /> {started ? "Send" : "Generate Job"}
         </Button>
@@ -260,6 +269,13 @@ function Assistant() {
       <PageHeader
         title="AI Lead Assistant"
         description="Describe The Leads You Want. The Assistant Interprets It, Assembles The Job, And Hands You The Controls To Review."
+        actions={
+          started ? (
+            <Button variant="outline" className="rounded-full" onClick={startOver}>
+              <RotateCcw className="mr-1.5 h-4 w-4" /> Start Over
+            </Button>
+          ) : undefined
+        }
       />
 
       {!started ? (
@@ -267,46 +283,21 @@ function Assistant() {
         <div className="mx-auto max-w-3xl pt-6">
           {composerBox}
 
-          <div className="mt-6 rounded-2xl border border-dashed border-border p-5">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Examples
-            </div>
-            <ul className="mt-3 space-y-2">
-              {EXAMPLES.map((e) => (
-                <li key={e}>
-                  <button
-                    type="button"
-                    onClick={() => setInput(e)}
-                    className="text-left text-sm text-foreground hover:text-primary"
-                  >
-                    • {e}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-6">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Or Start From A Common Ask
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {STARTER_CHIPS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setInput(`${c} In Hillsborough County, FL With Mobile Numbers`)}
-                  className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary hover:text-primary"
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-6 flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Badge variant="outline" className="text-[10px] uppercase">Beta</Badge>
-            AI May Make Mistakes. You Review Everything Before Anything Runs.
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Try:</span>
+            {TRY_CHIPS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => {
+                  setInput(c);
+                  composer.current?.focus();
+                }}
+                className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary hover:text-primary"
+              >
+                {c}
+              </button>
+            ))}
           </div>
         </div>
       ) : (
