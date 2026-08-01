@@ -9,7 +9,9 @@ export const listThreads = createServerFn({ method: "GET" })
   .inputValidator((input) =>
     z.object({
       workspaceId: z.string().uuid(),
-      filter: z.enum(["all", "unread", "optouts"]).default("all"),
+      filter: z
+        .enum(["all", "needs_reply", "interested", "appointments", "ai", "unread", "optouts"])
+        .default("all"),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -17,7 +19,7 @@ export const listThreads = createServerFn({ method: "GET" })
     // can't do a DISTINCT ON via the JS client cleanly.
     let q = context.supabase
       .from("messages")
-      .select("id, thread_key, direction, body, created_at, read_at, is_optout, lead_id, sending_number_id")
+      .select("id, thread_key, direction, body, created_at, read_at, is_optout, lead_id, sending_number_id, campaign_id, is_bot, handoff_reason")
       .eq("workspace_id", data.workspaceId)
       .not("thread_key", "is", null)
       .order("created_at", { ascending: false })
@@ -27,7 +29,7 @@ export const listThreads = createServerFn({ method: "GET" })
     if (error) throw error;
 
     type Row = NonNullable<typeof rows>[number];
-    const byThread = new Map<string, {
+    type Agg = {
       thread_key: string;
       last_body: string | null;
       last_direction: string;
@@ -35,42 +37,133 @@ export const listThreads = createServerFn({ method: "GET" })
       unread: number;
       is_optout: boolean;
       lead_id: string | null;
-    }>();
+      campaign_id: string | null;
+      inbound: number;
+      outbound: number;
+      inbound_bodies: string[];
+      last_inbound_at: string | null;
+      bot_active: boolean;
+      handoff: string | null;
+    };
+    const byThread = new Map<string, Agg>();
     for (const r of (rows ?? []) as Row[]) {
       if (!r.thread_key) continue;
-      const cur = byThread.get(r.thread_key);
+      let cur = byThread.get(r.thread_key);
       if (!cur) {
-        byThread.set(r.thread_key, {
+        cur = {
           thread_key: r.thread_key,
           last_body: r.body,
           last_direction: r.direction,
           last_at: r.created_at,
-          unread: r.direction === "inbound" && !r.read_at ? 1 : 0,
-          is_optout: !!r.is_optout,
+          unread: 0,
+          is_optout: false,
           lead_id: r.lead_id ?? null,
-        });
+          campaign_id: r.campaign_id ?? null,
+          inbound: 0,
+          outbound: 0,
+          inbound_bodies: [],
+          last_inbound_at: null,
+          bot_active: false,
+          handoff: null,
+        };
+        byThread.set(r.thread_key, cur);
+      }
+      if (!cur.lead_id && r.lead_id) cur.lead_id = r.lead_id;
+      if (!cur.campaign_id && r.campaign_id) cur.campaign_id = r.campaign_id;
+      if (r.is_optout) cur.is_optout = true;
+      if (r.handoff_reason && !cur.handoff) cur.handoff = r.handoff_reason;
+      if (r.direction === "inbound") {
+        cur.inbound += 1;
+        if (!r.read_at) cur.unread += 1;
+        if (r.body) cur.inbound_bodies.push(r.body);
+        if (!cur.last_inbound_at) cur.last_inbound_at = r.created_at;
       } else {
-        if (r.direction === "inbound" && !r.read_at) cur.unread += 1;
-        if (r.is_optout) cur.is_optout = true;
+        cur.outbound += 1;
+        if (r.is_bot && !cur.bot_active) cur.bot_active = true;
       }
     }
 
+    const { classifyIntent, detectBadges, leadScore, sentimentOf } = await import("@/lib/conversation-intel");
+
     let threads = Array.from(byThread.values());
-    if (data.filter === "unread") threads = threads.filter((t) => t.unread > 0);
 
-    // Enrich with lead + phone via a second targeted select.
+    // Enrich with lead, campaign and derived intelligence.
     const leadIds = threads.map((t) => t.lead_id).filter((v): v is string => !!v);
-    const leads = leadIds.length
-      ? (await context.supabase.from("leads").select("id, full_name, phone, city, state").in("id", leadIds)).data ?? []
-      : [];
+    const campaignIds = Array.from(new Set(threads.map((t) => t.campaign_id).filter((v): v is string => !!v)));
+    const [leads, campaigns] = await Promise.all([
+      leadIds.length
+        ? context.supabase
+            .from("leads")
+            .select("id, full_name, business_name, phone, phone_type, city, state")
+            .in("id", leadIds)
+            .then((r) => r.data ?? [])
+        : Promise.resolve([]),
+      campaignIds.length
+        ? context.supabase
+            .from("campaigns")
+            .select("id, name, status")
+            .in("id", campaignIds)
+            .then((r) => r.data ?? [])
+        : Promise.resolve([]),
+    ]);
     const leadMap = new Map(leads.map((l) => [l.id, l]));
+    const campaignMap = new Map(campaigns.map((c) => [c.id, c]));
 
-    return {
-      threads: threads.map((t) => ({
+    const enriched = threads.map((t) => {
+      const lead = t.lead_id ? leadMap.get(t.lead_id) ?? null : null;
+      const intent = classifyIntent(t.inbound_bodies.join(" "), t.is_optout);
+      const badges = detectBadges(t.inbound_bodies, t.is_optout);
+      const score = leadScore({
+        inboundCount: t.inbound,
+        outboundCount: t.outbound,
+        intent,
+        lastAt: t.last_at,
+        isOptout: t.is_optout,
+        hasPhoneType: lead?.phone_type ?? null,
+      });
+      return {
         ...t,
-        lead: t.lead_id ? leadMap.get(t.lead_id) ?? null : null,
-      })),
+        lead,
+        campaign: t.campaign_id ? campaignMap.get(t.campaign_id) ?? null : null,
+        intent,
+        badges,
+        score,
+        sentiment: sentimentOf(t.inbound_bodies.join(" ")),
+        needs_reply: t.last_direction === "inbound" && !t.is_optout,
+      };
+    });
+
+    const filtered = enriched.filter((t) => {
+      switch (data.filter) {
+        case "unread":
+          return t.unread > 0;
+        case "needs_reply":
+          return t.needs_reply;
+        case "interested":
+          return t.intent === "qualified" || t.intent === "appointment";
+        case "appointments":
+          return t.intent === "appointment";
+        case "ai":
+          return t.bot_active;
+        case "optouts":
+          return t.is_optout;
+        default:
+          return true;
+      }
+    });
+
+    // Counts drive the filter chips so operators see where attention is needed.
+    const counts = {
+      all: enriched.length,
+      needs_reply: enriched.filter((t) => t.needs_reply).length,
+      interested: enriched.filter((t) => t.intent === "qualified" || t.intent === "appointment").length,
+      appointments: enriched.filter((t) => t.intent === "appointment").length,
+      ai: enriched.filter((t) => t.bot_active).length,
+      unread: enriched.filter((t) => t.unread > 0).length,
+      optouts: enriched.filter((t) => t.is_optout).length,
     };
+
+    return { threads: filtered, counts };
   });
 
 // Full message list for one thread, plus lead detail.
