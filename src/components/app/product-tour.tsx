@@ -16,7 +16,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     anchor: "nav-new-job",
     title: "Generate Leads",
-    body: "Type a niche and a county. We pull matching businesses from multiple sources — no downloads, no setup.",
+    body: "Describe what you're after and where. We pull matching records from multiple sources — no downloads, no setup.",
   },
   {
     anchor: "nav-new-job",
