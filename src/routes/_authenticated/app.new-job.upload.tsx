@@ -29,9 +29,8 @@ function Wizard() {
   const { reattach } = Route.useSearch();
   const { workspaceId } = useWorkspaceId();
   const runJobFn = useServerFn(runJob);
-  const columns = ["Full Name", "Phone", "Email", "Address", "City", "State", "Zip"];
   const [file, setFile] = useState<File | null>(null);
-  const [parsed, setParsed] = useState<{ rows: CsvLead[]; skipped: number; headers: string[] } | null>(null);
+  const [attached, setAttached] = useState<UploadAttachment | null>(null);
   const [parsing, setParsing] = useState(false);
   const [mapping, setMapping] = useState<ColumnMap>({});
   const [skipTrace, setSkipTrace] = useState(true);
@@ -39,15 +38,13 @@ function Wizard() {
 
   const onFile = async (f: File | null) => {
     setFile(f);
-    setParsed(null);
+    setAttached(null);
     if (!f) return;
-    if (!/\.csv$/i.test(f.name)) return; // XLSX handled server-side later
     setParsing(true);
     try {
-      const text = await f.text();
-      const result = csvToLeads(text);
-      setParsed(result);
-      setMapping(autoMapHeaders(result.headers));
+      const next = await readAttachment(f); // XLSX still maps server-side
+      setAttached(next);
+      setMapping(next.map);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could Not Read CSV");
     } finally {
@@ -71,7 +68,7 @@ function Wizard() {
           file_size: file.size,
           mapping,
           skip_trace: skipTrace,
-          rows: parsed ? rowsFromTable([parsed.headers, ...parsed.rows.map(() => [])], mapping) : null,
+          rows: attached ? attachmentRows({ ...attached, map: mapping }) : null,
         },
       });
       navigate({ to: "/app/jobs/$jobId", params: { jobId: id } });
@@ -108,8 +105,8 @@ function Wizard() {
             <div className="text-xs text-muted-foreground mt-1">
               {parsing
                 ? "Parsing…"
-                : parsed
-                  ? `${parsed.rows.length.toLocaleString()} Rows Detected${parsed.skipped ? ` · ${parsed.skipped} Skipped` : ""}`
+                : attached?.parseable
+                  ? `${attached.rowCount.toLocaleString()} Rows Detected`
                   : file
                     ? `${(file.size / 1024).toFixed(1)} KB`
                     : "Up To 25,000 Rows Per CSV Upload"}
@@ -122,30 +119,14 @@ function Wizard() {
             />
           </label>
 
-          <div>
-            <Label>Column Mapping</Label>
-            <div className="mt-2 grid sm:grid-cols-2 gap-3">
-              {columns.map((c) => (
-                <div key={c} className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2">
-                  <span className="text-sm text-foreground">{c}</span>
-                  <Select
-                    value={mapping[c]}
-                    onValueChange={(v) => setMapping((m) => ({ ...m, [c]: v }))}
-                  >
-                    <SelectTrigger className="w-40 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {columns.map((cc) => (
-                        <SelectItem key={cc} value={cc}>{cc}</SelectItem>
-                      ))}
-                      <SelectItem value="__skip">Skip Column</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
+          {attached?.parseable && (
+            <div>
+              <Label>Column Mapping</Label>
+              <div className="mt-2">
+                <ColumnMapper headers={attached.headers} value={mapping} onChange={setMapping} />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="space-y-3 rounded-lg border border-border p-4">
             <div className="flex items-center justify-between">
