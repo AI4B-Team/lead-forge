@@ -75,7 +75,7 @@ const TIERS = [
     usage: [
       ["$0.011", "Per SMS Segment — Flat, Never Multiplied"],
       ["$18", "Per 1,000 Lead Credit Overage"],
-      ["$0.05", "Per Skip Trace Lookup (Optional)"],
+      ["$0.05", "Per Skip Trace Beyond Your Included Limits"],
       ["$1.50", "Per Additional Number / Mo, No Cap"],
     ],
   },
@@ -96,7 +96,7 @@ const TIERS = [
     usage: [
       ["$0.010", "Per SMS Segment — Flat, Never Multiplied"],
       ["$15", "Per 1,000 Lead Credit Overage"],
-      ["$0.04", "Per Skip Trace Lookup (Optional)"],
+      ["$0.04", "Per Skip Trace Beyond Your Included Limits"],
       ["$1.50", "Per Additional Number / Mo, No Cap"],
     ],
   },
