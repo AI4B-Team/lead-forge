@@ -344,3 +344,48 @@ function PrefRow({
     </div>
   );
 }
+
+function IdentityCard({
+  initials,
+  name,
+  email,
+  verified,
+}: {
+  initials: string;
+  name: string;
+  email: string;
+  verified: boolean;
+}) {
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary font-display font-bold text-primary-foreground">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <div className="truncate font-display font-bold text-foreground">{name}</div>
+            <div className="truncate text-xs text-muted-foreground">{email}</div>
+          </div>
+        </div>
+        <Separator className="my-4" />
+        <div className="space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Role</span>
+            <span className="font-medium text-foreground">Owner</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Email</span>
+            <span className={verified ? "font-medium text-success" : "font-medium text-warn"}>
+              {verified ? "Verified" : "Unverified"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Two-Factor</span>
+            <span className="font-medium text-warn">Disabled</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
