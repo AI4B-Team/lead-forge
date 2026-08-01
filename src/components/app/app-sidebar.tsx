@@ -33,7 +33,7 @@ const ITEMS = [
   { to: "/app/new-job", label: "New Job", icon: Plus },
   { to: "/app/lists", label: "Jobs", icon: ListChecks },
   { to: "/app/leads", label: "Leads", icon: Users },
-  { to: "/app/brands", label: "Brands", icon: BrainCircuit },
+  { to: "/app/brands", label: "AI Brands", icon: BrainCircuit },
   { to: "/app/campaigns", label: "Campaigns", icon: MessageSquare },
   { to: "/app/reports", label: "Reports", icon: BarChart3 },
 ] as const;

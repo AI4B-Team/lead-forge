@@ -220,6 +220,13 @@
   animation: arrow-nudge 2.6s ease-in-out infinite;
 }
 
+/* Knowledge flow — reads like the AI is absorbing each stage in turn. */
+@keyframes knowledge-pulse {
+  0%, 100% { opacity: 0.45; transform: translateY(0); }
+  12% { opacity: 1; transform: translateY(-2px); }
+  30% { opacity: 0.45; transform: translateY(0); }
+}
+
 /* Staggered check reveal on card hover — reads as active processing. */
 @keyframes check-pop {
   0% { opacity: 0.45; transform: translateX(-4px); }
