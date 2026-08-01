@@ -69,6 +69,7 @@ const TIERS = [
     included: [
       ["5", "User Seats"],
       ["15", "Sending Numbers Included"],
+      ["Included", "Skip Tracing — 300 / Day, 3,000 / Mo"],
       ["Free", "10DLC Brand & Campaign Registration"],
       ["Priority", "Support & Processing Queue"],
     ],
@@ -90,6 +91,7 @@ const TIERS = [
     included: [
       ["Unlimited", "User Seats"],
       ["50", "Sending Numbers Included"],
+      ["Included", "Skip Tracing — 1,000 / Day, 10,000 / Mo"],
       ["Free", "10DLC Brand & Campaign Registration"],
       ["Dedicated", "Account Manager"],
     ],
