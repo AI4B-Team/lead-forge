@@ -159,7 +159,7 @@ export function ProductTour({ open, onClose }: { open: boolean; onClose: () => v
             left: spot.left,
             width: spot.width,
             height: spot.height,
-            boxShadow: "0 0 0 9999px hsl(var(--foreground) / 0.6)",
+            boxShadow: "0 0 0 9999px rgb(0 0 0 / 0.6)",
           }}
         />
       ) : (
