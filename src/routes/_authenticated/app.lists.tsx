@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { StatusBadge } from "@/components/app/status-badge";
@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Repeat } from "lucide-react";
+import { toast } from "sonner";
+import { setJobSchedule } from "@/lib/monitoring.functions";
+import { CADENCE_LABEL } from "@/lib/monitoring.shared";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { listJobs } from "@/lib/jobs.functions";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
@@ -28,6 +31,8 @@ const SOURCE_LABEL: Record<string, string> = {
 function Lists() {
   const { workspaceId } = useWorkspaceId();
   const fetchJobs = useServerFn(listJobs);
+  const saveSchedule = useServerFn(setJobSchedule);
+  const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["jobs-list", workspaceId],
     queryFn: () => fetchJobs({ data: { workspaceId: workspaceId! } }),
@@ -106,16 +111,17 @@ function Lists() {
                 <th className="p-4">Rows</th>
                 <th className="p-4 w-[160px]">Funnel</th>
                 <th className="p-4">Clean / DNC / Litigator</th>
+                <th className="p-4">Rescan</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Created</th>
               </tr>
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading Lists…</td></tr>
+                <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Loading Lists…</td></tr>
               )}
               {!isLoading && rows.length === 0 && (
-                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">
+                <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">
                   No Lists Match. <Link to="/app/new-job" className="text-primary underline">Start A New Job</Link>.
                 </td></tr>
               )}
@@ -145,6 +151,21 @@ function Lists() {
                     <span className="text-warn font-medium">{j.counts.dnc.toLocaleString()}</span> /{" "}
                     <span className="text-danger font-medium">{j.counts.litigator.toLocaleString()}</span>
                   </td>
+                  <td className="p-4">
+                    <CadenceSelect
+                      value={j.schedule}
+                      nextRunAt={j.next_run_at}
+                      onChange={async (schedule) => {
+                        try {
+                          await saveSchedule({ data: { jobId: j.id, schedule } });
+                          toast.success(schedule === "one_time" ? "Rescanning Turned Off." : `Rescanning ${CADENCE_LABEL[schedule]}.`);
+                          qc.invalidateQueries({ queryKey: ["jobs-list", workspaceId] });
+                        } catch (e) {
+                          toast.error(e instanceof Error ? e.message : "Could Not Save Cadence.");
+                        }
+                      }}
+                    />
+                  </td>
                   <td className="p-4"><StatusBadge status={(j.status ?? "queued") as JobStatus} /></td>
                   <td className="p-4 text-muted-foreground">{new Date(j.created_at).toLocaleDateString()}</td>
                 </tr>
@@ -153,6 +174,40 @@ function Lists() {
           </table>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+/**
+ * Recurring-scan cadence per list (spec §15.1). Re-runs reuse the same search
+ * and only surface records that were not already in the workspace.
+ */
+function CadenceSelect({
+  value,
+  nextRunAt,
+  onChange,
+}: {
+  value: string;
+  nextRunAt: string | null;
+  onChange: (schedule: "one_time" | "12h" | "daily" | "weekly") => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <Select value={value} onValueChange={(v) => onChange(v as "one_time" | "12h" | "daily" | "weekly")}>
+        <SelectTrigger className="h-8 w-[150px] text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="one_time">One-Time</SelectItem>
+          <SelectItem value="12h">Every 12 Hours</SelectItem>
+          <SelectItem value="daily">Daily</SelectItem>
+          <SelectItem value="weekly">Weekly</SelectItem>
+        </SelectContent>
+      </Select>
+      {value !== "one_time" && nextRunAt && (
+        <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+          <Repeat className="h-3 w-3" /> Next {new Date(nextRunAt).toLocaleDateString()}
+        </span>
+      )}
     </div>
   );
 }

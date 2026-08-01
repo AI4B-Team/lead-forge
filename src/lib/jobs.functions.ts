@@ -10,7 +10,7 @@ export const listJobs = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data: jobs, error } = await supabase
       .from("jobs")
-      .select("id, source_type, status, rows_in, rows_deduped, params, created_at")
+      .select("id, source_type, record_type, status, rows_in, rows_deduped, params, created_at, schedule, next_run_at, last_run_at")
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: false });
     if (error) throw error;
@@ -43,6 +43,10 @@ export const listJobs = createServerFn({ method: "GET" })
           rows_in: j.rows_in ?? 0,
           rows_deduped: j.rows_deduped ?? 0,
           created_at: j.created_at,
+          record_type: j.record_type ?? "business",
+          schedule: j.schedule ?? "one_time",
+          next_run_at: j.next_run_at,
+          last_run_at: j.last_run_at,
           counts: counts.get(j.id) ?? { clean: 0, dnc: 0, litigator: 0 },
         };
       }),
