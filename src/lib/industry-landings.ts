@@ -15,6 +15,11 @@ export type IndustryLanding = {
     subtitle: string;
   };
   icon: LucideIcon;
+  card: {
+    tagline: string;
+    bullets: string[];
+    pills: string[];
+  };
   stats: { value: string; label: string }[];
   useCases: { title: string; body: string }[];
   benefits: { title: string; body: string; icon: LucideIcon }[];
@@ -35,6 +40,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "realestate",
     industry: "Real Estate",
     icon: Home,
+    card: {
+      tagline: "Find distressed properties before everyone else.",
+      bullets: ["Probates", "Vacants", "Tax Delinquencies", "Code Violations"],
+      pills: ["Probates", "Code Violations"],
+    },
     hero: {
       eyebrow: "Now Tracking 15,000+ Live Code Enforcement Cases",
       title: "Find Distressed Properties",
@@ -70,6 +80,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "insurance",
     industry: "Insurance",
     icon: Shield,
+    card: {
+      tagline: "Build fresh prospect lists in any ZIP code.",
+      bullets: ["Age", "Homeowners", "Auto", "Business Owners"],
+      pills: ["ZIP Targeting", "Skip Trace"],
+    },
     hero: {
       eyebrow: "Built For Medicare, Life, Auto, And Final Expense",
       title: "Book More Policies.",
@@ -105,6 +120,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "solar",
     industry: "Solar & Roofing",
     icon: Sun,
+    card: {
+      tagline: "Target homeowners ready for an estimate.",
+      bullets: ["Roof Age", "Storm Areas", "Property Filters", "Owner Occupied"],
+      pills: ["Roof Age", "Owner Occupied"],
+    },
     hero: {
       eyebrow: "For Solar Installers, Roofers, And EPC Partners",
       title: "Book Roof Inspections.",
@@ -140,6 +160,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "home-services",
     industry: "Home Services",
     icon: Wrench,
+    card: {
+      tagline: "Own every neighborhood you service.",
+      bullets: ["Trade + City", "Qualified Homeowners", "Radius Targeting", "Seasonal Sync"],
+      pills: ["Trade Search", "Radius Targeting"],
+    },
     hero: {
       eyebrow: "For HVAC, Plumbing, Electrical, And Contractors",
       title: "Fill The Truck.",
@@ -174,7 +199,12 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
   {
     slug: "mortgage",
     industry: "Mortgage & Lending",
-    icon: DollarSign,
+    icon: Landmark,
+    card: {
+      tagline: "Build borrower lists instead of buying them.",
+      bullets: ["Public Records", "Homeowners", "Equity Signals", "Refi Triggers"],
+      pills: ["Public Records", "Equity Filters"],
+    },
     hero: {
       eyebrow: "For Loan Officers And Mortgage Brokers",
       title: "Fund More Loans.",
@@ -209,6 +239,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "auto",
     industry: "Auto Dealers & Detailing",
     icon: Car,
+    card: {
+      tagline: "Find local car owners that match your offer.",
+      bullets: ["Vehicle Owners", "Lease Expiring", "Service Area", "Fleet Accounts"],
+      pills: ["Vehicle Owners", "Lease Expiring"],
+    },
     hero: {
       eyebrow: "For Dealerships, Detailers, And Mobile Mechanics",
       title: "Move More Inventory.",
@@ -241,6 +276,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "medical",
     industry: "Medical & Wellness",
     icon: HeartPulse,
+    card: {
+      tagline: "Fill appointment slots with local, compliant outreach.",
+      bullets: ["Demographics", "Radius Targeting", "DNC Scrubbed", "No PHI Stored"],
+      pills: ["Radius Targeting", "Demographics"],
+    },
     hero: {
       eyebrow: "For Clinics, Med Spas, Dentists, And Practices",
       title: "Fill The Chairs.",
@@ -273,6 +313,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "b2b",
     industry: "B2B / SaaS",
     icon: Briefcase,
+    card: {
+      tagline: "Build prospect lists without the enterprise data stack.",
+      bullets: ["Any Industry", "NAICS + Trade", "Emails + Phones", "CSV Export"],
+      pills: ["NAICS Filters", "Enriched Contacts"],
+    },
     hero: {
       eyebrow: "For SDRs, Founders, And Growth Teams",
       title: "Skip The $60K Data Stack.",
@@ -305,6 +350,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "ecommerce",
     industry: "E-Commerce & Retail",
     icon: ShoppingBag,
+    card: {
+      tagline: "Find every retailer and wholesaler in your category.",
+      bullets: ["Boutiques", "Big Box", "Owner Contacts", "Trade Shows"],
+      pills: ["Retailers", "Owner Contacts"],
+    },
     hero: {
       eyebrow: "For DTC Brands, Retailers, And Wholesalers",
       title: "Wholesale Accounts.",
@@ -337,6 +387,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "legal",
     industry: "Legal Services",
     icon: Scale,
+    card: {
+      tagline: "Turn court filings into signed cases.",
+      bullets: ["Probates", "Foreclosures", "Business Filings", "Litigator Scrub"],
+      pills: ["Court Filings", "Litigator Scrub"],
+    },
     hero: {
       eyebrow: "For Personal Injury, Estate, And Business Attorneys",
       title: "Sign More Cases.",
@@ -369,6 +424,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "education",
     industry: "Education & Coaching",
     icon: GraduationCap,
+    card: {
+      tagline: "Fill cohorts and discovery calendars with your ideal clients.",
+      bullets: ["Any Niche", "Business + Consumer", "Local Numbers", "CRM Export"],
+      pills: ["Geo-Matched", "Demographics"],
+    },
     hero: {
       eyebrow: "For Coaches, Tutors, And Course Creators",
       title: "Fill Your Cohort.",
@@ -401,6 +461,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "agency",
     industry: "Agencies",
     icon: Users,
+    card: {
+      tagline: "White-label the whole pipeline for every client.",
+      bullets: ["Per-Client Workspaces", "White-Label Sending", "Flat Rate", "10DLC Ready"],
+      pills: ["Per-Client", "White-Label"],
+    },
     hero: {
       eyebrow: "For Marketing, Lead-Gen, And Growth Agencies",
       title: "White-Label",
