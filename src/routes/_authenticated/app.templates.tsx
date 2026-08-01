@@ -89,7 +89,7 @@ function AppTemplates() {
   /** In-app selection hands the template prompt to the assistant composer. */
   function handleSelect(t: Template) {
     if (workspaceId) touchRecentTemplate(workspaceId, t.id);
-    navigate({ to: "/app/assistant", search: { prompt: t.prompt, fill: "1" } });
+    navigate({ to: "/app/assistant", search: { template: t.id } });
   }
 
   const pill = (active: boolean) =>
