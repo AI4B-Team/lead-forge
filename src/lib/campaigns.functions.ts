@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { spinOnce } from "@/lib/spintax";
 import { planDrops, estimateCost } from "@/lib/drops";
 import { canStartNewDrop } from "@/lib/tcpa";
+import { SCRUB_STALE_MESSAGE, isScrubStale, withStopFooter } from "@/lib/compliance-rules";
 import { emptyStats, type CampaignStats } from "@/lib/campaign-stats";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
@@ -378,6 +379,19 @@ export const tickCampaign = createServerFn({ method: "POST" })
       return { dispatched: 0, reason: "quiet_hours" };
     }
 
+    // §6: never send against a list whose scrub is older than 30 days.
+    const { data: lastScrub } = await supabase
+      .from("scrub_runs")
+      .select("created_at")
+      .eq("job_id", campaign.list_job_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (isScrubStale(lastScrub?.created_at)) {
+      await supabase.from("campaigns").update({ status: "paused" }).eq("id", campaign.id);
+      return { dispatched: 0, reason: "scrub_stale" };
+    }
+
     // Daily cap: today's outbound count for this campaign
     const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
     const { count: sentToday } = await supabase
@@ -466,7 +480,8 @@ export const tickCampaign = createServerFn({ method: "POST" })
       const template = variants[Math.floor(Math.random() * variants.length)];
       const first_name = (lead.full_name ?? "").trim().split(/\s+/)[0] ?? "there";
       const spun = spinOnce(template);
-      const body = renderTemplate(spun, { ...lead, first_name });
+      // Opt-out footer is appended server-side and cannot be removed in the editor.
+      const body = withStopFooter(renderTemplate(spun, { ...lead, first_name }));
       rows.push({
         workspace_id: campaign.workspace_id,
         campaign_id: campaign.id,
