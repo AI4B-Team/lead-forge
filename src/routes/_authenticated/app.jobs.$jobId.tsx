@@ -388,7 +388,12 @@ function LeadsBrowser({ jobId, disabled, open, onOpenChange, bucket, onBucketCha
                 </Badge>
               </div>
               <div className="mt-1 text-xs text-muted-foreground space-x-3">
-                {l.phone && <span>{l.phone}{l.phone_type ? ` · ${l.phone_type}` : ""}</span>}
+                {l.phone && (
+                  <span>
+                    <PhoneLink phone={l.phone} />
+                    {l.phone_type ? ` · ${l.phone_type}` : ""}
+                  </span>
+                )}
                 {l.email && <span>{l.email}</span>}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
@@ -419,7 +424,10 @@ function ContactDetailDialog({ lead, onClose }: { lead: LeadRow | null; onClose:
         <dl className="grid grid-cols-3 gap-y-3 text-sm">
           <DetailRow label="Name" value={lead?.full_name} />
           <DetailRow label="Business" value={lead?.business_name} />
-          <DetailRow label="Phone" value={lead?.phone} />
+          <dt className="text-muted-foreground">Phone</dt>
+          <dd className="col-span-2 font-medium text-foreground">
+            <PhoneLink phone={lead?.phone} />
+          </dd>
           <DetailRow label="Line Type" value={lead?.phone_type} />
           <DetailRow label="Email" value={lead?.email} />
           <DetailRow label="Address" value={lead?.address} />
