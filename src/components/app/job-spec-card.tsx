@@ -212,6 +212,7 @@ export function JobSpecCard({
   onPickFile,
   onRemoveUpload,
   onEditMapping,
+  onRequestRecordType,
 }: {
   spec: JobSpec;
   onChange: (next: JobSpec) => void;
@@ -305,12 +306,57 @@ export function JobSpecCard({
         {isRecords && (
           <div>
             <FieldLabel confidence={96} show={Boolean(spec.recordType) && inf("recordType")}>Record Type</FieldLabel>
-            <Select value={spec.recordType ?? ""} onValueChange={(v) => set("recordType", v)}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Pick A Record Type" /></SelectTrigger>
-              <SelectContent>
-                {RECORD_TYPES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Popover open={requestOpen} onOpenChange={setRequestOpen}>
+              <Select
+                value={spec.recordType ?? ""}
+                onValueChange={(v) => {
+                  // The last item is an affordance, not a fulfillable record type.
+                  if (v === REQUEST_RECORD_TYPE) {
+                    setRequestOpen(true);
+                    return;
+                  }
+                  set("recordType", v);
+                }}
+              >
+                <PopoverTrigger asChild>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Pick A Record Type" /></SelectTrigger>
+                </PopoverTrigger>
+                <SelectContent>
+                  {RECORD_TYPE_OPTIONS.map((r) => (
+                    <SelectItem key={r.id} value={r.label}>{r.label}</SelectItem>
+                  ))}
+                  {onRequestRecordType && (
+                    <>
+                      <SelectSeparator />
+                      <SelectItem value={REQUEST_RECORD_TYPE}>Request A Record Type…</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+              <PopoverContent align="start" className="w-80 space-y-2">
+                <div className="text-sm font-medium text-foreground">Request A Record Type</div>
+                <Input
+                  autoFocus
+                  value={requestText}
+                  placeholder="What records do you want? e.g. Building Permits, New LLC Filings"
+                  onChange={(e) => setRequestText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void submitRecordTypeRequest();
+                    }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  className="w-full"
+                  disabled={!requestText.trim() || requesting}
+                  onClick={() => void submitRecordTypeRequest()}
+                >
+                  {requesting ? "Logging…" : "Submit"}
+                </Button>
+              </PopoverContent>
+            </Popover>
           </div>
         )}
 
