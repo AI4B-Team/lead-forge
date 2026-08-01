@@ -1,0 +1,292 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+// Recurring-scan monitoring layer (spec §15.1) + the cumulative Leads asset
+// (spec §14). Everything here reports what the system actually did — no
+// predictive scoring, no fabricated signal feeds.
+
+const CADENCES = ["one_time", "12h", "daily", "weekly"] as const;
+
+// The cumulative, cross-list record asset.
+export const listLeadRecords = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        disposition: z.enum(["all", "clean", "dnc", "litigator"]).default("all"),
+        sourceType: z.string().max(40).default("all"),
+        lineType: z.enum(["all", "mobile", "landline", "voip", "unknown"]).default("all"),
+        onlyNew: z.boolean().default(false),
+        multiList: z.boolean().default(false),
+        search: z.string().max(120).optional(),
+        limit: z.number().int().min(1).max(500).default(200),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+
+    let q = supabase
+      .from("lead_records")
+      .select(
+        "id, full_name, business_name, phone, phone_type, email, city, state, disposition, source_types, record_types, list_count, first_seen_at, last_seen_at, is_new",
+      )
+      .eq("workspace_id", data.workspaceId)
+      .order("last_seen_at", { ascending: false })
+      .limit(data.limit);
+
+    if (data.disposition !== "all") q = q.eq("disposition", data.disposition);
+    if (data.lineType !== "all") q = q.eq("phone_type", data.lineType);
+    if (data.sourceType !== "all") q = q.contains("source_types", [data.sourceType]);
+    if (data.onlyNew) q = q.eq("is_new", true);
+    if (data.multiList) q = q.gt("list_count", 1);
+    if (data.search?.trim()) {
+      const s = `%${data.search.trim()}%`;
+      q = q.or(
+        `full_name.ilike.${s},business_name.ilike.${s},phone.ilike.${s},email.ilike.${s},city.ilike.${s}`,
+      );
+    }
+
+    const { data: rows, error } = await q;
+    if (error) throw error;
+
+    // Header stat cards — counts, not charts.
+    const head = (build: (b: ReturnType<typeof baseCount>) => unknown) => build(baseCount());
+    function baseCount() {
+      return supabase
+        .from("lead_records")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", data.workspaceId);
+    }
+    void head;
+
+    const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+    const [total, clean, dnc, litigator, thisWeek] = await Promise.all([
+      baseCount(),
+      baseCount().eq("disposition", "clean"),
+      baseCount().eq("disposition", "dnc"),
+      baseCount().eq("disposition", "litigator"),
+      baseCount().gte("first_seen_at", weekAgo),
+    ]);
+
+    const { data: sourceRows } = await supabase
+      .from("lead_records")
+      .select("source_types, record_types")
+      .eq("workspace_id", data.workspaceId)
+      .limit(5000);
+
+    const bySource: Record<string, number> = {};
+    const byRecordType: Record<string, number> = {};
+    for (const r of sourceRows ?? []) {
+      for (const s of r.source_types ?? []) bySource[s] = (bySource[s] ?? 0) + 1;
+      for (const t of r.record_types ?? []) byRecordType[t] = (byRecordType[t] ?? 0) + 1;
+    }
+
+    return {
+      rows: rows ?? [],
+      stats: {
+        total: total.count ?? 0,
+        clean: clean.count ?? 0,
+        dnc: dnc.count ?? 0,
+        litigator: litigator.count ?? 0,
+        newThisWeek: thisWeek.count ?? 0,
+      },
+      bySource,
+      byRecordType,
+    };
+  });
+
+// "Since your last visit" digest — only counts things that really happened.
+export const getScanDigest = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: member } = await supabase
+      .from("workspace_members")
+      .select("last_visit_at")
+      .eq("workspace_id", data.workspaceId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const since = member?.last_visit_at ?? new Date(Date.now() - 7 * 86_400_000).toISOString();
+
+    const { count: newRecords } = await supabase
+      .from("lead_records")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", data.workspaceId)
+      .gte("first_seen_at", since);
+
+    const { data: jobs } = await supabase
+      .from("jobs")
+      .select("id, params, source_type, record_type, schedule, next_run_at, last_run_at, parent_job_id, created_at, status")
+      .eq("workspace_id", data.workspaceId)
+      .neq("schedule", "one_time")
+      .order("created_at", { ascending: false });
+
+    const recurring = [] as Array<{
+      id: string;
+      name: string;
+      schedule: string;
+      record_type: string;
+      next_run_at: string | null;
+      last_run_at: string | null;
+      newRecords: number;
+      due: boolean;
+    }>;
+
+    for (const j of jobs ?? []) {
+      const params = (j.params ?? {}) as { name?: string; file_name?: string };
+      const { count } = await supabase
+        .from("lead_records")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", data.workspaceId)
+        .eq("last_seen_job_id", j.id)
+        .gte("first_seen_at", since);
+      recurring.push({
+        id: j.id,
+        name: params.name ?? params.file_name ?? `${j.source_type} · ${j.id.slice(0, 8)}`,
+        schedule: j.schedule ?? "one_time",
+        record_type: j.record_type ?? "business",
+        next_run_at: j.next_run_at,
+        last_run_at: j.last_run_at,
+        newRecords: count ?? 0,
+        due: !!j.next_run_at && new Date(j.next_run_at) <= new Date(),
+      });
+    }
+
+    const { data: typeRows } = await supabase
+      .from("lead_records")
+      .select("record_types")
+      .eq("workspace_id", data.workspaceId)
+      .gte("first_seen_at", since)
+      .limit(5000);
+    const byRecordType: Record<string, number> = {};
+    for (const r of typeRows ?? []) {
+      for (const t of r.record_types ?? []) byRecordType[t] = (byRecordType[t] ?? 0) + 1;
+    }
+
+    return { since, newRecords: newRecords ?? 0, recurring, byRecordType };
+  });
+
+// Stamp the visit so the next digest window starts here.
+export const markWorkspaceVisited = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await context.supabase
+      .from("workspace_members")
+      .update({ last_visit_at: new Date().toISOString() })
+      .eq("workspace_id", data.workspaceId)
+      .eq("user_id", context.userId);
+    return { ok: true };
+  });
+
+export const setJobSchedule = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ jobId: z.string().uuid(), schedule: z.enum(CADENCES) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { nextRunFor } = await import("./monitoring.shared");
+    const next = data.schedule === "one_time" ? null : nextRunFor(data.schedule, new Date());
+    const { error } = await context.supabase
+      .from("jobs")
+      .update({ schedule: data.schedule, next_run_at: next })
+      .eq("id", data.jobId);
+    if (error) throw error;
+    return { ok: true, next_run_at: next };
+  });
+
+// Queue a fresh run for every recurring job that is due. Returns the new job
+// ids so the caller can advance them through the normal pipeline.
+export const queueDueScans = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { nextRunFor } = await import("./monitoring.shared");
+    const now = new Date();
+
+    const { data: due } = await supabase
+      .from("jobs")
+      .select("id, source_type, record_type, params, schedule, workspace_id")
+      .eq("workspace_id", data.workspaceId)
+      .neq("schedule", "one_time")
+      .lte("next_run_at", now.toISOString());
+
+    const queued: string[] = [];
+    for (const j of due ?? []) {
+      const { data: clone } = await supabase
+        .from("jobs")
+        .insert({
+          workspace_id: j.workspace_id,
+          source_type: j.source_type,
+          record_type: j.record_type ?? "business",
+          params: j.params as never,
+          status: "queued",
+          schedule: "one_time",
+          parent_job_id: j.id,
+          created_by: userId,
+        })
+        .select("id")
+        .maybeSingle();
+      if (clone?.id) queued.push(clone.id);
+      await supabase
+        .from("jobs")
+        .update({
+          last_run_at: now.toISOString(),
+          next_run_at: nextRunFor(j.schedule as "12h" | "daily" | "weekly", now),
+        })
+        .eq("id", j.id);
+    }
+
+    return { queued };
+  });
+
+// Webhook endpoints — the hub subscribes here (spec §15.2).
+export const listWebhooks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("webhook_endpoints")
+      .select("id, url, event_types, active, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return { rows: rows ?? [] };
+  });
+
+export const saveWebhook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        url: z.string().url(),
+        eventTypes: z.array(z.string().max(60)).default([]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("webhook_endpoints").insert({
+      workspace_id: data.workspaceId,
+      url: data.url,
+      event_types: data.eventTypes,
+    });
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const deleteWebhook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("webhook_endpoints").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
