@@ -16,6 +16,13 @@ import {
   Paperclip, Mic, Send,
 } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { supabase } from "@/integrations/supabase/client";
+import { queueJob } from "@/lib/job-submit";
+import { ColumnMapperDialog } from "@/components/app/column-mapper";
+import {
+  attachmentReady, attachmentRows, isSpreadsheet, readAttachment, type UploadAttachment,
+} from "@/lib/upload-attachment";
+import type { ColumnMap } from "@/lib/csv";
 import { assistantChat, createJobFromSpec, requestCoverage } from "@/lib/assistant.functions";
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, type Coverage, type JobSpec } from "@/lib/assistant.shared";
@@ -122,6 +129,9 @@ function Assistant() {
   const [allOpen, setAllOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
+  /** Inline upload state — survives a source switch so it can be restored. */
+  const [upload, setUpload] = useState<UploadAttachment | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
   const lastTemplateId = useRef<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const sentPrompt = useRef(false);
@@ -131,7 +141,8 @@ function Assistant() {
 
   const started = thread.length > 0;
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
-  const missing = useMemo(() => openSlots(spec), [spec]);
+  const uploadReady = attachmentReady(upload);
+  const missing = useMemo(() => openSlots(spec, uploadReady), [spec, uploadReady]);
   const traceComplete =
     revealed >= traceSteps.length && !busy && traceSteps.length > 0 && missing.length === 0;
   const lastAssistantIndex = useMemo(() => {
@@ -199,6 +210,48 @@ function Assistant() {
     }
     if (workspaceId) setRecents(touchRecentTemplate(workspaceId, t.id));
     requestAnimationFrame(() => composer.current?.focus());
+  };
+
+  const dictate = () => {
+
+  /**
+   * A file added from either entry point (panel dropzone or composer attach)
+   * flips the source to Upload My List and runs the shared mapping step.
+   */
+  const attachFile = async (file: File) => {
+    if (!isSpreadsheet(file)) {
+      toast.error("Attach A .csv Or .xlsx File.");
+      return;
+    }
+    try {
+      const next = await readAttachment(file);
+      setUpload(next);
+      if (spec.sourceType !== "upload") {
+        setSpec((s) => ({ ...s, sourceType: "upload" }));
+        setInferred((prev) => { const out = new Set(prev); out.delete("sourceType"); return out; });
+      }
+      if (selectedTemplate && templateSourceType(selectedTemplate) !== "upload") {
+        setSelectedTemplate(null);
+        lastTemplateId.current = null;
+        toast.info(`${selectedTemplate.title} Deselected — Using Your Uploaded File Instead.`);
+      }
+      setConfirmed(false);
+      if (started) {
+        setThread((m) => [...m, { role: "system", content: `You Attached: ${next.name}` }]);
+      }
+      if (next.parseable && !next.mapped) setMapOpen(true);
+      else if (next.parseable) {
+        toast.success(`${next.name} · ${next.rowCount.toLocaleString()} Rows Detected`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Read That File");
+    }
+  };
+
+  const saveMapping = (map: ColumnMap) => {
+    setUpload((u) => (u ? { ...u, map, mapped: true } : u));
+    setMapOpen(false);
+    setConfirmed(false);
   };
 
   const dictate = () => {
