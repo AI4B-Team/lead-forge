@@ -23,6 +23,7 @@ import { Route as InsuranceRouteImport } from './routes/insurance'
 import { Route as IndustriesRouteImport } from './routes/industries'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as HomeServicesRouteImport } from './routes/home-services'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as EducationRouteImport } from './routes/education'
 import { Route as EcommerceRouteImport } from './routes/ecommerce'
@@ -138,6 +139,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
 const HomeServicesRoute = HomeServicesRouteImport.update({
   id: '/home-services',
   path: '/home-services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeaturesRoute = FeaturesRouteImport.update({
@@ -396,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/ecommerce': typeof EcommerceRoute
   '/education': typeof EducationRoute
   '/features': typeof FeaturesRoute
+  '/help': typeof HelpRoute
   '/home-services': typeof HomeServicesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
@@ -457,6 +464,7 @@ export interface FileRoutesByTo {
   '/ecommerce': typeof EcommerceRoute
   '/education': typeof EducationRoute
   '/features': typeof FeaturesRoute
+  '/help': typeof HelpRoute
   '/home-services': typeof HomeServicesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
@@ -519,6 +527,7 @@ export interface FileRoutesById {
   '/ecommerce': typeof EcommerceRoute
   '/education': typeof EducationRoute
   '/features': typeof FeaturesRoute
+  '/help': typeof HelpRoute
   '/home-services': typeof HomeServicesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
@@ -582,6 +591,7 @@ export interface FileRouteTypes {
     | '/ecommerce'
     | '/education'
     | '/features'
+    | '/help'
     | '/home-services'
     | '/how-it-works'
     | '/industries'
@@ -643,6 +653,7 @@ export interface FileRouteTypes {
     | '/ecommerce'
     | '/education'
     | '/features'
+    | '/help'
     | '/home-services'
     | '/how-it-works'
     | '/industries'
@@ -704,6 +715,7 @@ export interface FileRouteTypes {
     | '/ecommerce'
     | '/education'
     | '/features'
+    | '/help'
     | '/home-services'
     | '/how-it-works'
     | '/industries'
@@ -767,6 +779,7 @@ export interface RootRouteChildren {
   EcommerceRoute: typeof EcommerceRoute
   EducationRoute: typeof EducationRoute
   FeaturesRoute: typeof FeaturesRoute
+  HelpRoute: typeof HelpRoute
   HomeServicesRoute: typeof HomeServicesRoute
   HowItWorksRoute: typeof HowItWorksRoute
   IndustriesRoute: typeof IndustriesRoute
@@ -892,6 +905,13 @@ declare module '@tanstack/react-router' {
       path: '/home-services'
       fullPath: '/home-services'
       preLoaderRoute: typeof HomeServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/features': {
@@ -1310,6 +1330,7 @@ const rootRouteChildren: RootRouteChildren = {
   EcommerceRoute: EcommerceRoute,
   EducationRoute: EducationRoute,
   FeaturesRoute: FeaturesRoute,
+  HelpRoute: HelpRoute,
   HomeServicesRoute: HomeServicesRoute,
   HowItWorksRoute: HowItWorksRoute,
   IndustriesRoute: IndustriesRoute,
