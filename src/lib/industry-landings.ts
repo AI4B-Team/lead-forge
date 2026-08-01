@@ -350,6 +350,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "ecommerce",
     industry: "E-Commerce & Retail",
     icon: ShoppingBag,
+    card: {
+      tagline: "Find every retailer and wholesaler in your category.",
+      bullets: ["Boutiques", "Big Box", "Owner Contacts", "Trade Shows"],
+      pills: ["Retailers", "Owner Contacts"],
+    },
     hero: {
       eyebrow: "For DTC Brands, Retailers, And Wholesalers",
       title: "Wholesale Accounts.",
@@ -382,6 +387,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "legal",
     industry: "Legal Services",
     icon: Scale,
+    card: {
+      tagline: "Turn court filings into signed cases.",
+      bullets: ["Probates", "Foreclosures", "Business Filings", "Litigator Scrub"],
+      pills: ["Court Filings", "Litigator Scrub"],
+    },
     hero: {
       eyebrow: "For Personal Injury, Estate, And Business Attorneys",
       title: "Sign More Cases.",
@@ -414,6 +424,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "education",
     industry: "Education & Coaching",
     icon: GraduationCap,
+    card: {
+      tagline: "Fill cohorts and discovery calendars with your ideal clients.",
+      bullets: ["Any Niche", "Business + Consumer", "Local Numbers", "CRM Export"],
+      pills: ["Geo-Matched", "Demographics"],
+    },
     hero: {
       eyebrow: "For Coaches, Tutors, And Course Creators",
       title: "Fill Your Cohort.",
@@ -446,6 +461,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "agency",
     industry: "Agencies",
     icon: Users,
+    card: {
+      tagline: "White-label the whole pipeline for every client.",
+      bullets: ["Per-Client Workspaces", "White-Label Sending", "Flat Rate", "10DLC Ready"],
+      pills: ["Per-Client", "White-Label"],
+    },
     hero: {
       eyebrow: "For Marketing, Lead-Gen, And Growth Agencies",
       title: "White-Label",
