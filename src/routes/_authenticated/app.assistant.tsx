@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
       { title: "AI Lead Assistant — LeadTrace" },
       { name: "description", content: "Describe the leads you want in plain English. The LeadTrace assistant assembles a compliant, runnable pipeline job you can review before running." },
       { property: "og:title", content: "AI Lead Assistant — LeadTrace" },
-      { property: "og:description", content: "Watch the assistant interpret plain English into a structured, editable job spec. You always click Run." },
+      { property: "og:description", content: "Watch the assistant interpret plain English into a structured, editable list of settings. You always click Generate List." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -367,7 +367,18 @@ function Assistant() {
       });
     }
     if (changed.length && thread.length) {
-      setThread((m) => [...m, { role: "system", content: `You Edited: ${changed.join(" · ")}` }]);
+      const content = `You Edited: ${changed.join(" · ")}`;
+      setThread((m) => {
+        const last = m[m.length - 1];
+        // Same field edited again: update the existing chip in place instead of
+        // stacking duplicate consecutive chips.
+        if (last && last.role === "system" && last.content.startsWith("You Edited: ")) {
+          const prevFields = last.content.slice("You Edited: ".length).split(" · ");
+          const merged = Array.from(new Set([...prevFields, ...changed]));
+          return [...m.slice(0, -1), { role: "system", content: `You Edited: ${merged.join(" · ")}` }];
+        }
+        return [...m, { role: "system", content }];
+      });
     }
   };
 
@@ -429,7 +440,7 @@ function Assistant() {
       clearDraft(workspaceId);
       // A template-originated run counts as usage, so it stays near the front.
       if (lastTemplateId.current) setRecents(touchRecentTemplate(workspaceId, lastTemplateId.current));
-      toast.success("Job Queued. Running Pipeline…");
+      toast.success("List Queued. Running Pipeline…");
       navigate({ to: "/app/jobs/$jobId", params: { jobId } });
       runJobFn({ data: { jobId } }).catch((e) =>
         toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
@@ -451,7 +462,7 @@ function Assistant() {
     : !traceComplete
       ? "Building Preview…"
       : confirmed
-        ? "Run Job"
+        ? "Generate List"
         : "Looks Good";
 
   const geoResolved = Boolean(spec.state || spec.counties.length || spec.sourceType === "upload");
@@ -766,7 +777,7 @@ function Assistant() {
           </CardContent>
         </Card>
 
-        {/* One consolidated Job Spec rail, sticky Run at its bottom. */}
+        {/* One consolidated List Settings rail, sticky Generate at its bottom. */}
         <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>
       </div>
       )}

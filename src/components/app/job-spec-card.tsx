@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,7 +45,78 @@ function FieldLabel({ children, confidence, show }: { children: React.ReactNode;
 }
 
 /**
- * The single editable Job Spec panel (§22). It is schema-aware: fields that
+ * Text fields commit on blur or after an 800ms typing pause — whichever comes
+ * first — so a multi-word entry produces one spec edit, not one per keystroke.
+ */
+function useCommitDraft(value: string, onCommit: (v: string) => void) {
+  const [draft, setDraft] = useState(value);
+  const dirty = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!dirty.current) setDraft(value);
+  }, [value]);
+
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  const fire = (v: string) => {
+    dirty.current = false;
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+    onCommit(v);
+  };
+
+  return {
+    value: draft,
+    onChange: (v: string) => {
+      setDraft(v);
+      dirty.current = true;
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => fire(v), 800);
+    },
+    onBlur: () => { if (dirty.current) fire(draft); },
+  };
+}
+
+function CommitInput({
+  value,
+  onCommit,
+  className,
+  placeholder,
+}: { value: string; onCommit: (v: string) => void; className?: string; placeholder?: string }) {
+  const d = useCommitDraft(value, onCommit);
+  return (
+    <Input
+      className={className}
+      value={d.value}
+      placeholder={placeholder}
+      onChange={(e) => d.onChange(e.target.value)}
+      onBlur={d.onBlur}
+    />
+  );
+}
+
+function CommitTextarea({
+  value,
+  onCommit,
+  className,
+  placeholder,
+  rows,
+}: { value: string; onCommit: (v: string) => void; className?: string; placeholder?: string; rows?: number }) {
+  const d = useCommitDraft(value, onCommit);
+  return (
+    <Textarea
+      className={className}
+      rows={rows}
+      value={d.value}
+      placeholder={placeholder}
+      onChange={(e) => d.onChange(e.target.value)}
+      onBlur={d.onBlur}
+    />
+  );
+}
+
+/**
+ * The single editable List Settings panel (§22). It is schema-aware: fields that
  * don't apply to the chosen source type never render.
  */
 export function JobSpecCard({
@@ -92,7 +164,7 @@ export function JobSpecCard({
     <Card>
       <CardContent className="pt-6 space-y-5">
         <div className="flex items-center justify-between">
-          <div className="font-display font-bold text-foreground">Job Spec</div>
+          <div className="font-display font-bold text-foreground">List Settings</div>
           <Badge variant="outline" className="text-[10px] uppercase">Editable</Badge>
         </div>
 
@@ -126,11 +198,11 @@ export function JobSpecCard({
         {isBusiness && (
           <div>
             <FieldLabel confidence={97} show={spec.niches.length > 0 && inf("niches")}>Niches</FieldLabel>
-            <Input
+            <CommitInput
               className="mt-1"
               value={spec.niches.join(", ")}
-              onChange={(e) =>
-                set("niches", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))
+              onCommit={(v) =>
+                set("niches", v.split(",").map((s) => s.trim()).filter(Boolean))
               }
               placeholder="e.g. HVAC, Roofer"
             />
@@ -169,11 +241,11 @@ export function JobSpecCard({
               {isRecords && (
                 <div>
                   <Label>Recency (Days)</Label>
-                  <Input
+                  <CommitInput
                     className="mt-1"
-                    value={spec.recencyDays ?? ""}
-                    onChange={(e) => {
-                      const n = Number(e.target.value.replace(/\D/g, ""));
+                    value={spec.recencyDays ? String(spec.recencyDays) : ""}
+                    onCommit={(v) => {
+                      const n = Number(v.replace(/\D/g, ""));
                       set("recencyDays", n ? n : null);
                     }}
                     placeholder="90"
@@ -214,11 +286,11 @@ export function JobSpecCard({
 
         <div>
           <Label>First-Touch Angle</Label>
-          <Textarea
+          <CommitTextarea
             className="mt-1"
             rows={3}
             value={spec.messageAngle ?? ""}
-            onChange={(e) => set("messageAngle", e.target.value || null)}
+            onCommit={(v) => set("messageAngle", v || null)}
             placeholder="Empathetic, low-pressure opener…"
           />
         </div>
