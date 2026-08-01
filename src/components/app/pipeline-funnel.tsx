@@ -3,22 +3,28 @@ import { cn } from "@/lib/utils";
 export type FunnelStages = {
   found: number;
   deduped: number;
-  textable: number;
+  /** Marketing wording for the Verified stage; app surfaces pass `verified`. */
+  textable?: number;
+  verified?: number;
+  skipTraced?: number;
   scrubbed: number;
   clean: number;
 };
 
-const LABELS: Array<{ key: keyof FunnelStages; label: string }> = [
+const ALL_LABELS: Array<{ key: keyof FunnelStages; label: string }> = [
   { key: "found", label: "Found" },
   { key: "deduped", label: "Deduped" },
+  { key: "verified", label: "Verified" },
   { key: "textable", label: "Textable" },
+  { key: "skipTraced", label: "Skip Traced" },
   { key: "scrubbed", label: "Scrubbed" },
   { key: "clean", label: "Clean" },
 ];
 
 /**
- * The signature Pipeline Funnel: record counts flowing Found → Deduped →
- * Textable → Scrubbed → Clean, with the drop at each stage labeled.
+ * The signature Pipeline Funnel. App surfaces use the canonical §23 order —
+ * Found → Deduped → Verified → Skip Traced → Scrubbed → Clean — with the drop
+ * at each stage labeled. Only the stages supplied are rendered.
  */
 export function PipelineFunnel({
   stages,
@@ -31,6 +37,7 @@ export function PipelineFunnel({
 }) {
   const max = Math.max(stages.found, 1);
   const small = size === "sm";
+  const LABELS = ALL_LABELS.filter((s) => stages[s.key] !== undefined);
 
   return (
     <div className={cn("flex items-end gap-1.5", className)}>
