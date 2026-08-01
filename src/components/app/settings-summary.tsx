@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 
 const CREDITS: Array<{ key: "scrape" | "skip_trace" | "sms"; label: string }> = [
-  { key: "scrape", label: "Scrape" },
+  { key: "scrape", label: "Lead Credits" },
   { key: "skip_trace", label: "Skip Trace" },
   { key: "sms", label: "SMS" },
 ];

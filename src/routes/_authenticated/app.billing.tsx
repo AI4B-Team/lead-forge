@@ -18,7 +18,7 @@ import { getBilling, topUpCredits } from "@/lib/billing.functions";
 type CreditKind = "scrape" | "skip_trace" | "sms";
 
 const CREDIT_META: Record<CreditKind, { label: string; rate: string; presets: number[] }> = {
-  scrape: { label: "Scrape", rate: "$3 / 1,000 Records", presets: [1000, 5000, 25000] },
+  scrape: { label: "Lead Credits", rate: "$3 / 1,000 Records", presets: [1000, 5000, 25000] },
   skip_trace: { label: "Skip Trace", rate: "$8 / 1,000 Traces", presets: [500, 2500, 10000] },
   sms: { label: "SMS", rate: "$0.008 / Segment", presets: [1000, 10000, 50000] },
 };
