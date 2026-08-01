@@ -528,7 +528,7 @@ function Assistant() {
             }
           }}
           aria-label="Tell Me Who You Want To Reach"
-          style={input.trim() ? undefined : { textIndent: "1.75rem" }}
+          style={input.trim() ? undefined : { textIndent: "1.375rem" }}
           className="min-h-[220px] resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
         />
         <div className="mt-4 flex items-center justify-between gap-3">
