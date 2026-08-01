@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { TemplateCard } from "@/components/marketing/template-card";
 import { TEMPLATES, type Template, type TemplateCategory } from "@/lib/templates";
 import { touchRecentTemplate } from "@/lib/recent-templates";
+import { useWorkspaceId } from "@/hooks/use-workspace";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,6 +65,7 @@ export const Route = createFileRoute("/_authenticated/app/templates")({
 
 function AppTemplates() {
   const navigate = useNavigate();
+  const workspaceId = useWorkspaceId();
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("relevance");
   const [betaOnly, setBetaOnly] = useState(false);
@@ -86,8 +88,8 @@ function AppTemplates() {
 
   /** In-app selection hands the template prompt to the assistant composer. */
   function handleSelect(t: Template) {
-    touchRecentTemplate(t.id);
-    navigate({ to: "/app/assistant", search: { prompt: t.prompt } });
+    if (workspaceId) touchRecentTemplate(workspaceId, t.id);
+    navigate({ to: "/app/assistant", search: { prompt: t.prompt, fill: "1" } });
   }
 
   const pill = (active: boolean) =>
