@@ -26,6 +26,7 @@ export function GettingStarted({ workspaceId }: { workspaceId: string | null }) 
   const save = useServerFn(setOnboardingPref);
   const qc = useQueryClient();
   const [tourOpen, setTourOpen] = useState(false);
+  const [showDone, setShowDone] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["onboarding", workspaceId],
