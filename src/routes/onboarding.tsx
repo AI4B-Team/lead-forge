@@ -171,7 +171,7 @@ function Onboarding() {
               </div>
             </div>
             <div className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted-foreground">
-              You'll Start With <span className="font-semibold text-foreground">1,000 Scrape</span>,{" "}
+              You'll Start With <span className="font-semibold text-foreground">1,000 Lead Credits</span>,{" "}
               <span className="font-semibold text-foreground">500 Skip Trace</span>, And{" "}
               <span className="font-semibold text-foreground">250 SMS</span> Trial Credits.
             </div>

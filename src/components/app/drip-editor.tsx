@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, Plus, Sparkles, Trash2, MessageSquare } from "lucide-react";
+import { Clock, Plus, Sparkles, Trash2, MessageSquare, Lock } from "lucide-react";
 import { spinCount, spinSample } from "@/lib/spintax";
 import { segmentsFor } from "@/lib/drops";
+import { STOP_FOOTER, hasStopFooter } from "@/lib/compliance-rules";
 
 export type DripStep = { step_order: number; delay_minutes: number; body: string };
 
@@ -133,6 +134,15 @@ export function DripEditor({
                 onChange={(e) => patch(i, { body: e.target.value })}
                 placeholder="Hi {{first_name}} — quick question about your {{niche}} in {{city}}?"
               />
+              {/* Opt-out footer is appended server-side and cannot be edited or removed. */}
+              {i === 0 && !hasStopFooter(s.body) && (
+                <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-surface-muted px-3 py-2 text-xs text-muted-foreground">
+                  <Lock className="h-3.5 w-3.5 text-primary" />
+                  <span>
+                    Auto-Appended: <span className="font-semibold text-foreground">{STOP_FOOTER}</span> — Required, Cannot Be Removed.
+                  </span>
+                </div>
+              )}
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                 <span>{s.body.length} Chars · {segmentsFor(s.body)} Segment{segmentsFor(s.body) === 1 ? "" : "s"}</span>
                 <span>Tokens: <code>{`{{first_name}}`}</code> <code>{`{{city}}`}</code> <code>{`{{state}}`}</code> <code>{`{{address}}`}</code></span>

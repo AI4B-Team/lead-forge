@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { RESCRUB_DAYS, SCRUB_STALE_MESSAGE, isScrubStale, scrubAgeDays } from "@/lib/compliance-rules";
 
 // List every job for a workspace with lead-bucket counts for the Lists page.
 export const listJobs = createServerFn({ method: "GET" })
@@ -18,17 +19,26 @@ export const listJobs = createServerFn({ method: "GET" })
     const ids = (jobs ?? []).map((j) => j.id);
     const counts = new Map<string, { clean: number; dnc: number; litigator: number }>();
     for (const id of ids) counts.set(id, { clean: 0, dnc: 0, litigator: 0 });
+    // Records added since the previous recurring run (§ recurring search diffing).
+    const newSince = new Map<string, number>();
     if (ids.length) {
       const { data: rows } = await supabase
         .from("leads")
-        .select("job_id, scrub_status")
+        .select("job_id, scrub_status, created_at")
         .in("job_id", ids);
+      const lastRunByJob = new Map<string, string | null>(
+        (jobs ?? []).map((j) => [j.id, j.last_run_at ?? null]),
+      );
       for (const r of rows ?? []) {
         const c = counts.get(r.job_id!);
         if (!c) continue;
         if (r.scrub_status === "clean") c.clean += 1;
         else if (r.scrub_status === "dnc") c.dnc += 1;
         else if (r.scrub_status === "litigator") c.litigator += 1;
+        const lastRun = lastRunByJob.get(r.job_id!);
+        if (lastRun && r.created_at && new Date(r.created_at) > new Date(lastRun)) {
+          newSince.set(r.job_id!, (newSince.get(r.job_id!) ?? 0) + 1);
+        }
       }
     }
 
@@ -47,6 +57,7 @@ export const listJobs = createServerFn({ method: "GET" })
           schedule: j.schedule ?? "one_time",
           next_run_at: j.next_run_at,
           last_run_at: j.last_run_at,
+          new_since_last_run: newSince.get(j.id) ?? 0,
           counts: counts.get(j.id) ?? { clean: 0, dnc: 0, litigator: 0 },
         };
       }),
@@ -139,7 +150,49 @@ export const getJobReview = createServerFn({ method: "GET" })
       scrub,
       counts: { total: t, clean: clean ?? 0, dnc: dnc ?? 0, litigator: litigator ?? 0, mobile: mobile ?? 0 },
       quality,
+      scrubFreshness: {
+        scrubbedAt: scrub?.created_at ?? null,
+        ageDays: scrubAgeDays(scrub?.created_at ?? null),
+        stale: isScrubStale(scrub?.created_at ?? null),
+        rescrubDays: RESCRUB_DAYS,
+      },
     };
+  });
+
+// Pause a running job (§9.5) — the orchestrator stops picking it up.
+export const pauseJob = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ jobId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("jobs")
+      .update({ status: "paused" })
+      .eq("id", data.jobId);
+    if (error) throw error;
+    await context.supabase.from("job_events").insert({
+      job_id: data.jobId,
+      stage: "paused",
+      message: "Job Paused. Nothing Is Discarded — Resume Any Time.",
+    } as never);
+    return { ok: true };
+  });
+
+// Resume a paused or failed job by re-queuing it for the orchestrator.
+export const resumeJob = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ jobId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("jobs")
+      .update({ status: "queued" })
+      .eq("id", data.jobId);
+    if (error) throw error;
+    await context.supabase.from("job_events").insert({
+      job_id: data.jobId,
+      stage: "queued",
+      message: "Job Resumed From The Last Completed Stage.",
+    } as never);
+    return { ok: true };
   });
 
 // Download leads by bucket. Returns rows -- caller builds CSV in the browser.
@@ -181,6 +234,16 @@ export const launchCampaignFromJob = createServerFn({ method: "POST" })
       .maybeSingle();
     if (jerr || !job) throw new Error("Job Not Found");
     if (job.status !== "ready") throw new Error("Job Is Not Ready. Scrub Must Complete First.");
+
+    // §6: a list older than 30 days must be re-scrubbed before it can send.
+    const { data: lastScrub } = await supabase
+      .from("scrub_runs")
+      .select("created_at")
+      .eq("job_id", data.jobId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (isScrubStale(lastScrub?.created_at)) throw new Error(SCRUB_STALE_MESSAGE);
 
     const { count: cleanCount } = await supabase
       .from("leads")

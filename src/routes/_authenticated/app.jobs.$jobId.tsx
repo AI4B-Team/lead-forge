@@ -11,9 +11,10 @@ import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search, Eye } from "lucide-react";
+import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search, Eye, Pause, Play, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs } from "@/lib/jobs.functions";
+import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs, pauseJob, resumeJob } from "@/lib/jobs.functions";
+import { RESCRUB_DAYS } from "@/lib/compliance-rules";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { PhoneLink } from "@/components/app/phone-link";
 import { setOnboardingPref } from "@/lib/onboarding.functions";
@@ -26,8 +27,17 @@ export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
 
 const STATUS_LABEL: Record<string, string> = {
   queued: "Queued", scraping: "Scraping", enriching: "Enriching",
-  skiptracing: "Skip Tracing", scrubbing: "Scrubbing", ready: "Ready", failed: "Failed",
+  skiptracing: "Skip Tracing", scrubbing: "Scrubbing", ready: "Ready", failed: "Needs Attention",
+  paused: "Paused",
 };
+
+function fmtDuration(ms: number) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ${s % 60}s`;
+  return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
 
 function toCsv(rows: Array<Record<string, unknown>>) {
   if (!rows.length) return "";
@@ -53,6 +63,8 @@ function JobDetail() {
   const fetchReview = useServerFn(getJobReview);
   const fetchBucket = useServerFn(getLeadsByBucket);
   const fetchEvents = useServerFn(listJobEvents);
+  const doPause = useServerFn(pauseJob);
+  const doResume = useServerFn(resumeJob);
   const [browserOpen, setBrowserOpen] = useState(false);
   const [browserBucket, setBrowserBucket] = useState<"clean" | "dnc" | "litigator" | "all">("clean");
 
@@ -61,7 +73,7 @@ function JobDetail() {
     queryFn: () => fetchReview({ data: { jobId } }),
     refetchInterval: (q) => {
       const s = q.state.data?.job?.status;
-      return s && s !== "ready" && s !== "failed" ? 2000 : false;
+      return s && s !== "ready" && s !== "failed" && s !== "paused" ? 2000 : false;
     },
   });
 
@@ -76,14 +88,59 @@ function JobDetail() {
   }
 
   const { job, counts, quality } = data;
+  const scrubFreshness = data.scrubFreshness;
   const isReady = job.status === "ready";
+  const isRunning = !isReady && job.status !== "failed" && job.status !== "paused";
   const params = (job.params ?? {}) as Record<string, unknown>;
   const jobName = String(params.name ?? params.file_name ?? `${job.source_type} · ${job.id.slice(0, 8)}`);
+
+  // Elapsed / throughput / ETA from the job clock and the rows already processed.
+  const startedAt = new Date(job.created_at as string).getTime();
+  const endedAt = isRunning
+    ? Date.now()
+    : new Date((scrubFreshness.scrubbedAt ?? job.last_run_at ?? job.created_at) as string).getTime();
+  const elapsedMs = Math.max(1000, endedAt - startedAt);
+  const processed = counts.total || (job.rows_deduped ?? 0) || (job.rows_in ?? 0);
+  const perMin = Math.round(processed / (elapsedMs / 60000));
+  const target = Math.max(processed, job.rows_in ?? 0);
+  const etaMs = perMin > 0 && target > processed ? ((target - processed) / perMin) * 60000 : 0;
+
+  const toggleRun = async () => {
+    try {
+      if (job.status === "paused" || job.status === "failed") {
+        await doResume({ data: { jobId } });
+        toast.success("Job Resumed");
+      } else {
+        await doPause({ data: { jobId } });
+        toast.success("Job Paused");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Update Job");
+    }
+  };
 
   const onDownload = async (bucket: "clean" | "dnc" | "litigator") => {
     const res = await fetchBucket({ data: { jobId, bucket } });
     if (!res.rows.length) return toast.info("No Rows In This Bucket.");
     downloadCsv(`${jobName.replace(/\s+/g, "_")}_${bucket}.csv`, toCsv(res.rows));
+  };
+
+  // Scrub audit trail: provider, timestamp and per-bucket outcome, exportable.
+  const onExportAudit = () => {
+    const s = data.scrub as Record<string, unknown> | null;
+    if (!s) return toast.info("No Scrub Run Recorded Yet.");
+    downloadCsv(
+      `${jobName.replace(/\s+/g, "_")}_scrub_audit.csv`,
+      toCsv([{
+        job: jobName,
+        provider: s.provider ?? "internal",
+        scrubbed_at: s.created_at,
+        total: s.total ?? counts.total,
+        clean: s.clean_count ?? counts.clean,
+        dnc: s.dnc_count ?? counts.dnc,
+        litigator: s.litigator_count ?? counts.litigator,
+      }]),
+    );
   };
 
   return (
@@ -96,6 +153,11 @@ function JobDetail() {
             <Badge variant="outline" className="text-sm">
               {STATUS_LABEL[job.status ?? "queued"] ?? job.status}
             </Badge>
+            {(isRunning || job.status === "paused" || job.status === "failed") && (
+              <Button variant="outline" className="rounded-full" onClick={toggleRun}>
+                {isRunning ? <><Pause className="mr-1 h-4 w-4" /> Pause</> : <><Play className="mr-1 h-4 w-4" /> Resume</>}
+              </Button>
+            )}
             <LeadsBrowser
               jobId={jobId}
               disabled={!isReady}
@@ -114,6 +176,18 @@ function JobDetail() {
         <Stat label="Enriched" value={job.rows_enriched ?? 0} />
         <Stat label="Skip Traced" value={job.rows_skiptraced ?? 0} />
       </div>
+
+      {scrubFreshness.stale && isReady && (
+        <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <span className="text-sm font-semibold text-foreground">
+            {scrubFreshness.scrubbedAt
+              ? `This List Was Scrubbed ${scrubFreshness.ageDays} Days Ago.`
+              : "This List Has No Recorded Scrub."}{" "}
+            Re-Scrub Before Launching — Campaigns Require A Scrub Newer Than {RESCRUB_DAYS} Days.
+          </span>
+        </div>
+      )}
 
       <Card className="mt-6">
         <CardHeader className="flex flex-row items-center justify-between">
@@ -156,6 +230,26 @@ function JobDetail() {
                 You Can Close This Tab — The Job Keeps Running On Our Servers.
               </div>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <MiniStat label="Elapsed" value={fmtDuration(elapsedMs)} />
+            <MiniStat label="Rate" value={perMin > 0 ? `${perMin.toLocaleString()} records/min` : "—"} />
+            <MiniStat
+              label="Est. Time Left"
+              value={isRunning ? (etaMs > 0 ? `~${fmtDuration(etaMs)}` : "Finishing Up") : "Complete"}
+            />
+            <MiniStat
+              label="Last Scrub"
+              value={
+                scrubFreshness.scrubbedAt
+                  ? new Date(scrubFreshness.scrubbedAt).toLocaleString([], {
+                      month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+                    })
+                  : "Not Scrubbed"
+              }
+              tone={scrubFreshness.stale ? "danger" : "default"}
+            />
           </div>
         </CardContent>
       </Card>
@@ -209,6 +303,9 @@ function JobDetail() {
       </Card>
 
       <div className="mt-8 flex justify-end gap-2">
+        <Button variant="outline" className="rounded-full" onClick={onExportAudit}>
+          <Download className="mr-1 h-4 w-4" /> Export Scrub Audit
+        </Button>
         <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/lists" })}>
           Back To Lists
         </Button>
@@ -466,6 +563,20 @@ function Stat({ label, value }: { label: string; value: number }) {
         <div className="mt-2 font-display text-3xl font-black text-foreground">{value.toLocaleString()}</div>
       </CardContent>
     </Card>
+  );
+}
+
+// Compact run telemetry used under the funnel: elapsed, rate, ETA, scrub stamp.
+function MiniStat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "danger" }) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-3">
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+        <Clock className="h-3 w-3" /> {label}
+      </div>
+      <div className={`mt-1 text-sm font-semibold tabular-nums ${tone === "danger" ? "text-destructive" : "text-foreground"}`}>
+        {value}
+      </div>
+    </div>
   );
 }
 
