@@ -608,8 +608,9 @@ function Assistant() {
         </Card>
 
         {/* One consolidated Job Spec rail, sticky Run at its bottom. */}
-        {started && <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>}
+        <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>
       </div>
+      )}
     </div>
   );
 }
