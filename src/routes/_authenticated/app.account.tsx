@@ -10,6 +10,7 @@ import {
   History,
   Terminal,
   Bell,
+  Mail,
 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,6 +92,13 @@ function AccountPage() {
   };
 
   const displayName = fullName || user?.email?.split("@")[0] || "You";
+  const passwordChangedAt = (user?.updated_at ?? user?.created_at) as string | undefined;
+  const passwordUpdatedLabel = passwordChangedAt
+    ? (() => {
+        const days = Math.floor((Date.now() - new Date(passwordChangedAt).getTime()) / 86400000);
+        return days <= 0 ? "Today" : `${days} Day${days === 1 ? "" : "s"} Ago`;
+      })()
+    : "Unknown";
   const initials = displayName
     .split(/[\s.@_-]+/)
     .filter(Boolean)
