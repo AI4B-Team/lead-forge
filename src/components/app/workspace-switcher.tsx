@@ -87,7 +87,6 @@ export function WorkspaceSwitcher() {
               Create
             </Button>
           </DialogFooter>
-        </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
