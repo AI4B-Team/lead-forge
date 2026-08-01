@@ -13,8 +13,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import {
   Users, ListChecks, MessageSquare, CreditCard, Plus, ArrowUpRight, Landmark, MapPin,
-  Upload, TrendingUp,
+  Upload, TrendingUp, Info,
 } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/_authenticated/app/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — LeadTrace" }] }),
