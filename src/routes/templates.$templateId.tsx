@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, ShieldCheck, Zap } from "lucide-react";
 import { MarketingNav, MarketingFooter } from "@/components/marketing/marketing-layout";
 import { TemplateCard } from "@/components/marketing/template-card";
+import { TemplateLogo } from "@/components/marketing/template-logo";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { Button } from "@/components/ui/button";
 import {
