@@ -23,6 +23,7 @@ export type SampleRow = {
 export type LeadPage = {
   slug: string;
   kind: "niche" | "stage";
+  category?: "business" | "property";
   title: string;
   /** Niche label used to prefill the New Search screen (spec §9.5). */
   nicheLabel?: string;
@@ -99,6 +100,7 @@ function faqs(sizeAnswer: string, noun: string) {
 
 type NicheSeed = {
   slug: string;
+  category?: "business" | "property";
   title: string;
   noun: string;
   tags: string[];
@@ -505,6 +507,144 @@ const NICHE_SEEDS: NicheSeed[] = [
       { title: "Real Estate Attorney & Title Firms", body: "The closers lenders work with repeatedly." },
     ],
   },
+  {
+    slug: "probate-filings",
+    category: "property",
+    title: "Probate Filing Leads",
+    noun: "probate filings",
+    tags: ["Public Records", "Real Estate", "Motivated Sellers"],
+    valueProp:
+      "Pull probate filings by county and reach heirs, executors, and estate representatives who need to sell real property fast. Every record is skip-traced, mobile-verified, and DNC and litigator scrubbed before delivery.",
+    size: "Probate volume varies with county size: a metro county typically returns 150–400 new filings per month before cleaning, with a strong mobile rate among family representatives.",
+    entries: [
+      ["Estate of Margaret Whitfield", "public-records"],
+      ["Estate of David Castellano", "public-records"],
+      ["Estate of Susan Okafor", "public-records"],
+      ["Estate of Robert Brennan", "public-records"],
+      ["Estate of Linda Farrow", "public-records"],
+    ],
+    personas: [
+      { title: "Real Estate Investors", body: "Reach heirs with property they need to liquidate before taxes and maintenance eat the equity." },
+      { title: "Probate Attorneys", body: "Find clients who need help navigating estate sales and property transfers." },
+      { title: "Home Buying Companies", body: "Cash-offer buyers who specialize in fast, as-is estate sales." },
+      { title: "Agents With Probate Experience", body: "List properties that need price-appropriate, expedited sales." },
+    ],
+  },
+  {
+    slug: "tax-delinquencies",
+    category: "property",
+    title: "Tax Delinquency Leads",
+    noun: "tax-delinquent properties",
+    tags: ["Public Records", "Real Estate", "Motivated Sellers"],
+    valueProp:
+      "Identify properties with delinquent tax liens by county. Reach owners before the auction with a clean, skip-traced, mobile-verified list that includes lien amount, property address, and owner contact.",
+    size: "A metro county can show 500–2,000 delinquent parcels per cycle. After cleaning and skip tracing, expect 200–600 reachable owner records depending on record quality.",
+    entries: [
+      ["412 Maple St, Tampa, FL", "public-records"],
+      ["885 Oak Lane, Brandon, FL", "public-records"],
+      ["1600 Bayview Dr, Clearwater, FL", "public-records"],
+      ["223 River Rd, Riverview, FL", "public-records"],
+      ["77 Gulf Blvd, St. Petersburg, FL", "public-records"],
+    ],
+    personas: [
+      { title: "Real Estate Investors", body: "Buy tax liens or negotiate directly with owners before the county sells the debt." },
+      { title: "Tax Lien Buyers", body: "Find the highest-yield parcels in counties you want to work." },
+      { title: "Attorneys & Tax Resolution", body: "Help owners stop the clock before penalties compound." },
+      { title: "Cash Home Buyers", body: "Owners behind on taxes are often ready to sell quickly." },
+    ],
+  },
+  {
+    slug: "code-violations",
+    category: "property",
+    title: "Code Violation Leads",
+    noun: "code violation properties",
+    tags: ["Public Records", "Real Estate", "Motivated Sellers"],
+    valueProp:
+      "Find properties with open municipal code violations — unsafe structures, unpermitted work, overgrown lots, and more. Reach owners with a mobile-verified, skip-traced, and DNC-scrubbed list that includes violation type and property details.",
+    size: "Active metro counties can generate 300–1,000 open violations per month. After cleaning and skip tracing, expect 150–500 reachable owner records.",
+    entries: [
+      ["632 Cypress Ave, Tampa, FL", "public-records"],
+      ["19 Harbor Point, Clearwater, FL", "public-records"],
+      ["5501 Ridge Rd, Lutz, FL", "public-records"],
+      ["3120 Main St, Wesley Chapel, FL", "public-records"],
+      ["88 Magnolia Dr, St. Petersburg, FL", "public-records"],
+    ],
+    personas: [
+      { title: "Real Estate Investors", body: "Owners with violations often want to sell before fines multiply." },
+      { title: "Contractors & Remediation", body: "Offer repairs and permit resolution to distressed owners." },
+      { title: "Attorneys", body: "Help owners negotiate with code enforcement and avoid liens." },
+      { title: "Cash Buyers", body: "Buy as-is before the city escalates enforcement." },
+    ],
+  },
+  {
+    slug: "vacant-properties",
+    category: "property",
+    title: "Vacant Property Leads",
+    noun: "vacant properties",
+    tags: ["Public Records", "Real Estate", "Motivated Sellers"],
+    valueProp:
+      "Target vacant, absentee-owned, and tax-delinquent properties from county and postal data. Each record includes owner name, mailing address, property address, and a mobile-verified contact after skip tracing and scrubbing.",
+    size: "Vacant property counts swing by county: a metro area often returns 1,000–5,000 candidate parcels before validation, with 300–1,000 clean owner records after skip tracing and DNC scrubbing.",
+    entries: [
+      ["1201 Palm St, Tampa, FL", "public-records"],
+      ["4040 Central Ave, St. Petersburg, FL", "public-records"],
+      ["8900 US Hwy 19, Pinellas Park, FL", "public-records"],
+      ["2200 Bayshore Blvd, Tampa, FL", "public-records"],
+      ["1675 Gulf-to-Bay Blvd, Clearwater, FL", "public-records"],
+    ],
+    personas: [
+      { title: "Real Estate Investors", body: "Vacant properties are often the fastest path to an off-market deal." },
+      { title: "Landlords & Property Managers", body: "Find owners who have walked away from rental inventory." },
+      { title: "Code Enforcement Services", body: "Reach owners before the city places liens or demolishes structures." },
+      { title: "Cash Buyers", body: "Owners of vacant homes are typically motivated to close quickly." },
+    ],
+  },
+  {
+    slug: "absentee-owners",
+    category: "property",
+    title: "Absentee Owner Leads",
+    noun: "absentee owners",
+    tags: ["Public Records", "Real Estate", "Motivated Sellers"],
+    valueProp:
+      "Find out-of-state and out-of-county property owners with mailing addresses different from the property address. These owners are prime motivated sellers — skip-traced, mobile-verified, and DNC and litigator scrubbed.",
+    size: "Absentee ownership is common in metros and tourist markets: expect 800–3,000 candidate properties per county, with 300–1,200 clean owner records after skip tracing and scrubbing.",
+    entries: [
+      ["Mailing: Miami, FL | Property: Tampa, FL", "public-records"],
+      ["Mailing: Atlanta, GA | Property: Clearwater, FL", "public-records"],
+      ["Mailing: Brooklyn, NY | Property: St. Petersburg, FL", "public-records"],
+      ["Mailing: Chicago, IL | Property: Brandon, FL", "public-records"],
+      ["Mailing: Denver, CO | Property: Riverview, FL", "public-records"],
+    ],
+    personas: [
+      { title: "Real Estate Investors", body: "Out-of-state owners are often the most motivated sellers in a county." },
+      { title: "Property Managers", body: "Landlords who live elsewhere need local management help." },
+      { title: "Agents", body: "List properties from owners who have never even seen the house." },
+      { title: "Cash Buyers", body: "Remote owners frequently accept quick, as-is offers." },
+    ],
+  },
+  {
+    slug: "pre-foreclosures",
+    category: "property",
+    title: "Pre-Foreclosure Leads",
+    noun: "pre-foreclosure properties",
+    tags: ["Public Records", "Real Estate", "Motivated Sellers"],
+    valueProp:
+      "Reach homeowners in default before the foreclosure auction. Every record includes loan default notice information, property address, and owner contact — skip-traced, mobile-verified, and DNC and litigator scrubbed.",
+    size: "Pre-foreclosure volume tracks interest rates and local economics. A metro county may show 200–800 active notices, with 100–400 clean owner records after skip tracing and scrubbing.",
+    entries: [
+      ["77 Willow Creek Dr, Tampa, FL", "public-records"],
+      ["300 Sand Key, Clearwater, FL", "public-records"],
+      ["1420 4th St N, St. Petersburg, FL", "public-records"],
+      ["6001 Hillsborough Ave, Tampa, FL", "public-records"],
+      ["9899 Ulmerton Rd, Largo, FL", "public-records"],
+    ],
+    personas: [
+      { title: "Real Estate Investors", body: "Homeowners in default need solutions fast — cash offers, short sales, or loan workouts." },
+      { title: "Foreclosure Attorneys", body: "Find clients who need help delaying or stopping a sale date." },
+      { title: "Short Sale Specialists", body: "List properties before the bank takes them back." },
+      { title: "Credit & Hard Money Lenders", body: "Help owners pay off the default and keep the property." },
+    ],
+  },
 ];
 
 type StageSeed = {
@@ -607,17 +747,24 @@ export const LEAD_PAGES: LeadPage[] = [
   ...NICHE_SEEDS.map<LeadPage>((n) => ({
     slug: n.slug,
     kind: "niche",
+    category: n.category,
     title: n.title,
     nicheLabel: n.title.replace(/\s+Leads$/i, ""),
     tags: n.tags,
     valueProp: n.valueProp,
     rows: rows(n.entries),
     funnelCaption:
-      "A real Hillsborough County reference search. The 554 is the list you text. The 686 removed records are why you don't get sued.",
+      n.category === "property"
+        ? "A real Hillsborough County reference search through public records. The 554 is the list you text. The 686 removed records are why you don't get sued."
+        : "A real Hillsborough County reference search. The 554 is the list you text. The 686 removed records are why you don't get sued.",
     personas: n.personas,
     faqs: faqs(n.size, n.noun),
-    metaTitle: `${n.title} — Clean, DNC-Scrubbed, Textable Lists | LeadTrace`,
-    metaDescription: `Get every ${n.noun.replace(/^([a-z])/, "$1")} on Google Maps in your county — deduplicated, mobile-verified, DNC and litigator scrubbed, ready to text. No download, no setup.`,
+    metaTitle: n.category === "property"
+      ? `${n.title} — Clean, Skip-Traced, Textable Records | LeadTrace`
+      : `${n.title} — Clean, DNC-Scrubbed, Textable Lists | LeadTrace`,
+    metaDescription: n.category === "property"
+      ? `Get every ${n.noun.replace(/^([a-z])/, "$1")} in your county from public records — skip-traced, mobile-verified, DNC and litigator scrubbed, ready to text. No download, no setup.`
+      : `Get every ${n.noun.replace(/^([a-z])/, "$1")} on Google Maps in your county — deduplicated, mobile-verified, DNC and litigator scrubbed, ready to text. No download, no setup.`,
   })),
   ...STAGE_SEEDS.map<LeadPage>((s) => ({
     slug: s.slug,

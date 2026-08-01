@@ -2,22 +2,41 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Building2,
+  Bug,
+  Car,
   Check,
   CircleCheck,
   Clock,
   Database,
+  Droplet,
+  Droplets,
+  Dumbbell,
   FileSpreadsheet,
+  FileText,
+  Flame,
+  Gavel,
   Globe,
+  HardHat,
+  HeartPulse,
+  Home,
   Landmark,
+  Leaf,
+  MapPin,
   MessageCircle,
+  Receipt,
+  Scale,
   Search,
   Send,
   Settings,
   ShieldCheck,
+  Smile,
   Smartphone,
   Sparkles,
   Star,
+  Stethoscope,
+  TreePine,
   Upload,
+  Wrench,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,6 +77,37 @@ const NICHE_FACTS = [
   { icon: Globe, label: "Nationwide" },
   { icon: Smartphone, label: "Mobile Verified" },
   { icon: Zap, label: "Built On Demand" },
+];
+
+const NICHE_CATEGORIES = [
+  "Businesses",
+  "Property Owners",
+  "Public Records",
+  "Real Estate",
+  "Local Services",
+  "Healthcare",
+  "Home Services",
+];
+
+const NICHE_ORDER: { slug: string; icon: React.ComponentType<{ className?: string }>; category: "business" | "property"; display?: string }[] = [
+  { slug: "roofing-contractors", icon: HardHat, category: "business", display: "Roofing Contractors" },
+  { slug: "hvac-companies", icon: Flame, category: "business", display: "HVAC Companies" },
+  { slug: "plumbers", icon: Droplet, category: "business", display: "Plumbers" },
+  { slug: "electricians", icon: Zap, category: "business", display: "Electricians" },
+  { slug: "landscaping", icon: Leaf, category: "business", display: "Landscapers" },
+  { slug: "pressure-washing", icon: Droplets, category: "business", display: "Pressure Washing" },
+  { slug: "tree-service", icon: TreePine, category: "business", display: "Tree Service" },
+  { slug: "pest-control", icon: Bug, category: "business", display: "Pest Control" },
+  { slug: "cleaning-services", icon: Sparkles, category: "business", display: "Cleaning Service" },
+  { slug: "dental-offices", icon: Smile, category: "business", display: "Dental Offices" },
+  { slug: "med-spas", icon: HeartPulse, category: "business", display: "Med Spas" },
+  { slug: "auto-repair-shops", icon: Wrench, category: "business", display: "Auto Repair" },
+  { slug: "probate-filings", icon: Scale, category: "property", display: "Probate Filings" },
+  { slug: "tax-delinquencies", icon: Receipt, category: "property", display: "Tax Delinquencies" },
+  { slug: "code-violations", icon: FileText, category: "property", display: "Code Violations" },
+  { slug: "vacant-properties", icon: Home, category: "property", display: "Vacant Properties" },
+  { slug: "absentee-owners", icon: MapPin, category: "property", display: "Absentee Owners" },
+  { slug: "pre-foreclosures", icon: Gavel, category: "property", display: "Pre-Foreclosures" },
 ];
 
 /** Benefit cards, sharpest copy first. */
@@ -388,36 +438,64 @@ function LeadsIndexBody() {
       {/* Niches */}
       <section className="border-y border-border bg-surface py-14">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">Lead Lists By Niche</h2>
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Every List:</span>
-            {NICHE_FACTS.map((f) => (
-              <span key={f.label} className="inline-flex items-center gap-1.5">
-                <f.icon className="h-4 w-4 shrink-0 text-primary" /> {f.label}
-              </span>
-            ))}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
+                Find Your Next Customers
+              </h2>
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-muted-foreground">
+                {NICHE_CATEGORIES.map((c, i) => (
+                  <span key={c} className="inline-flex items-center gap-2">
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">
+                      {c}
+                    </span>
+                    {i < NICHE_CATEGORIES.length - 1 && (
+                      <span className="text-border">•</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">Every List:</span>
+              {NICHE_FACTS.map((f) => (
+                <span key={f.label} className="inline-flex items-center gap-1.5">
+                  <f.icon className="h-4 w-4 shrink-0 text-primary" /> {f.label}
+                </span>
+              ))}
+            </div>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {niches.map((p) => (
-              <Link
-                key={p.slug}
-                to="/leads/$slug"
-                params={{ slug: p.slug }}
-                className="group flex items-center gap-3 rounded-2xl border border-border bg-background p-4 transition-colors hover:border-primary"
-              >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                  <Building2 className="h-4 w-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-display text-base font-black text-foreground">
-                    {p.nicheLabel ?? p.title}
+            {NICHE_ORDER.map((n) => {
+              const page = niches.find((p) => p.slug === n.slug);
+              const Icon = n.icon;
+              const label = n.display ?? page?.nicheLabel ?? page?.title ?? n.slug;
+              return (
+                <Link
+                  key={n.slug}
+                  to="/leads/$slug"
+                  params={{ slug: n.slug }}
+                  className="group flex items-center gap-3 rounded-2xl border border-border bg-background p-4 transition-colors hover:border-primary"
+                >
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <Icon className="h-4 w-4" />
                   </span>
-                  <span className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                    View Leads <ArrowRight className="h-3 w-3" />
+                  <span className="min-w-0 flex-1">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-primary">
+                        {n.category.charAt(0).toUpperCase() + n.category.slice(1)}
+                      </span>
+                    </span>
+                    <span className="mt-0.5 block truncate font-display text-base font-black text-foreground">
+                      {label}
+                    </span>
+                    <span className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                      View Leads <ArrowRight className="h-3 w-3" />
+                    </span>
                   </span>
-                </span>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
