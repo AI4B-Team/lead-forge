@@ -366,6 +366,44 @@ export type Database = {
           },
         ]
       }
+      events: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          delivery_error: string | null
+          id: string
+          payload: Json
+          type: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          delivery_error?: string | null
+          id?: string
+          payload?: Json
+          type: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          delivery_error?: string | null
+          id?: string
+          payload?: Json
+          type?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           body: string
@@ -438,11 +476,17 @@ export type Database = {
           created_by: string | null
           error: string | null
           id: string
+          last_run_at: string | null
+          name: string | null
+          next_run_at: string | null
           params: Json
+          parent_job_id: string | null
+          record_type: string
           rows_deduped: number | null
           rows_enriched: number | null
           rows_in: number | null
           rows_skiptraced: number | null
+          schedule: string
           source_type: string
           status: string
           workspace_id: string
@@ -452,11 +496,17 @@ export type Database = {
           created_by?: string | null
           error?: string | null
           id?: string
+          last_run_at?: string | null
+          name?: string | null
+          next_run_at?: string | null
           params?: Json
+          parent_job_id?: string | null
+          record_type?: string
           rows_deduped?: number | null
           rows_enriched?: number | null
           rows_in?: number | null
           rows_skiptraced?: number | null
+          schedule?: string
           source_type: string
           status?: string
           workspace_id: string
@@ -466,16 +516,29 @@ export type Database = {
           created_by?: string | null
           error?: string | null
           id?: string
+          last_run_at?: string | null
+          name?: string | null
+          next_run_at?: string | null
           params?: Json
+          parent_job_id?: string | null
+          record_type?: string
           rows_deduped?: number | null
           rows_enriched?: number | null
           rows_in?: number | null
           rows_skiptraced?: number | null
+          schedule?: string
           source_type?: string
           status?: string
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "jobs_parent_job_id_fkey"
+            columns: ["parent_job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "jobs_workspace_id_fkey"
             columns: ["workspace_id"]
@@ -535,6 +598,89 @@ export type Database = {
           },
           {
             foreignKeyName: "lead_imports_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_records: {
+        Row: {
+          business_name: string | null
+          city: string | null
+          created_at: string
+          dedupe_key: string
+          disposition: string
+          email: string | null
+          first_seen_at: string
+          first_seen_job_id: string | null
+          full_name: string | null
+          id: string
+          is_new: boolean
+          last_seen_at: string
+          last_seen_job_id: string | null
+          list_count: number
+          phone: string | null
+          phone_type: string | null
+          record_types: string[]
+          source_types: string[]
+          state: string | null
+          updated_at: string
+          workspace_id: string
+          zip: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          city?: string | null
+          created_at?: string
+          dedupe_key: string
+          disposition?: string
+          email?: string | null
+          first_seen_at?: string
+          first_seen_job_id?: string | null
+          full_name?: string | null
+          id?: string
+          is_new?: boolean
+          last_seen_at?: string
+          last_seen_job_id?: string | null
+          list_count?: number
+          phone?: string | null
+          phone_type?: string | null
+          record_types?: string[]
+          source_types?: string[]
+          state?: string | null
+          updated_at?: string
+          workspace_id: string
+          zip?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          city?: string | null
+          created_at?: string
+          dedupe_key?: string
+          disposition?: string
+          email?: string | null
+          first_seen_at?: string
+          first_seen_job_id?: string | null
+          full_name?: string | null
+          id?: string
+          is_new?: boolean
+          last_seen_at?: string
+          last_seen_job_id?: string | null
+          list_count?: number
+          phone?: string | null
+          phone_type?: string | null
+          record_types?: string[]
+          source_types?: string[]
+          state?: string | null
+          updated_at?: string
+          workspace_id?: string
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_records_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -1066,6 +1212,47 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_endpoints: {
+        Row: {
+          active: boolean
+          created_at: string
+          event_types: string[]
+          id: string
+          secret: string
+          updated_at: string
+          url: string
+          workspace_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          event_types?: string[]
+          id?: string
+          secret?: string
+          updated_at?: string
+          url: string
+          workspace_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          event_types?: string[]
+          id?: string
+          secret?: string
+          updated_at?: string
+          url?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoints_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_invites: {
         Row: {
           accepted_at: string | null
@@ -1113,18 +1300,21 @@ export type Database = {
       workspace_members: {
         Row: {
           created_at: string
+          last_visit_at: string | null
           role: string
           user_id: string
           workspace_id: string
         }
         Insert: {
           created_at?: string
+          last_visit_at?: string | null
           role?: string
           user_id: string
           workspace_id: string
         }
         Update: {
           created_at?: string
+          last_visit_at?: string | null
           role?: string
           user_id?: string
           workspace_id?: string

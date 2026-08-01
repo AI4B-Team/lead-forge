@@ -85,6 +85,14 @@ export const Route = createFileRoute("/api/public/hooks/inbound-sms")({
           });
         }
 
+        const { emitEvent } = await import("@/lib/events.server");
+        await emitEvent(admin, num.workspace_id, "message.reply_received", {
+          from,
+          campaign_id: campaignId,
+          lead_id: lead?.id ?? null,
+          is_optout: isOptOut,
+        });
+
         return Response.json({ ok: true, optOut: isOptOut });
       },
     },

@@ -52,6 +52,7 @@ import { Route as AuthenticatedAppRegistrationRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppNumbersRouteImport } from './routes/_authenticated/app.numbers'
 import { Route as AuthenticatedAppNewJobRouteImport } from './routes/_authenticated/app.new-job'
 import { Route as AuthenticatedAppListsRouteImport } from './routes/_authenticated/app.lists'
+import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
 import { Route as AuthenticatedAppComplianceRouteImport } from './routes/_authenticated/app.compliance'
@@ -288,6 +289,11 @@ const AuthenticatedAppListsRoute = AuthenticatedAppListsRouteImport.update({
   path: '/lists',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppLeadsRoute = AuthenticatedAppLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppInboxRoute = AuthenticatedAppInboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
@@ -440,6 +446,7 @@ export interface FileRoutesByFullPath {
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
+  '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/lists': typeof AuthenticatedAppListsRoute
   '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
@@ -502,6 +509,7 @@ export interface FileRoutesByTo {
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
+  '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/lists': typeof AuthenticatedAppListsRoute
   '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
@@ -567,6 +575,7 @@ export interface FileRoutesById {
   '/_authenticated/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
+  '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
   '/_authenticated/app/lists': typeof AuthenticatedAppListsRoute
   '/_authenticated/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
   '/_authenticated/app/numbers': typeof AuthenticatedAppNumbersRoute
@@ -632,6 +641,7 @@ export interface FileRouteTypes {
     | '/app/compliance'
     | '/app/dashboard'
     | '/app/inbox'
+    | '/app/leads'
     | '/app/lists'
     | '/app/new-job'
     | '/app/numbers'
@@ -694,6 +704,7 @@ export interface FileRouteTypes {
     | '/app/compliance'
     | '/app/dashboard'
     | '/app/inbox'
+    | '/app/leads'
     | '/app/lists'
     | '/app/new-job'
     | '/app/numbers'
@@ -758,6 +769,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/compliance'
     | '/_authenticated/app/dashboard'
     | '/_authenticated/app/inbox'
+    | '/_authenticated/app/leads'
     | '/_authenticated/app/lists'
     | '/_authenticated/app/new-job'
     | '/_authenticated/app/numbers'
@@ -1123,6 +1135,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppListsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/leads': {
+      id: '/_authenticated/app/leads'
+      path: '/leads'
+      fullPath: '/app/leads'
+      preLoaderRoute: typeof AuthenticatedAppLeadsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/inbox': {
       id: '/_authenticated/app/inbox'
       path: '/inbox'
@@ -1286,6 +1305,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppComplianceRoute: typeof AuthenticatedAppComplianceRoute
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
+  AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
   AuthenticatedAppListsRoute: typeof AuthenticatedAppListsRoute
   AuthenticatedAppNewJobRoute: typeof AuthenticatedAppNewJobRouteWithChildren
   AuthenticatedAppNumbersRoute: typeof AuthenticatedAppNumbersRoute
@@ -1309,6 +1329,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppComplianceRoute: AuthenticatedAppComplianceRoute,
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
+  AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
   AuthenticatedAppListsRoute: AuthenticatedAppListsRoute,
   AuthenticatedAppNewJobRoute: AuthenticatedAppNewJobRouteWithChildren,
   AuthenticatedAppNumbersRoute: AuthenticatedAppNumbersRoute,

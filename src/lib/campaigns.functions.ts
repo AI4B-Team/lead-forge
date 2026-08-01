@@ -154,6 +154,7 @@ export const updateCampaignStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     // If transitioning to sending, enforce 10DLC gate.
+    let launchedWorkspaceId: string | null = null;
     if (data.status === "sending") {
       const { data: c } = await context.supabase
         .from("campaigns").select("workspace_id").eq("id", data.campaignId).maybeSingle();
@@ -163,12 +164,19 @@ export const updateCampaignStatus = createServerFn({ method: "POST" })
       if (reg?.campaign_status !== "approved") {
         throw new Error("10DLC Registration Must Be Approved Before Sending.");
       }
+      launchedWorkspaceId = c.workspace_id;
     }
     const { error } = await context.supabase
       .from("campaigns")
       .update({ status: data.status })
       .eq("id", data.campaignId);
     if (error) throw error;
+    if (launchedWorkspaceId) {
+      const { emitEvent } = await import("./events.server");
+      await emitEvent(context.supabase, launchedWorkspaceId, "campaign.launched", {
+        campaign_id: data.campaignId,
+      });
+    }
     return { ok: true };
   });
 

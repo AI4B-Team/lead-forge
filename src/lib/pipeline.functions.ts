@@ -329,5 +329,24 @@ export const runJob = createServerFn({ method: "POST" })
     // 6) READY -----------------------------------------------------------------
     await supabase.from("jobs").update({ status: "ready" }).eq("id", jobId);
     await say("ready", `${clean.toLocaleString()} clean, textable leads are ready.`, clean);
+
+    // 7) EVENTS (activity log + outbound webhooks for the hub) -----------------
+    const { emitEvent } = await import("./events.server");
+    await emitEvent(supabase, workspaceId, "job.completed", {
+      job_id: jobId,
+      source_type: job.source_type,
+      total: inserted?.length ?? 0,
+      clean,
+      dnc,
+      litigator,
+    });
+    if (clean > 0) {
+      await emitEvent(supabase, workspaceId, "leads.new", { job_id: jobId, count: clean });
+    }
+    if (dnc > 0) await emitEvent(supabase, workspaceId, "lead.flagged_dnc", { job_id: jobId, count: dnc });
+    if (litigator > 0) {
+      await emitEvent(supabase, workspaceId, "lead.flagged_litigator", { job_id: jobId, count: litigator });
+    }
+
     return { ok: true, status: "ready", clean, dnc, litigator, total: inserted?.length ?? 0 };
   });

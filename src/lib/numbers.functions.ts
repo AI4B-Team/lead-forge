@@ -205,6 +205,11 @@ export const advanceRegistration = createServerFn({ method: "POST" })
 
     const { error } = await context.supabase.from("registrations").upsert(payload);
     if (error) throw error;
+    // Brand approval unlocks sending — the hub cares about this transition.
+    if (data.brand_status === "approved" && existing?.brand_status !== "approved") {
+      const { emitEvent } = await import("./events.server");
+      await emitEvent(context.supabase, data.workspaceId, "brand.approved", {});
+    }
     return { ok: true };
   });
 
