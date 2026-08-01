@@ -56,7 +56,7 @@ function Dashboard() {
   const { workspaceId } = useWorkspaceId();
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [metrics, setMetrics] = useState({
-    leads: 0, lists: 0, activeCampaigns: 0, deliverability: 0, leadsToday: 0, processing: 0,
+    leads: 0, lists: 0, sending: 0, scheduled: 0, deliverability: 0, leadsToday: 0, processing: 0,
   });
   const [credits, setCredits] = useState<Credits>({ scrape: 0, skip_trace: 0, sms: 0 });
   const [creditTotals, setCreditTotals] = useState<CreditTotals>({ scrape: 0, skip_trace: 0, sms: 0 });
@@ -81,7 +81,7 @@ function Dashboard() {
         supabase.from("jobs").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
         supabase
           .from("campaigns")
-          .select("id", { count: "exact", head: true })
+          .select("status")
           .eq("workspace_id", workspaceId)
           .in("status", ["scheduled", "sending"]),
         supabase.from("sending_numbers").select("health_score").eq("workspace_id", workspaceId),
@@ -158,10 +158,12 @@ function Dashboard() {
       }
       setWeekly(buckets);
 
+      const campRows = (campRes.data ?? []) as Array<{ status: string }>;
       setMetrics({
         leads: leadsRes.count ?? 0,
         lists: listsRes.count ?? 0,
-        activeCampaigns: campRes.count ?? 0,
+        sending: campRows.filter((c) => c.status === "sending").length,
+        scheduled: campRows.filter((c) => c.status === "scheduled").length,
         deliverability,
         leadsToday: leadRows.filter((r) => new Date(r.created_at) >= startOfToday).length,
         processing: procRes.count ?? 0,
@@ -233,15 +235,30 @@ function Dashboard() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <Metric
           icon={<ListChecks className="h-4 w-4" />}
-          label="Active Jobs"
+          label="Jobs"
           value={metrics.lists.toString()}
-          note={metrics.processing ? `${metrics.processing} Processing` : "All Processed"}
+          note={metrics.processing ? `${metrics.processing} running` : "All processed"}
+          noteTone={metrics.processing ? "success" : undefined}
         />
         <Metric
           icon={<MessageSquare className="h-4 w-4" />}
           label="Live Campaigns"
-          value={metrics.activeCampaigns.toString()}
-          note={metrics.activeCampaigns ? "Sending Now" : "Ready To Launch"}
+          value={(metrics.sending + metrics.scheduled).toString()}
+          note={
+            metrics.sending + metrics.scheduled
+              ? `${metrics.sending} sending · ${metrics.scheduled} scheduled`
+              : undefined
+          }
+          noteNode={
+            metrics.sending + metrics.scheduled ? undefined : (
+              <>
+                None running yet —{" "}
+                <Link to="/app/campaigns/new" className="font-semibold text-primary underline-offset-2 hover:underline">
+                  launch your first
+                </Link>
+              </>
+            )
+          }
         />
       </div>
 
@@ -384,12 +401,13 @@ function HeroStat({ label, value, info }: { label: string; value: string; info?:
 }
 
 function Metric({
-  icon, label, value, note, noteTone,
+  icon, label, value, note, noteNode, noteTone,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   note?: string;
+  noteNode?: React.ReactNode;
   noteTone?: "success";
 }) {
   return (
@@ -399,9 +417,9 @@ function Metric({
           {icon} {label}
         </div>
         <div className="mt-2 font-display text-3xl font-black text-foreground">{value}</div>
-        {note && (
+        {(noteNode ?? note) && (
           <div className={`mt-1 text-xs font-medium ${noteTone === "success" ? "text-success" : "text-muted-foreground"}`}>
-            {note}
+            {noteNode ?? note}
           </div>
         )}
       </CardContent>
