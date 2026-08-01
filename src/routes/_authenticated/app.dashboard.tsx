@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { StatusBadge } from "@/components/app/status-badge";
+import { GettingStarted } from "@/components/app/getting-started";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type JobStatus } from "@/lib/mock-data";
@@ -97,6 +98,7 @@ function Dashboard() {
           </Button>
         }
       />
+      <GettingStarted workspaceId={workspaceId ?? null} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Metric icon={<Users className="h-4 w-4" />} label="Leads" value={metrics.leads.toLocaleString()} />
         <Metric icon={<ListChecks className="h-4 w-4" />} label="Lists" value={metrics.lists.toString()} />
