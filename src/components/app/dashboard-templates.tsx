@@ -72,29 +72,36 @@ export function DashboardTemplates() {
             </button>
           ))}
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {items.map((t, i) => (
               <Link
                 key={t.id}
                 {...templateLink(t)}
-                className="group flex flex-col rounded-2xl border border-border bg-surface p-5 transition hover:border-primary hover:shadow-md"
+                className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 transition hover:border-primary hover:shadow-sm"
               >
-                <TemplateLogo template={t} className="h-11 w-11" imgClassName="h-6 w-6" />
-                <span className="mt-4 block font-display text-base font-bold leading-snug text-foreground">
-                  {t.title}
-                </span>
-                <span className="mt-1.5 block text-xs leading-relaxed text-muted-foreground line-clamp-2">
-                  {t.subtitle}
-                </span>
-                <span className="mt-auto flex items-center gap-2 pt-4">
-                  <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
-                    {CATEGORY_LABEL[t.category] ?? "Template"}
-                  </span>
-                  {i < 3 && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
-                      <Star className="h-3 w-3 fill-current" /> Popular
+                <TemplateLogo template={t} className="h-12 w-12" imgClassName="h-7 w-7" />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2">
+                    <span className="truncate font-display text-sm font-bold leading-snug text-foreground">
+                      {t.title}
                     </span>
-                  )}
+                    {t.beta ? (
+                      <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Beta
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">{t.subtitle}</span>
+                  <span className="mt-2 flex items-center gap-2">
+                    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                      {CATEGORY_LABEL[t.category] ?? "Template"}
+                    </span>
+                    {i < 3 && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary">
+                        <Star className="h-3 w-3 fill-current" /> Popular
+                      </span>
+                    )}
+                  </span>
                 </span>
               </Link>
           ))}
