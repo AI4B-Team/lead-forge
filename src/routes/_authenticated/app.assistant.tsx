@@ -210,6 +210,7 @@ function Assistant() {
   const startOver = () => {
     clearStashedPrompt();
     if (workspaceId) clearDraft(workspaceId);
+    lastTemplateId.current = null;
     setThread([]);
     setInput("");
     setSpec(EMPTY_SPEC);
@@ -275,6 +276,8 @@ function Assistant() {
         .map((m) => ({ role: m.role, content: m.content }));
       const { jobId } = await createJob({ data: { workspaceId, spec, transcript: transcript.slice(-40) } });
       clearDraft(workspaceId);
+      // A template-originated run counts as usage, so it stays near the front.
+      if (lastTemplateId.current) setRecents(touchRecentTemplate(workspaceId, lastTemplateId.current));
       toast.success("Job Queued. Running Pipeline…");
       navigate({ to: "/app/jobs/$jobId", params: { jobId } });
       runJobFn({ data: { jobId } }).catch((e) =>
