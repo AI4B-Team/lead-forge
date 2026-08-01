@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Check } from "lucide-react";
 import type { Template } from "@/lib/templates";
 import { TemplateLogo } from "@/components/marketing/template-logo";
 
@@ -10,15 +11,25 @@ export function TemplateCard({
    */
   variant = "detail",
   onSelect,
+  selected = false,
 }: {
   template: Template;
   variant?: "detail" | "prompt" | "insert";
   onSelect?: (template: Template) => void;
+  /** Persistent selected state for the in-app "insert" variant. */
+  selected?: boolean;
 }) {
   const className =
-    "group flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 hover:border-primary hover:shadow-sm transition text-left w-full";
+    `group relative flex items-center gap-4 rounded-2xl border p-4 hover:border-primary hover:shadow-sm transition text-left w-full ${
+      selected ? "border-primary bg-primary/5" : "border-border bg-surface"
+    }`;
   const body = (
     <>
+      {selected ? (
+        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+          <Check className="h-3 w-3" />
+        </span>
+      ) : null}
       <TemplateLogo template={template} />
       <span className="min-w-0">
         <span className="flex items-center gap-2">
@@ -36,7 +47,12 @@ export function TemplateCard({
 
   if (variant === "insert") {
     return (
-      <button type="button" onClick={() => onSelect?.(template)} className={className}>
+      <button
+        type="button"
+        aria-pressed={selected}
+        onClick={() => onSelect?.(template)}
+        className={className}
+      >
         {body}
       </button>
     );
