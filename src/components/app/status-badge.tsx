@@ -33,17 +33,19 @@ const TONE: Record<string, Tone> = {
   paused: "gray",
   failed: "red",
   review: "purple",
+  attention: "yellow",
 };
 
 const EXTRA_LABEL: Record<string, string> = {
   scheduled: "Scheduled",
   paused: "Paused",
   review: "Needs Review",
+  attention: "Needs Attention",
 };
 
 const RUNNING = new Set(["scraping", "enriching", "skiptracing", "scrubbing"]);
 
-export function StatusBadge({ status }: { status: JobStatus | "scheduled" | "paused" | "review" }) {
+export function StatusBadge({ status }: { status: JobStatus | "scheduled" | "paused" | "review" | "attention" }) {
   const tone = TONE[status] ?? "gray";
   const label = EXTRA_LABEL[status] ?? statusLabel(status as JobStatus);
   return (

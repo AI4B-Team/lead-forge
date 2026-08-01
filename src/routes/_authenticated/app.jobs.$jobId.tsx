@@ -19,6 +19,7 @@ import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { PhoneLink } from "@/components/app/phone-link";
 import { setOnboardingPref } from "@/lib/onboarding.functions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { isStalled, stallReason } from "@/lib/job-watchdog";
 
 export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
   head: () => ({ meta: [{ title: "Pipeline Review — LeadTrace" }] }),
@@ -91,6 +92,9 @@ function JobDetail() {
   const scrubFreshness = data.scrubFreshness;
   const isReady = job.status === "ready";
   const isRunning = !isReady && job.status !== "failed" && job.status !== "paused";
+  // Stuck-job watchdog (§23): no progress events for 2h on a running stage.
+  const lastEventAt = (eventData?.events ?? []).at(-1)?.created_at ?? null;
+  const stalled = isStalled({ status: job.status, lastEventAt, createdAt: job.created_at as string });
   const params = (job.params ?? {}) as Record<string, unknown>;
   const jobName =
     data.displayName ??
@@ -176,11 +180,21 @@ function JobDetail() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Stat label="Rows In" value={job.rows_in ?? 0} />
-        <Stat label="De-Duped" value={job.rows_deduped ?? 0} />
-        <Stat label="Enriched" value={job.rows_enriched ?? 0} />
+        <Stat label="Rows Processed" value={job.rows_in ?? 0} />
+        <Stat label="Deduped" value={job.rows_deduped ?? 0} />
+        <Stat label="Verified" value={job.rows_enriched ?? 0} />
         <Stat label="Skip Traced" value={job.rows_skiptraced ?? 0} />
       </div>
+
+      {stalled && (
+        <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-warn/40 bg-warn/10 p-4">
+          <AlertTriangle className="h-4 w-4 text-warn" />
+          <span className="text-sm font-semibold text-foreground">Needs Attention — {stallReason(job.status)}</span>
+          <Button variant="outline" size="sm" className="rounded-full" onClick={toggleRun}>
+            <Play className="mr-1 h-4 w-4" /> Retry
+          </Button>
+        </div>
+      )}
 
       {scrubFreshness.stale && isReady && (
         <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4">
@@ -208,7 +222,8 @@ function JobDetail() {
             stages={{
               found: job.rows_in ?? 0,
               deduped: job.rows_deduped ?? 0,
-              textable: counts.mobile,
+              verified: job.rows_enriched ?? counts.total,
+              skipTraced: job.rows_skiptraced ?? counts.mobile,
               scrubbed: counts.total,
               clean: counts.clean,
             }}

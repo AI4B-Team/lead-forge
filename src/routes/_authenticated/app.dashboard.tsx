@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type JobStatus } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
+import { isRunningStatus, isStalled } from "@/lib/job-watchdog";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { assignJobNames, cadenceBadge } from "@/lib/job-naming";
 import {
@@ -95,7 +96,7 @@ function Dashboard() {
           .from("jobs")
           .select("id", { count: "exact", head: true })
           .eq("workspace_id", workspaceId)
-          .in("status", ["running", "queued"]),
+          .in("status", ["scraping", "enriching", "skiptracing", "scrubbing"]),
         supabase
           .from("credit_ledger")
           .select("kind, delta")
@@ -159,6 +160,24 @@ function Dashboard() {
       setWeekly(buckets);
 
       const campRows = (campRes.data ?? []) as Array<{ status: string }>;
+      // Running counts only genuinely active jobs (§23): a running stage with
+      // no progress events for 2h is stalled, not processing.
+      const runningJobs = rawJobs.filter((j) => isRunningStatus(j.status));
+      let activeCount = procRes.count ?? runningJobs.length;
+      if (runningJobs.length) {
+        const { data: evts } = await supabase
+          .from("job_events")
+          .select("job_id, created_at")
+          .in("job_id", runningJobs.map((j) => j.id))
+          .order("created_at", { ascending: false });
+        const last = new Map<string, string>();
+        for (const e of (evts ?? []) as Array<{ job_id: string | null; created_at: string }>) {
+          if (e.job_id && !last.has(e.job_id)) last.set(e.job_id, e.created_at);
+        }
+        activeCount = runningJobs.filter(
+          (j) => !isStalled({ status: j.status, lastEventAt: last.get(j.id) ?? null, createdAt: j.created_at }),
+        ).length;
+      }
       setMetrics({
         leads: leadsRes.count ?? 0,
         lists: listsRes.count ?? 0,
@@ -166,7 +185,7 @@ function Dashboard() {
         scheduled: campRows.filter((c) => c.status === "scheduled").length,
         deliverability,
         leadsToday: leadRows.filter((r) => new Date(r.created_at) >= startOfToday).length,
-        processing: procRes.count ?? 0,
+        processing: activeCount,
       });
 
       const bal: Credits = { scrape: 0, skip_trace: 0, sms: 0 };
@@ -307,7 +326,7 @@ function Dashboard() {
                         <div className="text-sm font-semibold tabular-nums text-foreground">
                           {(j.rows_in ?? 0).toLocaleString()}
                         </div>
-                        <div className="text-xs text-muted-foreground">Contacts</div>
+                        <div className="text-xs text-muted-foreground">Rows</div>
                       </div>
                       <div className="w-24 shrink-0 text-right">
                         <StatusBadge status={j.status} />
