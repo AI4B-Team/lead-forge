@@ -356,6 +356,7 @@ export const getWorkspacePerformance = createServerFn({ method: "GET" })
 
     const funnel = [
       { label: "Contacts Messaged", value: contacts },
+      { label: "Messages Sent", value: current.sent },
       { label: "Delivered", value: current.delivered },
       { label: "Replies", value: current.replies },
       { label: "Qualified", value: current.qualified },
