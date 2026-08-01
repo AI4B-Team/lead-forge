@@ -63,6 +63,7 @@ import { Route as AuthenticatedAppAssistantRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
 import { Route as AuthenticatedAppAccountRouteImport } from './routes/_authenticated/app.account'
 import { Route as AuthenticatedAppCampaignsIndexRouteImport } from './routes/_authenticated/app.campaigns.index'
+import { Route as ApiPublicV1LeadsRouteImport } from './routes/api/public/v1/leads'
 import { Route as ApiPublicV1JobsRouteImport } from './routes/api/public/v1/jobs'
 import { Route as ApiPublicHubCallbackRouteImport } from './routes/api/public/hub/callback'
 import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
@@ -352,6 +353,11 @@ const AuthenticatedAppCampaignsIndexRoute =
     path: '/campaigns/',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const ApiPublicV1LeadsRoute = ApiPublicV1LeadsRouteImport.update({
+  id: '/api/public/v1/leads',
+  path: '/api/public/v1/leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1JobsRoute = ApiPublicV1JobsRouteImport.update({
   id: '/api/public/v1/jobs',
   path: '/api/public/v1/jobs',
@@ -492,6 +498,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
+  '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
@@ -559,6 +566,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
+  '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/app/campaigns': typeof AuthenticatedAppCampaignsIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
@@ -629,6 +637,7 @@ export interface FileRoutesById {
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
+  '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/_authenticated/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
@@ -699,6 +708,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hub/callback'
     | '/api/public/v1/jobs'
+    | '/api/public/v1/leads'
     | '/app/campaigns/'
     | '/api/public/v1/jobs/$jobId'
   fileRoutesByTo: FileRoutesByTo
@@ -766,6 +776,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hub/callback'
     | '/api/public/v1/jobs'
+    | '/api/public/v1/leads'
     | '/app/campaigns'
     | '/api/public/v1/jobs/$jobId'
   id:
@@ -835,6 +846,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hub/callback'
     | '/api/public/v1/jobs'
+    | '/api/public/v1/leads'
     | '/_authenticated/app/campaigns/'
     | '/api/public/v1/jobs/$jobId'
   fileRoutesById: FileRoutesById
@@ -880,6 +892,7 @@ export interface RootRouteChildren {
   ApiPublicHooksTickCampaignsRoute: typeof ApiPublicHooksTickCampaignsRoute
   ApiPublicHubCallbackRoute: typeof ApiPublicHubCallbackRoute
   ApiPublicV1JobsRoute: typeof ApiPublicV1JobsRouteWithChildren
+  ApiPublicV1LeadsRoute: typeof ApiPublicV1LeadsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1262,6 +1275,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCampaignsIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/api/public/v1/leads': {
+      id: '/api/public/v1/leads'
+      path: '/api/public/v1/leads'
+      fullPath: '/api/public/v1/leads'
+      preLoaderRoute: typeof ApiPublicV1LeadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/jobs': {
       id: '/api/public/v1/jobs'
       path: '/api/public/v1/jobs'
@@ -1500,6 +1520,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksTickCampaignsRoute: ApiPublicHooksTickCampaignsRoute,
   ApiPublicHubCallbackRoute: ApiPublicHubCallbackRoute,
   ApiPublicV1JobsRoute: ApiPublicV1JobsRouteWithChildren,
+  ApiPublicV1LeadsRoute: ApiPublicV1LeadsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
