@@ -20,7 +20,7 @@ const TOPICS = [
   { icon: Search, title: "Generating Lists", body: "Enter a niche and a county. We pull matching businesses from multiple sources and price the run before it starts." },
   { icon: Upload, title: "Uploading Your Own List", body: "Import a CSV, map your columns, and run the same clean-and-scrub pipeline without paying for sourcing." },
   { icon: ShieldCheck, title: "Clean & Scrub", body: "Every record is deduped, line-type checked, and scrubbed against DNC and litigator data with a timestamped audit trail." },
-  { icon: CreditCard, title: "Credits & Skip Trace", body: "One lead credit covers a fully processed record. Skip trace is always metered per hit, never bundled." },
+  { icon: CreditCard, title: "Credits & Skip Trace", body: "One lead credit covers a fully processed record. Skip tracing is included on Growth and up within daily and monthly fair-use limits, then metered per hit." },
   { icon: Phone, title: "Numbers & Registration", body: "Carrier brand and campaign registration is free on every plan. Numbers rotate from a managed pool with health monitoring." },
   { icon: MessageSquare, title: "Campaigns & Compliance", body: "Quiet hours follow the recipient's timezone, STOP is processed automatically, and litigators can never enter a campaign." },
 ];
