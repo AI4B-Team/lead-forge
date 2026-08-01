@@ -15,6 +15,9 @@ import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
 import { PhoneLink } from "@/components/app/phone-link";
 
 export const Route = createFileRoute("/_authenticated/app/leads")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    onlyNew: search.onlyNew === true || search.onlyNew === "true",
+  }),
   head: () => ({
     meta: [
       { title: "Leads — LeadTrace" },
@@ -53,13 +56,14 @@ function Stat({ icon, label, value, tone }: { icon: React.ReactNode; label: stri
 
 function LeadsPage() {
   const { workspaceId } = useWorkspaceId();
+  const { onlyNew: onlyNewParam } = Route.useSearch();
   const fetchRecords = useServerFn(listLeadRecords);
 
   const [q, setQ] = useState("");
   const [disposition, setDisposition] = useState<"all" | "clean" | "dnc" | "litigator">("all");
   const [sourceType, setSourceType] = useState("all");
   const [lineType, setLineType] = useState<"all" | "mobile" | "landline" | "voip" | "unknown">("all");
-  const [onlyNew, setOnlyNew] = useState(false);
+  const [onlyNew, setOnlyNew] = useState(onlyNewParam);
   const [multiList, setMultiList] = useState(false);
 
   const { data, isLoading } = useQuery({
