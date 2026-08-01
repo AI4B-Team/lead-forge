@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { Button } from "@/components/ui/button";
-import { Zap } from "lucide-react";
+import { Zap, Inbox } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { ProfileDropdown } from "@/components/app/profile-dropdown";
 import { NotificationBell } from "@/components/app/notification-bell";
@@ -29,6 +29,9 @@ function AppLayout() {
             <div className="flex items-center gap-2">
               <Button asChild size="sm" variant="outline" className="rounded-full" data-tour="credits">
                 <Link to="/app/billing"><Zap className="mr-1 h-3.5 w-3.5" /> Top Up Credits</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="rounded-full" data-tour="inbox">
+                <Link to="/app/inbox"><Inbox className="mr-1 h-3.5 w-3.5" /> Inbox</Link>
               </Button>
               <HelpMenu onStartTour={tour.start} />
               <NotificationBell />

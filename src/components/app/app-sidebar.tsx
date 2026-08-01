@@ -36,7 +36,6 @@ const ITEMS = [
   { to: "/app/lists", label: "Lists", icon: ListChecks },
   { to: "/app/brands", label: "Brands", icon: BrainCircuit },
   { to: "/app/campaigns", label: "Campaigns", icon: MessageSquare },
-  { to: "/app/inbox", label: "Inbox", icon: Inbox },
   { to: "/app/reports", label: "Reports", icon: BarChart3 },
   { to: "/app/numbers", label: "Numbers", icon: Phone },
 ] as const;
