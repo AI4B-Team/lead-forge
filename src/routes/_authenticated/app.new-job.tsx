@@ -44,17 +44,22 @@ function DoorCard({ door }: { door: (typeof generateDoors)[number] | (typeof imp
       to={door.to}
       className="group rounded-2xl border border-border bg-surface p-8 hover:border-primary transition"
     >
-      <div className="grid place-items-center h-12 w-12 rounded-xl bg-primary/10 text-primary">
-        <door.icon className="h-5 w-5" />
+      <div className="flex items-center gap-4">
+        <div className="grid place-items-center h-12 w-12 shrink-0 rounded-xl bg-primary/10 text-primary">
+          <door.icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 font-display font-bold text-xl text-foreground whitespace-nowrap truncate">
+          {door.title}
+        </div>
       </div>
-      <div className="mt-5 font-display font-bold text-xl text-foreground">{door.title}</div>
-      <p className="mt-2 text-sm text-muted-foreground">{door.body}</p>
+      <p className="mt-4 text-sm text-muted-foreground">{door.body}</p>
       <div className="mt-6 flex items-center gap-1 text-sm font-medium text-primary">
         Start <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
       </div>
     </Link>
   );
 }
+
 
 function NewJob() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
