@@ -10,6 +10,7 @@ import {
   History,
   Terminal,
   Bell,
+  Mail,
 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { AccountTabs } from "@/components/app/account-tabs";
+import { SettingsShell } from "@/components/app/settings-shell";
 import { SettingsSummary } from "@/components/app/settings-summary";
 
 const searchSchema = z.object({ tab: z.enum(["profile", "security"]).optional() });
@@ -91,6 +92,13 @@ function AccountPage() {
   };
 
   const displayName = fullName || user?.email?.split("@")[0] || "You";
+  const passwordChangedAt = (user?.updated_at ?? user?.created_at) as string | undefined;
+  const passwordUpdatedLabel = passwordChangedAt
+    ? (() => {
+        const days = Math.floor((Date.now() - new Date(passwordChangedAt).getTime()) / 86400000);
+        return days <= 0 ? "Today" : `${days} Day${days === 1 ? "" : "s"} Ago`;
+      })()
+    : "Unknown";
   const initials = displayName
     .split(/[\s.@_-]+/)
     .filter(Boolean)
@@ -99,12 +107,12 @@ function AccountPage() {
     .join("");
 
   return (
-    <div className="mx-auto max-w-[1100px]">
+    <div className="mx-auto max-w-[1400px]">
+      <SettingsShell current={tab ?? "profile"}>
       <PageHeader
         title="Settings"
         description="Manage Your Profile, Workspace, Billing, Compliance, And Team."
       />
-      <AccountTabs current={tab ?? "profile"} />
       <Tabs
         value={tab ?? "profile"}
         onValueChange={(v) => navigate({ search: { tab: v as "profile" | "security" }, replace: true })}
@@ -185,7 +193,15 @@ function AccountPage() {
               </Button>
             </div>
 
-            <SettingsSummary ownerName={displayName} />
+            <div className="space-y-6">
+              <IdentityCard
+                initials={initials || "LT"}
+                name={displayName}
+                email={user?.email ?? ""}
+                verified={!!user?.email_confirmed_at}
+              />
+              <SettingsSummary ownerName={displayName} />
+            </div>
           </div>
         </TabsContent>
 
@@ -217,6 +233,28 @@ function AccountPage() {
                       Send Reset Email
                     </Button>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Last Updated {passwordUpdatedLabel} · Use At Least 12 Characters With A Number And Symbol.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base font-display">
+                    <Mail className="h-4 w-4 text-muted-foreground" /> Recovery Email
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-foreground">{user?.email ?? "—"}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {user?.email_confirmed_at ? "Verified — Used For Password Resets" : "Not Verified Yet"}
+                    </div>
+                  </div>
+                  <Button variant="outline" className="rounded-full" onClick={sendReset}>
+                    Verify
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -298,10 +336,19 @@ function AccountPage() {
               </Card>
             </div>
 
-            <SettingsSummary ownerName={displayName} />
+            <div className="space-y-6">
+              <IdentityCard
+                initials={initials || "LT"}
+                name={displayName}
+                email={user?.email ?? ""}
+                verified={!!user?.email_confirmed_at}
+              />
+              <SettingsSummary ownerName={displayName} />
+            </div>
           </div>
         </TabsContent>
       </Tabs>
+      </SettingsShell>
     </div>
   );
 }
@@ -325,5 +372,50 @@ function PrefRow({
       </div>
       <Switch checked={checked} onCheckedChange={onChange} />
     </div>
+  );
+}
+
+function IdentityCard({
+  initials,
+  name,
+  email,
+  verified,
+}: {
+  initials: string;
+  name: string;
+  email: string;
+  verified: boolean;
+}) {
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary font-display font-bold text-primary-foreground">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <div className="truncate font-display font-bold text-foreground">{name}</div>
+            <div className="truncate text-xs text-muted-foreground">{email}</div>
+          </div>
+        </div>
+        <Separator className="my-4" />
+        <div className="space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Role</span>
+            <span className="font-medium text-foreground">Owner</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Email</span>
+            <span className={verified ? "font-medium text-success" : "font-medium text-warn"}>
+              {verified ? "Verified" : "Unverified"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Two-Factor</span>
+            <span className="font-medium text-warn">Disabled</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -18,7 +18,13 @@ import {
   getRegistration, advanceRegistration, submitBrandToProvider,
   submitCampaignToProvider, listNumbers, buyNumbers,
 } from "@/lib/numbers.functions";
-import { AccountTabs } from "@/components/app/account-tabs";
+import { SettingsShell } from "@/components/app/settings-shell";
+import { StatTile } from "@/components/app/stat-tile";
+
+function titleize(v: string | null | undefined) {
+  const s = v ?? "pending";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 export const Route = createFileRoute("/_authenticated/app/registration")({
   head: () => ({
@@ -213,8 +219,8 @@ function RegistrationPage() {
   const completed = STEPS.filter((s) => stepDone(s.id)).length;
 
   return (
-    <div>
-      <AccountTabs current="registration" />
+    <div className="mx-auto max-w-[1400px]">
+      <SettingsShell current="registration">
       <div className="flex flex-col gap-3 mb-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">Brand & SMS Setup</h1>
@@ -226,6 +232,21 @@ function RegistrationPage() {
         <p className="text-sm text-muted-foreground">
           Carrier Approval Takes A Few Days — Start Now So It's Ready When Your List Is. Registration Fees Are $0 On Every Plan.
         </p>
+      </div>
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile label="Brand Status" value={titleize(reg?.brand_status)} hint="T-Mobile / AT&T Registry" />
+        <StatTile label="Campaign Status" value={titleize(reg?.campaign_status)} hint="A2P 10DLC Use Case" />
+        <StatTile
+          label="Trust Score"
+          value={reg?.brand_status === "approved" ? "75 / 100" : "—"}
+          hint="Sets Daily Throughput"
+        />
+        <StatTile
+          label="Est. Approval"
+          value={reg?.campaign_status === "approved" ? "Complete" : "2–5 Days"}
+          hint={`${completed} Of 5 Steps Done`}
+        />
       </div>
 
       <div className="grid lg:grid-cols-[260px_1fr] gap-6">
@@ -410,6 +431,7 @@ function RegistrationPage() {
           )}
         </div>
       </div>
+      </SettingsShell>
     </div>
   );
 }

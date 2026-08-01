@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
-import { AccountTabs } from "@/components/app/account-tabs";
+import { SettingsShell } from "@/components/app/settings-shell";
+import { StatTile } from "@/components/app/stat-tile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +65,7 @@ function Numbers() {
     ? Math.round(numbers.reduce((a, n) => a + (n.health_score ?? 0), 0) / numbers.length)
     : 0;
   const flagged = numbers.filter((n) => (n.optout_rate ?? 0) > 5).length;
+  const rotating = numbers.filter((n) => (n.status ?? "active") === "active" && (n.health_score ?? 0) > 0).length;
   const campaignApproved = regData?.registration?.campaign_status === "approved";
 
   const submit = async () => {
@@ -98,8 +100,8 @@ function Numbers() {
   };
 
   return (
-    <div>
-      <AccountTabs current="numbers" />
+    <div className="mx-auto max-w-[1400px]">
+      <SettingsShell current="numbers">
       <PageHeader
         title="Number Pool"
         description="Geo-Matched By Region. Auto-Retirement When Opt-Out Rate Climbs."
@@ -169,10 +171,16 @@ function Numbers() {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <StatCard label="Total Numbers" value={numbers.length.toString()} />
-        <StatCard label="Active" value={active.toString()} />
-        <StatCard label="Avg Health" value={numbers.length ? `${avg}/100` : "—"} tone="success" />
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <StatTile label="Total Numbers" value={numbers.length} hint="In This Workspace" />
+        <StatTile label="Active" value={active} hint="Eligible To Send" />
+        <StatTile label="Rotating" value={rotating} hint="In Live Campaigns" />
+        <StatTile
+          label="Pool Health"
+          value={numbers.length ? `${avg}%` : "—"}
+          hint={flagged ? `${flagged} Flagged For Cooling` : "No Numbers Flagged"}
+        />
+        <StatTile label="Carrier" value="Telnyx" hint={campaignApproved ? "10DLC Approved" : "10DLC Pending"} />
       </div>
       {flagged > 0 && (
         <div className="mb-6 rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
@@ -252,6 +260,7 @@ function Numbers() {
           )}
         </CardContent>
       </Card>
+      </SettingsShell>
     </div>
   );
 }

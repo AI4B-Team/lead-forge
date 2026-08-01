@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
-import { AccountTabs } from "@/components/app/account-tabs";
+import { SettingsShell } from "@/components/app/settings-shell";
+import { StatTile } from "@/components/app/stat-tile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,11 +53,46 @@ function Billing() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  return (
-    <div className="max-w-5xl">
-      <PageHeader title="Billing" description="Plan, Metered Credits, And Recent Activity." />
-      <AccountTabs current="billing" />
+  const balances = data?.balances;
+  const totalCredits =
+    (balances?.scrape ?? 0) + (balances?.skip_trace ?? 0) + (balances?.sms ?? 0);
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const monthLedger = (data?.ledger ?? []).filter(
+    (r) => new Date(r.created_at) >= monthStart && r.delta < 0,
+  );
+  const usedThisMonth = monthLedger.reduce((sum, r) => sum + Math.abs(r.delta), 0);
+  const usageByKind = monthLedger.reduce<Record<string, number>>((acc, r) => {
+    acc[r.kind] = (acc[r.kind] ?? 0) + Math.abs(r.delta);
+    return acc;
+  }, {});
+  const renewDate = new Date(monthStart);
+  renewDate.setMonth(renewDate.getMonth() + 1);
+  const renewLabel = renewDate.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
+  return (
+    <div className="mx-auto max-w-[1400px]">
+      <SettingsShell current="billing">
+      <PageHeader title="Billing" description="Plan, Metered Credits, And Recent Activity." />
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile label="Current Plan" value="Trial" hint="Pay-As-You-Go Credits" />
+        <StatTile
+          label="Total Credits"
+          value={totalCredits.toLocaleString()}
+          hint="Scrape + Skip Trace + SMS"
+        />
+        <StatTile label="Renews" value={renewLabel} hint="Auto-Renew Enabled" />
+        <StatTile
+          label="Used This Month"
+          value={usedThisMonth.toLocaleString()}
+          hint={`${data?.ledger.length ?? 0} Ledger Entries`}
+        />
+      </div>
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div>
       <Card className="mb-6">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -117,12 +153,65 @@ function Billing() {
         </CardContent>
       </Card>
 
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base font-display">Payment Method</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3 rounded-xl border border-border p-3">
+                <div className="grid h-9 w-12 shrink-0 place-items-center rounded-md bg-muted text-[10px] font-bold uppercase tracking-wider">
+                  Card
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium">No Card On File</div>
+                  <div className="text-xs text-muted-foreground">Add One Before Your Trial Ends</div>
+                </div>
+              </div>
+              <Button variant="outline" className="w-full rounded-full" disabled>
+                Add Payment Method
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base font-display">Invoices</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Invoices Appear Here After Your First Paid Cycle.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base font-display">Usage This Month</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(Object.keys(CREDIT_META) as CreditKind[]).map((k) => (
+                <div key={k} className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{CREDIT_META[k].label}</span>
+                  <span className="font-display font-bold tabular-nums">
+                    {(usageByKind[k] ?? 0).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
       <TopUpDialog
         kind={topUpKind}
         onClose={() => setTopUpKind(null)}
         onConfirm={(amount) => topUpKind && mutate.mutate({ kind: topUpKind, amount })}
         pending={mutate.isPending}
       />
+      </SettingsShell>
     </div>
   );
 }

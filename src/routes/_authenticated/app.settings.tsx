@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
-import { AccountTabs } from "@/components/app/account-tabs";
+import { SettingsShell } from "@/components/app/settings-shell";
 import { SettingsSummary } from "@/components/app/settings-summary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,9 +48,9 @@ function Settings() {
   const [state, setState] = useState("FL");
 
   return (
-    <div>
+    <div className="mx-auto max-w-[1400px]">
+      <SettingsShell current="workspace">
       <PageHeader title="Workspace Settings" description="General Details, Industry Preset, And Connected Apps." />
-      <AccountTabs current="workspace" />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
@@ -175,6 +175,7 @@ function Settings() {
           </Card>
         </div>
       </div>
+      </SettingsShell>
     </div>
   );
 }

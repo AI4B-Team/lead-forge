@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
-import { AccountTabs } from "@/components/app/account-tabs";
+import { SettingsShell } from "@/components/app/settings-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,12 +60,12 @@ function Compliance() {
   }, [query]);
 
   return (
-    <div>
+    <div className="mx-auto max-w-[1400px]">
+      <SettingsShell current="compliance">
       <PageHeader
         title="Compliance Center"
         description="Everything Needed To Keep Outreach Compliant."
       />
-      <AccountTabs current="compliance" />
 
       {/* Status banner — the first thing a compliance-minded buyer looks for. */}
       <div className="mb-6 rounded-2xl border border-success/30 bg-success/5 p-5">
@@ -231,6 +231,7 @@ function Compliance() {
           </table>
         </CardContent>
       </Card>
+      </SettingsShell>
     </div>
   );
 }

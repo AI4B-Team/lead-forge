@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
-import { AccountTabs } from "@/components/app/account-tabs";
+import { SettingsShell } from "@/components/app/settings-shell";
 import { StatTile } from "@/components/app/stat-tile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -202,12 +202,12 @@ function AdminPage() {
   };
 
   return (
-    <div>
+    <div className="mx-auto max-w-[1400px]">
+      <SettingsShell current="admin">
       <PageHeader
         title="Super Admin"
         description="Manage Every Workspace. Comp Accounts. Grant Credits. Cap Monthly Usage."
       />
-      <AccountTabs current="admin" />
 
       <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile label="Total Workspaces" value={totals.workspaces} icon={Building2} hint={`${totals.paid} Paid · ${totals.pastDue} Past Due`} />
@@ -454,6 +454,7 @@ function AdminPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </SettingsShell>
     </div>
   );
 }
