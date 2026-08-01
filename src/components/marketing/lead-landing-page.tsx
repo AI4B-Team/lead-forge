@@ -14,8 +14,24 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
   const ctaSearch = startSearchLink(page);
   const ctaLabel = page.nicheLabel ? `Start Free — ${page.nicheLabel} Search` : "Start Free";
 
+  // §9.1: FAQPage structured data so the FAQ block can win rich results.
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: page.faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <MarketingLayout>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       {/* [1] H1 + tag row */}
       <section className="bg-background pt-16 pb-10">
         <div className="mx-auto max-w-5xl px-6">
