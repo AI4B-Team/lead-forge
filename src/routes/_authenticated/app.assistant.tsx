@@ -5,18 +5,18 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { JobSpecCard } from "@/components/app/job-spec-card";
 import { AssistantTrace, buildTraceSteps } from "@/components/app/assistant-trace";
-import { AssistantSummary } from "@/components/app/assistant-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Sparkles, ChevronDown, Play, CornerDownLeft, SlidersHorizontal, CheckCircle2, RotateCcw } from "lucide-react";
+import { Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { assistantChat, createJobFromSpec, requestCoverage } from "@/lib/assistant.functions";
 import { runJob } from "@/lib/pipeline.functions";
-import { EMPTY_SPEC, describeSpec, type AssistantMessage, type Coverage, type JobSpec } from "@/lib/assistant.shared";
+import { EMPTY_SPEC, describeSpec, type Coverage, type JobSpec } from "@/lib/assistant.shared";
+import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
 import { TEMPLATES } from "@/lib/templates";
 import { takeStashedPrompt, clearStashedPrompt } from "@/lib/prompt-handoff";
 
@@ -37,6 +37,28 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
 
 const TRY_CHIPS = ["Probate Filings", "Roofers", "Code Violations", "Vacant Homes"];
 
+const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
+  sourceType: "Source",
+  niches: "Niches",
+  recordType: "Record Type",
+  state: "State",
+  counties: "Counties",
+  recencyDays: "Recency",
+  removeFranchises: "Remove Franchises",
+  dedupe: "Dedupe",
+  mobileOnly: "Mobile Only",
+  skipTrace: "Skip Trace",
+  industry: "Industry Preset",
+  messageAngle: "First-Touch Angle",
+};
+
+/** Plain-language list of what a manual panel edit changed, for the thread chip. */
+function diffSpec(prev: JobSpec, next: JobSpec): string[] {
+  return (Object.keys(FIELD_LABELS) as Array<keyof JobSpec>)
+    .filter((k) => JSON.stringify(prev[k]) !== JSON.stringify(next[k]))
+    .map((k) => FIELD_LABELS[k]!);
+}
+
 function Assistant() {
   const navigate = useNavigate();
   const search = Route.useSearch();
@@ -46,7 +68,7 @@ function Assistant() {
   const logRequest = useServerFn(requestCoverage);
   const runJobFn = useServerFn(runJob);
 
-  const [messages, setMessages] = useState<AssistantMessage[]>([]);
+  const [thread, setThread] = useState<ThreadItem[]>([]);
   const [input, setInput] = useState("");
   const [spec, setSpec] = useState<JobSpec>(EMPTY_SPEC);
   const [firstPrompt, setFirstPrompt] = useState("");
@@ -59,12 +81,16 @@ function Assistant() {
   const [revealed, setRevealed] = useState(0);
   const scroller = useRef<HTMLDivElement>(null);
   const sentPrompt = useRef(false);
+  const restored = useRef(false);
   const composer = useRef<HTMLTextAreaElement>(null);
 
-  // Nothing has been assembled yet → the AI is the only thing on screen.
-  const started = messages.length > 0;
+  const started = thread.length > 0;
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
   const traceComplete = revealed >= traceSteps.length && !busy && traceSteps.length > 0;
+  const lastAssistantIndex = useMemo(() => {
+    for (let i = thread.length - 1; i >= 0; i -= 1) if (thread[i].role === "assistant") return i;
+    return -1;
+  }, [thread]);
 
   useEffect(() => {
     composer.current?.focus();
@@ -72,7 +98,7 @@ function Assistant() {
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
-  }, [messages, busy]);
+  }, [thread, busy, revealed]);
 
   // Reveal the reasoning trail one row at a time so assembly feels live.
   useEffect(() => {
@@ -82,19 +108,39 @@ function Assistant() {
     return () => clearTimeout(t);
   }, [busy, revealed, traceSteps.length]);
 
+  // Draft persistence (§22): restore on return, keep saving as the thread grows.
+  useEffect(() => {
+    if (!workspaceId || restored.current) return;
+    restored.current = true;
+    if (search.prompt?.trim()) return;
+    const draft = loadDraft(workspaceId);
+    if (!draft) return;
+    setThread(draft.thread);
+    setSpec(draft.spec);
+    setFirstPrompt(draft.firstPrompt);
+    setRevealed(buildTraceSteps(draft.spec).length);
+  }, [workspaceId, search.prompt]);
+
+  useEffect(() => {
+    if (!workspaceId || !thread.length) return;
+    saveDraft(workspaceId, { thread, spec, firstPrompt });
+  }, [workspaceId, thread, spec, firstPrompt]);
+
   const send = async (text: string) => {
     const body = text.trim();
     if (!body || !workspaceId || busy) return;
-    const history = messages;
+    const history = thread
+      .filter((m): m is ThreadItem & { role: "user" | "assistant" } => m.role !== "system")
+      .map((m) => ({ role: m.role, content: m.content }));
     if (!firstPrompt) setFirstPrompt(body);
-    setMessages((m) => [...m, { role: "user", content: body }]);
+    setThread((m) => [...m, { role: "user", content: body }]);
     setInput("");
     setBusy(true);
     setConfirmed(false);
     setRevealed(0);
     try {
       const res = await chat({ data: { workspaceId, message: body, history: history.slice(-12), spec } });
-      setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
+      setThread((m) => [...m, { role: "assistant", content: res.reply, spec: res.spec }]);
       setSpec(res.spec);
       setCoverage(res.coverage);
       setEstimate(res.estimate);
@@ -108,7 +154,8 @@ function Assistant() {
 
   const startOver = () => {
     clearStashedPrompt();
-    setMessages([]);
+    if (workspaceId) clearDraft(workspaceId);
+    setThread([]);
     setInput("");
     setSpec(EMPTY_SPEC);
     setFirstPrompt("");
@@ -117,6 +164,17 @@ function Assistant() {
     setSuggested([]);
     setConfirmed(false);
     setRevealed(0);
+  };
+
+  // Two-way sync: a manual panel edit is announced in the thread so the next
+  // assistant turn (and the operator) both know it happened.
+  const editSpec = (next: JobSpec) => {
+    const changed = diffSpec(spec, next);
+    setSpec(next);
+    setConfirmed(false);
+    if (changed.length && thread.length) {
+      setThread((m) => [...m, { role: "system", content: `You Edited: ${changed.join(" · ")}` }]);
+    }
   };
 
   // Deep-link: the homepage prompt box carries its text in ?prompt=, with a
@@ -128,7 +186,6 @@ function Assistant() {
     const initial = fromUrl || stashed;
     if (!initial) return;
     sentPrompt.current = true;
-    // Strip the param so a refresh (or a later visit) never re-sends it.
     if (fromUrl) navigate({ to: "/app/assistant", search: {}, replace: true });
     void send(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -158,7 +215,11 @@ function Assistant() {
     }
     setRunning(true);
     try {
-      const { jobId } = await createJob({ data: { workspaceId, spec, transcript: messages.slice(-40) } });
+      const transcript = thread
+        .filter((m): m is ThreadItem & { role: "user" | "assistant" } => m.role !== "system")
+        .map((m) => ({ role: m.role, content: m.content }));
+      const { jobId } = await createJob({ data: { workspaceId, spec, transcript: transcript.slice(-40) } });
+      clearDraft(workspaceId);
       toast.success("Job Queued. Running Pipeline…");
       navigate({ to: "/app/jobs/$jobId", params: { jobId } });
       runJobFn({ data: { jobId } }).catch((e) =>
@@ -184,38 +245,31 @@ function Assistant() {
         ? "Run Job"
         : "Looks Good";
 
-  const specPanel = (
-    <div className="space-y-4">
-      {firstPrompt && <AssistantSummary prompt={firstPrompt} spec={spec} />}
+  const geoResolved = Boolean(spec.state || spec.counties.length || spec.sourceType === "upload");
 
-      <Collapsible>
-        <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm hover:border-primary">
-          <span className="flex items-center gap-2 font-medium text-foreground">
-            <SlidersHorizontal className="h-4 w-4 text-muted-foreground" /> Fine-Tune Every Field
-          </span>
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pt-4">
-          <JobSpecCard spec={spec} onChange={setSpec} coverage={coverage} estimate={estimate} />
-        </CollapsibleContent>
-      </Collapsible>
-
+  const runFooter = (
+    <div className="space-y-3 border-t border-border bg-background pt-4">
       {uncovered.length > 0 && (
-        <Card>
-          <CardContent className="pt-5 text-sm">
-            <div className="font-medium text-foreground">Not Covered Yet</div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              We Don't Have An Adapter For These Yet. Log A Request And We'll Add It To The Backlog.
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {uncovered.map((c) => (
-                <Button key={c.county} size="sm" variant="outline" className="rounded-full" onClick={() => request(c.county)}>
-                  Request {c.county}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-border p-3 text-xs">
+          <div className="font-medium text-foreground">Not Covered Yet</div>
+          <div className="mt-1 text-muted-foreground">
+            Log A Request And We'll Add It To The Backlog.
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {uncovered.map((c) => (
+              <Button key={c.county} size="sm" variant="outline" className="rounded-full" onClick={() => request(c.county)}>
+                Request {c.county}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {estimate && spec.sourceType && geoResolved && (
+        <div className="text-center text-xs text-muted-foreground">
+          ≈ {estimate.rows.toLocaleString()} Rows · ~{estimate.scrapeCredits.toLocaleString()} Lead Credits
+          {estimate.skipTraceCredits ? ` · ~${estimate.skipTraceCredits.toLocaleString()} Skip-Trace Credits` : ""}
+        </div>
       )}
 
       <Button
@@ -228,6 +282,15 @@ function Assistant() {
       <div className="text-center text-[11px] text-muted-foreground">
         The Assistant Assembles. You Run. Nothing Sends Without You.
       </div>
+    </div>
+  );
+
+  const specPanel = (
+    <div className="flex min-h-0 flex-col gap-4 lg:h-full">
+      <div className="min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
+        <JobSpecCard spec={spec} onChange={editSpec} coverage={coverage} />
+      </div>
+      {runFooter}
     </div>
   );
 
@@ -264,109 +327,141 @@ function Assistant() {
     </div>
   );
 
+  const emptyState = (
+    <div className="flex h-full flex-col items-center justify-center text-center">
+      <Sparkles className="h-6 w-6 text-primary" />
+      <div className="mt-3 font-display text-lg font-bold text-foreground">
+        Tell Me Who You Want To Reach
+      </div>
+      <p className="mt-1 max-w-md text-sm text-muted-foreground">
+        A Record Type Or A Trade, Plus A County Or State. I'll Assemble The Job And Hand You The Controls.
+      </p>
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+        <span className="text-xs font-medium text-muted-foreground">Try:</span>
+        {TRY_CHIPS.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => {
+              setInput(c);
+              composer.current?.focus();
+            }}
+            className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary hover:text-primary"
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
-    <div>
-      <PageHeader
-        title="AI Lead Assistant"
-        description="Describe The Leads You Want. The Assistant Interprets It, Assembles The Job, And Hands You The Controls To Review."
-        descriptionClassName="whitespace-nowrap !max-w-none"
-        actions={
-          started ? (
-            <Button variant="outline" className="rounded-full" onClick={startOver}>
-              <RotateCcw className="mr-1.5 h-4 w-4" /> Start Over
-            </Button>
-          ) : undefined
-        }
-      />
+    <div className="assistant-shell flex flex-col">
+      <div className="shrink-0">
+        <PageHeader
+          title="AI Lead Assistant"
+          description="Describe The Leads You Want. The Assistant Interprets It, Assembles The Job, And Hands You The Controls To Review."
+          descriptionClassName="whitespace-nowrap !max-w-none"
+          actions={
+            started ? (
+              <Button variant="outline" className="rounded-full" onClick={startOver}>
+                <RotateCcw className="mr-1.5 h-4 w-4" /> Start Over
+              </Button>
+            ) : undefined
+          }
+        />
+      </div>
 
-      {!started ? (
-        /* Phase one: the AI is the star — no machinery on screen yet. */
-        <div className="mx-auto max-w-3xl pt-6">
-          {composerBox}
-
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">Try:</span>
-            {TRY_CHIPS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => {
-                  setInput(c);
-                  composer.current?.focus();
-                }}
-                className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary hover:text-primary"
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="grid items-start gap-6 lg:grid-cols-[1fr_400px]">
-          <div className="space-y-4">
-            {composerBox}
-
-            <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} />
-
-            {/* The conversation sits under the prompt, so the trace stays the headline. */}
-            <Card>
-              <CardContent className="pt-6">
-                <div ref={scroller} className="max-h-[40vh] space-y-4 overflow-y-auto pr-1">
-                  {messages.map((m, i) => (
-                    <div key={i}>
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                        {m.role === "user" ? "You" : "LeadTrace"}
+      <div className={`grid min-h-0 flex-1 items-start gap-6 ${started ? "lg:grid-cols-[1fr_400px]" : "lg:grid-cols-1"}`}>
+        {/* Chat column: thread scrolls, composer stays pinned to the bottom. */}
+        <Card className="flex min-h-0 flex-col lg:h-full">
+          <CardContent className="flex min-h-0 flex-1 flex-col p-4 md:p-5">
+            <div ref={scroller} className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
+              {!started ? (
+                emptyState
+              ) : (
+                thread.map((m, i) => (
+                  <div key={i}>
+                    {m.role === "system" ? (
+                      <div className="flex justify-center">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[11px] text-muted-foreground">
+                          <SlidersHorizontal className="h-3 w-3" /> {m.content}
+                        </span>
                       </div>
-                      <div
-                        className={`mt-1.5 whitespace-pre-wrap text-sm ${
-                          m.role === "user"
-                            ? "inline-block rounded-2xl bg-primary px-4 py-2 text-primary-foreground"
-                            : "text-foreground"
-                        }`}
-                      >
-                        {m.content}
-                      </div>
-                    </div>
-                  ))}
-                  {busy && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Sparkles className="h-3.5 w-3.5 animate-pulse text-primary" /> Thinking…
-                    </div>
-                  )}
-                </div>
-
-                {templateChips.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {templateChips.map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => send(t.prompt)}
-                        className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary"
-                      >
-                        {t.title}
-                      </button>
-                    ))}
+                    ) : (
+                      <>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                          {m.role === "user" ? "You" : "LeadTrace"}
+                        </div>
+                        <div
+                          className={`mt-1.5 whitespace-pre-wrap text-sm ${
+                            m.role === "user"
+                              ? "inline-block rounded-2xl bg-primary px-4 py-2 text-primary-foreground"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {m.content}
+                        </div>
+                        {/* Assembly status lives inline, in chronological order. */}
+                        {m.role === "assistant" && (
+                          <div className="mt-3">
+                            {i === lastAssistantIndex ? (
+                              <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} />
+                            ) : (
+                              <AssistantTrace
+                                steps={buildTraceSteps(m.spec ?? EMPTY_SPEC)}
+                                revealed={buildTraceSteps(m.spec ?? EMPTY_SPEC).length}
+                                thinking={false}
+                              />
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <div className="lg:hidden">
-              <Collapsible>
-                <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-sm">
-                  <span className="text-foreground">{describeSpec(spec)}</span>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-4">{specPanel}</CollapsibleContent>
-              </Collapsible>
+                ))
+              )}
+              {busy && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Sparkles className="h-3.5 w-3.5 animate-pulse text-primary" /> Thinking…
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Phase two: controls slide in only after the AI has something to review. */}
-          <div className="spec-slide-in hidden lg:block">{specPanel}</div>
-        </div>
-      )}
+            {templateChips.length > 0 && (
+              <div className="mt-4 flex shrink-0 flex-wrap gap-2">
+                {templateChips.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => send(t.prompt)}
+                    className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary"
+                  >
+                    {t.title}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-4 shrink-0">{composerBox}</div>
+
+            {started && (
+              <div className="mt-4 shrink-0 lg:hidden">
+                <Collapsible>
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-sm">
+                    <span className="text-foreground">{describeSpec(spec)}</span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-4">{specPanel}</CollapsibleContent>
+                </Collapsible>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* One consolidated Job Spec rail, sticky Run at its bottom. */}
+        {started && <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>}
+      </div>
     </div>
   );
 }
