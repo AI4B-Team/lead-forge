@@ -17,7 +17,7 @@ export function openSlots(spec: JobSpec, uploadReady = false): string[] {
   }
   if (spec.sourceType === "records" && !spec.recordType) open.push("Record Type");
   if (spec.sourceType === "business" && !spec.niches.length) open.push("Niche");
-  if (spec.sourceType !== "upload" && !spec.state && !spec.counties.length) open.push("Location");
+  if (!spec.state && !spec.counties.length) open.push("Location");
   return open;
 }
 
