@@ -16,7 +16,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
 
 export const Route = createFileRoute("/_authenticated/app/new-job/business")({
-  validateSearch: z.object({ niche: z.string().optional() }),
+  validateSearch: z.object({ niche: z.string().optional(), location: z.string().optional() }),
   head: () => ({ meta: [{ title: "Scrape A Niche — LeadTrace" }] }),
   component: Wizard,
 });
@@ -36,7 +36,7 @@ const STATE_NAMES: Record<string, string> = {
 
 function Wizard() {
   const navigate = useNavigate();
-  const { niche: nicheParam } = Route.useSearch();
+  const { niche: nicheParam, location: locationParam } = Route.useSearch();
   const { workspaceId } = useWorkspaceId();
   const runJobFn = useServerFn(runJob);
   const [picked, setPicked] = useState<string[]>([nicheParam?.trim() || "HVAC"]);
