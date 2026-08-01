@@ -23,7 +23,7 @@ export function QuickRun() {
   const activeType = TYPES.find((t) => t.key === type)!;
 
   const run = () => {
-    if (type === "upload") return void navigate({ to: "/app/new-job/upload" });
+    if (type === "upload") return void navigate({ to: "/app/new-job/upload", search: { reattach: false } });
     if (type === "records") return void navigate({ to: "/app/new-job/records" });
     void navigate({
       to: "/app/new-job/business",

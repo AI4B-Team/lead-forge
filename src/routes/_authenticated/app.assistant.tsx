@@ -153,7 +153,7 @@ function Assistant() {
       return;
     }
     if (spec.sourceType === "upload") {
-      navigate({ to: "/app/new-job/upload" });
+      navigate({ to: "/app/new-job/upload", search: { reattach: false } });
       return;
     }
     setRunning(true);
