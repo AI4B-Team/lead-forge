@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type JobStatus } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
+import { isRunningStatus, isStalled } from "@/lib/job-watchdog";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { assignJobNames, cadenceBadge } from "@/lib/job-naming";
 import {
@@ -325,7 +326,7 @@ function Dashboard() {
                         <div className="text-sm font-semibold tabular-nums text-foreground">
                           {(j.rows_in ?? 0).toLocaleString()}
                         </div>
-                        <div className="text-xs text-muted-foreground">Contacts</div>
+                        <div className="text-xs text-muted-foreground">Rows</div>
                       </div>
                       <div className="w-24 shrink-0 text-right">
                         <StatusBadge status={j.status} />
