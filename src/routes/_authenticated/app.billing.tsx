@@ -81,7 +81,7 @@ function Billing() {
         <StatTile
           label="Total Credits"
           value={totalCredits.toLocaleString()}
-          hint="Scrape + Skip Trace + SMS"
+          hint="Lead Credits + Skip Trace + SMS"
         />
         <StatTile label="Renews" value={renewLabel} hint="Auto-Renew Enabled" />
         <StatTile
