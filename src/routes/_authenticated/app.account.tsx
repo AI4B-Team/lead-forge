@@ -185,7 +185,15 @@ function AccountPage() {
               </Button>
             </div>
 
-            <SettingsSummary ownerName={displayName} />
+            <div className="space-y-6">
+              <IdentityCard
+                initials={initials || "LT"}
+                name={displayName}
+                email={user?.email ?? ""}
+                verified={!!user?.email_confirmed_at}
+              />
+              <SettingsSummary ownerName={displayName} />
+            </div>
           </div>
         </TabsContent>
 
@@ -298,7 +306,15 @@ function AccountPage() {
               </Card>
             </div>
 
-            <SettingsSummary ownerName={displayName} />
+            <div className="space-y-6">
+              <IdentityCard
+                initials={initials || "LT"}
+                name={displayName}
+                email={user?.email ?? ""}
+                verified={!!user?.email_confirmed_at}
+              />
+              <SettingsSummary ownerName={displayName} />
+            </div>
           </div>
         </TabsContent>
       </Tabs>
