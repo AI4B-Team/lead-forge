@@ -62,12 +62,12 @@ const NICHE_FACTS = [
 
 /** Benefit cards, sharpest copy first. */
 const BENEFIT_ORDER = [
+  "ai-built",
   "litigator-scrub",
   "landline-remover",
   "dnc-list-scrubbing",
   "google-maps-lead-finder",
   "sms-lead-outreach",
-  "ai-built",
 ];
 
 const BENEFIT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
