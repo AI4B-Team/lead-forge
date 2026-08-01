@@ -4,6 +4,8 @@ import { PageHeader } from "@/components/app/page-header";
 import { StatusBadge } from "@/components/app/status-badge";
 import { GettingStarted } from "@/components/app/getting-started";
 import { ScanDigest } from "@/components/app/scan-digest";
+import { QuickRun } from "@/components/app/quick-run";
+import { DashboardTemplates } from "@/components/app/dashboard-templates";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type JobStatus } from "@/lib/mock-data";
@@ -99,14 +101,17 @@ function Dashboard() {
           </Button>
         }
       />
-      <GettingStarted workspaceId={workspaceId ?? null} />
+      {/* Composition order locked by spec §18: digest + stats → quick run → checklist → templates. */}
       <ScanDigest workspaceId={workspaceId ?? null} />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Metric icon={<Users className="h-4 w-4" />} label="Leads" value={metrics.leads.toLocaleString()} />
         <Metric icon={<ListChecks className="h-4 w-4" />} label="Lists" value={metrics.lists.toString()} />
         <Metric icon={<MessageSquare className="h-4 w-4" />} label="Active Campaigns" value={metrics.activeCampaigns.toString()} />
         <Metric icon={<Activity className="h-4 w-4" />} label="Deliverability" value={metrics.deliverability ? `${metrics.deliverability}%` : "—"} tone="success" />
       </div>
+
+      <QuickRun />
+      <GettingStarted workspaceId={workspaceId ?? null} />
 
       <div className="grid md:grid-cols-3 gap-4 mt-6">
         <Card className="md:col-span-2">
@@ -161,6 +166,8 @@ function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <DashboardTemplates />
     </div>
   );
 }
