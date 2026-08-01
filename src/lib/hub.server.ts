@@ -22,7 +22,9 @@ function b64urlToBytes(s: string): Uint8Array<ArrayBuffer> {
 
 /** Verifies an HS256 hub token against the shared secret and returns its claims. */
 export async function verifyHubToken(token: string): Promise<HubClaims> {
-  const secret = process.env.REAL_ELITE_HUB_SECRET;
+  // Family standard: ONE shared secret value, same name in every app.
+  // REAL_ELITE_HUB_SECRET is kept only as a legacy fallback.
+  const secret = process.env.HUB_SIGNING_SECRET ?? process.env.REAL_ELITE_HUB_SECRET;
   if (!secret) throw new Error("Hub linking is not configured");
 
   const parts = token.split(".");

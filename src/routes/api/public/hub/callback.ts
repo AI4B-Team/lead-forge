@@ -29,13 +29,23 @@ export const Route = createFileRoute("/api/public/hub/callback")({
           { auth: { persistSession: false } },
         );
 
-        // 1. Local user (create on first handoff, otherwise reuse).
-        const created = await admin.auth.admin.createUser({
-          email: claims.email,
-          email_confirm: true,
-          user_metadata: { full_name: claims.name ?? null, real_elite_user_id: claims.reo_user_id },
-        });
-        let userId = created.data.user?.id ?? null;
+        // 1. Resolve the local user in the family-standard order:
+        //    real_elite_user_id → email → create.
+        const { data: knownPref } = await admin
+          .from("user_prefs")
+          .select("user_id")
+          .eq("real_elite_user_id", claims.reo_user_id)
+          .maybeSingle();
+
+        let userId = knownPref?.user_id ?? null;
+        if (!userId) {
+          const created = await admin.auth.admin.createUser({
+            email: claims.email,
+            email_confirm: true,
+            user_metadata: { full_name: claims.name ?? null, real_elite_user_id: claims.reo_user_id },
+          });
+          userId = created.data.user?.id ?? null;
+        }
         if (!userId) {
           const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
           userId = list?.users.find((u) => u.email?.toLowerCase() === claims.email.toLowerCase())?.id ?? null;
