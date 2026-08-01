@@ -126,7 +126,7 @@ export function CampaignCard({
           <div className="pb-0.5 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Sent</div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4 sm:gap-x-3">
+        <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3">
           <SubStat label="Delivered" value={`${s.deliveryRate}%`} />
           <SubStat label="Replies" value={s.replies} />
           <SubStat label="AI Chats" value={s.aiChats} />
