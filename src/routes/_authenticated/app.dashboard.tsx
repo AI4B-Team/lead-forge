@@ -278,7 +278,7 @@ function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex h-32 items-stretch gap-2">
+              <div className="flex items-end gap-2" style={{ height: 128 }}>
                 {weekly.map((w, i) => (
                   <div key={`${w.day}-${i}`} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
                     <span className="text-[10px] font-semibold text-muted-foreground">
@@ -286,7 +286,7 @@ function Dashboard() {
                     </span>
                     <div
                       className="w-full shrink-0 rounded-t-md bg-primary/80 transition-all"
-                      style={{ height: `${Math.max(4, (w.count / peak) * 88)}%` }}
+                      style={{ height: Math.max(4, Math.round((w.count / peak) * 92)) }}
                     />
                     <span className="text-[10px] text-muted-foreground">{w.day}</span>
                   </div>
