@@ -78,7 +78,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel>Workspace</SidebarGroupLabel>}
+          {!collapsed && <SidebarGroupLabel>Navigate</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {ITEMS.map((item) => {
