@@ -192,13 +192,12 @@ function Jobs() {
 
       <Card>
         <CardContent className="overflow-x-auto p-0">
-          <table className="w-full min-w-[1040px] text-sm">
+          <table className="w-full min-w-[980px] text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="p-4">Name</th>
                 <th className="p-4">Source</th>
                 <th className="p-4">Pipeline</th>
-                <th className="whitespace-nowrap p-4">Clean / DNC / Litigator</th>
                 <th className="p-4">Rescan</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Created</th>
@@ -207,10 +206,10 @@ function Jobs() {
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Loading Jobs…</td></tr>
+                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading Jobs…</td></tr>
               )}
               {!isLoading && rows.length === 0 && (
-                <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">
+                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">
                   No Jobs Match. <Link to="/app/new-job" className="text-primary underline">Start A New Job</Link>.
                 </td></tr>
               )}
@@ -226,6 +225,13 @@ function Jobs() {
                 >
                   <td className="p-4">
                     <span className="whitespace-nowrap font-medium text-foreground group-hover:text-primary">{j.name}</span>
+                    <div className="mt-0.5 whitespace-nowrap text-xs text-muted-foreground">
+                      <span className="text-success">{j.counts.clean.toLocaleString()} Clean</span>
+                      {" · "}
+                      <span className="text-warn">{j.counts.dnc.toLocaleString()} DNC</span>
+                      {" · "}
+                      <span className="text-danger">{j.counts.litigator.toLocaleString()} Litigator</span>
+                    </div>
                   </td>
                   <td className="p-4">
                     <span className="inline-flex items-center gap-2 whitespace-nowrap text-muted-foreground">
@@ -242,11 +248,6 @@ function Jobs() {
                         ready: j.counts.clean,
                       }}
                     />
-                  </td>
-                  <td className="whitespace-nowrap p-4 text-muted-foreground">
-                    <span className="text-success font-medium">{j.counts.clean.toLocaleString()}</span> /{" "}
-                    <span className="text-warn font-medium">{j.counts.dnc.toLocaleString()}</span> /{" "}
-                    <span className="text-danger font-medium">{j.counts.litigator.toLocaleString()}</span>
                   </td>
                   <td className="p-4" onClick={(e) => e.stopPropagation()}>
                     <CadenceSelect
