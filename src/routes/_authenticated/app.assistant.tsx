@@ -207,6 +207,7 @@ function Assistant() {
       setRevealed(0);
       setInferred(new Set());
       setSpec({ ...EMPTY_SPEC, sourceType: templateSourceType(t), templateId: t.id });
+      setUpload(null);
     }
     if (workspaceId) setRecents(touchRecentTemplate(workspaceId, t.id));
     requestAnimationFrame(() => composer.current?.focus());
@@ -316,9 +317,29 @@ function Assistant() {
   const send = async (text: string) => {
     const body = text.trim();
     if (!workspaceId || busy) return;
+    // Uploads have their own required slot: a mapped file. Niche/location
+    // questions don't apply, so the assistant asks for the file instead.
+    if (spec.sourceType === "upload" && !uploadReady) {
+      if (body) setThread((m) => [...m, { role: "user", content: body }]);
+      setThread((m) => [
+        ...m,
+        {
+          role: "assistant",
+          content: upload
+            ? "Map your columns in the panel on the right and I'll take it from there."
+            : "Drop your file in the panel on the right, or attach it below.",
+          spec,
+        },
+      ]);
+      if (body && !firstPrompt) setFirstPrompt(body);
+      setInput("");
+      setRevealed(0);
+      return;
+    }
+    if (spec.sourceType === "upload" && !body) return;
     // Template selected but slots still missing: the assistant opens the
     // conversation itself and asks only for what it doesn't have.
-    if (selectedTemplate) {
+    if (selectedTemplate && templateSourceType(selectedTemplate) !== "upload") {
       const miss = missingSlots(body, spec);
       if (!body || miss.geo || miss.subject) {
         const ask = miss.subject && miss.geo
@@ -398,6 +419,7 @@ function Assistant() {
     setConfirmed(false);
     setRevealed(0);
     setInferred(new Set());
+    setUpload(null);
     setConvId(`c${Date.now()}`);
   };
 
