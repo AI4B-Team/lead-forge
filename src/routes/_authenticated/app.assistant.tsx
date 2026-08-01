@@ -27,7 +27,7 @@ import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@
 import { takeStashedPrompt, clearStashedPrompt } from "@/lib/prompt-handoff";
 
 export const Route = createFileRoute("/_authenticated/app/assistant")({
-  validateSearch: z.object({ prompt: z.string().optional() }),
+  validateSearch: z.object({ prompt: z.string().optional(), fill: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "AI Lead Assistant — LeadTrace" },
@@ -242,6 +242,11 @@ function Assistant() {
     if (!initial) return;
     sentPrompt.current = true;
     if (fromUrl) navigate({ to: "/app/assistant", search: {}, replace: true });
+    // fill=1 (in-app template pick) prefills the composer instead of auto-sending.
+    if (search.fill) {
+      setInput(initial);
+      return;
+    }
     void send(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, search.prompt]);
