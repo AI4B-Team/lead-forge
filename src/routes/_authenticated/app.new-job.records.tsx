@@ -57,7 +57,8 @@ function Wizard() {
           source_type: "records",
           status: "queued",
           params: {
-            name: `${county} · ${record}`,
+            // §9.5 auto-name format: {Niche} – {Geography} – {Mon DD}
+            name: `${record} – ${county} – ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
             record_type: record,
             county,
             date_from: from || null,
