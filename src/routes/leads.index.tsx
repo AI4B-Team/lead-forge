@@ -91,7 +91,7 @@ const NICHE_CATEGORIES = [
 
 const NICHE_ORDER: { slug: string; icon: React.ComponentType<{ className?: string }>; category: "business" | "property"; display?: string }[] = [
   { slug: "roofing-contractors", icon: HardHat, category: "business" },
-  { slug: "hvac-companies", icon: Wind, category: "business", display: "HVAC Companies" },
+  { slug: "hvac-companies", icon: Flame, category: "business", display: "HVAC Companies" },
   { slug: "plumbers", icon: Droplet, category: "business", display: "Plumbers" },
   { slug: "electricians", icon: Zap, category: "business", display: "Electricians" },
   { slug: "landscaping", icon: Leaf, category: "business", display: "Landscapers" },
