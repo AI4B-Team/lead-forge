@@ -53,14 +53,12 @@ export const listLeadRecords = createServerFn({ method: "GET" })
     if (error) throw error;
 
     // Header stat cards — counts, not charts.
-    const head = (build: (b: ReturnType<typeof baseCount>) => unknown) => build(baseCount());
     function baseCount() {
       return supabase
         .from("lead_records")
         .select("id", { count: "exact", head: true })
         .eq("workspace_id", data.workspaceId);
     }
-    void head;
 
     const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
     const [total, clean, dnc, litigator, thisWeek] = await Promise.all([
