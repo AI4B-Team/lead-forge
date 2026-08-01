@@ -482,7 +482,7 @@ function LeadsIndexBody() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="inline-flex items-center gap-2">
-                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary">
+                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-primary">
                         {n.category.charAt(0).toUpperCase() + n.category.slice(1)}
                       </span>
                     </span>
