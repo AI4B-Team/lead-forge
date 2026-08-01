@@ -196,14 +196,8 @@ export const COUNTIES = [
   { name: "Fulton, GA", coverage: "requested" },
 ] as const;
 
-export const RECORD_TYPES = [
-  "Probate",
-  "Code Violation",
-  "Pre-Foreclosure / Lis Pendens",
-  "Tax Default / Delinquency",
-  "Vacancy / Demolition Notice",
-  "Eviction",
-] as const;
+/** Single source of truth lives in record-types.ts; re-exported for legacy imports. */
+export { RECORD_TYPE_LABELS as RECORD_TYPES } from "./record-types";
 
 export const NICHES = [
   "Electrician",
