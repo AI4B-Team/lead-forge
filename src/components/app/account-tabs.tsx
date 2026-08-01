@@ -10,6 +10,7 @@ export type AccountTabKey =
   | "billing"
   | "team"
   | "workspace"
+  | "numbers"
   | "registration"
   | "compliance"
   | "admin";
@@ -17,7 +18,7 @@ export type AccountTabKey =
 type TabDef = {
   key: AccountTabKey;
   label: string;
-  to: "/app/account" | "/app/billing" | "/app/team" | "/app/settings" | "/app/registration" | "/app/compliance" | "/app/admin";
+  to: "/app/account" | "/app/billing" | "/app/team" | "/app/settings" | "/app/registration" | "/app/compliance" | "/app/numbers" | "/app/admin";
   search?: { tab: "profile" | "security" };
 };
 
@@ -27,6 +28,7 @@ const TABS: TabDef[] = [
   { key: "billing", label: "Billing", to: "/app/billing" },
   { key: "team", label: "Team", to: "/app/team" },
   { key: "workspace", label: "Workspace", to: "/app/settings" },
+  { key: "numbers", label: "Numbers", to: "/app/numbers" },
   { key: "registration", label: "10DLC", to: "/app/registration" },
   { key: "compliance", label: "Compliance", to: "/app/compliance" },
 ];

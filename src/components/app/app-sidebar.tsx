@@ -4,7 +4,6 @@ import {
   Plus,
   ListChecks,
   MessageSquare,
-  Phone,
   Radar,
   BarChart3,
   BrainCircuit,
@@ -34,7 +33,6 @@ const ITEMS = [
   { to: "/app/brands", label: "Brands", icon: BrainCircuit },
   { to: "/app/campaigns", label: "Campaigns", icon: MessageSquare },
   { to: "/app/reports", label: "Reports", icon: BarChart3 },
-  { to: "/app/numbers", label: "Numbers", icon: Phone },
 ] as const;
 
 export function AppSidebar() {

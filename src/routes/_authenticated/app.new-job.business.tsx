@@ -16,7 +16,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
 
 export const Route = createFileRoute("/_authenticated/app/new-job/business")({
-  validateSearch: z.object({ niche: z.string().optional() }),
+  validateSearch: z.object({ niche: z.string().optional(), location: z.string().optional() }),
   head: () => ({ meta: [{ title: "Scrape A Niche — LeadTrace" }] }),
   component: Wizard,
 });
@@ -36,7 +36,7 @@ const STATE_NAMES: Record<string, string> = {
 
 function Wizard() {
   const navigate = useNavigate();
-  const { niche: nicheParam } = Route.useSearch();
+  const { niche: nicheParam, location: locationParam } = Route.useSearch();
   const { workspaceId } = useWorkspaceId();
   const runJobFn = useServerFn(runJob);
   const [picked, setPicked] = useState<string[]>([nicheParam?.trim() || "HVAC"]);
@@ -92,6 +92,20 @@ function Wizard() {
       }
     } catch { /* ignore */ }
   }, []);
+
+  // Dashboard quick-run bar passes a free-text location; reuse the same
+  // state/county resolution the prompt path uses.
+  useEffect(() => {
+    const loc = locationParam?.trim();
+    if (!loc) return;
+    const named = Object.entries(STATE_NAMES).find(([name]) => new RegExp(`\\b${name}\\b`, "i").test(loc));
+    if (named) setState(named[1]);
+    else {
+      const code = loc.match(/\b([A-Z]{2})\b/);
+      if (code) setState(code[1]);
+    }
+    setPrompt((p) => p ?? loc);
+  }, [locationParam]);
 
   const toggle = (n: string) =>
     setPicked((p) => (p.includes(n) ? p.filter((x) => x !== n) : [...p, n]));
