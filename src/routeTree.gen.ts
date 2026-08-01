@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TutorialsRouteImport } from './routes/tutorials'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SolarRouteImport } from './routes/solar'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -71,6 +72,11 @@ import { Route as AuthenticatedAppJobsJobIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppCampaignsNewRouteImport } from './routes/_authenticated/app.campaigns.new'
 import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
 
+const TutorialsRoute = TutorialsRouteImport.update({
+  id: '/tutorials',
+  path: '/tutorials',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StartRoute = StartRouteImport.update({
   id: '/start',
   path: '/start',
@@ -417,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/tutorials': typeof TutorialsRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -479,6 +486,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/tutorials': typeof TutorialsRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
@@ -542,6 +550,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/tutorials': typeof TutorialsRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -606,6 +615,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/tutorials'
     | '/app'
     | '/leads/$slug'
     | '/templates/$templateId'
@@ -668,6 +678,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/tutorials'
     | '/leads/$slug'
     | '/templates/$templateId'
     | '/tools/dnc-checker'
@@ -730,6 +741,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/tutorials'
     | '/_authenticated/app'
     | '/leads/$slug'
     | '/templates/$templateId'
@@ -794,6 +806,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SolarRoute: typeof SolarRoute
   StartRoute: typeof StartRoute
+  TutorialsRoute: typeof TutorialsRoute
   LeadsSlugRoute: typeof LeadsSlugRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsDncCheckerRoute: typeof ToolsDncCheckerRoute
@@ -809,6 +822,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tutorials': {
+      id: '/tutorials'
+      path: '/tutorials'
+      fullPath: '/tutorials'
+      preLoaderRoute: typeof TutorialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/start': {
       id: '/start'
       path: '/start'
@@ -1345,6 +1365,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SolarRoute: SolarRoute,
   StartRoute: StartRoute,
+  TutorialsRoute: TutorialsRoute,
   LeadsSlugRoute: LeadsSlugRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsDncCheckerRoute: ToolsDncCheckerRoute,
@@ -1360,3 +1381,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
