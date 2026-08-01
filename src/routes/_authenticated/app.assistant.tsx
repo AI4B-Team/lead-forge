@@ -415,8 +415,16 @@ function Assistant() {
 
   const specPanel = (
     <div className="flex min-h-0 flex-col gap-4 lg:h-full">
-      <div className="min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
-        <JobSpecCard spec={spec} onChange={editSpec} coverage={coverage} />
+      <div className="relative min-h-0 lg:flex-1">
+        <div
+          ref={specScroll.ref}
+          className={`h-full min-h-0 lg:overflow-y-auto ${specScroll.overflowing ? "thin-scroll lg:pr-1" : ""}`}
+        >
+          <JobSpecCard spec={spec} onChange={editSpec} coverage={coverage} />
+        </div>
+        {specScroll.overflowing && !specScroll.atBottom && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background to-transparent" />
+        )}
       </div>
       {runFooter}
     </div>
@@ -435,7 +443,7 @@ function Assistant() {
             void send(input);
           }
         }}
-        placeholder="Describe The Leads You Want. E.g. Roofing Companies In Hillsborough County With Mobile Numbers."
+        placeholder={selectedTemplate?.placeholderHint ?? GENERIC_PLACEHOLDER}
         className="resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
       />
       <div className="mt-3 flex items-center justify-between gap-3">
@@ -448,7 +456,11 @@ function Assistant() {
             AI May Make Mistakes. You Review Everything Before Anything Runs.
           </span>
         </div>
-        <Button className="rounded-full px-5" disabled={busy || !input.trim()} onClick={() => send(input)}>
+        <Button
+          className="rounded-full px-5"
+          disabled={busy || (!input.trim() && !selectedTemplate)}
+          onClick={() => send(input)}
+        >
           <Sparkles className="mr-1 h-4 w-4" /> {started ? "Send" : "Generate Job"}
         </Button>
       </div>
