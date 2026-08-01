@@ -382,31 +382,125 @@ function Assistant() {
     </div>
   );
 
-  const emptyState = (
-    <div className="flex h-full flex-col items-center justify-center text-center">
-      <Sparkles className="h-6 w-6 text-primary" />
-      <div className="mt-3 font-display text-lg font-bold text-foreground">
-        Tell Me Who You Want To Reach
+  // Recents first (most recent first), padded with the default order.
+  const gridTemplates = useMemo(() => {
+    const byId = new Map(TEMPLATES.map((t) => [t.id, t] as const));
+    const ordered: Template[] = [];
+    const seen = new Set<string>();
+    for (const r of recents) {
+      const t = byId.get(r.id);
+      if (t && !seen.has(t.id)) { ordered.push(t); seen.add(t.id); }
+    }
+    for (const id of DEFAULT_GRID_IDS) {
+      if (ordered.length >= GRID_SLOTS) break;
+      const t = byId.get(id);
+      if (t && !seen.has(t.id)) { ordered.push(t); seen.add(t.id); }
+    }
+    return ordered.slice(0, GRID_SLOTS);
+  }, [recents]);
+
+  const grouped = useMemo(() => {
+    const groups = new Map<TemplateCategory, Template[]>();
+    for (const t of TEMPLATES) {
+      const list = groups.get(t.category) ?? [];
+      list.push(t);
+      groups.set(t.category, list);
+    }
+    return Array.from(groups.entries());
+  }, []);
+
+  const heroState = (
+    <div className="mx-auto w-full max-w-5xl space-y-8 py-2">
+      <div>
+        <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">AI Lead Assistant</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Describe the leads you want. The assistant interprets it, assembles the job, and hands you the controls to review.
+        </p>
       </div>
-      <p className="mt-1 max-w-md text-sm text-muted-foreground">
-        A Record Type Or A Trade, Plus A County Or State. I'll Assemble The Job And Hand You The Controls.
-      </p>
-      <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-        <span className="text-xs font-medium text-muted-foreground">Try:</span>
-        {TRY_CHIPS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => {
-              setInput(c);
-              composer.current?.focus();
+
+      <div className="rounded-2xl border border-primary bg-card p-5 shadow-sm">
+        <div className="flex items-start gap-2">
+          <Sparkles className="mt-1.5 h-5 w-5 shrink-0 text-primary" />
+          <Textarea
+            ref={composer}
+            rows={10}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void send(input);
+              }
             }}
-            className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary hover:text-primary"
-          >
-            {c}
-          </button>
-        ))}
+            placeholder="Tell Me Who You Want To Reach"
+            className="min-h-[220px] resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
+          />
+        </div>
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground">
+            <Paperclip className="mr-1.5 h-4 w-4" /> Attach Files
+          </Button>
+          <div className="flex items-center gap-2">
+            {micSupported && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label="Dictate"
+                onClick={dictate}
+                className={`rounded-full ${listening ? "border-primary text-primary" : ""}`}
+              >
+                <Mic className="h-4 w-4" />
+              </Button>
+            )}
+            <Button className="rounded-full px-5" disabled={busy || !input.trim()} onClick={() => send(input)}>
+              Build List <Send className="ml-1.5 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
+
+      <div>
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="font-display text-lg font-bold text-foreground">
+            {recents.length ? "Your Templates" : "Not Sure Where To Start? Try One Of These…"}
+          </h2>
+          <button
+            type="button"
+            onClick={() => setAllOpen(true)}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            View All Templates →
+          </button>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {gridTemplates.map((t) => (
+            <TemplateCard key={t.id} template={t} variant="insert" onSelect={insertTemplate} />
+          ))}
+        </div>
+      </div>
+
+      <Dialog open={allOpen} onOpenChange={setAllOpen}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>All Templates</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {grouped.map(([category, list]) => (
+              <div key={category}>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  {CATEGORY_LABELS[category]}
+                </div>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {list.map((t) => (
+                    <TemplateCard key={t.id} template={t} variant="insert" onSelect={insertTemplate} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
