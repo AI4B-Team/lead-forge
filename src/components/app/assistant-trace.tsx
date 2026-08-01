@@ -4,6 +4,20 @@ import { US_STATES } from "@/lib/us-geo";
 
 export type TraceStep = { label: string; value: string };
 
+/** Required slots for a runnable job: source + subject + geography. */
+export function openSlots(spec: JobSpec): string[] {
+  const open: string[] = [];
+  if (!spec.sourceType) open.push("Source");
+  if (spec.sourceType === "records" && !spec.recordType) open.push("Record Type");
+  if (spec.sourceType === "business" && !spec.niches.length) open.push("Niche");
+  if (spec.sourceType !== "upload" && !spec.state && !spec.counties.length) open.push("Location");
+  return open;
+}
+
+export function specSlotsComplete(spec: JobSpec): boolean {
+  return Boolean(spec.sourceType) && openSlots(spec).length === 0;
+}
+
 const SOURCE_LABEL: Record<string, string> = {
   business: "Business Search",
   records: "Public Records",
@@ -43,13 +57,17 @@ export function AssistantTrace({
   steps,
   revealed,
   thinking,
+  open = [],
 }: {
   steps: TraceStep[];
   revealed: number;
   thinking: boolean;
+  /** Required slots still missing; while non-empty the card stays neutral. */
+  open?: string[];
 }) {
   const visible = steps.slice(0, revealed);
-  const done = revealed >= steps.length && !thinking;
+  const complete = open.length === 0;
+  const done = complete && revealed >= steps.length && !thinking;
 
   return (
     <div className="rounded-2xl border border-border bg-surface-muted/60 p-5">
@@ -62,7 +80,7 @@ export function AssistantTrace({
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
         )}
         <span className="font-display text-sm font-bold text-foreground">
-          {done ? "Job Assembled" : "Building Your Job…"}
+          {done ? "Job Assembled" : complete ? "Building Your Job…" : "Assembling…"}
         </span>
       </div>
 
@@ -73,12 +91,21 @@ export function AssistantTrace({
             className="trace-in flex items-baseline gap-2.5 text-sm"
             style={{ animationDelay: `${i * 40}ms` }}
           >
-            <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" strokeWidth={3} />
+            <Check
+              className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${complete ? "text-success" : "text-muted-foreground"}`}
+              strokeWidth={3}
+            />
             <span className="text-muted-foreground">{s.label}:</span>
-            <span className="font-medium text-foreground">{s.value}</span>
+            <span className={complete ? "font-medium text-foreground" : "text-foreground/80"}>{s.value}</span>
           </li>
         ))}
-        {!done && (
+        {open.map((label) => (
+          <li key={`open-${label}`} className="flex items-baseline gap-2.5 text-sm text-muted-foreground">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full border border-muted-foreground/50" />
+            <span>{label} — Waiting On You</span>
+          </li>
+        ))}
+        {!done && complete && (
           <li className="flex items-center gap-2.5 text-sm text-muted-foreground">
             <span className="ml-0.5 h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
             {thinking ? "Interpreting Your Request…" : "Building Preview…"}
@@ -97,11 +124,13 @@ export function AssistantTraceCard({
   steps,
   revealed,
   thinking,
+  open,
 }: {
   steps: TraceStep[];
   revealed: number;
   thinking: boolean;
+  open?: string[];
 }) {
   if (!steps.length && !thinking) return null;
-  return <AssistantTrace steps={steps} revealed={revealed} thinking={thinking} />;
+  return <AssistantTrace steps={steps} revealed={revealed} thinking={thinking} open={open} />;
 }

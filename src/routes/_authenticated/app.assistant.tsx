@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { JobSpecCard } from "@/components/app/job-spec-card";
-import { AssistantTrace, buildTraceSteps } from "@/components/app/assistant-trace";
+import { AssistantTrace, buildTraceSteps, openSlots } from "@/components/app/assistant-trace";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -116,6 +116,9 @@ function Assistant() {
   const [revealed, setRevealed] = useState(0);
   const [recents, setRecents] = useState<RecentTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [convId, setConvId] = useState<string>(() => `c${Date.now()}`);
+  /** Keys the assistant inferred this conversation (drives the % badges). */
+  const [inferred, setInferred] = useState<Set<keyof JobSpec>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
@@ -128,7 +131,9 @@ function Assistant() {
 
   const started = thread.length > 0;
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
-  const traceComplete = revealed >= traceSteps.length && !busy && traceSteps.length > 0;
+  const missing = useMemo(() => openSlots(spec), [spec]);
+  const traceComplete =
+    revealed >= traceSteps.length && !busy && traceSteps.length > 0 && missing.length === 0;
   const lastAssistantIndex = useMemo(() => {
     for (let i = thread.length - 1; i >= 0; i -= 1) if (thread[i].role === "assistant") return i;
     return -1;
@@ -161,12 +166,37 @@ function Assistant() {
     if (selectedTemplate?.id === t.id) {
       setSelectedTemplate(null);
       lastTemplateId.current = null;
+      if (!started) {
+        setSpec(EMPTY_SPEC);
+        setInferred(new Set());
+      }
       requestAnimationFrame(() => composer.current?.focus());
       return;
     }
     setSelectedTemplate(t);
     lastTemplateId.current = t.id;
-    setSpec((s) => ({ ...s, sourceType: templateSourceType(t), templateId: t.id }));
+    if (started) {
+      // Mid-conversation: the template only informs the source, never wipes context.
+      setSpec((s) => ({ ...s, sourceType: templateSourceType(t), templateId: t.id }));
+      setInferred((prev) => {
+        const next = new Set(prev);
+        next.delete("sourceType");
+        return next;
+      });
+    } else {
+      // Fresh context: reset everything, then apply only what the template determines.
+      if (workspaceId) clearDraft(workspaceId);
+      setConvId(`c${Date.now()}`);
+      setThread([]);
+      setFirstPrompt("");
+      setCoverage([]);
+      setEstimate(null);
+      setSuggested([]);
+      setConfirmed(false);
+      setRevealed(0);
+      setInferred(new Set());
+      setSpec({ ...EMPTY_SPEC, sourceType: templateSourceType(t), templateId: t.id });
+    }
     if (workspaceId) setRecents(touchRecentTemplate(workspaceId, t.id));
     requestAnimationFrame(() => composer.current?.focus());
   };
@@ -207,16 +237,30 @@ function Assistant() {
     if (search.prompt?.trim()) return;
     const draft = loadDraft(workspaceId);
     if (!draft) return;
+    if (!draft.thread.length) return;
     setThread(draft.thread);
     setSpec(draft.spec);
     setFirstPrompt(draft.firstPrompt);
+    if (draft.convId) setConvId(draft.convId);
+    if (draft.templateId) {
+      const t = TEMPLATES.find((x) => x.id === draft.templateId);
+      if (t) { setSelectedTemplate(t); lastTemplateId.current = t.id; }
+    }
+    setInferred(new Set((draft.inferred ?? []) as Array<keyof JobSpec>));
     setRevealed(buildTraceSteps(draft.spec).length);
   }, [workspaceId, search.prompt]);
 
   useEffect(() => {
     if (!workspaceId || !thread.length) return;
-    saveDraft(workspaceId, { thread, spec, firstPrompt });
-  }, [workspaceId, thread, spec, firstPrompt]);
+    saveDraft(workspaceId, {
+      thread,
+      spec,
+      firstPrompt,
+      convId,
+      templateId: selectedTemplate?.id ?? null,
+      inferred: Array.from(inferred),
+    });
+  }, [workspaceId, thread, spec, firstPrompt, convId, selectedTemplate, inferred]);
 
   const send = async (text: string) => {
     const body = text.trim();
@@ -265,6 +309,18 @@ function Assistant() {
     try {
       const res = await chat({ data: { workspaceId, message: body, history: history.slice(-12), spec } });
       setThread((m) => [...m, { role: "assistant", content: res.reply, spec: res.spec }]);
+      // Anything the model changed this turn counts as inferred, except fields the
+      // template already determined (those are certain and need no badge).
+      setInferred((prev) => {
+        const next = new Set(prev);
+        (["sourceType", "recordType", "niches", "state", "counties"] as Array<keyof JobSpec>).forEach((k) => {
+          const changed = JSON.stringify(spec[k]) !== JSON.stringify(res.spec[k]);
+          const filled = Array.isArray(res.spec[k]) ? (res.spec[k] as unknown[]).length > 0 : Boolean(res.spec[k]);
+          if (changed && filled) next.add(k);
+        });
+        if (selectedTemplate) next.delete("sourceType");
+        return next;
+      });
       setSpec(res.spec);
       setCoverage(res.coverage);
       setEstimate(res.estimate);
@@ -290,6 +346,8 @@ function Assistant() {
     setSuggested([]);
     setConfirmed(false);
     setRevealed(0);
+    setInferred(new Set());
+    setConvId(`c${Date.now()}`);
   };
 
   // Two-way sync: a manual panel edit is announced in the thread so the next
@@ -298,6 +356,16 @@ function Assistant() {
     const changed = diffSpec(spec, next);
     setSpec(next);
     setConfirmed(false);
+    if (changed.length) {
+      // A hand-edited value is the operator's choice, not an inference.
+      setInferred((prev) => {
+        const out = new Set(prev);
+        (Object.keys(FIELD_LABELS) as Array<keyof JobSpec>).forEach((k) => {
+          if (JSON.stringify(spec[k]) !== JSON.stringify(next[k])) out.delete(k);
+        });
+        return out;
+      });
+    }
     if (changed.length && thread.length) {
       setThread((m) => [...m, { role: "system", content: `You Edited: ${changed.join(" · ")}` }]);
     }
@@ -433,7 +501,7 @@ function Assistant() {
           ref={specScroll.ref}
           className={`h-full min-h-0 lg:overflow-y-auto ${specScroll.overflowing ? "thin-scroll lg:pr-1" : ""}`}
         >
-          <JobSpecCard spec={spec} onChange={editSpec} coverage={coverage} />
+          <JobSpecCard spec={spec} onChange={editSpec} coverage={coverage} inferred={inferred} />
         </div>
         {specScroll.overflowing && !specScroll.atBottom && (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background to-transparent" />
@@ -645,12 +713,13 @@ function Assistant() {
                         {m.role === "assistant" && (
                           <div className="mt-3">
                             {i === lastAssistantIndex ? (
-                              <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} />
+                              <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
                             ) : (
                               <AssistantTrace
                                 steps={buildTraceSteps(m.spec ?? EMPTY_SPEC)}
                                 revealed={buildTraceSteps(m.spec ?? EMPTY_SPEC).length}
                                 thinking={false}
+                                open={openSlots(m.spec ?? EMPTY_SPEC)}
                               />
                             )}
                           </div>

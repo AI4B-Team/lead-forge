@@ -10,7 +10,15 @@ export type ThreadItem = {
   spec?: JobSpec;
 };
 
-export type AssistantDraft = { thread: ThreadItem[]; spec: JobSpec; firstPrompt: string };
+export type AssistantDraft = {
+  thread: ThreadItem[];
+  spec: JobSpec;
+  firstPrompt: string;
+  /** Identity of the in-progress conversation; a new one never inherits a draft. */
+  convId: string;
+  templateId?: string | null;
+  inferred?: string[];
+};
 
 const key = (workspaceId: string) => `leadtrace_assistant_draft:${workspaceId}`;
 
@@ -34,6 +42,9 @@ export function loadDraft(workspaceId: string): AssistantDraft | null {
       thread: parsed.thread.filter((m) => m && typeof m.content === "string"),
       spec: parsed.spec ? jobSpecSchema.parse(parsed.spec) : EMPTY_SPEC,
       firstPrompt: typeof parsed.firstPrompt === "string" ? parsed.firstPrompt : "",
+      convId: typeof parsed.convId === "string" ? parsed.convId : "",
+      templateId: typeof parsed.templateId === "string" ? parsed.templateId : null,
+      inferred: Array.isArray(parsed.inferred) ? parsed.inferred.filter((k) => typeof k === "string") : [],
     };
   } catch {
     return null;
