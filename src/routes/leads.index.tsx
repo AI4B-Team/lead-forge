@@ -79,6 +79,37 @@ const NICHE_FACTS = [
   { icon: Zap, label: "Built On Demand" },
 ];
 
+const NICHE_CATEGORIES = [
+  "Businesses",
+  "Property Owners",
+  "Public Records",
+  "Real Estate",
+  "Local Services",
+  "Healthcare",
+  "Home Services",
+];
+
+const NICHE_ORDER: { slug: string; icon: React.ComponentType<{ className?: string }>; category: "business" | "property"; display?: string }[] = [
+  { slug: "roofing-contractors", icon: HardHat, category: "business" },
+  { slug: "hvac-companies", icon: Wind, category: "business", display: "HVAC Companies" },
+  { slug: "plumbers", icon: Droplet, category: "business", display: "Plumbers" },
+  { slug: "electricians", icon: Zap, category: "business", display: "Electricians" },
+  { slug: "landscaping", icon: Leaf, category: "business", display: "Landscapers" },
+  { slug: "pressure-washing", icon: Droplets, category: "business", display: "Pressure Washing" },
+  { slug: "tree-service", icon: TreePine, category: "business", display: "Tree Service" },
+  { slug: "pest-control", icon: Bug, category: "business", display: "Pest Control" },
+  { slug: "cleaning-services", icon: Sparkles, category: "business", display: "Cleaning Service" },
+  { slug: "dental-offices", icon: Smile, category: "business", display: "Dental Offices" },
+  { slug: "med-spas", icon: HeartPulse, category: "business", display: "Med Spas" },
+  { slug: "auto-repair-shops", icon: Wrench, category: "business", display: "Auto Repair" },
+  { slug: "probate-filings", icon: Scale, category: "property", display: "Probate Filings" },
+  { slug: "tax-delinquencies", icon: Receipt, category: "property", display: "Tax Delinquencies" },
+  { slug: "code-violations", icon: FileText, category: "property", display: "Code Violations" },
+  { slug: "vacant-properties", icon: Home, category: "property", display: "Vacant Properties" },
+  { slug: "absentee-owners", icon: MapPin, category: "property", display: "Absentee Owners" },
+  { slug: "pre-foreclosures", icon: Gavel, category: "property", display: "Pre-Foreclosures" },
+];
+
 /** Benefit cards, sharpest copy first. */
 const BENEFIT_ORDER = [
   "ai-built",
