@@ -6,11 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
+import { Plus, Pipette } from "lucide-react";
 import { toast } from "sonner";
 import { listTags, createTag } from "@/lib/tags.functions";
 
-const SWATCHES = ["#2563eb", "#16a34a", "#f59e0b", "#dc2626", "#7c3aed", "#0891b2"];
+const SWATCHES = [
+  "#2563eb", "#3b82f6", "#0891b2", "#06b6d4", "#14b8a6", "#10b981",
+  "#16a34a", "#65a30d", "#eab308", "#f59e0b", "#f97316", "#dc2626",
+  "#e11d48", "#ec4899", "#a855f7", "#7c3aed", "#6366f1", "#64748b",
+];
+
+const CUSTOM_KEY = "lf-custom-tag-colors";
+const isHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
 
 /** Tag dropdown with modal creation when the workspace has none to pick from. */
 export function TagPicker({
