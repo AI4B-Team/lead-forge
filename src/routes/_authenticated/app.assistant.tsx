@@ -428,7 +428,7 @@ function Assistant() {
       <div className="relative rounded-2xl border border-primary bg-card p-5 shadow-sm">
         {/* Visual placeholder: icon + label always render as a single aligned row */}
         {!input.trim() && (
-          <div className="pointer-events-none absolute inset-x-5 top-5 flex items-center gap-2 text-base text-muted-foreground">
+          <div className="pointer-events-none absolute inset-x-5 top-5 flex items-center gap-2 pl-0.5 text-base text-muted-foreground">
             <Sparkles className="h-5 w-5 shrink-0 text-primary" />
             <span className="whitespace-nowrap">Tell Me Who You Want To Reach</span>
           </div>
@@ -446,7 +446,7 @@ function Assistant() {
           }}
           placeholder=""
           aria-label="Tell Me Who You Want To Reach"
-          className="min-h-[220px] resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
+          className="min-h-[220px] resize-none border-0 bg-transparent px-0.5 py-0 text-base shadow-none focus-visible:ring-0"
         />
         <div className="mt-4 flex items-center justify-between gap-3">
           <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground">
