@@ -178,7 +178,7 @@ export const getThread = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: messages, error } = await context.supabase
       .from("messages")
-      .select("id, direction, body, status, created_at, is_optout, is_bot, handoff_reason, provider_sid, sending_number_id, lead_id, error_code")
+      .select("id, direction, body, status, created_at, is_optout, is_bot, handoff_reason, provider_sid, sending_number_id, lead_id, campaign_id, error_code, read_at")
       .eq("workspace_id", data.workspaceId)
       .eq("thread_key", data.threadKey)
       .order("created_at", { ascending: true });
@@ -186,17 +186,78 @@ export const getThread = createServerFn({ method: "GET" })
 
     const leadId = messages?.find((m) => m.lead_id)?.lead_id ?? null;
     const numberId = messages?.find((m) => m.sending_number_id)?.sending_number_id ?? null;
-    const [lead, number] = await Promise.all([
+    const campaignId = messages?.find((m) => m.campaign_id)?.campaign_id ?? null;
+    const [lead, number, campaign] = await Promise.all([
       leadId
-        ? context.supabase.from("leads").select("id, full_name, phone, email, city, state, address").eq("id", leadId).maybeSingle().then((r) => r.data)
+        ? context.supabase
+            .from("leads")
+            .select("id, full_name, business_name, phone, phone_type, email, city, state, zip, address, job_id, scrub_status, source_meta, created_at")
+            .eq("id", leadId)
+            .maybeSingle()
+            .then((r) => r.data)
         : Promise.resolve(null),
       numberId
-        ? context.supabase.from("sending_numbers").select("id, phone").eq("id", numberId).maybeSingle().then((r) => r.data)
+        ? context.supabase.from("sending_numbers").select("id, phone, area_code, health_score").eq("id", numberId).maybeSingle().then((r) => r.data)
+        : Promise.resolve(null),
+      campaignId
+        ? context.supabase
+            .from("campaigns")
+            .select("id, name, status, brand_id, tag_id, list_job_id")
+            .eq("id", campaignId)
+            .maybeSingle()
+            .then((r) => r.data)
         : Promise.resolve(null),
     ]);
 
+    // Surrounding context: source job, drip depth, brand, tag, and the
+    // cross-list rollup record for this phone.
+    const [job, steps, brand, tag, record, suppressed] = await Promise.all([
+      lead?.job_id
+        ? context.supabase.from("jobs").select("id, name, source_type, record_type, params").eq("id", lead.job_id).maybeSingle().then((r) => r.data)
+        : Promise.resolve(null),
+      campaign
+        ? context.supabase.from("campaign_steps").select("id", { count: "exact", head: true }).eq("campaign_id", campaign.id).then((r) => r.count ?? 0)
+        : Promise.resolve(0),
+      campaign?.brand_id
+        ? context.supabase.from("brands").select("id, name, description").eq("id", campaign.brand_id).maybeSingle().then((r) => r.data)
+        : Promise.resolve(null),
+      campaign?.tag_id
+        ? context.supabase.from("tags").select("id, name, color").eq("id", campaign.tag_id).maybeSingle().then((r) => r.data)
+        : Promise.resolve(null),
+      lead?.phone
+        ? context.supabase
+            .from("lead_records")
+            .select("disposition, source_types, record_types, list_count, first_seen_at")
+            .eq("workspace_id", data.workspaceId)
+            .eq("phone", lead.phone)
+            .maybeSingle()
+            .then((r) => r.data)
+        : Promise.resolve(null),
+      lead?.phone
+        ? context.supabase
+            .from("suppression")
+            .select("phone, reason")
+            .eq("workspace_id", data.workspaceId)
+            .eq("phone", lead.phone)
+            .maybeSingle()
+            .then((r) => !!r.data)
+        : Promise.resolve(false),
+    ]);
+
     const handoff = messages?.find((m) => m.handoff_reason)?.handoff_reason ?? null;
-    return { messages: messages ?? [], lead, number, handoff };
+    const touchCount = (messages ?? []).filter((m) => m.direction === "outbound").length;
+    return {
+      messages: messages ?? [],
+      lead,
+      number,
+      handoff,
+      campaign: campaign ? { ...campaign, step_count: steps, touch: touchCount } : null,
+      job,
+      brand,
+      tag,
+      record,
+      suppressed,
+    };
   });
 
 // Mark all inbound messages in a thread as read.
