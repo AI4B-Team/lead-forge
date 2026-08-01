@@ -12,7 +12,8 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
-import { autoMapHeaders, csvToLeads, rowsFromTable, type ColumnMap, type CsvLead } from "@/lib/csv";
+import type { ColumnMap } from "@/lib/csv";
+import { attachmentRows, readAttachment, type UploadAttachment } from "@/lib/upload-attachment";
 import { ColumnMapper } from "@/components/app/column-mapper";
 import { queueJob } from "@/lib/job-submit";
 
