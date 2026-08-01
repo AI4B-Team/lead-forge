@@ -16,12 +16,16 @@ import { csvToLeads, type CsvLead } from "@/lib/csv";
 import { queueJob } from "@/lib/job-submit";
 
 export const Route = createFileRoute("/_authenticated/app/new-job/upload")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    reattach: search['reattach'] === "1" || search['reattach'] === true,
+  }),
   head: () => ({ meta: [{ title: "Upload My List — LeadTrace" }] }),
   component: Wizard,
 });
 
 function Wizard() {
   const navigate = useNavigate();
+  const { reattach } = Route.useSearch();
   const { workspaceId } = useWorkspaceId();
   const runJobFn = useServerFn(runJob);
   const columns = ["Full Name", "Phone", "Email", "Address", "City", "State", "Zip"];
@@ -88,6 +92,11 @@ function Wizard() {
   return (
     <div className="max-w-3xl">
       <PageHeader title="Upload My List" description="Door C · Bring Your Own Data" />
+      {reattach && (
+        <div className="mb-4 rounded-xl border border-border bg-surface-muted px-4 py-3 text-sm text-foreground">
+          Re-attach Your File To Continue — Browsers Can't Carry Files Across Pages.
+        </div>
+      )}
       <Card>
         <CardContent className="pt-6 space-y-6">
           <label className="block rounded-2xl border-2 border-dashed border-border bg-surface-muted p-10 text-center cursor-pointer hover:border-primary transition">
