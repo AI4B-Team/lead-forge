@@ -501,7 +501,39 @@ function Assistant() {
       return;
     }
     if (spec.sourceType === "upload") {
-      navigate({ to: "/app/new-job/upload", search: { reattach: false } });
+      if (!upload) {
+        toast.error("Attach A File First.");
+        return;
+      }
+      setRunning(true);
+      try {
+        // Same params shape the Upload page queues, so the pipeline is identical.
+        const { id, duplicate } = await queueJob(supabase, {
+          workspaceId,
+          sourceType: "upload",
+          params: {
+            file_name: upload.name,
+            file_size: upload.size,
+            mapping: upload.map,
+            skip_trace: spec.skipTrace,
+            rows: attachmentRows(upload),
+          },
+        });
+        clearDraft(workspaceId);
+        navigate({ to: "/app/jobs/$jobId", params: { jobId: id } });
+        if (duplicate) {
+          toast.info("This File Was Already Queued — Opening That Run.");
+          return;
+        }
+        toast.success("List Queued. Running Pipeline…");
+        runJobFn({ data: { jobId: id } }).catch((e) =>
+          toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
+        );
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Could Not Queue Job");
+      } finally {
+        setRunning(false);
+      }
       return;
     }
     setRunning(true);
