@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { jobLabel, type JobRef } from "@/lib/compliance.shared";
 
 /** Real compliance inputs for a workspace: registration stage, scrub history, suppression. */
 export const getComplianceState = createServerFn({ method: "GET" })
