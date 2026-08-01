@@ -214,18 +214,20 @@ export function ProductTour({ open, onClose }: { open: boolean; onClose: () => v
   );
 }
 
-/** Auto-launches the tour once per user; also exposes a manual restart. */
+/**
+ * The tour never auto-launches (§12): it starts only from the welcome banner's
+ * tour link or Help → Tour. Status is read so callers can tell first-timers apart.
+ */
 export function useProductTour() {
   const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState<null | "skipped" | "completed">(null);
   const load = useServerFn(getTourStatus);
 
   useEffect(() => {
     load({})
-      .then((r) => {
-        if (!r.status) setOpen(true);
-      })
+      .then((r) => setStatus(r.status))
       .catch(() => {});
   }, [load]);
 
-  return { open, start: () => setOpen(true), close: () => setOpen(false) };
+  return { open, status, start: () => setOpen(true), close: () => setOpen(false) };
 }
