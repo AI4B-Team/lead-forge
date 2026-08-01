@@ -140,7 +140,49 @@ export const getJobReview = createServerFn({ method: "GET" })
       scrub,
       counts: { total: t, clean: clean ?? 0, dnc: dnc ?? 0, litigator: litigator ?? 0, mobile: mobile ?? 0 },
       quality,
+      scrubFreshness: {
+        scrubbedAt: scrub?.created_at ?? null,
+        ageDays: scrubAgeDays(scrub?.created_at ?? null),
+        stale: isScrubStale(scrub?.created_at ?? null),
+        rescrubDays: RESCRUB_DAYS,
+      },
     };
+  });
+
+// Pause a running job (§9.5) — the orchestrator stops picking it up.
+export const pauseJob = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ jobId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("jobs")
+      .update({ status: "paused" })
+      .eq("id", data.jobId);
+    if (error) throw error;
+    await context.supabase.from("job_events").insert({
+      job_id: data.jobId,
+      stage: "paused",
+      message: "Job Paused. Nothing Is Discarded — Resume Any Time.",
+    } as never);
+    return { ok: true };
+  });
+
+// Resume a paused or failed job by re-queuing it for the orchestrator.
+export const resumeJob = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ jobId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("jobs")
+      .update({ status: "queued" })
+      .eq("id", data.jobId);
+    if (error) throw error;
+    await context.supabase.from("job_events").insert({
+      job_id: data.jobId,
+      stage: "queued",
+      message: "Job Resumed From The Last Completed Stage.",
+    } as never);
+    return { ok: true };
   });
 
 // Download leads by bucket. Returns rows -- caller builds CSV in the browser.
