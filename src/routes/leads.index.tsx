@@ -430,20 +430,28 @@ function LeadsIndexBody() {
             Why Our Lists Convert Better
           </h2>
           <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {stages.map((p) => {
-              const b = BENEFITS[p.slug];
+            {BENEFIT_ORDER.map((slug) => {
+              const isAi = slug === "ai-built";
+              const p = stages.find((s) => s.slug === slug);
+              const b = BENEFITS[slug];
+              const Icon = BENEFIT_ICONS[slug];
+              const title = b?.title ?? p?.title ?? "";
+              const body = b?.body ?? p?.valueProp ?? "";
               return (
                 <Link
-                  key={p.slug}
-                  to="/leads/$slug"
-                  params={{ slug: p.slug }}
+                  key={slug}
+                  to={isAi ? "/app/assistant" : "/leads/$slug"}
+                  params={isAi ? undefined : { slug }}
                   className="rounded-2xl border border-border bg-surface p-6 transition-colors hover:border-primary"
                 >
+                  <div className="mb-3 grid h-11 w-11 place-items-center rounded-full bg-muted text-foreground">
+                    <Icon className="h-5 w-5" />
+                  </div>
                   <div className="font-display text-lg font-black text-foreground">
-                    {b?.title ?? p.title}
+                    {title}
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {b?.body ?? p.valueProp}
+                    {body}
                   </p>
                 </Link>
               );
