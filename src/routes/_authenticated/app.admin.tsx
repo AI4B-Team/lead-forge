@@ -370,9 +370,33 @@ function AdminPage() {
           </Table>
         </CardContent>
       </Card>
+        </div>
+
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base font-display">Platform Health</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <HealthRow label="Paid Workspaces" value={totals.paid.toLocaleString()} />
+              <HealthRow label="Past Due" value={totals.pastDue.toLocaleString()} tone={totals.pastDue > 0 ? "danger" : undefined} />
+              <HealthRow label="SMS This Month" value={totals.sentMonth.toLocaleString()} />
+              <HealthRow label="Leads Stored" value={totals.leads.toLocaleString()} />
+              <HealthRow label="Sending Numbers" value={totals.numbers.toLocaleString()} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base font-display">Showing</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              {rows.length.toLocaleString()} Of {totals.workspaces.toLocaleString()} Workspaces
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       <Dialog open={!!capWs} onOpenChange={(o) => !o && setCapWs(null)}>
-*** MARKER ***
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Monthly SMS Cap — {capWs?.name}</DialogTitle>
