@@ -903,6 +903,7 @@ export type Database = {
           activated_at: string
           area_code: string | null
           created_at: string
+          forward_calls_to: string | null
           health_score: number | null
           id: string
           optout_rate: number | null
@@ -910,12 +911,14 @@ export type Database = {
           provider_sid: string | null
           region: string | null
           status: string | null
+          voicemail_greeting: string | null
           workspace_id: string
         }
         Insert: {
           activated_at?: string
           area_code?: string | null
           created_at?: string
+          forward_calls_to?: string | null
           health_score?: number | null
           id?: string
           optout_rate?: number | null
@@ -923,12 +926,14 @@ export type Database = {
           provider_sid?: string | null
           region?: string | null
           status?: string | null
+          voicemail_greeting?: string | null
           workspace_id: string
         }
         Update: {
           activated_at?: string
           area_code?: string | null
           created_at?: string
+          forward_calls_to?: string | null
           health_score?: number | null
           id?: string
           optout_rate?: number | null
@@ -936,6 +941,7 @@ export type Database = {
           provider_sid?: string | null
           region?: string | null
           status?: string | null
+          voicemail_greeting?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -1011,22 +1017,31 @@ export type Database = {
       }
       user_prefs: {
         Row: {
+          checklist_collapsed: boolean
+          reviewed_clean_list: boolean
           theme: string
           tour_status: string | null
           updated_at: string
           user_id: string
+          welcome_dismissed: boolean
         }
         Insert: {
+          checklist_collapsed?: boolean
+          reviewed_clean_list?: boolean
           theme?: string
           tour_status?: string | null
           updated_at?: string
           user_id: string
+          welcome_dismissed?: boolean
         }
         Update: {
+          checklist_collapsed?: boolean
+          reviewed_clean_list?: boolean
           theme?: string
           tour_status?: string | null
           updated_at?: string
           user_id?: string
+          welcome_dismissed?: boolean
         }
         Relationships: []
       }
