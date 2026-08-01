@@ -349,6 +349,11 @@ function NewCampaign() {
               <div>· Sending Numbers Auto-Cool Above 5% Opt-Out Rate.</div>
               <div>· A New Drop Never Starts After 6:00 PM Recipient Local Time.</div>
               <div>· Outreach Hours: 8:00 AM – 8:00 PM Recipient Local Time (TCPA).</div>
+              <div className="pt-1">
+                <Link to="/app/numbers" className="font-medium text-primary underline underline-offset-2">
+                  Manage Pool →
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>
