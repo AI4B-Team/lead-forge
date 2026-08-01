@@ -61,8 +61,8 @@ function healthTone(health: number) {
 
 function SubStat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div>
-      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</div>
+    <div className="min-w-0">
+      <div className="truncate text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</div>
       <div className="font-display text-base font-bold tabular-nums text-foreground">
         {typeof value === "number" ? value.toLocaleString() : value}
       </div>
@@ -126,7 +126,7 @@ export function CampaignCard({
           <div className="pb-0.5 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Sent</div>
         </div>
 
-        <div className="mt-4 grid grid-cols-4 gap-3">
+        <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4 sm:gap-x-3">
           <SubStat label="Delivered" value={`${s.deliveryRate}%`} />
           <SubStat label="Replies" value={s.replies} />
           <SubStat label="AI Chats" value={s.aiChats} />
