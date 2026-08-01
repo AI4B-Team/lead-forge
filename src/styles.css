@@ -265,6 +265,50 @@
   animation: trace-in 0.35s ease-out both;
 }
 
+/* Live dictation indicator — users immediately know the mic is listening. */
+@keyframes mic-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.14); }
+}
+
+@keyframes recording-ring {
+  0% { transform: scale(0.92); opacity: 0.55; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+@keyframes recording-fill {
+  0%, 100% { background-color: oklch(0.50 0.22 27); }
+  50% { background-color: oklch(0.41 0.19 28); }
+}
+
+@utility mic-recording {
+  position: relative;
+  background-color: oklch(0.50 0.22 27) !important;
+  border-color: oklch(0.50 0.22 27) !important;
+  color: #ffffff !important;
+  animation: recording-fill 1.2s ease-in-out infinite;
+
+  & > svg {
+    animation: mic-pulse 1.2s ease-in-out infinite;
+  }
+
+  &::after,
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 2px solid oklch(0.50 0.22 27);
+    animation: recording-ring 1.5s ease-out infinite;
+  }
+
+  &::before {
+    animation-delay: 0.75s;
+  }
+}
+
+
+
 /* §20 Content density: internal app pages render at 80% density.
    Sidebar + top bar stay 100%. Uses `zoom` (reflows) — never transform: scale. */
 @supports (zoom: 0.8) {
