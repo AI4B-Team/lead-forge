@@ -594,33 +594,12 @@ function Assistant() {
         </div>
       </div>
 
-      <Dialog open={allOpen} onOpenChange={setAllOpen}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>All Templates</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6">
-            {grouped.map(([category, list]) => (
-              <div key={category}>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  {CATEGORY_LABELS[category]}
-                </div>
-                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {list.map((t) => (
-                    <TemplateCard
-                      key={t.id}
-                      template={t}
-                      variant="insert"
-                      selected={selectedTemplate?.id === t.id}
-                      onSelect={selectTemplate}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <TemplatePickerDialog
+        open={allOpen}
+        onOpenChange={setAllOpen}
+        selectedId={selectedTemplate?.id ?? null}
+        onSelect={selectTemplate}
+      />
     </div>
   );
 
