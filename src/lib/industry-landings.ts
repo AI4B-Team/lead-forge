@@ -15,6 +15,11 @@ export type IndustryLanding = {
     subtitle: string;
   };
   icon: LucideIcon;
+  card: {
+    tagline: string;
+    bullets: string[];
+    pills: string[];
+  };
   stats: { value: string; label: string }[];
   useCases: { title: string; body: string }[];
   benefits: { title: string; body: string; icon: LucideIcon }[];
