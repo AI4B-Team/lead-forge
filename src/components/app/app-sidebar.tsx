@@ -1,6 +1,4 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   Plus,
@@ -8,7 +6,6 @@ import {
   MessageSquare,
   Phone,
   Radar,
-  Inbox,
   BarChart3,
   BrainCircuit,
   Sparkles,
@@ -26,8 +23,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { BRAND_NAME } from "@/config/brand";
-import { useWorkspaceId } from "@/hooks/use-workspace";
-import { unreadCount } from "@/lib/inbox.functions";
 
 const ITEMS = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -36,7 +31,6 @@ const ITEMS = [
   { to: "/app/lists", label: "Lists", icon: ListChecks },
   { to: "/app/brands", label: "Brands", icon: BrainCircuit },
   { to: "/app/campaigns", label: "Campaigns", icon: MessageSquare },
-  { to: "/app/inbox", label: "Inbox", icon: Inbox },
   { to: "/app/reports", label: "Reports", icon: BarChart3 },
   { to: "/app/numbers", label: "Numbers", icon: Phone },
 ] as const;
@@ -45,14 +39,6 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { workspaceId } = useWorkspaceId();
-  const fetchUnread = useServerFn(unreadCount);
-  const { data: unread } = useQuery({
-    queryKey: ["inbox-unread", workspaceId],
-    queryFn: () => fetchUnread({ data: { workspaceId: workspaceId! } }),
-    enabled: !!workspaceId,
-    refetchInterval: 30000,
-  });
 
   return (
     <Sidebar collapsible="icon">
@@ -71,18 +57,12 @@ export function AppSidebar() {
             <SidebarMenu>
               {ITEMS.map((item) => {
                 const active = pathname === item.to || pathname.startsWith(item.to + "/");
-                const showBadge = item.to === "/app/inbox" && (unread?.count ?? 0) > 0;
                 return (
                   <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton asChild isActive={active} data-tour={`nav-${item.to.replace("/app/", "")}`}>
                       <Link to={item.to} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{item.label}</span>}
-                        {!collapsed && showBadge && (
-                          <span className="ml-auto rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 min-w-[18px] text-center">
-                            {unread!.count > 99 ? "99+" : unread!.count}
-                          </span>
-                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
