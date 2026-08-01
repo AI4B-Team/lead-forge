@@ -183,6 +183,16 @@ export const launchCampaignFromJob = createServerFn({ method: "POST" })
     if (jerr || !job) throw new Error("Job Not Found");
     if (job.status !== "ready") throw new Error("Job Is Not Ready. Scrub Must Complete First.");
 
+    // §6: a list older than 30 days must be re-scrubbed before it can send.
+    const { data: lastScrub } = await supabase
+      .from("scrub_runs")
+      .select("created_at")
+      .eq("job_id", data.jobId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (isScrubStale(lastScrub?.created_at)) throw new Error(SCRUB_STALE_MESSAGE);
+
     const { count: cleanCount } = await supabase
       .from("leads")
       .select("id", { count: "exact", head: true })
