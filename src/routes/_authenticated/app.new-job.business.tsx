@@ -161,31 +161,27 @@ function Wizard() {
     }
     setBusy(true);
     try {
-      const { data, error } = await supabase
-        .from("jobs")
-        .insert({
-          workspace_id: workspaceId,
-          source_type: "business",
-          status: "queued",
-          params: {
-            // §9.5 auto-name format: {Niche} – {Geography} – {Mon DD}
-            name: `${picked.join(", ") || "Niche Scrape"} – ${state} – ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
-            niches: picked,
-            state,
-            counties: pickedCounties,
-            remove_franchises: removeFranchises,
-            dedupe,
-            mobile_only: mobileOnly,
-            avoid_metros: avoidMetros,
-            max_results: cap,
-          },
-        })
-        .select("id")
-        .single();
-      if (error || !data) throw error ?? new Error("Could Not Queue Job");
+      const { id, duplicate } = await queueJob(supabase, {
+        workspaceId,
+        sourceType: "business",
+        params: {
+          niches: picked,
+          state,
+          counties: pickedCounties,
+          remove_franchises: removeFranchises,
+          dedupe,
+          mobile_only: mobileOnly,
+          avoid_metros: avoidMetros,
+          max_results: cap,
+        },
+      });
+      navigate({ to: "/app/jobs/$jobId", params: { jobId: id } });
+      if (duplicate) {
+        toast.info("This Search Was Already Queued — Opening That Run.");
+        return;
+      }
       toast.success("Job Queued. Running Pipeline…");
-      navigate({ to: "/app/jobs/$jobId", params: { jobId: data.id } });
-      runJobFn({ data: { jobId: data.id } }).catch((e) =>
+      runJobFn({ data: { jobId: id } }).catch((e) =>
         toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
       );
     } catch (err) {
