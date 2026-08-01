@@ -40,6 +40,11 @@ export const INDUSTRY_LANDINGS: IndustryLanding[] = [
     slug: "realestate",
     industry: "Real Estate",
     icon: Home,
+    card: {
+      tagline: "Find distressed properties before everyone else.",
+      bullets: ["Probates", "Vacants", "Tax Delinquencies", "Code Violations"],
+      pills: ["Probates", "Code Violations"],
+    },
     hero: {
       eyebrow: "Now Tracking 15,000+ Live Code Enforcement Cases",
       title: "Find Distressed Properties",
