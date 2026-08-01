@@ -83,6 +83,8 @@ export async function emitEvent(
             headers: {
               "content-type": "application/json",
               "x-leadtrace-event": type,
+              // Family standard §3/§6: canonical HMAC header name across every app.
+              "x-webhook-signature": await sign(e.secret, body),
               "x-leadtrace-signature": await sign(e.secret, body),
             },
             body,
