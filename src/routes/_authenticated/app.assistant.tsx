@@ -11,13 +11,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal,
+  Paperclip, Mic, Send,
+} from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { assistantChat, createJobFromSpec, requestCoverage } from "@/lib/assistant.functions";
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
-import { TEMPLATES } from "@/lib/templates";
+import { TEMPLATES, CATEGORY_LABELS, type Template, type TemplateCategory } from "@/lib/templates";
+import { TemplateCard } from "@/components/marketing/template-card";
+import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@/lib/recent-templates";
 import { takeStashedPrompt, clearStashedPrompt } from "@/lib/prompt-handoff";
 
 export const Route = createFileRoute("/_authenticated/app/assistant")({
@@ -35,7 +41,12 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
   component: Assistant,
 });
 
-const TRY_CHIPS = ["Probate Filings", "Roofers", "Code Violations", "Vacant Homes"];
+/** Default grid order when the workspace has no template history yet. */
+const DEFAULT_GRID_IDS = [
+  "probate", "roofers", "code", "vacancy",
+  "property-owners", "commercial", "contractors", "absentee",
+];
+const GRID_SLOTS = 8;
 
 const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   sourceType: "Source",
