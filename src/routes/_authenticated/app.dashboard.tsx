@@ -146,7 +146,8 @@ function Dashboard() {
 
   const hasJobs = jobs.length > 0;
   const totalCredits = credits.scrape + credits.skip_trace + credits.sms;
-  const conversations = useMemo(() => Math.round(metrics.leads * 3.8), [metrics.leads]);
+  // A full drip is 4 touches per contact.
+  const dripMessages = useMemo(() => Math.round(metrics.leads * 4), [metrics.leads]);
   const peak = Math.max(1, ...weekly.map((w) => w.count));
 
   return (
@@ -169,26 +170,23 @@ function Dashboard() {
             {metrics.leads.toLocaleString()}
           </div>
           <p className="mt-3 text-sm opacity-75">
-            Worth roughly <span className="font-semibold opacity-100">{conversations.toLocaleString()} SMS conversations</span> at current reply rates.
+            Enough for a full 4-message drip sequence — <span className="font-semibold opacity-100">≈{dripMessages.toLocaleString()} messages</span>
           </p>
         </div>
         <div className="mt-5 flex items-center gap-6 sm:mt-0">
           <HeroStat label="Added Today" value={`+${metrics.leadsToday.toLocaleString()}`} />
-          <HeroStat label="Deliverability" value={metrics.deliverability ? `${metrics.deliverability}%` : "—"} />
+          <HeroStat
+            label="Deliverability"
+            value={metrics.deliverability ? `${metrics.deliverability}%` : "—"}
+            sub={metrics.deliverability ? undefined : "Starts with your first campaign."}
+          />
           <HeroStat label="Credits" value={totalCredits.toLocaleString()} />
         </div>
       </div>
 
       {/* Composition order locked by spec §18: digest + stats → quick run → checklist → templates. */}
       <ScanDigest workspaceId={workspaceId ?? null} />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Metric
-          icon={<Users className="h-4 w-4" />}
-          label="Ready Leads"
-          value={metrics.leads.toLocaleString()}
-          note={metrics.leadsToday ? `+${metrics.leadsToday} Today` : "No New Leads Today"}
-          noteTone={metrics.leadsToday ? "success" : undefined}
-        />
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <Metric
           icon={<ListChecks className="h-4 w-4" />}
           label="Active Jobs"
@@ -200,12 +198,6 @@ function Dashboard() {
           label="Live Campaigns"
           value={metrics.activeCampaigns.toString()}
           note={metrics.activeCampaigns ? "Sending Now" : "Ready To Launch"}
-        />
-        <Metric
-          icon={<CreditCard className="h-4 w-4" />}
-          label="Credits"
-          value={totalCredits.toLocaleString()}
-          note={`${credits.sms.toLocaleString()} SMS Left`}
         />
       </div>
 
@@ -303,7 +295,7 @@ function Dashboard() {
               <CardTitle className="text-base font-display">Credit Balance</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <CreditRow label="Scrape" value={credits.scrape} max={Math.max(1000, credits.scrape)} />
+              <CreditRow label="Lead Credits" value={credits.scrape} max={Math.max(1000, credits.scrape)} />
               <CreditRow label="Skip Trace" value={credits.skip_trace} max={Math.max(1000, credits.skip_trace)} />
               <CreditRow label="SMS" value={credits.sms} max={Math.max(1000, credits.sms)} />
               <Button asChild className="w-full rounded-full mt-2">
@@ -319,11 +311,12 @@ function Dashboard() {
   );
 }
 
-function HeroStat({ label, value }: { label: string; value: string }) {
+function HeroStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div>
       <div className="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-60">{label}</div>
       <div className="mt-1 font-display text-xl font-bold">{value}</div>
+      {sub && <div className="mt-0.5 text-[11px] opacity-60 max-w-[9rem] leading-tight">{sub}</div>}
     </div>
   );
 }
