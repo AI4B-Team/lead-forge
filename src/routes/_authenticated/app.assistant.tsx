@@ -480,7 +480,7 @@ function Assistant() {
             View All Templates →
           </button>
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {gridTemplates.map((t) => (
             <TemplateCard key={t.id} template={t} variant="insert" onSelect={insertTemplate} />
           ))}
