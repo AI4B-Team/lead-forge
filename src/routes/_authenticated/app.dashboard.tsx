@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type JobStatus } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { assignJobNames, cadenceBadge } from "@/lib/job-naming";
 import {
   Users, ListChecks, MessageSquare, CreditCard, Plus, ArrowUpRight, Landmark, MapPin,
   Upload, TrendingUp, Info,
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/app/dashboard")({
 type JobRow = {
   id: string;
   name: string | null;
+  cadence: string | null;
   source_type: string;
   status: JobStatus;
   rows_in: number | null;
@@ -32,6 +34,7 @@ type JobRow = {
 };
 
 type Credits = { scrape: number; skip_trace: number; sms: number };
+type CreditTotals = Credits;
 
 const SOURCE_META: Record<string, { icon: typeof MapPin; label: string }> = {
   business: { icon: MapPin, label: "Business Search" },
@@ -56,6 +59,7 @@ function Dashboard() {
     leads: 0, lists: 0, activeCampaigns: 0, deliverability: 0, leadsToday: 0, processing: 0,
   });
   const [credits, setCredits] = useState<Credits>({ scrape: 0, skip_trace: 0, sms: 0 });
+  const [creditTotals, setCreditTotals] = useState<CreditTotals>({ scrape: 0, skip_trace: 0, sms: 0 });
   const [weekly, setWeekly] = useState<Array<{ day: string; count: number }>>([]);
 
   useEffect(() => {
@@ -66,13 +70,13 @@ function Dashboard() {
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
 
-      const [jobsRes, leadsRes, listsRes, campRes, numRes, credRes, recentLeads, procRes] = await Promise.all([
+      const [jobsRes, leadsRes, listsRes, campRes, numRes, credRes, recentLeads, procRes, ledgerRes] = await Promise.all([
         supabase
           .from("jobs")
-          .select("id, params, source_type, status, rows_in, created_at")
+          .select("id, params, record_type, schedule, source_type, status, rows_in, created_at")
           .eq("workspace_id", workspaceId)
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(60),
         supabase.from("leads").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
         supabase.from("jobs").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
         supabase
@@ -92,13 +96,39 @@ function Dashboard() {
           .select("id", { count: "exact", head: true })
           .eq("workspace_id", workspaceId)
           .in("status", ["running", "queued"]),
+        supabase
+          .from("credit_ledger")
+          .select("kind, delta")
+          .eq("workspace_id", workspaceId)
+          .gt("delta", 0),
       ]);
 
-      const rawJobs = (jobsRes.data ?? []) as Array<JobRow & { params: { name?: string } | null }>;
-      setJobs(
+      const rawJobs = (jobsRes.data ?? []) as Array<{
+        id: string;
+        params: Record<string, unknown> | null;
+        record_type: string | null;
+        schedule: string | null;
+        source_type: string;
+        status: JobStatus;
+        rows_in: number | null;
+        created_at: string;
+      }>;
+      // Names are numbered across the whole workspace so repeat runs of the
+      // same search read as "· Run #2" instead of looking like duplicates.
+      const names = assignJobNames(
         rawJobs.map((j) => ({
           id: j.id,
-          name: (j.params?.name as string | undefined) ?? "Untitled Job",
+          source_type: j.source_type,
+          record_type: j.record_type,
+          params: j.params,
+          created_at: j.created_at,
+        })),
+      );
+      setJobs(
+        rawJobs.slice(0, 5).map((j) => ({
+          id: j.id,
+          name: names.get(j.id)?.name ?? "Untitled Job",
+          cadence: cadenceBadge(j.schedule),
           source_type: j.source_type,
           status: j.status,
           rows_in: j.rows_in,
@@ -142,6 +172,17 @@ function Dashboard() {
         if (row.kind in bal) bal[row.kind] = row.balance;
       }
       setCredits(bal);
+
+      // Plan allowance = total credits granted this period, so every bar is
+      // honestly "remaining ÷ allowance".
+      const totals: CreditTotals = { scrape: 0, skip_trace: 0, sms: 0 };
+      for (const row of (ledgerRes.data ?? []) as Array<{ kind: keyof Credits; delta: number }>) {
+        if (row.kind in totals) totals[row.kind] += Number(row.delta ?? 0);
+      }
+      for (const k of Object.keys(totals) as Array<keyof Credits>) {
+        totals[k] = Math.max(totals[k], bal[k]);
+      }
+      setCreditTotals(totals);
     })();
   }, [workspaceId]);
 
