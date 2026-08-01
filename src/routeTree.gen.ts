@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TutorialsRouteImport } from './routes/tutorials'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SolarRouteImport } from './routes/solar'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -23,6 +24,7 @@ import { Route as InsuranceRouteImport } from './routes/insurance'
 import { Route as IndustriesRouteImport } from './routes/industries'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as HomeServicesRouteImport } from './routes/home-services'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as EducationRouteImport } from './routes/education'
 import { Route as EcommerceRouteImport } from './routes/ecommerce'
@@ -70,6 +72,11 @@ import { Route as AuthenticatedAppJobsJobIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppCampaignsNewRouteImport } from './routes/_authenticated/app.campaigns.new'
 import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
 
+const TutorialsRoute = TutorialsRouteImport.update({
+  id: '/tutorials',
+  path: '/tutorials',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StartRoute = StartRouteImport.update({
   id: '/start',
   path: '/start',
@@ -138,6 +145,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
 const HomeServicesRoute = HomeServicesRouteImport.update({
   id: '/home-services',
   path: '/home-services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeaturesRoute = FeaturesRouteImport.update({
@@ -396,6 +408,7 @@ export interface FileRoutesByFullPath {
   '/ecommerce': typeof EcommerceRoute
   '/education': typeof EducationRoute
   '/features': typeof FeaturesRoute
+  '/help': typeof HelpRoute
   '/home-services': typeof HomeServicesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
@@ -410,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/tutorials': typeof TutorialsRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -457,6 +471,7 @@ export interface FileRoutesByTo {
   '/ecommerce': typeof EcommerceRoute
   '/education': typeof EducationRoute
   '/features': typeof FeaturesRoute
+  '/help': typeof HelpRoute
   '/home-services': typeof HomeServicesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
@@ -471,6 +486,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/tutorials': typeof TutorialsRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
@@ -519,6 +535,7 @@ export interface FileRoutesById {
   '/ecommerce': typeof EcommerceRoute
   '/education': typeof EducationRoute
   '/features': typeof FeaturesRoute
+  '/help': typeof HelpRoute
   '/home-services': typeof HomeServicesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
@@ -533,6 +550,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/tutorials': typeof TutorialsRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -582,6 +600,7 @@ export interface FileRouteTypes {
     | '/ecommerce'
     | '/education'
     | '/features'
+    | '/help'
     | '/home-services'
     | '/how-it-works'
     | '/industries'
@@ -596,6 +615,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/tutorials'
     | '/app'
     | '/leads/$slug'
     | '/templates/$templateId'
@@ -643,6 +663,7 @@ export interface FileRouteTypes {
     | '/ecommerce'
     | '/education'
     | '/features'
+    | '/help'
     | '/home-services'
     | '/how-it-works'
     | '/industries'
@@ -657,6 +678,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/tutorials'
     | '/leads/$slug'
     | '/templates/$templateId'
     | '/tools/dnc-checker'
@@ -704,6 +726,7 @@ export interface FileRouteTypes {
     | '/ecommerce'
     | '/education'
     | '/features'
+    | '/help'
     | '/home-services'
     | '/how-it-works'
     | '/industries'
@@ -718,6 +741,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/tutorials'
     | '/_authenticated/app'
     | '/leads/$slug'
     | '/templates/$templateId'
@@ -767,6 +791,7 @@ export interface RootRouteChildren {
   EcommerceRoute: typeof EcommerceRoute
   EducationRoute: typeof EducationRoute
   FeaturesRoute: typeof FeaturesRoute
+  HelpRoute: typeof HelpRoute
   HomeServicesRoute: typeof HomeServicesRoute
   HowItWorksRoute: typeof HowItWorksRoute
   IndustriesRoute: typeof IndustriesRoute
@@ -781,6 +806,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SolarRoute: typeof SolarRoute
   StartRoute: typeof StartRoute
+  TutorialsRoute: typeof TutorialsRoute
   LeadsSlugRoute: typeof LeadsSlugRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsDncCheckerRoute: typeof ToolsDncCheckerRoute
@@ -796,6 +822,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tutorials': {
+      id: '/tutorials'
+      path: '/tutorials'
+      fullPath: '/tutorials'
+      preLoaderRoute: typeof TutorialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/start': {
       id: '/start'
       path: '/start'
@@ -892,6 +925,13 @@ declare module '@tanstack/react-router' {
       path: '/home-services'
       fullPath: '/home-services'
       preLoaderRoute: typeof HomeServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/features': {
@@ -1310,6 +1350,7 @@ const rootRouteChildren: RootRouteChildren = {
   EcommerceRoute: EcommerceRoute,
   EducationRoute: EducationRoute,
   FeaturesRoute: FeaturesRoute,
+  HelpRoute: HelpRoute,
   HomeServicesRoute: HomeServicesRoute,
   HowItWorksRoute: HowItWorksRoute,
   IndustriesRoute: IndustriesRoute,
@@ -1324,6 +1365,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SolarRoute: SolarRoute,
   StartRoute: StartRoute,
+  TutorialsRoute: TutorialsRoute,
   LeadsSlugRoute: LeadsSlugRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsDncCheckerRoute: ToolsDncCheckerRoute,

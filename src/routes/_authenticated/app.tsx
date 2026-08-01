@@ -6,6 +6,8 @@ import { Zap } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { ProfileDropdown } from "@/components/app/profile-dropdown";
 import { NotificationBell } from "@/components/app/notification-bell";
+import { HelpMenu } from "@/components/app/help-menu";
+import { ProductTour, useProductTour } from "@/components/app/product-tour";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -13,6 +15,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 
 function AppLayout() {
   const { workspaceName } = useWorkspaceId();
+  const tour = useProductTour();
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-surface-muted">
@@ -24,9 +27,10 @@ function AppLayout() {
               <div className="text-sm text-muted-foreground hidden md:block">{workspaceName ?? "Workspace"}</div>
             </div>
             <div className="flex items-center gap-2">
-              <Button asChild size="sm" variant="outline" className="rounded-full">
+              <Button asChild size="sm" variant="outline" className="rounded-full" data-tour="credits">
                 <Link to="/app/billing"><Zap className="mr-1 h-3.5 w-3.5" /> Top Up Credits</Link>
               </Button>
+              <HelpMenu onStartTour={tour.start} />
               <NotificationBell />
               <ProfileDropdown />
             </div>
@@ -36,6 +40,7 @@ function AppLayout() {
           </main>
         </div>
       </div>
+      <ProductTour open={tour.open} onClose={tour.close} />
     </SidebarProvider>
   );
 }
