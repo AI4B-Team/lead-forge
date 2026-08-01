@@ -11,13 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, ShieldAlert, Loader2 } from "lucide-react";
+import { Plus, ShieldAlert, Loader2, PhoneForwarded, Voicemail } from "lucide-react";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { listNumbers, buyNumbers, getRegistration } from "@/lib/numbers.functions";
+import { listNumbers, buyNumbers, getRegistration, updateInboundSettings } from "@/lib/numbers.functions";
+import { PhoneLink } from "@/components/app/phone-link";
 
 export const Route = createFileRoute("/_authenticated/app/numbers")({
   head: () => ({ meta: [{ title: "Numbers — LeadTrace" }] }),
@@ -55,6 +57,7 @@ function Numbers() {
   }
 
   const numbers = data.rows;
+  const unforwarded = numbers.filter((n) => !n.forward_calls_to).length;
   const active = numbers.filter((n) => n.status === "active").length;
   const avg = numbers.length
     ? Math.round(numbers.reduce((a, n) => a + (n.health_score ?? 0), 0) / numbers.length)
@@ -174,6 +177,15 @@ function Numbers() {
           {flagged} Number{flagged === 1 ? "" : "s"} Above 5% Opt-Out Rate — Auto-Flagged For Cooling.
         </div>
       )}
+
+      <InboundCallCard
+        workspaceId={workspaceId}
+        unforwarded={unforwarded}
+        total={numbers.length}
+        currentForward={numbers.find((n) => n.forward_calls_to)?.forward_calls_to ?? ""}
+        currentGreeting={numbers.find((n) => n.voicemail_greeting)?.voicemail_greeting ?? ""}
+      />
+
       <Card>
         <CardContent className="p-0">
           {numbers.length === 0 ? (
@@ -189,6 +201,7 @@ function Numbers() {
                   <th className="p-4">Health</th>
                   <th className="p-4">Opt-Out Rate</th>
                   <th className="p-4">Status</th>
+                  <th className="p-4">Inbound Calls</th>
                 </tr>
               </thead>
               <tbody>
@@ -198,7 +211,7 @@ function Numbers() {
                   const status = optout > 5 ? "cooling" : (n.status ?? "active");
                   return (
                     <tr key={n.id} className="border-b border-border last:border-0">
-                      <td className="p-4 font-medium text-foreground">{n.phone}</td>
+                      <td className="p-4 font-medium text-foreground"><PhoneLink phone={n.phone} showIcon={false} /></td>
                       <td className="p-4 text-muted-foreground capitalize">{n.region ?? "—"}</td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
@@ -217,6 +230,17 @@ function Numbers() {
                         }>
                           {status}
                         </Badge>
+                      </td>
+                      <td className="p-4 text-xs text-muted-foreground">
+                        {n.forward_calls_to ? (
+                          <span className="inline-flex items-center gap-1 text-foreground">
+                            <PhoneForwarded className="h-3.5 w-3.5 text-success" /> {n.forward_calls_to}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1">
+                            <Voicemail className="h-3.5 w-3.5" /> Voicemail
+                          </span>
+                        )}
                       </td>
                     </tr>
                   );
