@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Plus, ShieldAlert, LayoutGrid, List, Bot, Send, MessageSquare, Rocket, Bot as BotIcon, UserRound } from "lucide-react";
 import { StatTile } from "@/components/app/stat-tile";
 import { CampaignCard, CampaignStatusBadge } from "@/components/app/campaign-card";
@@ -256,11 +255,3 @@ function CampaignList({ campaigns, stats, tags, workspaceId }: { campaigns: any[
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: number }) {
-  return (
-    <div>
-      <div className="text-muted-foreground uppercase tracking-wider">{label}</div>
-      <div className="font-display font-bold text-lg text-foreground">{value.toLocaleString()}</div>
-    </div>
-  );
-}
