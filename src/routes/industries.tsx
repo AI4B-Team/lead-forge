@@ -22,7 +22,7 @@ function Industries() {
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="text-center max-w-3xl mx-auto">
           <div className="text-primary text-xs font-semibold uppercase tracking-[0.18em]">Industries</div>
-          <h1 className="mt-3 font-display text-5xl md:text-6xl font-black text-foreground leading-tight">
+          <h1 className="mt-3 font-display text-5xl md:text-6xl font-black text-foreground leading-tight whitespace-nowrap">
             Same Engine. Your Playbook.
           </h1>
           <p className="mt-5 text-lg text-muted-foreground">
