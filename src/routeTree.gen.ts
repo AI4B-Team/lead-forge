@@ -65,6 +65,7 @@ import { Route as AuthenticatedAppAccountRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppCampaignsIndexRouteImport } from './routes/_authenticated/app.campaigns.index'
 import { Route as ApiPublicV1LeadsRouteImport } from './routes/api/public/v1/leads'
 import { Route as ApiPublicV1JobsRouteImport } from './routes/api/public/v1/jobs'
+import { Route as ApiPublicV1CampaignsRouteImport } from './routes/api/public/v1/campaigns'
 import { Route as ApiPublicHubCallbackRouteImport } from './routes/api/public/hub/callback'
 import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
 import { Route as ApiPublicHooksTelnyxInboundRouteImport } from './routes/api/public/hooks/telnyx-inbound'
@@ -363,6 +364,11 @@ const ApiPublicV1JobsRoute = ApiPublicV1JobsRouteImport.update({
   path: '/api/public/v1/jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1CampaignsRoute = ApiPublicV1CampaignsRouteImport.update({
+  id: '/api/public/v1/campaigns',
+  path: '/api/public/v1/campaigns',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHubCallbackRoute = ApiPublicHubCallbackRouteImport.update({
   id: '/api/public/hub/callback',
   path: '/api/public/hub/callback',
@@ -497,6 +503,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
+  '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
@@ -565,6 +572,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
+  '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/app/campaigns': typeof AuthenticatedAppCampaignsIndexRoute
@@ -636,6 +644,7 @@ export interface FileRoutesById {
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
+  '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/_authenticated/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
@@ -707,6 +716,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hub/callback'
+    | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
     | '/app/campaigns/'
@@ -775,6 +785,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hub/callback'
+    | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
     | '/app/campaigns'
@@ -845,6 +856,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hub/callback'
+    | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
     | '/_authenticated/app/campaigns/'
@@ -891,6 +903,7 @@ export interface RootRouteChildren {
   ApiPublicHooksTelnyxInboundRoute: typeof ApiPublicHooksTelnyxInboundRoute
   ApiPublicHooksTickCampaignsRoute: typeof ApiPublicHooksTickCampaignsRoute
   ApiPublicHubCallbackRoute: typeof ApiPublicHubCallbackRoute
+  ApiPublicV1CampaignsRoute: typeof ApiPublicV1CampaignsRoute
   ApiPublicV1JobsRoute: typeof ApiPublicV1JobsRouteWithChildren
   ApiPublicV1LeadsRoute: typeof ApiPublicV1LeadsRoute
 }
@@ -1289,6 +1302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1JobsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/campaigns': {
+      id: '/api/public/v1/campaigns'
+      path: '/api/public/v1/campaigns'
+      fullPath: '/api/public/v1/campaigns'
+      preLoaderRoute: typeof ApiPublicV1CampaignsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hub/callback': {
       id: '/api/public/hub/callback'
       path: '/api/public/hub/callback'
@@ -1519,6 +1539,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksTelnyxInboundRoute: ApiPublicHooksTelnyxInboundRoute,
   ApiPublicHooksTickCampaignsRoute: ApiPublicHooksTickCampaignsRoute,
   ApiPublicHubCallbackRoute: ApiPublicHubCallbackRoute,
+  ApiPublicV1CampaignsRoute: ApiPublicV1CampaignsRoute,
   ApiPublicV1JobsRoute: ApiPublicV1JobsRouteWithChildren,
   ApiPublicV1LeadsRoute: ApiPublicV1LeadsRoute,
 }
