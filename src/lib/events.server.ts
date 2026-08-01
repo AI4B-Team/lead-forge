@@ -36,9 +36,21 @@ export async function emitEvent(
   payload: Record<string, unknown> = {},
 ): Promise<void> {
   try {
+    // Canonical hub ID travels with every payload when the workspace is linked (spec §16).
+    const { data: ws } = await supabase
+      .from("workspaces")
+      .select("real_elite_org_id")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    const realEliteOrgId: string | null = ws?.real_elite_org_id ?? null;
+
     const { data: row } = await supabase
       .from("events")
-      .insert({ workspace_id: workspaceId, type, payload: payload as never })
+      .insert({
+        workspace_id: workspaceId,
+        type,
+        payload: { ...payload, real_elite_org_id: realEliteOrgId } as never,
+      })
       .select("id, created_at")
       .maybeSingle();
 
@@ -57,6 +69,7 @@ export async function emitEvent(
       id: row.id,
       type,
       workspace_id: workspaceId,
+      real_elite_org_id: realEliteOrgId,
       created_at: row.created_at,
       payload,
     });

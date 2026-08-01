@@ -43,6 +43,7 @@ import { Route as ToolsLineTypeCheckerRouteImport } from './routes/tools.line-ty
 import { Route as ToolsDncCheckerRouteImport } from './routes/tools.dnc-checker'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as LeadsSlugRouteImport } from './routes/leads.$slug'
+import { Route as AuthHubRouteImport } from './routes/auth.hub'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
@@ -243,6 +244,11 @@ const LeadsSlugRoute = LeadsSlugRouteImport.update({
   path: '/leads/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthHubRoute = AuthHubRouteImport.update({
+  id: '/hub',
+  path: '/hub',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -413,7 +419,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
   '/compliance': typeof ComplianceRoute
@@ -437,6 +443,7 @@ export interface FileRoutesByFullPath {
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
@@ -478,7 +485,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
   '/compliance': typeof ComplianceRoute
@@ -501,6 +508,7 @@ export interface FileRoutesByTo {
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
+  '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
@@ -544,7 +552,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
   '/compliance': typeof ComplianceRoute
@@ -568,6 +576,7 @@ export interface FileRoutesById {
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
@@ -635,6 +644,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/tutorials'
     | '/app'
+    | '/auth/hub'
     | '/leads/$slug'
     | '/templates/$templateId'
     | '/tools/dnc-checker'
@@ -699,6 +709,7 @@ export interface FileRouteTypes {
     | '/solar'
     | '/start'
     | '/tutorials'
+    | '/auth/hub'
     | '/leads/$slug'
     | '/templates/$templateId'
     | '/tools/dnc-checker'
@@ -765,6 +776,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/tutorials'
     | '/_authenticated/app'
+    | '/auth/hub'
     | '/leads/$slug'
     | '/templates/$templateId'
     | '/tools/dnc-checker'
@@ -808,7 +820,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
   AgencyRoute: typeof AgencyRoute
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   AutoRoute: typeof AutoRoute
   B2bRoute: typeof B2bRoute
   ComplianceRoute: typeof ComplianceRoute
@@ -1084,6 +1096,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/leads/$slug'
       preLoaderRoute: typeof LeadsSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/hub': {
+      id: '/auth/hub'
+      path: '/hub'
+      fullPath: '/auth/hub'
+      preLoaderRoute: typeof AuthHubRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_authenticated/app': {
       id: '/_authenticated/app'
@@ -1379,12 +1398,22 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthHubRoute: typeof AuthHubRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthHubRoute: AuthHubRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
   AgencyRoute: AgencyRoute,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   AutoRoute: AutoRoute,
   B2bRoute: B2bRoute,
   ComplianceRoute: ComplianceRoute,
