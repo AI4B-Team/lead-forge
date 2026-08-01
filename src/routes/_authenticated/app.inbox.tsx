@@ -1,43 +1,84 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Inbox as InboxIcon, Loader2, Send, ShieldOff, UserRound, Plus } from "lucide-react";
+import { Bot, Inbox as InboxIcon, Loader2, Plus, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { listThreads, getThread, markThreadRead, sendReply } from "@/lib/inbox.functions";
+import {
+  listThreads,
+  getThread,
+  markThreadRead,
+  sendReply,
+  summarizeThread,
+  suggestThreadReplies,
+  blacklistThread,
+} from "@/lib/inbox.functions";
 import { listQuickReplies, createQuickReply } from "@/lib/tags.functions";
-import { PhoneLink } from "@/components/app/phone-link";
+import {
+  AiActivityPill,
+  AiSummary,
+  ConversationRow,
+  LeadProfilePanel,
+  QuickActions,
+  SuggestedReplies,
+  buildTimeline,
+  type ThreadRow,
+} from "@/components/app/conversation-panels";
+import { SLASH_COMMANDS, classifyIntent, dayLabel } from "@/lib/conversation-intel";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
-  head: () => ({ meta: [{ title: "Inbox — LeadTrace" }] }),
-  component: InboxPage,
+  head: () => ({
+    meta: [
+      { title: "Conversations — LeadTrace" },
+      {
+        name: "description",
+        content: "The AI sales command center: summaries, suggested replies, and full lead context on every SMS conversation.",
+      },
+    ],
+  }),
+  component: ConversationsPage,
 });
 
-type Filter = "all" | "unread" | "optouts";
+type Filter = "all" | "needs_reply" | "interested" | "appointments" | "ai" | "unread" | "optouts";
 
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.round(diff / 60000);
-  if (m < 1) return "now";
-  if (m < 60) return `${m}m`;
-  const h = Math.round(m / 60);
-  if (h < 24) return `${h}h`;
-  return `${Math.round(h / 24)}d`;
+const FILTERS: Array<{ key: Filter; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "needs_reply", label: "Needs Reply" },
+  { key: "interested", label: "Interested" },
+  { key: "appointments", label: "Appointments" },
+  { key: "ai", label: "AI" },
+  { key: "unread", label: "Unread" },
+  { key: "optouts", label: "STOP" },
+];
+
+const notesKey = (t: string) => `leadtrace:notes:${t}`;
+const ARCHIVE_KEY = "leadtrace:archived-threads";
+
+function readArchive(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(window.localStorage.getItem(ARCHIVE_KEY) ?? "[]") as string[];
+  } catch {
+    return [];
+  }
 }
 
-function InboxPage() {
+function ConversationsPage() {
   const { workspaceId } = useWorkspaceId();
   const [filter, setFilter] = useState<Filter>("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
+  const [archived, setArchived] = useState<string[]>([]);
+  const [notes, setNotes] = useState("");
+  const [slashOpen, setSlashOpen] = useState(false);
   const qc = useQueryClient();
 
   const fetchThreads = useServerFn(listThreads);
@@ -46,6 +87,11 @@ function InboxPage() {
   const send = useServerFn(sendReply);
   const fetchSnippets = useServerFn(listQuickReplies);
   const addSnippet = useServerFn(createQuickReply);
+  const runSummary = useServerFn(summarizeThread);
+  const runSuggest = useServerFn(suggestThreadReplies);
+  const runBlacklist = useServerFn(blacklistThread);
+
+  useEffect(() => setArchived(readArchive()), []);
 
   const threadsQ = useQuery({
     queryKey: ["inbox-threads", workspaceId, filter],
@@ -61,30 +107,43 @@ function InboxPage() {
     refetchInterval: 10000,
   });
 
-  // Operator-approved quick replies — one tap to load into the composer.
   const snippetsQ = useQuery({
     queryKey: ["quick-replies", workspaceId],
     queryFn: () => fetchSnippets({ data: { workspaceId: workspaceId! } }),
     enabled: !!workspaceId,
   });
 
-  const saveSnippet = async () => {
-    if (!workspaceId || !reply.trim()) return;
-    try {
-      await addSnippet({
-        data: { workspaceId, title: reply.trim().slice(0, 40), body: reply.trim() },
-      });
-      qc.invalidateQueries({ queryKey: ["quick-replies", workspaceId] });
-      toast.success("Saved As Quick Reply");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Save Failed");
-    }
-  };
+  // AI summary is cached per thread + message count so it refreshes on new activity.
+  const msgCount = threadQ.data?.messages.length ?? 0;
+  const summaryQ = useQuery({
+    queryKey: ["thread-summary", workspaceId, selected, msgCount],
+    queryFn: () => runSummary({ data: { workspaceId: workspaceId!, threadKey: selected! } }),
+    enabled: !!workspaceId && !!selected && msgCount > 0,
+    staleTime: 5 * 60_000,
+  });
 
-  // Auto-select first thread and mark read when opened.
+  const suggestM = useMutation({
+    mutationFn: (vars: { command?: string | null; draft?: string | null }) =>
+      runSuggest({
+        data: {
+          workspaceId: workspaceId!,
+          threadKey: selected!,
+          command: vars.command ?? null,
+          draft: vars.draft ?? null,
+        },
+      }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could Not Generate Replies"),
+  });
+  const suggestions = suggestM.data?.suggestions ?? [];
+
+  const threads = useMemo(() => {
+    const rows = (threadsQ.data?.threads ?? []) as unknown as ThreadRow[];
+    return rows.filter((t) => (showArchived ? archived.includes(t.thread_key) : !archived.includes(t.thread_key)));
+  }, [threadsQ.data, archived, showArchived]);
+
   useEffect(() => {
-    if (!selected && threadsQ.data?.threads[0]) setSelected(threadsQ.data.threads[0].thread_key);
-  }, [threadsQ.data, selected]);
+    if (!selected && threads[0]) setSelected(threads[0].thread_key);
+  }, [threads, selected]);
 
   useEffect(() => {
     if (!workspaceId || !selected) return;
@@ -94,14 +153,43 @@ function InboxPage() {
     });
   }, [selected, workspaceId, markRead, qc]);
 
+  // Notes are private and device-local.
+  useEffect(() => {
+    if (!selected || typeof window === "undefined") return;
+    setNotes(window.localStorage.getItem(notesKey(selected)) ?? "");
+  }, [selected]);
+  const saveNotes = useCallback(
+    (v: string) => {
+      setNotes(v);
+      if (selected && typeof window !== "undefined") window.localStorage.setItem(notesKey(selected), v);
+    },
+    [selected],
+  );
+
+  // Fresh suggestions whenever a new lead reply lands on the open conversation.
+  const lastMsg = threadQ.data?.messages[msgCount - 1];
+  const autoKey = selected && lastMsg?.direction === "inbound" ? `${selected}:${lastMsg.id}` : null;
+  const autoRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!autoKey || autoRef.current === autoKey) return;
+    autoRef.current = autoKey;
+    suggestM.mutate({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoKey]);
+
   const scrollerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight });
   }, [threadQ.data]);
 
   const activeThread = useMemo(
-    () => threadsQ.data?.threads.find((t) => t.thread_key === selected) ?? null,
-    [threadsQ.data, selected],
+    () => threads.find((t) => t.thread_key === selected) ?? null,
+    [threads, selected],
+  );
+
+  const timeline = useMemo(
+    () => buildTimeline(threadQ.data?.messages ?? [], (b) => classifyIntent(b)),
+    [threadQ.data],
   );
 
   const handleSend = async () => {
@@ -110,114 +198,174 @@ function InboxPage() {
     try {
       await send({ data: { workspaceId, threadKey: selected, body: reply.trim() } });
       setReply("");
+      suggestM.reset();
       qc.invalidateQueries({ queryKey: ["inbox-thread", workspaceId, selected] });
       qc.invalidateQueries({ queryKey: ["inbox-threads", workspaceId] });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Send failed.");
+      toast.error(e instanceof Error ? e.message : "Send Failed.");
     } finally {
       setSending(false);
     }
   };
 
+  const saveSnippet = async () => {
+    if (!workspaceId || !reply.trim()) return;
+    try {
+      await addSnippet({ data: { workspaceId, title: reply.trim().slice(0, 40), body: reply.trim() } });
+      qc.invalidateQueries({ queryKey: ["quick-replies", workspaceId] });
+      toast.success("Saved As Quick Reply");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Save Failed");
+    }
+  };
+
+  const toggleArchive = () => {
+    if (!selected) return;
+    const next = archived.includes(selected) ? archived.filter((t) => t !== selected) : [...archived, selected];
+    setArchived(next);
+    if (typeof window !== "undefined") window.localStorage.setItem(ARCHIVE_KEY, JSON.stringify(next));
+    toast.success(archived.includes(selected) ? "Conversation Restored" : "Conversation Archived");
+  };
+
+  const doBlacklist = async () => {
+    if (!workspaceId || !selected) return;
+    try {
+      const r = await runBlacklist({ data: { workspaceId, threadKey: selected } });
+      toast.success(`${r.phone} Added To Suppression`);
+      qc.invalidateQueries({ queryKey: ["inbox-thread", workspaceId, selected] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Blacklist");
+    }
+  };
+
+  const applyCommand = (cmd: string) => {
+    setSlashOpen(false);
+    setReply("");
+    suggestM.mutate({ command: cmd });
+  };
+
   if (!workspaceId) return null;
+  const counts = threadsQ.data?.counts;
+  const aiHandling = !!threadQ.data?.messages.some((m) => m.is_bot) && !threadQ.data?.handoff;
 
   return (
     <div className="flex flex-col h-[calc(100vh-var(--header-h,4rem))]">
-      <PageHeader title="Inbox" description="Two-Way SMS Conversations. STOP Replies Auto-Suppress." />
-      <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 flex-1 min-h-0">
-        {/* Thread list */}
+      <PageHeader
+        title="Conversations"
+        description="Where AI And You Work Leads Together — Summaries, Suggested Replies, And Full Context."
+      />
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_320px] gap-4 flex-1 min-h-0">
+        {/* Conversation list */}
         <Card className="flex flex-col min-h-0">
-          <div className="p-2 border-b flex gap-1">
-            {(["all", "unread", "optouts"] as Filter[]).map((f) => (
+          <div className="p-2 border-b flex gap-1 flex-wrap">
+            {FILTERS.map((f) => (
               <Button
-                key={f}
+                key={f.key}
                 size="sm"
-                variant={filter === f ? "default" : "ghost"}
-                className="rounded-full text-xs capitalize"
-                onClick={() => setFilter(f)}
+                variant={filter === f.key && !showArchived ? "default" : "ghost"}
+                className="rounded-full text-xs h-7 px-2.5"
+                onClick={() => {
+                  setFilter(f.key);
+                  setShowArchived(false);
+                }}
               >
-                {f === "optouts" ? "Opt-Outs" : f}
+                {f.label}
+                {counts && counts[f.key] > 0 && (
+                  <span className="ml-1 opacity-70">{counts[f.key]}</span>
+                )}
               </Button>
             ))}
+            <Button
+              size="sm"
+              variant={showArchived ? "default" : "ghost"}
+              className="rounded-full text-xs h-7 px-2.5"
+              onClick={() => setShowArchived((v) => !v)}
+            >
+              Archive
+            </Button>
           </div>
           <div className="flex-1 overflow-y-auto">
             {threadsQ.isLoading ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin inline-block mr-1" /> Loading…
               </div>
-            ) : !threadsQ.data?.threads.length ? (
+            ) : !threads.length ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
                 <InboxIcon className="h-6 w-6 mx-auto mb-2 opacity-40" />
-                No Conversations Yet.
+                No Conversations Here.
               </div>
             ) : (
-              threadsQ.data.threads.map((t) => (
-                <button
+              threads.map((t) => (
+                <ConversationRow
                   key={t.thread_key}
-                  onClick={() => setSelected(t.thread_key)}
-                  className={cn(
-                    "w-full text-left px-3 py-3 border-b hover:bg-muted/40 transition-colors",
-                    selected === t.thread_key && "bg-muted/60",
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="font-medium truncate">
-                      {t.lead?.full_name || t.lead?.phone || t.thread_key}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground shrink-0">{timeAgo(t.last_at)}</div>
-                  </div>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <p className="text-xs text-muted-foreground truncate flex-1">
-                      {t.last_direction === "outbound" ? "You: " : ""}{t.last_body}
-                    </p>
-                    {t.is_optout && <ShieldOff className="h-3 w-3 text-danger shrink-0" />}
-                    {t.unread > 0 && (
-                      <span className="rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 min-w-[18px] text-center">
-                        {t.unread}
-                      </span>
-                    )}
-                  </div>
-                </button>
+                  thread={t}
+                  active={selected === t.thread_key}
+                  onSelect={() => {
+                    setSelected(t.thread_key);
+                    suggestM.reset();
+                  }}
+                />
               ))
             )}
           </div>
         </Card>
 
-        {/* Conversation pane */}
+        {/* Conversation */}
         <Card className="flex flex-col min-h-0">
           {!selected ? (
-            <div className="flex-1 grid place-items-center text-sm text-muted-foreground">
-              Select A Conversation.
-            </div>
+            <div className="flex-1 grid place-items-center text-sm text-muted-foreground">Select A Conversation.</div>
           ) : (
             <>
-              <div className="p-3 border-b flex items-center gap-3">
-                <div className="flex-1">
-                  <div className="font-display font-bold">
-                    {threadQ.data?.lead?.full_name || threadQ.data?.lead?.phone || activeThread?.thread_key}
+              <div className="p-3 border-b space-y-2">
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-display font-bold truncate">
+                      {threadQ.data?.lead?.full_name ||
+                        threadQ.data?.lead?.business_name ||
+                        threadQ.data?.lead?.phone ||
+                        activeThread?.thread_key}
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center flex-wrap gap-x-2">
+                      {threadQ.data?.campaign && <span>{threadQ.data.campaign.name}</span>}
+                      {threadQ.data?.campaign && <span>· Touch {threadQ.data.campaign.touch}</span>}
+                      {threadQ.data?.number && <span>· From {threadQ.data.number.phone}</span>}
+                      {activeThread && <span>· {dayLabel(activeThread.last_at)}</span>}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground flex items-center flex-wrap gap-x-2">
-                    <span className="inline-flex items-center gap-1">
-                      <UserRound className="h-3 w-3" /> Lead{" "}
-                      <PhoneLink phone={threadQ.data?.lead?.phone} showIcon={false} />
-                    </span>
-                    {threadQ.data?.number && (
-                      <span className="inline-flex items-center gap-1">
-                        <Send className="h-3 w-3" /> Sent From {threadQ.data.number.phone}
-                      </span>
-                    )}
-                    {threadQ.data?.lead?.city ? <span>· {threadQ.data.lead.city}, {threadQ.data.lead.state}</span> : null}
-                  </div>
+                  {aiHandling && <AiActivityPill label="AI Handling" />}
+                  {threadQ.data?.handoff && (
+                    <Badge variant="outline" className="bg-warn/10 text-warn border-warn/20 text-xs">
+                      Needs Human
+                    </Badge>
+                  )}
+                  {activeThread?.is_optout && (
+                    <Badge variant="outline" className="bg-danger/10 text-danger border-danger/20">
+                      Opted Out
+                    </Badge>
+                  )}
                 </div>
-                {threadQ.data?.handoff && (
-                  <Badge variant="outline" className="bg-warn/10 text-warn border-warn/20 text-xs">
-                    Handoff: {threadQ.data.handoff}
-                  </Badge>
-                )}
-                {activeThread?.is_optout && (
-                  <Badge variant="outline" className="bg-danger/10 text-danger border-danger/20">Opted Out</Badge>
-                )}
+                <QuickActions
+                  phone={threadQ.data?.lead?.phone}
+                  email={threadQ.data?.lead?.email}
+                  onAppointment={() => {
+                    setReply("Great — I have a couple of times open. Does tomorrow morning or afternoon work better?");
+                    toast.success("Appointment Ask Drafted");
+                  }}
+                  onArchive={toggleArchive}
+                  onTag={() => toast.info("Campaign Tags Are Managed On The Campaigns Page")}
+                  onBlacklist={doBlacklist}
+                  archived={!!selected && archived.includes(selected)}
+                  blacklisting={false}
+                />
               </div>
+
+              <AiSummary
+                bullets={summaryQ.data?.summary?.bullets ?? []}
+                nextStep={summaryQ.data?.summary?.nextStep ?? null}
+                loading={summaryQ.isFetching}
+                onUseNextStep={() => suggestM.mutate({ command: null, draft: summaryQ.data?.summary?.nextStep ?? null })}
+              />
+
               <div ref={scrollerRef} className="flex-1 overflow-y-auto p-4 space-y-2">
                 {threadQ.data?.messages.map((m) => (
                   <div key={m.id} className={cn("flex", m.direction === "outbound" ? "justify-end" : "justify-start")}>
@@ -230,17 +378,42 @@ function InboxPage() {
                       )}
                     >
                       <div className="whitespace-pre-wrap">{m.body}</div>
-                      <div className={cn(
-                        "text-[10px] mt-1 opacity-70",
-                        m.direction === "outbound" ? "text-primary-foreground" : "text-muted-foreground",
-                      )}>
-                        {new Date(m.created_at).toLocaleString()} · {m.status}
-                        {m.is_bot ? " · Bot" : ""}
+                      <div
+                        className={cn(
+                          "text-[10px] mt-1 opacity-70 flex items-center gap-1",
+                          m.direction === "outbound" ? "text-primary-foreground" : "text-muted-foreground",
+                        )}
+                      >
+                        {new Date(m.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} ·{" "}
+                        {dayLabel(m.created_at)} · {m.status}
+                        {m.is_bot && (
+                          <>
+                            {" · "}
+                            <Bot className="h-2.5 w-2.5" /> AI
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
                 ))}
+                {suggestM.isPending && (
+                  <div className="flex justify-end">
+                    <AiActivityPill label="AI Composing" />
+                  </div>
+                )}
               </div>
+
+              <SuggestedReplies
+                suggestions={suggestions}
+                loading={suggestM.isPending}
+                onUse={(body) => {
+                  setReply(body);
+                  void handleSendWith(body);
+                }}
+                onEdit={(body) => setReply(body)}
+                onRegenerate={() => suggestM.mutate({})}
+              />
+
               {!!snippetsQ.data?.snippets.length && (
                 <div className="px-3 pt-2 flex flex-wrap gap-1">
                   {snippetsQ.data.snippets.map((s) => (
@@ -256,32 +429,104 @@ function InboxPage() {
                   ))}
                 </div>
               )}
-              <div className="p-3 border-t flex gap-2">
-                <Input
-                  value={reply}
-                  onChange={(e) => setReply(e.target.value)}
-                  placeholder={activeThread?.is_optout ? "Contact has opted out — replies disabled." : "Type a reply…"}
-                  disabled={activeThread?.is_optout || sending}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full shrink-0"
-                  title="Save As Quick Reply"
-                  onClick={saveSnippet}
-                  disabled={!reply.trim()}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-                <Button onClick={handleSend} disabled={activeThread?.is_optout || sending || !reply.trim()} className="rounded-full">
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </Button>
+
+              <div className="p-3 border-t relative">
+                {slashOpen && (
+                  <div className="absolute bottom-full left-3 mb-1 w-72 rounded-xl border bg-popover shadow-lg overflow-hidden z-20">
+                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b">
+                      AI Commands
+                    </div>
+                    {SLASH_COMMANDS.filter((c) => c.cmd.startsWith(reply.trim().split(" ")[0] || "/")).map((c) => (
+                      <button
+                        key={c.cmd}
+                        onClick={() => applyCommand(c.cmd)}
+                        className="w-full text-left px-3 py-2 hover:bg-muted/60 flex items-center gap-2"
+                      >
+                        <Sparkles className="h-3 w-3 text-primary shrink-0" />
+                        <span className="text-xs font-semibold">{c.label}</span>
+                        <span className="text-[10px] text-muted-foreground ml-auto">{c.cmd}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <textarea
+                    value={reply}
+                    onChange={(e) => {
+                      setReply(e.target.value);
+                      setSlashOpen(e.target.value.startsWith("/"));
+                    }}
+                    rows={1}
+                    placeholder={
+                      activeThread?.is_optout
+                        ? "Contact has opted out — replies disabled."
+                        : "Reply… type / for AI commands"
+                    }
+                    disabled={activeThread?.is_optout || sending}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") setSlashOpen(false);
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (slashOpen) {
+                          const match = SLASH_COMMANDS.find((c) => c.cmd === reply.trim());
+                          if (match) return applyCommand(match.cmd);
+                        }
+                        handleSend();
+                      }
+                    }}
+                    className="flex-1 min-h-9 max-h-32 rounded-full border bg-background px-4 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full shrink-0"
+                    title="Save As Quick Reply"
+                    onClick={saveSnippet}
+                    disabled={!reply.trim()}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={handleSend}
+                    disabled={activeThread?.is_optout || sending || !reply.trim()}
+                    className="rounded-full"
+                  >
+                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
             </>
           )}
         </Card>
+
+        {/* Lead profile rail */}
+        <div className="hidden xl:flex flex-col min-h-0">
+          <LeadProfilePanel
+            ctx={threadQ.data ? ({ ...threadQ.data } as never) : null}
+            thread={activeThread}
+            events={timeline}
+            notes={notes}
+            onNotes={saveNotes}
+            tags={activeThread?.badges ?? []}
+          />
+        </div>
       </div>
     </div>
   );
+
+  async function handleSendWith(body: string) {
+    if (!workspaceId || !selected) return;
+    setSending(true);
+    try {
+      await send({ data: { workspaceId, threadKey: selected, body } });
+      setReply("");
+      suggestM.reset();
+      qc.invalidateQueries({ queryKey: ["inbox-thread", workspaceId, selected] });
+      qc.invalidateQueries({ queryKey: ["inbox-threads", workspaceId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Send Failed.");
+    } finally {
+      setSending(false);
+    }
+  }
 }

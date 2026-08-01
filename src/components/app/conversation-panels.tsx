@@ -23,7 +23,6 @@ import {
 } from "@/lib/conversation-intel";
 import {
   Archive,
-  ArrowRight,
   Ban,
   Bot,
   CalendarPlus,
@@ -33,7 +32,6 @@ import {
   Mail,
   MessageSquare,
   Phone,
-  Send,
   Sparkles,
   Star,
   Tag as TagIcon,
@@ -630,5 +628,3 @@ export function AiActivityPill({ label }: { label: string }) {
 function Dot({ delay }: { delay: string }) {
   return <span className="h-1 w-1 rounded-full bg-success animate-bounce" style={{ animationDelay: delay }} />;
 }
-
-export { ArrowRight, Send };
