@@ -29,6 +29,7 @@ const ITEMS = [
   { to: "/app/assistant", label: "AI Assistant", icon: Sparkles },
   { to: "/app/new-job", label: "New Job", icon: Plus },
   { to: "/app/lists", label: "Lists", icon: ListChecks },
+  { to: "/app/leads", label: "Leads", icon: Users },
   { to: "/app/brands", label: "Brands", icon: BrainCircuit },
   { to: "/app/campaigns", label: "Campaigns", icon: MessageSquare },
   { to: "/app/reports", label: "Reports", icon: BarChart3 },
