@@ -24,7 +24,7 @@ export function PipelineFlow({
   return (
     <div className={cn("grid gap-3 sm:grid-cols-5", className)}>
       {STEPS.map((s, i) => {
-        const value = stages[s.key];
+        const value = stages[s.key] ?? 0;
         const last = i === STEPS.length - 1;
         return (
           <div
