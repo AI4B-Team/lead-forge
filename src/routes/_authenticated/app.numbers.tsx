@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsShell } from "@/components/app/settings-shell";
+import { StatTile } from "@/components/app/stat-tile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +65,7 @@ function Numbers() {
     ? Math.round(numbers.reduce((a, n) => a + (n.health_score ?? 0), 0) / numbers.length)
     : 0;
   const flagged = numbers.filter((n) => (n.optout_rate ?? 0) > 5).length;
+  const rotating = numbers.filter((n) => (n.status ?? "active") === "active" && (n.health_score ?? 0) > 0).length;
   const campaignApproved = regData?.registration?.campaign_status === "approved";
 
   const submit = async () => {
