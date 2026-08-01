@@ -37,6 +37,12 @@ type JobRow = {
 type Credits = { scrape: number; skip_trace: number; sms: number };
 type CreditTotals = Credits;
 
+type ActivityItem = {
+  tone: "leads" | "done" | "reply" | "credit";
+  text: string;
+  at: string | null;
+};
+
 const SOURCE_META: Record<string, { icon: typeof MapPin; label: string }> = {
   business: { icon: MapPin, label: "Business Search" },
   records: { icon: Landmark, label: "Public Records" },
@@ -254,6 +260,18 @@ function Dashboard() {
 
   const hasJobs = jobs.length > 0;
   const totalCredits = credits.scrape + credits.skip_trace + credits.sms;
+  // Job completions come from the jobs list we already loaded.
+  const activityFeed = useMemo<ActivityItem[]>(() => {
+    const jobItems: ActivityItem[] = jobs
+      .filter((j) => (j.rows_in ?? 0) > 0)
+      .slice(0, 3)
+      .map((j) => ({
+        tone: "leads" as const,
+        text: `${(j.rows_in ?? 0).toLocaleString()} New Contacts · ${j.name ?? "Job"}`,
+        at: j.created_at,
+      }));
+    return [...jobItems, ...activity].slice(0, 6);
+  }, [jobs, activity]);
   // A full drip is 4 touches per contact.
   const dripMessages = useMemo(() => Math.round(metrics.leads * 4), [metrics.leads]);
   const peak = Math.max(1, ...weekly.map((w) => w.count));
