@@ -41,12 +41,11 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
   component: Assistant,
 });
 
-/** Default grid order when the workspace has no template history yet. */
+/** Default grid order mirrors the homepage template teaser (first 6 non-upload templates). */
 const DEFAULT_GRID_IDS = [
-  "probate", "roofers", "code", "vacancy",
-  "property-owners", "commercial", "contractors", "absentee",
+  "gmaps", "gserp", "glocal", "contact-details", "universal-crawl", "yelp",
 ];
-const GRID_SLOTS = 8;
+const GRID_SLOTS = 6;
 
 const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   sourceType: "Source",
@@ -481,7 +480,7 @@ function Assistant() {
             View All Templates →
           </button>
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {gridTemplates.map((t) => (
             <TemplateCard key={t.id} template={t} variant="insert" onSelect={insertTemplate} />
           ))}
