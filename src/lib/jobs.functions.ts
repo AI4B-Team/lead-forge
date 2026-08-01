@@ -43,6 +43,16 @@ export const listJobs = createServerFn({ method: "GET" })
       }
     }
 
+    const nameMap = assignJobNames(
+      (jobs ?? []).map((j) => ({
+        id: j.id,
+        source_type: j.source_type,
+        record_type: j.record_type,
+        params: (j.params ?? {}) as Record<string, unknown>,
+        created_at: j.created_at,
+      })),
+    );
+
     return {
       jobs: (jobs ?? []).map((j) => {
         const names = nameMap;
