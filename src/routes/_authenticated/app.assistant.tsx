@@ -16,6 +16,13 @@ import {
   Paperclip, Mic, Send,
 } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { supabase } from "@/integrations/supabase/client";
+import { queueJob } from "@/lib/job-submit";
+import { ColumnMapperDialog } from "@/components/app/column-mapper";
+import {
+  attachmentReady, attachmentRows, isSpreadsheet, readAttachment, type UploadAttachment,
+} from "@/lib/upload-attachment";
+import type { ColumnMap } from "@/lib/csv";
 import { assistantChat, createJobFromSpec, requestCoverage } from "@/lib/assistant.functions";
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, type Coverage, type JobSpec } from "@/lib/assistant.shared";
@@ -122,6 +129,9 @@ function Assistant() {
   const [allOpen, setAllOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
+  /** Inline upload state — survives a source switch so it can be restored. */
+  const [upload, setUpload] = useState<UploadAttachment | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
   const lastTemplateId = useRef<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const sentPrompt = useRef(false);
@@ -131,7 +141,8 @@ function Assistant() {
 
   const started = thread.length > 0;
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
-  const missing = useMemo(() => openSlots(spec), [spec]);
+  const uploadReady = attachmentReady(upload);
+  const missing = useMemo(() => openSlots(spec, uploadReady), [spec, uploadReady]);
   const traceComplete =
     revealed >= traceSteps.length && !busy && traceSteps.length > 0 && missing.length === 0;
   const lastAssistantIndex = useMemo(() => {
@@ -196,9 +207,62 @@ function Assistant() {
       setRevealed(0);
       setInferred(new Set());
       setSpec({ ...EMPTY_SPEC, sourceType: templateSourceType(t), templateId: t.id });
+      setUpload(null);
     }
     if (workspaceId) setRecents(touchRecentTemplate(workspaceId, t.id));
     requestAnimationFrame(() => composer.current?.focus());
+  };
+
+  /**
+   * A file added from either entry point (panel dropzone or composer attach)
+   * flips the source to Upload My List and runs the shared mapping step.
+   */
+  const attachFile = async (file: File) => {
+    if (!isSpreadsheet(file)) {
+      toast.error("Attach A .csv Or .xlsx File.");
+      return;
+    }
+    try {
+      const next = await readAttachment(file);
+      setUpload(next);
+      if (spec.sourceType !== "upload") {
+        setSpec((s) => ({ ...s, sourceType: "upload" }));
+        setInferred((prev) => { const out = new Set(prev); out.delete("sourceType"); return out; });
+      }
+      if (selectedTemplate && templateSourceType(selectedTemplate) !== "upload") {
+        setSelectedTemplate(null);
+        lastTemplateId.current = null;
+        toast.info(`${selectedTemplate.title} Deselected — Using Your Uploaded File Instead.`);
+      }
+      setConfirmed(false);
+      if (started) {
+        setThread((m) => [...m, { role: "system", content: `You Attached: ${next.name}` }]);
+      } else {
+        // Attaching from the hero opens the working view so the panel is visible.
+        setThread([
+          { role: "system", content: `You Attached: ${next.name}` },
+          {
+            role: "assistant",
+            content: next.parseable && next.mapped
+              ? `Got ${next.name} — ${next.rowCount.toLocaleString()} rows. Review the mapping and settings on the right, then generate the list.`
+              : `Got ${next.name}. Map your columns on the right and I'll clean, verify, and scrub it.`,
+            spec: { ...spec, sourceType: "upload" },
+          },
+        ]);
+      }
+      if (next.parseable && !next.mapped) setMapOpen(true);
+      else if (next.parseable) {
+        toast.success(`${next.name} · ${next.rowCount.toLocaleString()} Rows Detected`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Read That File");
+    }
+  };
+
+  const saveMapping = (map: ColumnMap) => {
+    setUpload((u) => (u ? { ...u, map, mapped: true } : u));
+    setMapOpen(false);
+    setConfirmed(false);
   };
 
   const dictate = () => {
@@ -265,9 +329,29 @@ function Assistant() {
   const send = async (text: string) => {
     const body = text.trim();
     if (!workspaceId || busy) return;
+    // Uploads have their own required slot: a mapped file. Niche/location
+    // questions don't apply, so the assistant asks for the file instead.
+    if (spec.sourceType === "upload" && !uploadReady) {
+      if (body) setThread((m) => [...m, { role: "user", content: body }]);
+      setThread((m) => [
+        ...m,
+        {
+          role: "assistant",
+          content: upload
+            ? "Map your columns in the panel on the right and I'll take it from there."
+            : "Drop your file in the panel on the right, or attach it below.",
+          spec,
+        },
+      ]);
+      if (body && !firstPrompt) setFirstPrompt(body);
+      setInput("");
+      setRevealed(0);
+      return;
+    }
+    if (spec.sourceType === "upload" && !body) return;
     // Template selected but slots still missing: the assistant opens the
     // conversation itself and asks only for what it doesn't have.
-    if (selectedTemplate) {
+    if (selectedTemplate && templateSourceType(selectedTemplate) !== "upload") {
       const miss = missingSlots(body, spec);
       if (!body || miss.geo || miss.subject) {
         const ask = miss.subject && miss.geo
@@ -347,6 +431,7 @@ function Assistant() {
     setConfirmed(false);
     setRevealed(0);
     setInferred(new Set());
+    setUpload(null);
     setConvId(`c${Date.now()}`);
   };
 
@@ -428,7 +513,39 @@ function Assistant() {
       return;
     }
     if (spec.sourceType === "upload") {
-      navigate({ to: "/app/new-job/upload", search: { reattach: false } });
+      if (!upload) {
+        toast.error("Attach A File First.");
+        return;
+      }
+      setRunning(true);
+      try {
+        // Same params shape the Upload page queues, so the pipeline is identical.
+        const { id, duplicate } = await queueJob(supabase, {
+          workspaceId,
+          sourceType: "upload",
+          params: {
+            file_name: upload.name,
+            file_size: upload.size,
+            mapping: upload.map,
+            skip_trace: spec.skipTrace,
+            rows: attachmentRows(upload),
+          },
+        });
+        clearDraft(workspaceId);
+        navigate({ to: "/app/jobs/$jobId", params: { jobId: id } });
+        if (duplicate) {
+          toast.info("This File Was Already Queued — Opening That Run.");
+          return;
+        }
+        toast.success("List Queued. Running Pipeline…");
+        runJobFn({ data: { jobId: id } }).catch((e) =>
+          toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
+        );
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Could Not Queue Job");
+      } finally {
+        setRunning(false);
+      }
       return;
     }
     setRunning(true);
@@ -512,7 +629,16 @@ function Assistant() {
           ref={specScroll.ref}
           className={`h-full min-h-0 lg:overflow-y-auto ${specScroll.overflowing ? "thin-scroll lg:pr-1" : ""}`}
         >
-          <JobSpecCard spec={spec} onChange={editSpec} coverage={coverage} inferred={inferred} />
+          <JobSpecCard
+            spec={spec}
+            onChange={editSpec}
+            coverage={coverage}
+            inferred={inferred}
+            upload={upload}
+            onPickFile={(f) => void attachFile(f)}
+            onRemoveUpload={() => { setUpload(null); setConfirmed(false); }}
+            onEditMapping={() => setMapOpen(true)}
+          />
         </div>
         {specScroll.overflowing && !specScroll.atBottom && (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background to-transparent" />
@@ -539,7 +665,18 @@ function Assistant() {
         className="resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
       />
       <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="hidden flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground sm:flex">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+          <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap font-medium text-foreground hover:text-primary">
+            <Paperclip className="h-3.5 w-3.5" /> Attach File
+            <input
+              type="file"
+              className="hidden"
+              accept=".csv,.xlsx"
+              onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
+            />
+          </label>
+        </div>
+        <div className="hidden flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground lg:flex">
           <span className="flex items-center gap-1.5">
             <CornerDownLeft className="h-3 w-3" /> Enter To Send · Shift + Enter For A New Line
           </span>
@@ -550,7 +687,7 @@ function Assistant() {
         </div>
         <Button
           className="rounded-full px-5"
-          disabled={busy || (!input.trim() && !selectedTemplate)}
+          disabled={busy || (!input.trim() && !selectedTemplate && !upload)}
           onClick={() => send(input)}
         >
           <Sparkles className="mr-1 h-4 w-4" /> {started ? "Send" : "Generate Job"}
@@ -611,9 +748,15 @@ function Assistant() {
           className="min-h-[220px] resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
         />
         <div className="mt-4 flex items-center justify-between gap-3">
-          <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground">
+          <label className="inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
             <Paperclip className="mr-1.5 h-4 w-4" /> Attach Files
-          </Button>
+            <input
+              type="file"
+              className="hidden"
+              accept=".csv,.xlsx"
+              onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
+            />
+          </label>
           <div className="flex items-center gap-2">
             {micSupported && (
               <Button
@@ -730,7 +873,7 @@ function Assistant() {
                                 steps={buildTraceSteps(m.spec ?? EMPTY_SPEC)}
                                 revealed={buildTraceSteps(m.spec ?? EMPTY_SPEC).length}
                                 thinking={false}
-                                open={openSlots(m.spec ?? EMPTY_SPEC)}
+                                open={openSlots(m.spec ?? EMPTY_SPEC, uploadReady)}
                               />
                             )}
                           </div>
@@ -780,6 +923,17 @@ function Assistant() {
         {/* One consolidated List Settings rail, sticky Generate at its bottom. */}
         <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>
       </div>
+      )}
+
+      {upload?.parseable && (
+        <ColumnMapperDialog
+          open={mapOpen}
+          onOpenChange={setMapOpen}
+          fileName={upload.name}
+          headers={upload.headers}
+          value={upload.map}
+          onConfirm={saveMapping}
+        />
       )}
     </div>
   );

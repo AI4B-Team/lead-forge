@@ -36,7 +36,7 @@ export type CsvLead = {
 };
 
 // Map a header string to a canonical lead field, or null to skip.
-function canonicalField(h: string): keyof CsvLead | null {
+export function canonicalField(h: string): keyof CsvLead | null {
   const s = h.toLowerCase().replace(/[^a-z0-9]+/g, "");
   if (["fullname", "name", "contactname", "ownername"].includes(s)) return "full_name";
   if (["businessname", "company", "companyname", "business"].includes(s)) return "business_name";
@@ -75,4 +75,66 @@ export function csvToLeads(text: string, max = 25_000): { rows: CsvLead[]; skipp
     else skipped++;
   }
   return { rows, skipped, headers };
+}
+/** Canonical lead fields, in the order the mapper renders them. */
+export const LEAD_FIELDS: Array<{ key: keyof CsvLead; label: string }> = [
+  { key: "full_name", label: "Full Name" },
+  { key: "business_name", label: "Business Name" },
+  { key: "phone", label: "Phone" },
+  { key: "email", label: "Email" },
+  { key: "address", label: "Address" },
+  { key: "city", label: "City" },
+  { key: "state", label: "State" },
+  { key: "zip", label: "Zip" },
+];
+
+export const SKIP = "__skip";
+
+export type ColumnMap = Record<string, string>;
+
+/** Best-guess mapping of canonical field -> source header (or SKIP). */
+export function autoMapHeaders(headers: string[]): ColumnMap {
+  const map: ColumnMap = {};
+  for (const f of LEAD_FIELDS) map[f.key] = SKIP;
+  headers.forEach((h) => {
+    const key = canonicalField(h);
+    if (key && map[key] === SKIP) map[key] = h;
+  });
+  return map;
+}
+
+/** Headers that couldn't be auto-matched to a canonical field. */
+export function ambiguousHeaders(headers: string[]): string[] {
+  return headers.filter((h) => !canonicalField(h));
+}
+
+export function mappedCount(map: ColumnMap): number {
+  return Object.values(map).filter((v) => v && v !== SKIP).length;
+}
+
+/** Apply a column map to a parsed table (row 0 = headers). */
+export function rowsFromTable(table: string[][], map: ColumnMap, max = 25_000): CsvLead[] {
+  if (!table.length) return [];
+  const headers = table[0]!.map((h) => h.trim());
+  const index: Array<[keyof CsvLead, number]> = [];
+  for (const f of LEAD_FIELDS) {
+    const h = map[f.key];
+    if (!h || h === SKIP) continue;
+    const i = headers.indexOf(h);
+    if (i >= 0) index.push([f.key, i]);
+  }
+  const rows: CsvLead[] = [];
+  for (let r = 1; r < table.length && rows.length < max; r++) {
+    const raw = table[r]!;
+    const lead: CsvLead = {};
+    let has = false;
+    for (const [key, i] of index) {
+      const v = (raw[i] ?? "").trim();
+      if (!v) continue;
+      lead[key] = v;
+      has = true;
+    }
+    if (has) rows.push(lead);
+  }
+  return rows;
 }

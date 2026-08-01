@@ -4,18 +4,25 @@ import { US_STATES } from "@/lib/us-geo";
 
 export type TraceStep = { label: string; value: string };
 
-/** Required slots for a runnable job: source + subject + geography. */
-export function openSlots(spec: JobSpec): string[] {
+/**
+ * Required slots for a runnable job: source + subject + geography, or for
+ * uploads, an attached file with its columns mapped.
+ */
+export function openSlots(spec: JobSpec, uploadReady = false): string[] {
   const open: string[] = [];
   if (!spec.sourceType) open.push("Source");
+  if (spec.sourceType === "upload") {
+    if (!uploadReady) open.push("File");
+    return open;
+  }
   if (spec.sourceType === "records" && !spec.recordType) open.push("Record Type");
   if (spec.sourceType === "business" && !spec.niches.length) open.push("Niche");
-  if (spec.sourceType !== "upload" && !spec.state && !spec.counties.length) open.push("Location");
+  if (!spec.state && !spec.counties.length) open.push("Location");
   return open;
 }
 
-export function specSlotsComplete(spec: JobSpec): boolean {
-  return Boolean(spec.sourceType) && openSlots(spec).length === 0;
+export function specSlotsComplete(spec: JobSpec, uploadReady = false): boolean {
+  return Boolean(spec.sourceType) && openSlots(spec, uploadReady).length === 0;
 }
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -43,7 +50,10 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
   if (spec.recencyDays) steps.push({ label: "Recency Window", value: `Last ${spec.recencyDays} Days` });
   if (spec.mobileOnly) steps.push({ label: "Filtering For Mobile Numbers", value: "Enabled" });
   if (spec.skipTrace) steps.push({ label: "Skip Tracing Missing Numbers", value: "Enabled" });
-  if (spec.removeFranchises) steps.push({ label: "Removing Franchises", value: "Enabled" });
+  // Franchise removal only applies to scraped business data.
+  if (spec.removeFranchises && spec.sourceType === "business") {
+    steps.push({ label: "Removing Franchises", value: "Enabled" });
+  }
   if (spec.dedupe) steps.push({ label: "Deduping Against Past Lists", value: "Enabled" });
   if (spec.industry) steps.push({ label: "Recommended Playbook", value: spec.industry });
   return steps;
