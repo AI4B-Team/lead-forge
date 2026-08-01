@@ -1,3 +1,4 @@
+import { takeStashedPrompt } from "@/lib/prompt-handoff";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { PageHeader } from "@/components/app/page-header";
