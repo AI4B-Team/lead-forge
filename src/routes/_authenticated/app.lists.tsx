@@ -217,7 +217,7 @@ function Jobs() {
 
       <Card>
         <CardContent className="overflow-x-auto p-0">
-          <table className="w-full min-w-[980px] text-sm">
+          <table className="w-full min-w-[1240px] text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="p-4">Name</th>
