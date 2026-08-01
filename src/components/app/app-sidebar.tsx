@@ -74,7 +74,7 @@ export function AppSidebar() {
                 const showBadge = item.to === "/app/inbox" && (unread?.count ?? 0) > 0;
                 return (
                   <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton asChild isActive={active}>
+                    <SidebarMenuButton asChild isActive={active} data-tour={`nav-${item.to.replace("/app/", "")}`}>
                       <Link to={item.to} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{item.label}</span>}
