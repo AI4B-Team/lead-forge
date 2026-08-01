@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { Zap, Inbox } from "lucide-react";
@@ -23,7 +23,6 @@ function AppLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center justify-between border-b border-border bg-background px-4">
             <div className="flex items-center gap-2">
-              <SidebarTrigger />
               <div className="hidden md:block"><WorkspaceSwitcher /></div>
             </div>
             <TooltipProvider delayDuration={150}>

@@ -23,6 +23,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { BRAND_NAME } from "@/config/brand";
@@ -69,12 +70,15 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <Link to="/app/dashboard" className="flex items-center gap-2 px-2 py-2 font-display font-bold text-base text-sidebar-foreground">
-          <span className="grid place-items-center h-7 w-7 rounded-md bg-primary text-primary-foreground shrink-0">
-            <Radar className="h-4 w-4" />
-          </span>
-          {!collapsed && BRAND_NAME}
-        </Link>
+        <div className="flex items-center justify-between gap-1 px-2 py-2">
+          <Link to="/app/dashboard" className="flex items-center gap-2 font-display font-bold text-base text-sidebar-foreground">
+            <span className="grid place-items-center h-7 w-7 rounded-md bg-primary text-primary-foreground shrink-0">
+              <Radar className="h-4 w-4" />
+            </span>
+            {!collapsed && BRAND_NAME}
+          </Link>
+          <SidebarTrigger className="h-7 w-7 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
