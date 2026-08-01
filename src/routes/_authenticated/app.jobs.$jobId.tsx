@@ -19,6 +19,7 @@ import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { PhoneLink } from "@/components/app/phone-link";
 import { setOnboardingPref } from "@/lib/onboarding.functions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { isStalled, stallReason } from "@/lib/job-watchdog";
 
 export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
   head: () => ({ meta: [{ title: "Pipeline Review — LeadTrace" }] }),
@@ -91,6 +92,9 @@ function JobDetail() {
   const scrubFreshness = data.scrubFreshness;
   const isReady = job.status === "ready";
   const isRunning = !isReady && job.status !== "failed" && job.status !== "paused";
+  // Stuck-job watchdog (§23): no progress events for 2h on a running stage.
+  const lastEventAt = (eventData?.events ?? []).at(-1)?.created_at ?? null;
+  const stalled = isStalled({ status: job.status, lastEventAt, createdAt: job.created_at as string });
   const params = (job.params ?? {}) as Record<string, unknown>;
   const jobName =
     data.displayName ??
