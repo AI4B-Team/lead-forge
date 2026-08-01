@@ -41,6 +41,13 @@ function NewCampaign() {
   const configFn = useServerFn(updateCampaignConfig);
   const previewFn = useServerFn(previewCampaign);
   const scheduleFn = useServerFn(scheduleCampaignDrops);
+  const fetchReg = useServerFn(getRegistration);
+  const { data: regData } = useQuery({
+    queryKey: ["registration", workspaceId],
+    queryFn: () => fetchReg({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId,
+  });
+  const regReady = regData?.registration?.campaign_status === "approved";
 
   const [selectedJob, setSelectedJob] = useState<string>("");
   const [name, setName] = useState("");
@@ -162,6 +169,19 @@ function NewCampaign() {
         description="Only Clean Leads Are Loaded. STOP Suppresses The Number Forever."
         actions={<Button asChild variant="outline" className="rounded-full"><Link to="/app/campaigns">Cancel</Link></Button>}
       />
+
+      {regData && !regReady && (
+        <div className="mb-6 rounded-2xl border border-warn/30 bg-warn/5 p-4 flex flex-wrap items-center gap-3">
+          <BadgeCheck className="h-5 w-5 text-warn" />
+          <div className="text-sm text-muted-foreground">
+            <span className="font-display font-bold text-foreground">Register Your Texting Brand To Send.</span>{" "}
+            Carrier Approval Takes A Few Days — Build This Campaign Now, And Sending Unlocks The Moment It Clears.
+          </div>
+          <Button asChild size="sm" className="rounded-full ml-auto">
+            <Link to="/app/registration">Finish Setup <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
+          </Button>
+        </div>
+      )}
 
       <Step n={1} title="Brand & Bot Training" hint="The Bot Only Speaks From Approved Brand Material.">
         <Card>
