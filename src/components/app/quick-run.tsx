@@ -1,32 +1,30 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Play } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Search, ChevronDown, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type RecordType = "business" | "records" | "upload";
 
-/** Quick-run bar (spec §18): primary action as hero — jump straight into a prefilled job. */
+const TYPES: Array<{ key: RecordType; label: string }> = [
+  { key: "business", label: "Business Search" },
+  { key: "records", label: "Public Records" },
+  { key: "upload", label: "Upload A List" },
+];
+
+/** Command-bar quick run (spec §18): one line from intent to a prefilled job. */
 export function QuickRun() {
   const navigate = useNavigate();
   const [type, setType] = useState<RecordType>("business");
   const [niche, setNiche] = useState("");
   const [location, setLocation] = useState("");
+  const activeType = TYPES.find((t) => t.key === type)!;
 
   const run = () => {
-    if (type === "upload") {
-      void navigate({ to: "/app/new-job/upload" });
-      return;
-    }
-    if (type === "records") {
-      void navigate({ to: "/app/new-job/records" });
-      return;
-    }
+    if (type === "upload") return void navigate({ to: "/app/new-job/upload" });
+    if (type === "records") return void navigate({ to: "/app/new-job/records" });
     void navigate({
       to: "/app/new-job/business",
       search: {
@@ -37,52 +35,56 @@ export function QuickRun() {
   };
 
   return (
-    <Card className="mb-6">
-      <CardContent className="pt-6">
-        <div className="grid gap-3 md:grid-cols-[190px_1fr_1fr_auto] md:items-end">
-          <div>
-            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Record Type</Label>
-            <Select value={type} onValueChange={(v) => setType(v as RecordType)}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="business">Business Search</SelectItem>
-                <SelectItem value="records">Public Records</SelectItem>
-                <SelectItem value="upload">Upload A List</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="quick-niche" className="text-xs uppercase tracking-wider text-muted-foreground">
-              Niche
-            </Label>
-            <Input
-              id="quick-niche"
-              value={niche}
-              onChange={(e) => setNiche(e.target.value)}
-              placeholder="HVAC Companies"
-              disabled={type !== "business"}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label htmlFor="quick-location" className="text-xs uppercase tracking-wider text-muted-foreground">
-              Location
-            </Label>
-            <Input
-              id="quick-location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Hillsborough County, FL"
-              disabled={type !== "business"}
-              className="mt-1"
-              onKeyDown={(e) => { if (e.key === "Enter") run(); }}
-            />
-          </div>
-          <Button className="rounded-full" onClick={run}>
-            <Play className="mr-1 h-4 w-4" /> Start Job
-          </Button>
+    <div className="mb-6 rounded-2xl border border-border bg-card p-2 shadow-sm transition-shadow focus-within:shadow-md">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+        <div className="flex min-w-0 flex-1 items-center gap-2 px-2">
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="inline-flex shrink-0 items-center gap-1 rounded-full bg-surface-muted px-3 py-1.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                {activeType.label} <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {TYPES.map((t) => (
+                <DropdownMenuItem key={t.key} onSelect={() => setType(t.key)}>
+                  {t.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {type === "business" ? (
+            <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+              <input
+                value={niche}
+                onChange={(e) => setNiche(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") run(); }}
+                placeholder="What Are You Looking For? e.g. HVAC Companies"
+                aria-label="Niche"
+                className="min-w-0 flex-1 bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+              <span className="hidden h-5 w-px bg-border sm:block" />
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") run(); }}
+                placeholder="Where? e.g. Hillsborough County, FL"
+                aria-label="Location"
+                className="min-w-0 flex-1 bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+            </div>
+          ) : (
+            <span className="min-w-0 flex-1 truncate py-2 text-sm text-muted-foreground">
+              {type === "upload" ? "Drop A CSV And We'll Clean, Scrub, And Skip Trace It." : "Search Probate, Code Violations, Liens, And More."}
+            </span>
+          )}
         </div>
-      </CardContent>
-    </Card>
+
+        <Button className="rounded-full shrink-0" onClick={run}>
+          Start Job <ArrowRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
   );
 }
