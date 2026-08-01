@@ -24,21 +24,65 @@ const COVERAGE_LABEL: Record<Coverage, string> = {
   unknown: "Not Covered",
 };
 
-/** The live, editable Job Spec. Chat fills it in, the operator can override. */
+/** Small inline confidence badge shown next to fields the assistant filled in. */
+function Confidence({ value, show }: { value: number; show: boolean }) {
+  if (!show) return null;
+  return (
+    <span className="rounded-full bg-success/12 px-1.5 py-0.5 text-[10px] font-semibold text-success">
+      {value}%
+    </span>
+  );
+}
+
+function FieldLabel({ children, confidence, show }: { children: React.ReactNode; confidence?: number; show?: boolean }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Label>{children}</Label>
+      {confidence ? <Confidence value={confidence} show={Boolean(show)} /> : null}
+    </div>
+  );
+}
+
+/**
+ * The single editable Job Spec panel (§22). It is schema-aware: fields that
+ * don't apply to the chosen source type never render.
+ */
 export function JobSpecCard({
   spec,
   onChange,
   coverage,
-  estimate,
 }: {
   spec: JobSpec;
   onChange: (next: JobSpec) => void;
   coverage: Array<{ county: string; coverage: Coverage }>;
-  estimate: { rows: number; skipTraceCredits: number; scrapeCredits: number } | null;
 }) {
   const set = <K extends keyof JobSpec>(key: K, value: JobSpec[K]) => onChange({ ...spec, [key]: value });
   const covFor = (county: string): Coverage =>
     coverage.find((c) => c.county.toLowerCase() === county.toLowerCase())?.coverage ?? "unknown";
+
+  const isRecords = spec.sourceType === "records";
+  const isBusiness = spec.sourceType === "business";
+  const isUpload = spec.sourceType === "upload";
+  const hasGeo = isRecords || isBusiness;
+
+  const toggles = isUpload
+    ? ([
+        ["skipTrace", "Skip Trace Missing Numbers"],
+        ["dedupe", "Dedupe Against Past Lists"],
+        ["mobileOnly", "Mobile Numbers Only"],
+      ] as const)
+    : isRecords
+      ? ([
+          ["skipTrace", "Skip Trace Missing Numbers"],
+          ["dedupe", "Dedupe Against Past Lists"],
+          ["mobileOnly", "Mobile Numbers Only"],
+        ] as const)
+      : ([
+          ["skipTrace", "Skip Trace Missing Numbers"],
+          ["removeFranchises", "Remove Franchises"],
+          ["dedupe", "Dedupe Against Past Lists"],
+          ["mobileOnly", "Mobile Numbers Only"],
+        ] as const);
 
   return (
     <Card>
@@ -49,7 +93,7 @@ export function JobSpecCard({
         </div>
 
         <div>
-          <Label>Source</Label>
+          <FieldLabel confidence={99} show={Boolean(spec.sourceType)}>Source</FieldLabel>
           <Select
             value={spec.sourceType ?? ""}
             onValueChange={(v) => set("sourceType", v as JobSpec["sourceType"])}
@@ -63,9 +107,9 @@ export function JobSpecCard({
           </Select>
         </div>
 
-        {spec.sourceType === "records" ? (
+        {isRecords && (
           <div>
-            <Label>Record Type</Label>
+            <FieldLabel confidence={96} show={Boolean(spec.recordType)}>Record Type</FieldLabel>
             <Select value={spec.recordType ?? ""} onValueChange={(v) => set("recordType", v)}>
               <SelectTrigger className="mt-1"><SelectValue placeholder="Pick A Record Type" /></SelectTrigger>
               <SelectContent>
@@ -73,9 +117,11 @@ export function JobSpecCard({
               </SelectContent>
             </Select>
           </div>
-        ) : (
+        )}
+
+        {isBusiness && (
           <div>
-            <Label>Niches</Label>
+            <FieldLabel confidence={97} show={spec.niches.length > 0}>Niches</FieldLabel>
             <Input
               className="mt-1"
               value={spec.niches.join(", ")}
@@ -87,54 +133,70 @@ export function JobSpecCard({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label>State</Label>
-            <Select
-              value={spec.state ?? ""}
-              onValueChange={(v) =>
-                onChange({ ...spec, state: v, counties: spec.state === v ? spec.counties : [] })
-              }
-            >
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Pick A State" /></SelectTrigger>
-              <SelectContent className="max-h-72">
-                {US_STATES.map((s) => (
-                  <SelectItem key={s.code} value={s.code}>{s.code} · {s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {isUpload && (
+          <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">Your Own File</span>
+            <div className="mt-1">
+              Upload Jobs Start On The Upload Page, Where You Attach The File And Map Its Columns. The Cleaning,
+              Line-Type Check, And Scrub Run Exactly The Same.
+            </div>
           </div>
-          <div>
-            <Label>Recency (Days)</Label>
-            <Input
-              className="mt-1"
-              value={spec.recencyDays ?? ""}
-              onChange={(e) => {
-                const n = Number(e.target.value.replace(/\D/g, ""));
-                set("recencyDays", n ? n : null);
-              }}
-              placeholder="90"
-            />
-          </div>
-        </div>
+        )}
 
-        <div>
-          <Label>Counties</Label>
-          <CountyMultiSelect
-            state={spec.state}
-            value={spec.counties}
-            onChange={(next) => set("counties", next)}
-            renderBadgeClassName={(c) => COVERAGE_STYLE[covFor(c)]}
-            renderBadgeLabel={(c) => `${c} · ${COVERAGE_LABEL[covFor(c)]}`}
-          />
-          {!spec.counties.length && (
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              {spec.state
-                ? `Select One Or More Of The ${countiesForState(spec.state).length} Counties In ${spec.state}. Leave Empty To Cover The Whole State.`
-                : `Covered Now: ${COUNTIES.filter((c) => c.coverage === "live").map((c) => c.name).join(", ")}`}
-            </p>
-          )}
-        </div>
+        {hasGeo && (
+          <>
+            <div className={isRecords ? "grid grid-cols-2 gap-3" : ""}>
+              <div>
+                <FieldLabel confidence={95} show={Boolean(spec.state)}>State</FieldLabel>
+                <Select
+                  value={spec.state ?? ""}
+                  onValueChange={(v) =>
+                    onChange({ ...spec, state: v, counties: spec.state === v ? spec.counties : [] })
+                  }
+                >
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Pick A State" /></SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {US_STATES.map((s) => (
+                      <SelectItem key={s.code} value={s.code}>{s.code} · {s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {isRecords && (
+                <div>
+                  <Label>Recency (Days)</Label>
+                  <Input
+                    className="mt-1"
+                    value={spec.recencyDays ?? ""}
+                    onChange={(e) => {
+                      const n = Number(e.target.value.replace(/\D/g, ""));
+                      set("recencyDays", n ? n : null);
+                    }}
+                    placeholder="90"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <FieldLabel confidence={98} show={spec.counties.length > 0}>Counties</FieldLabel>
+              <CountyMultiSelect
+                state={spec.state}
+                value={spec.counties}
+                onChange={(next) => set("counties", next)}
+                renderBadgeClassName={(c) => COVERAGE_STYLE[covFor(c)]}
+                renderBadgeLabel={(c) => `${c} · ${COVERAGE_LABEL[covFor(c)]}`}
+              />
+              {!spec.counties.length && (
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  {spec.state
+                    ? `Select One Or More Of The ${countiesForState(spec.state).length} Counties In ${spec.state}. Leave Empty To Cover The Whole State.`
+                    : `Covered Now: ${COUNTIES.filter((c) => c.coverage === "live").map((c) => c.name).join(", ")}`}
+                </p>
+              )}
+            </div>
+          </>
+        )}
 
         <div>
           <Label>Industry Preset</Label>
@@ -158,32 +220,12 @@ export function JobSpecCard({
         </div>
 
         <div className="space-y-3">
-          {([
-            ["skipTrace", "Skip Trace Missing Numbers"],
-            ["removeFranchises", "Remove Franchises"],
-            ["dedupe", "Dedupe Against Past Lists"],
-            ["mobileOnly", "Mobile Numbers Only"],
-          ] as const).map(([key, label]) => (
+          {toggles.map(([key, label]) => (
             <div key={key} className="flex items-center justify-between">
               <span className="text-sm text-foreground">{label}</span>
               <Switch checked={spec[key]} onCheckedChange={(v) => set(key, v)} />
             </div>
           ))}
-        </div>
-
-        <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-          {estimate ? (
-            <>
-              <div className="font-medium text-foreground">Coverage + Cost Preview</div>
-              <div className="mt-1">
-                About {estimate.rows.toLocaleString()} Rows · ~{estimate.scrapeCredits.toLocaleString()} Lead Credits
-                {estimate.skipTraceCredits ? ` · ~${estimate.skipTraceCredits.toLocaleString()} Skip-Trace Credits` : ""}
-              </div>
-              <div className="mt-1">Estimates Only. Nothing Is Charged Until You Run The Job.</div>
-            </>
-          ) : (
-            "Resolve A Source And Geography To See A Cost Preview."
-          )}
         </div>
       </CardContent>
     </Card>

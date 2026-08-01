@@ -88,3 +88,20 @@ export function AssistantTrace({
     </div>
   );
 }
+
+/**
+ * The same reasoning trail rendered as an inline thread card (§22): assembly
+ * status lives in the conversation, in chronological order, not in a side rail.
+ */
+export function AssistantTraceCard({
+  steps,
+  revealed,
+  thinking,
+}: {
+  steps: TraceStep[];
+  revealed: number;
+  thinking: boolean;
+}) {
+  if (!steps.length && !thinking) return null;
+  return <AssistantTrace steps={steps} revealed={revealed} thinking={thinking} />;
+}
