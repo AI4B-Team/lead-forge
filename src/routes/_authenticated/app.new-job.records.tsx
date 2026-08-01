@@ -13,6 +13,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
+import { queueJob } from "@/lib/job-submit";
 
 export const Route = createFileRoute("/_authenticated/app/new-job/records")({
   head: () => ({ meta: [{ title: "Scrape Public Records — LeadTrace" }] }),
@@ -50,27 +51,24 @@ function Wizard() {
     }
     setBusy(true);
     try {
-      const { data, error } = await supabase
-        .from("jobs")
-        .insert({
-          workspace_id: workspaceId,
-          source_type: "records",
-          status: "queued",
-          params: {
-            // §9.5 auto-name format: {Niche} – {Geography} – {Mon DD}
-            name: `${record} – ${county} – ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
-            record_type: record,
-            county,
-            date_from: from || null,
-            date_to: to || null,
-          },
-        })
-        .select("id")
-        .single();
-      if (error || !data) throw error ?? new Error("Could Not Queue Job");
+      const { id, duplicate } = await queueJob(supabase, {
+        workspaceId,
+        sourceType: "records",
+        recordType: record,
+        params: {
+          record_type: record,
+          county,
+          date_from: from || null,
+          date_to: to || null,
+        },
+      });
+      navigate({ to: "/app/jobs/$jobId", params: { jobId: id } });
+      if (duplicate) {
+        toast.info("This Search Was Already Queued — Opening That Run.");
+        return;
+      }
       toast.success("Job Queued. Running Pipeline…");
-      navigate({ to: "/app/jobs/$jobId", params: { jobId: data.id } });
-      runJobFn({ data: { jobId: data.id } }).catch((e) =>
+      runJobFn({ data: { jobId: id } }).catch((e) =>
         toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
       );
     } catch (err) {

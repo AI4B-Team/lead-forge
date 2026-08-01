@@ -92,7 +92,9 @@ function JobDetail() {
   const isReady = job.status === "ready";
   const isRunning = !isReady && job.status !== "failed" && job.status !== "paused";
   const params = (job.params ?? {}) as Record<string, unknown>;
-  const jobName = String(params.name ?? params.file_name ?? `${job.source_type} · ${job.id.slice(0, 8)}`);
+  const jobName =
+    data.displayName ??
+    String(params.name ?? params.file_name ?? `${job.source_type} · ${job.id.slice(0, 8)}`);
 
   // Elapsed / throughput / ETA from the job clock and the rows already processed.
   const startedAt = new Date(job.created_at as string).getTime();
@@ -153,6 +155,9 @@ function JobDetail() {
             <Badge variant="outline" className="text-sm">
               {STATUS_LABEL[job.status ?? "queued"] ?? job.status}
             </Badge>
+            {data.cadenceBadge && (
+              <Badge variant="secondary" className="text-sm">{data.cadenceBadge}</Badge>
+            )}
             {(isRunning || job.status === "paused" || job.status === "failed") && (
               <Button variant="outline" className="rounded-full" onClick={toggleRun}>
                 {isRunning ? <><Pause className="mr-1 h-4 w-4" /> Pause</> : <><Play className="mr-1 h-4 w-4" /> Resume</>}

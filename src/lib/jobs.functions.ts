@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { RESCRUB_DAYS, SCRUB_STALE_MESSAGE, isScrubStale, scrubAgeDays } from "@/lib/compliance-rules";
+import { assignJobNames, cadenceBadge } from "@/lib/job-naming";
 
 // List every job for a workspace with lead-bucket counts for the Lists page.
 export const listJobs = createServerFn({ method: "GET" })
@@ -42,12 +43,24 @@ export const listJobs = createServerFn({ method: "GET" })
       }
     }
 
+    const nameMap = assignJobNames(
+      (jobs ?? []).map((j) => ({
+        id: j.id,
+        source_type: j.source_type,
+        record_type: j.record_type,
+        params: (j.params ?? {}) as Record<string, unknown>,
+        created_at: j.created_at,
+      })),
+    );
+
     return {
       jobs: (jobs ?? []).map((j) => {
-        const params = (j.params ?? {}) as { name?: string; file_name?: string };
+        const names = nameMap;
         return {
           id: j.id,
-          name: params.name ?? params.file_name ?? `${j.source_type} · ${j.id.slice(0, 8)}`,
+          name: names.get(j.id)?.name ?? `${j.source_type} · ${j.id.slice(0, 8)}`,
+          run_index: names.get(j.id)?.runIndex ?? 1,
+          cadence_badge: cadenceBadge(j.schedule),
           source_type: j.source_type,
           status: j.status,
           rows_in: j.rows_in ?? 0,
@@ -147,6 +160,24 @@ export const getJobReview = createServerFn({ method: "GET" })
 
     return {
       job,
+      displayName:
+        (await (async () => {
+          const { data: siblings } = await supabase
+            .from("jobs")
+            .select("id, source_type, record_type, params, created_at")
+            .eq("workspace_id", job.workspace_id);
+          const map = assignJobNames(
+            (siblings ?? []).map((s) => ({
+              id: s.id,
+              source_type: s.source_type,
+              record_type: s.record_type,
+              params: (s.params ?? {}) as Record<string, unknown>,
+              created_at: s.created_at,
+            })),
+          );
+          return map.get(job.id)?.name ?? null;
+        })()) ?? null,
+      cadenceBadge: cadenceBadge(job.schedule),
       scrub,
       counts: { total: t, clean: clean ?? 0, dnc: dnc ?? 0, litigator: litigator ?? 0, mobile: mobile ?? 0 },
       quality,

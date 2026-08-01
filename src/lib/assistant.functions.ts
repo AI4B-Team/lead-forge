@@ -121,32 +121,27 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
         ? `${spec.recordType} · ${spec.counties.join(", ") || spec.state || "All"}`
         : `${spec.niches.join(", ")} · ${spec.counties.join(", ") || spec.state || "All"}`);
 
-    const { data: job, error } = await context.supabase
-      .from("jobs")
-      .insert({
-        workspace_id: data.workspaceId,
-        source_type: spec.sourceType,
-        status: "queued",
-        params: {
-          name,
-          niches: spec.niches,
-          record_type: spec.recordType,
-          state: spec.state,
-          counties: spec.counties,
-          county: spec.counties[0] ?? null,
-          recency_days: spec.recencyDays,
-          remove_franchises: spec.removeFranchises,
-          dedupe: spec.dedupe,
-          mobile_only: spec.mobileOnly,
-          skip_trace: spec.skipTrace,
-          industry: spec.industry,
-          message_angle: spec.messageAngle,
-          assembled_by: "ai_assistant",
-          assistant_transcript: data.transcript,
-        },
-      })
-      .select("id")
-      .single();
-    if (error || !job) throw new Error(error?.message ?? "Could Not Queue Job");
-    return { jobId: job.id };
+    const { queueJob } = await import("@/lib/job-submit");
+    const queued = await queueJob(context.supabase, {
+      workspaceId: data.workspaceId,
+      sourceType: spec.sourceType,
+      params: {
+        name,
+        niches: spec.niches,
+        record_type: spec.recordType,
+        state: spec.state,
+        counties: spec.counties,
+        county: spec.counties[0] ?? null,
+        recency_days: spec.recencyDays,
+        remove_franchises: spec.removeFranchises,
+        dedupe: spec.dedupe,
+        mobile_only: spec.mobileOnly,
+        skip_trace: spec.skipTrace,
+        industry: spec.industry,
+        message_angle: spec.messageAngle,
+        assembled_by: "ai_assistant",
+        assistant_transcript: data.transcript,
+      },
+    });
+    return { jobId: queued.id, duplicate: queued.duplicate };
   });

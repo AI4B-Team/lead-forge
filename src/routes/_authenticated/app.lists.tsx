@@ -226,6 +226,11 @@ function Jobs() {
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <span className="whitespace-nowrap font-medium text-foreground group-hover:text-primary">{j.name}</span>
+                      {j.cadence_badge && (
+                        <span className="whitespace-nowrap rounded-full border border-border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                          {j.cadence_badge}
+                        </span>
+                      )}
                       {j.new_since_last_run > 0 && (
                         <span className="whitespace-nowrap rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
                           +{j.new_since_last_run.toLocaleString()} New
