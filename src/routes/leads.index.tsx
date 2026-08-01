@@ -438,36 +438,62 @@ function LeadsIndexBody() {
       {/* Niches */}
       <section className="border-y border-border bg-surface py-14">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">Lead Lists By Niche</h2>
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Every List:</span>
-            {NICHE_FACTS.map((f) => (
-              <span key={f.label} className="inline-flex items-center gap-1.5">
-                <f.icon className="h-4 w-4 shrink-0 text-primary" /> {f.label}
-              </span>
-            ))}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="font-display text-2xl md:text-3xl font-black text-foreground">
+                Find Your Next Customers
+              </h2>
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-muted-foreground">
+                {NICHE_CATEGORIES.map((c, i) => (
+                  <span key={c} className="inline-flex items-center gap-2">
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">
+                      {c}
+                    </span>
+                    {i < NICHE_CATEGORIES.length - 1 && (
+                      <span className="text-border">•</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">Every List:</span>
+              {NICHE_FACTS.map((f) => (
+                <span key={f.label} className="inline-flex items-center gap-1.5">
+                  <f.icon className="h-4 w-4 shrink-0 text-primary" /> {f.label}
+                </span>
+              ))}
+            </div>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {niches.map((p) => (
-              <Link
-                key={p.slug}
-                to="/leads/$slug"
-                params={{ slug: p.slug }}
-                className="group flex items-center gap-3 rounded-2xl border border-border bg-background p-4 transition-colors hover:border-primary"
-              >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                  <Building2 className="h-4 w-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-display text-base font-black text-foreground">
-                    {p.nicheLabel ?? p.title}
+            {NICHE_ORDER.map((n) => {
+              const Icon = n.icon;
+              return (
+                <Link
+                  key={n.slug}
+                  to="/leads/$slug"
+                  params={{ slug: n.slug }}
+                  className="group flex items-center gap-3 rounded-2xl border border-border bg-background p-4 transition-colors hover:border-primary"
+                >
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <Icon className="h-4 w-4" />
                   </span>
-                  <span className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                    View Leads <ArrowRight className="h-3 w-3" />
+                  <span className="min-w-0 flex-1">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary">
+                        {n.category}
+                      </span>
+                    </span>
+                    <span className="mt-0.5 block truncate font-display text-base font-black text-foreground">
+                      {n.display}
+                    </span>
+                    <span className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                      View Leads <ArrowRight className="h-3 w-3" />
+                    </span>
                   </span>
-                </span>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
