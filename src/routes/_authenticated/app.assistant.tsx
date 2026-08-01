@@ -11,13 +11,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal,
+  Paperclip, Mic, Send,
+} from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { assistantChat, createJobFromSpec, requestCoverage } from "@/lib/assistant.functions";
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
-import { TEMPLATES } from "@/lib/templates";
+import { TEMPLATES, CATEGORY_LABELS, type Template, type TemplateCategory } from "@/lib/templates";
+import { TemplateCard } from "@/components/marketing/template-card";
+import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@/lib/recent-templates";
 import { takeStashedPrompt, clearStashedPrompt } from "@/lib/prompt-handoff";
 
 export const Route = createFileRoute("/_authenticated/app/assistant")({
@@ -35,7 +41,12 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
   component: Assistant,
 });
 
-const TRY_CHIPS = ["Probate Filings", "Roofers", "Code Violations", "Vacant Homes"];
+/** Default grid order when the workspace has no template history yet. */
+const DEFAULT_GRID_IDS = [
+  "probate", "roofers", "code", "vacancy",
+  "property-owners", "commercial", "contractors", "absentee",
+];
+const GRID_SLOTS = 8;
 
 const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   sourceType: "Source",
@@ -79,6 +90,11 @@ function Assistant() {
   const [running, setRunning] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [revealed, setRevealed] = useState(0);
+  const [recents, setRecents] = useState<RecentTemplate[]>([]);
+  const [allOpen, setAllOpen] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [micSupported, setMicSupported] = useState(false);
+  const lastTemplateId = useRef<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const sentPrompt = useRef(false);
   const restored = useRef(false);
@@ -95,6 +111,45 @@ function Assistant() {
   useEffect(() => {
     composer.current?.focus();
   }, [started]);
+
+  useEffect(() => {
+    setMicSupported(
+      typeof window !== "undefined" &&
+        Boolean((window as unknown as Record<string, unknown>).SpeechRecognition ||
+          (window as unknown as Record<string, unknown>).webkitSpeechRecognition),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    setRecents(loadRecentTemplates(workspaceId));
+  }, [workspaceId]);
+
+  /** Prefill only — the operator still reviews and presses Build List. */
+  const insertTemplate = (t: Template) => {
+    lastTemplateId.current = t.id;
+    setInput(t.prompt);
+    setAllOpen(false);
+    if (workspaceId) setRecents(touchRecentTemplate(workspaceId, t.id));
+    requestAnimationFrame(() => composer.current?.focus());
+  };
+
+  const dictate = () => {
+    const w = window as unknown as Record<string, any>;
+    const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!Ctor) return;
+    const rec = new Ctor();
+    rec.lang = "en-US";
+    rec.interimResults = false;
+    rec.onresult = (e: any) => {
+      const said = e.results?.[0]?.[0]?.transcript ?? "";
+      if (said) setInput((v) => (v ? `${v} ${said}` : said));
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    setListening(true);
+    rec.start();
+  };
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
@@ -155,6 +210,7 @@ function Assistant() {
   const startOver = () => {
     clearStashedPrompt();
     if (workspaceId) clearDraft(workspaceId);
+    lastTemplateId.current = null;
     setThread([]);
     setInput("");
     setSpec(EMPTY_SPEC);
@@ -220,6 +276,8 @@ function Assistant() {
         .map((m) => ({ role: m.role, content: m.content }));
       const { jobId } = await createJob({ data: { workspaceId, spec, transcript: transcript.slice(-40) } });
       clearDraft(workspaceId);
+      // A template-originated run counts as usage, so it stays near the front.
+      if (lastTemplateId.current) setRecents(touchRecentTemplate(workspaceId, lastTemplateId.current));
       toast.success("Job Queued. Running Pipeline…");
       navigate({ to: "/app/jobs/$jobId", params: { jobId } });
       runJobFn({ data: { jobId } }).catch((e) =>
@@ -327,60 +385,154 @@ function Assistant() {
     </div>
   );
 
-  const emptyState = (
-    <div className="flex h-full flex-col items-center justify-center text-center">
-      <Sparkles className="h-6 w-6 text-primary" />
-      <div className="mt-3 font-display text-lg font-bold text-foreground">
-        Tell Me Who You Want To Reach
+  // Recents first (most recent first), padded with the default order.
+  const gridTemplates = useMemo(() => {
+    const byId = new Map(TEMPLATES.map((t) => [t.id, t] as const));
+    const ordered: Template[] = [];
+    const seen = new Set<string>();
+    for (const r of recents) {
+      const t = byId.get(r.id);
+      if (t && !seen.has(t.id)) { ordered.push(t); seen.add(t.id); }
+    }
+    for (const id of DEFAULT_GRID_IDS) {
+      if (ordered.length >= GRID_SLOTS) break;
+      const t = byId.get(id);
+      if (t && !seen.has(t.id)) { ordered.push(t); seen.add(t.id); }
+    }
+    return ordered.slice(0, GRID_SLOTS);
+  }, [recents]);
+
+  const grouped = useMemo(() => {
+    const groups = new Map<TemplateCategory, Template[]>();
+    for (const t of TEMPLATES) {
+      const list = groups.get(t.category) ?? [];
+      list.push(t);
+      groups.set(t.category, list);
+    }
+    return Array.from(groups.entries());
+  }, []);
+
+  const heroState = (
+    <div className="mx-auto w-full max-w-5xl space-y-8 py-2">
+      <div>
+        <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">AI Lead Assistant</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Describe the leads you want. The assistant interprets it, assembles the job, and hands you the controls to review.
+        </p>
       </div>
-      <p className="mt-1 max-w-md text-sm text-muted-foreground">
-        A Record Type Or A Trade, Plus A County Or State. I'll Assemble The Job And Hand You The Controls.
-      </p>
-      <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-        <span className="text-xs font-medium text-muted-foreground">Try:</span>
-        {TRY_CHIPS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => {
-              setInput(c);
-              composer.current?.focus();
+
+      <div className="rounded-2xl border border-primary bg-card p-5 shadow-sm">
+        <div className="flex items-start gap-2">
+          <Sparkles className="mt-1.5 h-5 w-5 shrink-0 text-primary" />
+          <Textarea
+            ref={composer}
+            rows={10}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void send(input);
+              }
             }}
-            className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary hover:text-primary"
-          >
-            {c}
-          </button>
-        ))}
+            placeholder="Tell Me Who You Want To Reach"
+            className="min-h-[220px] resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
+          />
+        </div>
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground">
+            <Paperclip className="mr-1.5 h-4 w-4" /> Attach Files
+          </Button>
+          <div className="flex items-center gap-2">
+            {micSupported && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label="Dictate"
+                onClick={dictate}
+                className={`rounded-full ${listening ? "border-primary text-primary" : ""}`}
+              >
+                <Mic className="h-4 w-4" />
+              </Button>
+            )}
+            <Button className="rounded-full px-5" disabled={busy || !input.trim()} onClick={() => send(input)}>
+              Build List <Send className="ml-1.5 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
+
+      <div>
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="font-display text-lg font-bold text-foreground">
+            {recents.length ? "Your Templates" : "Not Sure Where To Start? Try One Of These…"}
+          </h2>
+          <button
+            type="button"
+            onClick={() => setAllOpen(true)}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            View All Templates →
+          </button>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {gridTemplates.map((t) => (
+            <TemplateCard key={t.id} template={t} variant="insert" onSelect={insertTemplate} />
+          ))}
+        </div>
+      </div>
+
+      <Dialog open={allOpen} onOpenChange={setAllOpen}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>All Templates</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {grouped.map(([category, list]) => (
+              <div key={category}>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  {CATEGORY_LABELS[category]}
+                </div>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {list.map((t) => (
+                    <TemplateCard key={t.id} template={t} variant="insert" onSelect={insertTemplate} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
   return (
-    <div className="assistant-shell flex flex-col">
-      <div className="shrink-0">
-        <PageHeader
-          title="AI Lead Assistant"
-          description="Describe The Leads You Want. The Assistant Interprets It, Assembles The Job, And Hands You The Controls To Review."
-          descriptionClassName="whitespace-nowrap !max-w-none"
-          actions={
-            started ? (
+    <div className={started ? "assistant-shell flex flex-col" : "flex flex-col"}>
+      {started && (
+        <div className="shrink-0">
+          <PageHeader
+            title="AI Lead Assistant"
+            description="Describe The Leads You Want. The Assistant Interprets It, Assembles The Job, And Hands You The Controls To Review."
+            descriptionClassName="whitespace-nowrap !max-w-none"
+            actions={
               <Button variant="outline" className="rounded-full" onClick={startOver}>
                 <RotateCcw className="mr-1.5 h-4 w-4" /> Start Over
               </Button>
-            ) : undefined
-          }
-        />
-      </div>
+            }
+          />
+        </div>
+      )}
 
-      <div className={`grid min-h-0 flex-1 items-start gap-6 ${started ? "lg:grid-cols-[1fr_400px]" : "lg:grid-cols-1"}`}>
+      {!started && heroState}
+
+      {started && (
+      <div className="grid min-h-0 flex-1 items-start gap-6 lg:grid-cols-[1fr_400px]">
         {/* Chat column: thread scrolls, composer stays pinned to the bottom. */}
         <Card className="flex min-h-0 flex-col lg:h-full">
           <CardContent className="flex min-h-0 flex-1 flex-col p-4 md:p-5">
             <div ref={scroller} className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
-              {!started ? (
-                emptyState
-              ) : (
-                thread.map((m, i) => (
+              {thread.map((m, i) => (
                   <div key={i}>
                     {m.role === "system" ? (
                       <div className="flex justify-center">
@@ -419,8 +571,7 @@ function Assistant() {
                       </>
                     )}
                   </div>
-                ))
-              )}
+              ))}
               {busy && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Sparkles className="h-3.5 w-3.5 animate-pulse text-primary" /> Thinking…
@@ -460,8 +611,9 @@ function Assistant() {
         </Card>
 
         {/* One consolidated Job Spec rail, sticky Run at its bottom. */}
-        {started && <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>}
+        <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>
       </div>
+      )}
     </div>
   );
 }

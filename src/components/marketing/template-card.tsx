@@ -3,25 +3,25 @@ import type { Template } from "@/lib/templates";
 
 export function TemplateCard({
   template,
-  /** "detail" opens the template's page; "prompt" prefills the homepage prompt. */
+  /**
+   * "detail" opens the template's page; "prompt" prefills the homepage prompt;
+   * "insert" is an in-app button that hands the template back via onSelect.
+   */
   variant = "detail",
+  onSelect,
 }: {
   template: Template;
-  variant?: "detail" | "prompt";
+  variant?: "detail" | "prompt" | "insert";
+  onSelect?: (template: Template) => void;
 }) {
   const Icon = template.icon;
   const logoUrl = template.logoDomain
     ? `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(template.logoDomain)}`
     : null;
-  const linkProps =
-    variant === "prompt"
-      ? ({ to: "/", search: { prompt: template.prompt } } as const)
-      : ({ to: "/templates/$templateId", params: { templateId: template.id } } as const);
-  return (
-    <Link
-      {...linkProps}
-      className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 hover:border-primary hover:shadow-sm transition text-left"
-    >
+  const className =
+    "group flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 hover:border-primary hover:shadow-sm transition text-left w-full";
+  const body = (
+    <>
       <span className={`grid place-items-center h-12 w-12 rounded-xl shrink-0 overflow-hidden bg-white border border-border ${logoUrl ? "" : template.tint}`}>
         {logoUrl ? (
           <img
@@ -49,6 +49,24 @@ export function TemplateCard({
         </span>
         <span className="block text-xs text-muted-foreground mt-0.5 truncate">{template.subtitle}</span>
       </span>
+    </>
+  );
+
+  if (variant === "insert") {
+    return (
+      <button type="button" onClick={() => onSelect?.(template)} className={className}>
+        {body}
+      </button>
+    );
+  }
+
+  const linkProps =
+    variant === "prompt"
+      ? ({ to: "/", search: { prompt: template.prompt } } as const)
+      : ({ to: "/templates/$templateId", params: { templateId: template.id } } as const);
+  return (
+    <Link {...linkProps} className={className}>
+      {body}
     </Link>
   );
 }
