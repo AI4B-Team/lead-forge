@@ -74,7 +74,7 @@ export async function askAssistant(opts: {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) {
     return {
-      reply: "The Assistant Is Temporarily Unavailable. You Can Still Edit The Job Spec On The Right And Run It.",
+      reply: "The Assistant Is Temporarily Unavailable. You Can Still Edit The List Settings On The Right And Generate It.",
       spec: opts.spec,
       suggestedTemplates: [],
     };
@@ -113,7 +113,7 @@ export async function askAssistant(opts: {
     ? { ...merged.data, counties: normalizeCounties(merged.data.counties, merged.data.state) }
     : opts.spec;
   return {
-    reply: out.reply?.trim() || "Updated The Job Spec On The Right.",
+    reply: out.reply?.trim() || "Updated The List Settings On The Right.",
     spec,
     suggestedTemplates: (out.suggestedTemplates ?? []).slice(0, 4),
   };

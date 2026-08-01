@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
       { title: "AI Lead Assistant — LeadTrace" },
       { name: "description", content: "Describe the leads you want in plain English. The LeadTrace assistant assembles a compliant, runnable pipeline job you can review before running." },
       { property: "og:title", content: "AI Lead Assistant — LeadTrace" },
-      { property: "og:description", content: "Watch the assistant interpret plain English into a structured, editable job spec. You always click Run." },
+      { property: "og:description", content: "Watch the assistant interpret plain English into a structured, editable list of settings. You always click Generate List." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -440,7 +440,7 @@ function Assistant() {
       clearDraft(workspaceId);
       // A template-originated run counts as usage, so it stays near the front.
       if (lastTemplateId.current) setRecents(touchRecentTemplate(workspaceId, lastTemplateId.current));
-      toast.success("Job Queued. Running Pipeline…");
+      toast.success("List Queued. Running Pipeline…");
       navigate({ to: "/app/jobs/$jobId", params: { jobId } });
       runJobFn({ data: { jobId } }).catch((e) =>
         toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
