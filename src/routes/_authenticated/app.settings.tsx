@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { INDUSTRIES } from "@/lib/mock-data";
 import { useState } from "react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { WebhookEndpoints } from "@/components/app/webhook-endpoints";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   head: () => ({ meta: [{ title: "Settings — LeadTrace" }] }),
@@ -73,6 +74,8 @@ function Settings() {
             <Button variant="outline" className="mt-4 rounded-full">Invite Teammate</Button>
           </CardContent>
         </Card>
+
+        <WebhookEndpoints />
       </div>
     </div>
   );
