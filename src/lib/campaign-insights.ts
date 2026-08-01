@@ -1,5 +1,5 @@
 import { segmentsFor } from "@/lib/drops";
-import { spinSample } from "@/lib/spintax";
+import { spinOnce } from "@/lib/spintax";
 
 export type TouchInput = { delay_minutes: number; body: string };
 
@@ -18,7 +18,7 @@ export function totalReplyRate(touches: number): number {
 /** Rough SMS spam risk from length, caps, links and trigger words. */
 export function spamScore(body: string): { level: "Low" | "Medium" | "High"; reasons: string[] } {
   const reasons: string[] = [];
-  const text = spinSample(body);
+  const text = spinOnce(body);
   if (text.length > 320) reasons.push("Message Runs Over 2 Segments");
   const letters = text.replace(/[^A-Za-z]/g, "");
   const caps = letters.replace(/[^A-Z]/g, "").length;
@@ -40,7 +40,7 @@ export function personalizationScore(bodies: string[]): number {
 
 /** ~180 words per minute reading speed, floored at 2 seconds. */
 export function readingSeconds(bodies: string[]): number {
-  const words = bodies.reduce((n, b) => n + spinSample(b).split(/\s+/).filter(Boolean).length, 0);
+  const words = bodies.reduce((n, b) => n + spinOnce(b).split(/\s+/).filter(Boolean).length, 0);
   return Math.max(2, Math.round((words / 180) * 60));
 }
 
@@ -68,7 +68,7 @@ export function projectCampaign({
   totalDelayMinutes: number;
 }): Projection {
   const touches = bodies.length;
-  const segmentsPerContact = bodies.reduce((n, b) => n + segmentsFor(spinSample(b)), 0);
+  const segmentsPerContact = bodies.reduce((n, b) => n + segmentsFor(spinOnce(b)), 0);
   const projectedMessages = recipients * touches;
   const credits = recipients * segmentsPerContact;
   const perDay = Math.max(1, dailyCap);
@@ -136,15 +136,14 @@ export function aiSuggestions({
   recipients: number;
 }): Suggestion[] {
   const out: Suggestion[] = [];
-  const longest = bodies.find((b) => spinSample(b).length > 160);
+  const longest = bodies.find((b) => spinOnce(b).length > 160);
   if (longest) out.push({ text: "Shorten A Touch — Over 160 Characters Costs A Second Segment", tone: "warn" });
   const second = touches[1];
   if (second && second.delay_minutes < 120) out.push({ text: "Increase Touch 2 Delay To At Least 2 Hours", tone: "warn" });
   if (personalizationScore(bodies) < 70) out.push({ text: "Add {{first_name}} Or {{city}} To Lift Personalization", tone: "warn" });
   if (touches.length < 3) out.push({ text: "Add A Third Touch — Most Replies Land After Follow-Up Two", tone: "warn" });
-  if (!bodies.some((b) => /\{|\}/.test(b) === false && false) && !bodies.some((b) => b.includes("{"))) {
-    out.push({ text: "Use Spintax {Hi|Hello|Hey} So Carriers See Message Variety", tone: "warn" });
-  }
+  const hasSpintax = bodies.some((b) => /\{[^{}]*\|[^{}]*\}/.test(b));
+  if (!hasSpintax) out.push({ text: "Add Spintax Variety So Carriers See Rotating Wording", tone: "warn" });
   if (recipients > 0 && dailyCap > 0 && recipients / dailyCap > 30) {
     out.push({ text: "Raise Daily Cap Or Split The List — Delivery Would Take Over A Month", tone: "warn" });
   }
@@ -154,5 +153,5 @@ export function aiSuggestions({
 
 /** Render merge tokens with sample lead values for previews. */
 export function renderSample(body: string, lead: Record<string, string>): string {
-  return spinSample(body).replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k: string) => lead[k] ?? k);
+  return spinOnce(body).replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k: string) => lead[k] ?? k);
 }
