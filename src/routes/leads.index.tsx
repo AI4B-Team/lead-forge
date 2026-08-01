@@ -68,8 +68,17 @@ const BENEFIT_ORDER = [
   "dnc-list-scrubbing",
   "google-maps-lead-finder",
   "sms-lead-outreach",
+  "ai-built",
 ];
 
+const BENEFIT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  "litigator-scrub": ShieldCheck,
+  "landline-remover": Smartphone,
+  "dnc-list-scrubbing": CircleCheck,
+  "google-maps-lead-finder": Globe,
+  "sms-lead-outreach": Send,
+  "ai-built": Sparkles,
+};
 
 /** Outcome-framed headings for the pipeline-stage pages (presentation only). */
 const BENEFITS: Record<string, { title: string; body: string }> = {
@@ -92,6 +101,10 @@ const BENEFITS: Record<string, { title: string; body: string }> = {
   "sms-lead-outreach": {
     title: "More Conversations",
     body: "Send straight from the clean list — merge fields, quiet hours, and automatic opt-out handling included, no export required.",
+  },
+  "ai-built": {
+    title: "AI-Built Lists",
+    body: "Describe the leads you want in plain English. LeadTrace automatically selects the best data source, configures the filters, and builds your list in seconds.",
   },
 };
 
