@@ -505,31 +505,31 @@ function Assistant() {
   );
 
   return (
-    <div className="assistant-shell flex flex-col">
-      <div className="shrink-0">
-        <PageHeader
-          title="AI Lead Assistant"
-          description="Describe The Leads You Want. The Assistant Interprets It, Assembles The Job, And Hands You The Controls To Review."
-          descriptionClassName="whitespace-nowrap !max-w-none"
-          actions={
-            started ? (
+    <div className={started ? "assistant-shell flex flex-col" : "flex flex-col"}>
+      {started && (
+        <div className="shrink-0">
+          <PageHeader
+            title="AI Lead Assistant"
+            description="Describe The Leads You Want. The Assistant Interprets It, Assembles The Job, And Hands You The Controls To Review."
+            descriptionClassName="whitespace-nowrap !max-w-none"
+            actions={
               <Button variant="outline" className="rounded-full" onClick={startOver}>
                 <RotateCcw className="mr-1.5 h-4 w-4" /> Start Over
               </Button>
-            ) : undefined
-          }
-        />
-      </div>
+            }
+          />
+        </div>
+      )}
 
-      <div className={`grid min-h-0 flex-1 items-start gap-6 ${started ? "lg:grid-cols-[1fr_400px]" : "lg:grid-cols-1"}`}>
+      {!started && heroState}
+
+      {started && (
+      <div className="grid min-h-0 flex-1 items-start gap-6 lg:grid-cols-[1fr_400px]">
         {/* Chat column: thread scrolls, composer stays pinned to the bottom. */}
         <Card className="flex min-h-0 flex-col lg:h-full">
           <CardContent className="flex min-h-0 flex-1 flex-col p-4 md:p-5">
             <div ref={scroller} className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
-              {!started ? (
-                emptyState
-              ) : (
-                thread.map((m, i) => (
+              {thread.map((m, i) => (
                   <div key={i}>
                     {m.role === "system" ? (
                       <div className="flex justify-center">
@@ -568,8 +568,7 @@ function Assistant() {
                       </>
                     )}
                   </div>
-                ))
-              )}
+              ))}
               {busy && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Sparkles className="h-3.5 w-3.5 animate-pulse text-primary" /> Thinking…
