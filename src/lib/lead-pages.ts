@@ -747,17 +747,24 @@ export const LEAD_PAGES: LeadPage[] = [
   ...NICHE_SEEDS.map<LeadPage>((n) => ({
     slug: n.slug,
     kind: "niche",
+    category: n.category,
     title: n.title,
     nicheLabel: n.title.replace(/\s+Leads$/i, ""),
     tags: n.tags,
     valueProp: n.valueProp,
     rows: rows(n.entries),
     funnelCaption:
-      "A real Hillsborough County reference search. The 554 is the list you text. The 686 removed records are why you don't get sued.",
+      n.category === "property"
+        ? "A real Hillsborough County reference search through public records. The 554 is the list you text. The 686 removed records are why you don't get sued."
+        : "A real Hillsborough County reference search. The 554 is the list you text. The 686 removed records are why you don't get sued.",
     personas: n.personas,
     faqs: faqs(n.size, n.noun),
-    metaTitle: `${n.title} — Clean, DNC-Scrubbed, Textable Lists | LeadTrace`,
-    metaDescription: `Get every ${n.noun.replace(/^([a-z])/, "$1")} on Google Maps in your county — deduplicated, mobile-verified, DNC and litigator scrubbed, ready to text. No download, no setup.`,
+    metaTitle: n.category === "property"
+      ? `${n.title} — Clean, Skip-Traced, Textable Records | LeadTrace`
+      : `${n.title} — Clean, DNC-Scrubbed, Textable Lists | LeadTrace`,
+    metaDescription: n.category === "property"
+      ? `Get every ${n.noun.replace(/^([a-z])/, "$1")} in your county from public records — skip-traced, mobile-verified, DNC and litigator scrubbed, ready to text. No download, no setup.`
+      : `Get every ${n.noun.replace(/^([a-z])/, "$1")} on Google Maps in your county — deduplicated, mobile-verified, DNC and litigator scrubbed, ready to text. No download, no setup.`,
   })),
   ...STAGE_SEEDS.map<LeadPage>((s) => ({
     slug: s.slug,
