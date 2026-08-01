@@ -505,7 +505,7 @@ function ListCard({
   return (
     <button
       onClick={onSelect}
-      className={`text-left rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-md ${active ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+      className={`text-left rounded-2xl border-2 p-4 transition hover:-translate-y-0.5 hover:shadow-md ${active ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
