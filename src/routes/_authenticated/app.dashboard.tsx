@@ -536,23 +536,3 @@ function Metric({
     </Card>
   );
 }
-
-function CreditRow({ label, value, max }: { label: string; value: number; max: number }) {
-  const total = Math.max(value, max, 1);
-  return (
-    <div>
-      <div className="flex items-baseline justify-between text-sm">
-        <span className="font-medium text-foreground">{label}</span>
-        <span className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
-          {value.toLocaleString()} of {total.toLocaleString()} Remaining
-        </span>
-      </div>
-      <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full rounded-full bg-primary transition-all duration-500"
-          style={{ width: `${Math.min(100, (value / total) * 100)}%` }}
-        />
-      </div>
-    </div>
-  );
-}
