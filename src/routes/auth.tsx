@@ -29,6 +29,17 @@ export const Route = createFileRoute("/auth")({
 
 type Mode = "signin" | "signup";
 
+/** Rebuilds /start's own search params from a post-auth destination URL. */
+function promptSearchFrom(target: string) {
+  const query = target.includes("?") ? new URLSearchParams(target.split("?")[1]) : new URLSearchParams();
+  const out = new URLSearchParams();
+  if (query.get("reattach")) out.set("upload", "true");
+  const prompt = query.get("prompt");
+  if (prompt) out.set("prompt", prompt);
+  const s = out.toString();
+  return s ? `?${s}` : "";
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
