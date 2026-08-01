@@ -458,9 +458,9 @@ function Assistant() {
                 type="button"
                 variant="outline"
                 size="icon"
-                aria-label="Dictate"
+                aria-label={listening ? "Recording" : "Dictate"}
                 onClick={dictate}
-                className={`rounded-full ${listening ? "border-primary text-primary" : ""}`}
+                className={`rounded-full ${listening ? "border-primary text-primary mic-recording" : ""}`}
               >
                 <Mic className="h-4 w-4" />
               </Button>
