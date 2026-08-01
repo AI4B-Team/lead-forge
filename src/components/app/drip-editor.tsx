@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, Plus, Sparkles, Trash2, MessageSquare } from "lucide-react";
+import { Clock, Plus, Sparkles, Trash2, MessageSquare, Lock } from "lucide-react";
 import { spinCount, spinSample } from "@/lib/spintax";
 import { segmentsFor } from "@/lib/drops";
+import { STOP_FOOTER, hasStopFooter } from "@/lib/compliance-rules";
 
 export type DripStep = { step_order: number; delay_minutes: number; body: string };
 
