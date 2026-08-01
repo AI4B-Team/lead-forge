@@ -15,7 +15,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { assignJobNames, cadenceBadge } from "@/lib/job-naming";
 import {
   Users, ListChecks, MessageSquare, CreditCard, Plus, ArrowUpRight, Landmark, MapPin,
-  Upload, TrendingUp, Info,
+  Upload, TrendingUp, Info, Activity, Zap, CheckCircle2,
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
@@ -36,6 +36,12 @@ type JobRow = {
 
 type Credits = { scrape: number; skip_trace: number; sms: number };
 type CreditTotals = Credits;
+
+type ActivityItem = {
+  tone: "leads" | "done" | "reply" | "credit";
+  text: string;
+  at: string | null;
+};
 
 const SOURCE_META: Record<string, { icon: typeof MapPin; label: string }> = {
   business: { icon: MapPin, label: "Business Search" },
@@ -62,6 +68,51 @@ function Dashboard() {
   const [credits, setCredits] = useState<Credits>({ scrape: 0, skip_trace: 0, sms: 0 });
   const [creditTotals, setCreditTotals] = useState<CreditTotals>({ scrape: 0, skip_trace: 0, sms: 0 });
   const [weekly, setWeekly] = useState<Array<{ day: string; count: number }>>([]);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+
+  // Recent Activity replaces the old credit card: what happened, not accounting.
+  useEffect(() => {
+    if (!workspaceId) return;
+    let active = true;
+    (async () => {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const [doneCamps, replies, spend] = await Promise.all([
+        supabase
+          .from("campaigns")
+          .select("name, created_at")
+          .eq("workspace_id", workspaceId)
+          .eq("status", "completed")
+          .order("created_at", { ascending: false })
+          .limit(2),
+        supabase
+          .from("messages")
+          .select("id", { count: "exact", head: true })
+          .eq("workspace_id", workspaceId)
+          .eq("direction", "inbound")
+          .gte("created_at", startOfToday.toISOString()),
+        supabase
+          .from("credit_ledger")
+          .select("delta")
+          .eq("workspace_id", workspaceId)
+          .lt("delta", 0)
+          .gte("created_at", startOfToday.toISOString()),
+      ]);
+      if (!active) return;
+      const items: ActivityItem[] = [];
+      for (const c of (doneCamps.data ?? []) as Array<{ name: string; created_at: string }>) {
+        items.push({ tone: "done", text: `${c.name} Campaign Completed`, at: c.created_at });
+      }
+      const replyCount = replies.count ?? 0;
+      if (replyCount) items.push({ tone: "reply", text: `${replyCount} New ${replyCount === 1 ? "Reply" : "Replies"}`, at: null });
+      const used = ((spend.data ?? []) as Array<{ delta: number }>).reduce((s, r) => s + Math.abs(Number(r.delta ?? 0)), 0);
+      if (used) items.push({ tone: "credit", text: `${used.toLocaleString()} Credits Used Today`, at: null });
+      setActivity(items);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [workspaceId]);
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -209,6 +260,18 @@ function Dashboard() {
 
   const hasJobs = jobs.length > 0;
   const totalCredits = credits.scrape + credits.skip_trace + credits.sms;
+  // Job completions come from the jobs list we already loaded.
+  const activityFeed = useMemo<ActivityItem[]>(() => {
+    const jobItems: ActivityItem[] = jobs
+      .filter((j) => (j.rows_in ?? 0) > 0)
+      .slice(0, 3)
+      .map((j) => ({
+        tone: "leads" as const,
+        text: `${(j.rows_in ?? 0).toLocaleString()} New Contacts · ${j.name ?? "Job"}`,
+        at: j.created_at,
+      }));
+    return [...jobItems, ...activity].slice(0, 6);
+  }, [jobs, activity]);
   // A full drip is 4 touches per contact.
   const dripMessages = useMemo(() => Math.round(metrics.leads * 4), [metrics.leads]);
   const peak = Math.max(1, ...weekly.map((w) => w.count));
@@ -351,6 +414,48 @@ function Dashboard() {
 
         <div className="space-y-4">
           <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="flex items-center gap-2 text-base font-display">
+                <Activity className="h-4 w-4 text-primary" /> Recent Activity
+              </CardTitle>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/app/inbox">Inbox <ArrowUpRight className="ml-1 h-3.5 w-3.5" /></Link>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {activityFeed.length ? (
+                <ul className="divide-y divide-border">
+                  {activityFeed.map((item, i) => (
+                    <li key={`${item.text}-${i}`} className="flex items-start gap-3 py-2.5">
+                      <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                        {item.tone === "reply" ? (
+                          <MessageSquare className="h-3.5 w-3.5" />
+                        ) : item.tone === "credit" ? (
+                          <Zap className="h-3.5 w-3.5" />
+                        ) : item.tone === "done" ? (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        ) : (
+                          <Users className="h-3.5 w-3.5" />
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1 text-sm text-foreground">{item.text}</span>
+                      {item.at && (
+                        <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
+                          {relative(item.at)}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  Nothing Yet — Activity Shows Up Once Your First Job Runs.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base font-display">
                 <TrendingUp className="h-4 w-4 text-primary" /> Lead Generation
@@ -374,20 +479,6 @@ function Dashboard() {
               <div className="mt-3 text-xs text-muted-foreground">
                 Last 7 Days · {weekly.reduce((s, w) => s + w.count, 0).toLocaleString()} Contacts Added
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-display">Credit Balance</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <CreditRow label="Lead Credits" value={credits.scrape} max={creditTotals.scrape} />
-              <CreditRow label="Skip Trace" value={credits.skip_trace} max={creditTotals.skip_trace} />
-              <CreditRow label="SMS" value={credits.sms} max={creditTotals.sms} />
-              <Button asChild className="w-full rounded-full mt-2">
-                <Link to="/app/billing">Top Up</Link>
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -443,25 +534,5 @@ function Metric({
         )}
       </CardContent>
     </Card>
-  );
-}
-
-function CreditRow({ label, value, max }: { label: string; value: number; max: number }) {
-  const total = Math.max(value, max, 1);
-  return (
-    <div>
-      <div className="flex items-baseline justify-between text-sm">
-        <span className="font-medium text-foreground">{label}</span>
-        <span className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
-          {value.toLocaleString()} of {total.toLocaleString()} Remaining
-        </span>
-      </div>
-      <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full rounded-full bg-primary transition-all duration-500"
-          style={{ width: `${Math.min(100, (value / total) * 100)}%` }}
-        />
-      </div>
-    </div>
   );
 }

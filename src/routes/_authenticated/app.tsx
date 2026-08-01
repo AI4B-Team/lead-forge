@@ -2,13 +2,14 @@ import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { Button } from "@/components/ui/button";
-import { Zap, Inbox } from "lucide-react";
+import { Inbox, Plus } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { WorkspaceSwitcher } from "@/components/app/workspace-switcher";
 import { ProfileDropdown } from "@/components/app/profile-dropdown";
 import { NotificationBell } from "@/components/app/notification-bell";
 import { HelpMenu } from "@/components/app/help-menu";
 import { ProductTour, useProductTour } from "@/components/app/product-tour";
+import { CreditMenu } from "@/components/app/credit-menu";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -27,14 +28,13 @@ function AppLayout() {
             </div>
             <TooltipProvider delayDuration={150}>
               <div className="flex items-center gap-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button asChild size="icon" variant="ghost" className="rounded-full" data-tour="credits" aria-label="Top Up Credits">
-                      <Link to="/app/billing"><Zap className="h-4 w-4" /></Link>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Top Up Credits</TooltipContent>
-                </Tooltip>
+                {/* Credits + Build List sit together: having credits nudges using them. */}
+                <div className="mr-2 flex items-center gap-2">
+                  <CreditMenu />
+                  <Button asChild size="sm" className="rounded-full">
+                    <Link to="/app/new-job"><Plus className="mr-1 h-3.5 w-3.5" /> Build List</Link>
+                  </Button>
+                </div>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button asChild size="icon" variant="ghost" className="rounded-full" data-tour="inbox" aria-label="Conversations">
