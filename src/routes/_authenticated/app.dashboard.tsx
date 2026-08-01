@@ -164,7 +164,7 @@ function Dashboard() {
       />
 
       {/* Hero metric */}
-      <div className="mb-6 rounded-2xl border border-border bg-ink text-ink-foreground p-6 sm:flex sm:items-end sm:justify-between sm:gap-8">
+      <div className="mb-6 rounded-2xl border border-border bg-ink text-ink-foreground p-6 sm:flex sm:items-center sm:justify-between sm:gap-8">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-70">Contacts Ready</div>
           <div className="mt-1 font-display text-5xl font-black leading-none">
@@ -174,14 +174,16 @@ function Dashboard() {
             Enough for a full 4-message drip sequence — <span className="font-semibold opacity-100">≈{dripMessages.toLocaleString()} messages</span>
           </p>
         </div>
-        <div className="mt-5 flex items-center gap-6 sm:mt-0">
-          <HeroStat label="Added Today" value={`+${metrics.leadsToday.toLocaleString()}`} />
-          <HeroStat
-            label="Deliverability"
-            value={metrics.deliverability ? `${metrics.deliverability}%` : "—"}
-            sub={metrics.deliverability ? undefined : "Starts with your first campaign."}
-          />
-          <HeroStat label="Credits" value={totalCredits.toLocaleString()} />
+        <div className="mt-5 flex items-start gap-12 sm:mt-0">
+          <TooltipProvider delayDuration={150}>
+            <HeroStat label="Added Today" value={`+${metrics.leadsToday.toLocaleString()}`} />
+            <HeroStat
+              label="Deliverability"
+              value={metrics.deliverability ? `${metrics.deliverability}%` : "—"}
+              info={metrics.deliverability ? undefined : "Starts tracking with your first campaign"}
+            />
+            <HeroStat label="Credits" value={totalCredits.toLocaleString()} />
+          </TooltipProvider>
         </div>
       </div>
 
