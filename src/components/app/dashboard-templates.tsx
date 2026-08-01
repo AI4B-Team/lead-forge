@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TEMPLATES, type Template, type TemplateCategory } from "@/lib/templates";
@@ -21,6 +21,24 @@ function templateLink(t: Template) {
   if (t.category === "records") return { to: "/app/new-job/records" } as const;
   return { to: "/app/new-job/business", search: { niche: t.title } } as const;
 }
+
+const CATEGORY_LABEL: Partial<Record<TemplateCategory, string>> = {
+  upload: "Your Data",
+  business: "Business Search",
+  directories: "Directories",
+  records: "Public Records",
+  social: "Social",
+  ecommerce: "E-Commerce",
+  jobs: "Jobs",
+  reviews: "Reviews",
+  realestate: "Real Estate",
+  travel: "Travel",
+  finance: "Finance",
+  education: "Education",
+  news: "News",
+  sports: "Sports",
+  search: "Search",
+};
 
 export function DashboardTemplates() {
   const [tab, setTab] = useState<TabKey>("all");
@@ -53,21 +71,33 @@ export function DashboardTemplates() {
             </button>
           ))}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {items.map((t) => {
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {items.map((t, i) => {
             const Icon = t.icon;
             return (
               <Link
                 key={t.id}
                 {...templateLink(t)}
-                className="group flex items-start gap-3 rounded-2xl border border-border bg-surface p-3 transition hover:border-primary hover:shadow-sm"
+                className="group flex flex-col rounded-2xl border border-border bg-surface p-5 transition hover:border-primary hover:shadow-md"
               >
-                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${t.tint}`}>
-                  <Icon className="h-4 w-4" />
+                <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${t.tint}`}>
+                  <Icon className="h-5 w-5" />
                 </span>
-                <span className="min-w-0">
-                  <span className="block truncate font-display text-sm font-bold text-foreground">{t.title}</span>
-                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">{t.subtitle}</span>
+                <span className="mt-4 block font-display text-base font-bold leading-snug text-foreground">
+                  {t.title}
+                </span>
+                <span className="mt-1.5 block text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                  {t.subtitle}
+                </span>
+                <span className="mt-auto flex items-center gap-2 pt-4">
+                  <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+                    {CATEGORY_LABEL[t.category] ?? "Template"}
+                  </span>
+                  {i < 3 && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
+                      <Star className="h-3 w-3 fill-current" /> Popular
+                    </span>
+                  )}
                 </span>
               </Link>
             );
