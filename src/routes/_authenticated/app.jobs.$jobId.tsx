@@ -15,6 +15,8 @@ import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loa
 import { toast } from "sonner";
 import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs } from "@/lib/jobs.functions";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
+import { PhoneLink } from "@/components/app/phone-link";
+import { setOnboardingPref } from "@/lib/onboarding.functions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 
 export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
@@ -331,6 +333,10 @@ function LeadsBrowser({ jobId, disabled, open, onOpenChange, bucket, onBucketCha
   const [q, setQ] = useState("");
   const [active, setActive] = useState<LeadRow | null>(null);
   const fetchLeads = useServerFn(listJobLeads);
+  const markReviewed = useServerFn(setOnboardingPref);
+  useEffect(() => {
+    if (open) markReviewed({ data: { reviewedCleanList: true } }).catch(() => {});
+  }, [open, markReviewed]);
   const { data, isFetching } = useQuery({
     queryKey: ["job-leads", jobId, bucket, q],
     queryFn: () => fetchLeads({ data: { jobId, bucket, search: q || undefined, limit: 100 } }),
