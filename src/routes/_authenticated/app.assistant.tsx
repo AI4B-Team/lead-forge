@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal,
   Paperclip, Mic, Send,
@@ -21,8 +20,9 @@ import { assistantChat, createJobFromSpec, requestCoverage } from "@/lib/assista
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
-import { TEMPLATES, CATEGORY_LABELS, templateSourceType, type Template, type TemplateCategory } from "@/lib/templates";
+import { TEMPLATES, templateSourceType, type Template } from "@/lib/templates";
 import { TemplateCard } from "@/components/marketing/template-card";
+import { TemplatePickerDialog } from "@/components/app/template-picker-dialog";
 import { useOverflow } from "@/hooks/use-overflow";
 import { US_STATES } from "@/lib/us-geo";
 import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@/lib/recent-templates";
@@ -496,16 +496,6 @@ function Assistant() {
     }
     return ordered.slice(0, GRID_SLOTS);
   }, [recents]);
-
-  const grouped = useMemo(() => {
-    const groups = new Map<TemplateCategory, Template[]>();
-    for (const t of TEMPLATES) {
-      const list = groups.get(t.category) ?? [];
-      list.push(t);
-      groups.set(t.category, list);
-    }
-    return Array.from(groups.entries());
-  }, []);
 
   const heroState = (
     <div className="mx-auto w-full max-w-5xl space-y-8 py-2">
