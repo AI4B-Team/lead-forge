@@ -15,6 +15,7 @@ import {
   Settings,
   ShieldCheck,
   Smartphone,
+  Sparkles,
   Star,
   Upload,
   Zap,
@@ -66,8 +67,17 @@ const BENEFIT_ORDER = [
   "dnc-list-scrubbing",
   "google-maps-lead-finder",
   "sms-lead-outreach",
+  "ai-built",
 ];
 
+const BENEFIT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  "litigator-scrub": ShieldCheck,
+  "landline-remover": Smartphone,
+  "dnc-list-scrubbing": CircleCheck,
+  "google-maps-lead-finder": Globe,
+  "sms-lead-outreach": Send,
+  "ai-built": Sparkles,
+};
 
 /** Outcome-framed headings for the pipeline-stage pages (presentation only). */
 const BENEFITS: Record<string, { title: string; body: string }> = {
@@ -90,6 +100,10 @@ const BENEFITS: Record<string, { title: string; body: string }> = {
   "sms-lead-outreach": {
     title: "More Conversations",
     body: "Send straight from the clean list — merge fields, quiet hours, and automatic opt-out handling included, no export required.",
+  },
+  "ai-built": {
+    title: "AI-Built Lists",
+    body: "Describe the leads you want in plain English. LeadTrace automatically selects the best data source, configures the filters, and builds your list in seconds.",
   },
 };
 
@@ -415,20 +429,28 @@ function LeadsIndexBody() {
             Why Our Lists Convert Better
           </h2>
           <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {stages.map((p) => {
-              const b = BENEFITS[p.slug];
+            {BENEFIT_ORDER.map((slug) => {
+              const isAi = slug === "ai-built";
+              const p = stages.find((s) => s.slug === slug);
+              const b = BENEFITS[slug];
+              const Icon = BENEFIT_ICONS[slug];
+              const title = b?.title ?? p?.title ?? "";
+              const body = b?.body ?? p?.valueProp ?? "";
               return (
                 <Link
-                  key={p.slug}
-                  to="/leads/$slug"
-                  params={{ slug: p.slug }}
+                  key={slug}
+                  to={isAi ? "/app/assistant" : "/leads/$slug"}
+                  params={isAi ? undefined : { slug }}
                   className="rounded-2xl border border-border bg-surface p-6 transition-colors hover:border-primary"
                 >
+                  <div className="mb-3 grid h-11 w-11 place-items-center rounded-full bg-muted text-foreground">
+                    <Icon className="h-5 w-5" />
+                  </div>
                   <div className="font-display text-lg font-black text-foreground">
-                    {b?.title ?? p.title}
+                    {title}
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {b?.body ?? p.valueProp}
+                    {body}
                   </p>
                 </Link>
               );
