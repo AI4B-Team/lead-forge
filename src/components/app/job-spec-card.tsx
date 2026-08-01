@@ -299,12 +299,24 @@ export function JobSpecCard({
         )}
 
         {isUpload && (
+          <div className="space-y-2">
+            <Label>Your Own File</Label>
+            <UploadPanel
+              upload={upload}
+              onPickFile={(f) => onPickFile?.(f)}
+              onRemove={() => onRemoveUpload?.()}
+              onEditMapping={() => onEditMapping?.()}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              The Cleaning, Line-Type Check, And Scrub Run Exactly The Same.
+            </p>
+          </div>
+        )}
+
+        {!isUpload && upload && (
           <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Your Own File</span>
-            <div className="mt-1">
-              Upload Jobs Start On The Upload Page, Where You Attach The File And Map Its Columns. The Cleaning,
-              Line-Type Check, And Scrub Run Exactly The Same.
-            </div>
+            <span className="font-medium text-foreground">{upload.name}</span>
+            <div className="mt-1">File Saved — Switch Back To Upload My List To Use It.</div>
           </div>
         )}
 
