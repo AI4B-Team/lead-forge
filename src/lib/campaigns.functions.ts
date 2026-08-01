@@ -46,22 +46,54 @@ export const listCampaigns = createServerFn({ method: "GET" })
       .eq("workspace_id", data.workspaceId);
     const tags = Object.fromEntries((tagRows ?? []).map((t) => [t.id, t]));
 
-    // Aggregate message stats per campaign.
+    // Aggregate live activity per campaign — the campaigns grid reads as a
+    // mini dashboard, so it needs conversation-level signal, not just counts.
     const ids = (campaigns ?? []).map((c) => c.id);
-    const stats: Record<string, { sent: number; replies: number; optOuts: number; recipients: number }> = {};
-    for (const id of ids) stats[id] = { sent: 0, replies: 0, optOuts: 0, recipients: 0 };
+    const stats: Record<string, CampaignStats> = {};
+    for (const id of ids) stats[id] = emptyStats();
 
     if (ids.length) {
       const { data: msgs } = await supabase
         .from("messages")
-        .select("campaign_id, direction, is_optout")
-        .in("campaign_id", ids);
+        .select("campaign_id, lead_id, direction, is_optout, is_bot, handoff_reason, status, body, created_at")
+        .in("campaign_id", ids)
+        .order("created_at", { ascending: true });
+
+      const threads: Record<string, Map<string, { lastDirection: string; aiTouched: boolean; needsHuman: boolean; replied: boolean }>> = {};
       for (const m of msgs ?? []) {
         const s = stats[m.campaign_id!];
         if (!s) continue;
-        if (m.direction === "outbound") s.sent += 1;
-        if (m.direction === "inbound") s.replies += 1;
+        if (m.direction === "outbound") {
+          s.sent += 1;
+          if (m.status !== "failed" && m.status !== "undelivered") s.delivered += 1;
+        }
+        if (m.direction === "inbound") {
+          s.replies += 1;
+          if (!m.is_optout) {
+            s.latestReply = { body: (m.body ?? "").slice(0, 220), at: m.created_at };
+          }
+        }
         if (m.is_optout) s.optOuts += 1;
+
+        const key = m.lead_id ?? m.campaign_id!;
+        const map = (threads[m.campaign_id!] ??= new Map());
+        const t = map.get(key) ?? { lastDirection: "", aiTouched: false, needsHuman: false, replied: false };
+        t.lastDirection = m.direction;
+        if (m.is_bot) t.aiTouched = true;
+        if (m.handoff_reason) t.needsHuman = true;
+        if (m.direction === "inbound" && !m.is_optout) t.replied = true;
+        map.set(key, t);
+      }
+
+      for (const [cid, map] of Object.entries(threads)) {
+        const s = stats[cid];
+        if (!s) continue;
+        for (const t of map.values()) {
+          if (t.replied) s.conversations += 1;
+          if (t.aiTouched) s.aiChats += 1;
+          if (t.needsHuman) s.needsHuman += 1;
+          if (t.lastDirection === "inbound") s.awaiting += 1;
+        }
       }
 
       // Recipient counts from linked list_job_id (clean leads).
@@ -74,6 +106,16 @@ export const listCampaigns = createServerFn({ method: "GET" })
           .eq("scrub_status", "clean");
         stats[c.id].recipients = count ?? 0;
       }
+    }
+
+    for (const s of Object.values(stats)) {
+      s.deliveryRate = s.sent ? Math.round((s.delivered / s.sent) * 100) : 0;
+      s.replyRate = s.sent ? Math.round((s.replies / s.sent) * 1000) / 10 : 0;
+      s.optOutRate = s.sent ? Math.round((s.optOuts / s.sent) * 1000) / 10 : 0;
+      // Health blends deliverability, engagement headroom and opt-out drag.
+      const engagement = Math.min(30, s.replyRate * 2);
+      const drag = Math.min(30, s.optOutRate * 8);
+      s.health = s.sent ? Math.max(5, Math.min(100, Math.round(s.deliveryRate * 0.7 + engagement - drag))) : 0;
     }
 
     return { campaigns: campaigns ?? [], stats, tags };
