@@ -63,7 +63,7 @@ function LeadsPage() {
   const [disposition, setDisposition] = useState<"all" | "clean" | "dnc" | "litigator">("all");
   const [sourceType, setSourceType] = useState("all");
   const [lineType, setLineType] = useState<"all" | "mobile" | "landline" | "voip" | "unknown">("all");
-  const [onlyNew, setOnlyNew] = useState(onlyNewParam);
+  const [onlyNew, setOnlyNew] = useState<boolean>(onlyNewParam === true);
   const [multiList, setMultiList] = useState(false);
 
   const { data, isLoading } = useQuery({
