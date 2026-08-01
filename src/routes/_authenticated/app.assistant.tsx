@@ -212,8 +212,6 @@ function Assistant() {
     requestAnimationFrame(() => composer.current?.focus());
   };
 
-  const dictate = () => {
-
   /**
    * A file added from either entry point (panel dropzone or composer attach)
    * flips the source to Upload My List and runs the shared mapping step.
