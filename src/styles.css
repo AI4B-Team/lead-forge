@@ -273,7 +273,7 @@
     width: 125%;
   }
   /* Portal-rendered overlays density-matched to the zoomed content */
-  [role="dialog"][data-slot="dialog-content"],
+  [role="dialog"],
   [role="alertdialog"],
   [data-sonner-toaster] {
     zoom: 0.8;
