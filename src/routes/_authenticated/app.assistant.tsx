@@ -666,8 +666,8 @@ function Assistant() {
       />
       <div className="mt-3 flex items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-          <label className="inline-flex cursor-pointer items-center gap-1.5 font-medium text-foreground hover:text-primary">
-            <Paperclip className="h-3.5 w-3.5" /> Attach Files
+          <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap font-medium text-foreground hover:text-primary">
+            <Paperclip className="h-3.5 w-3.5" /> Attach File
             <input
               type="file"
               className="hidden"
