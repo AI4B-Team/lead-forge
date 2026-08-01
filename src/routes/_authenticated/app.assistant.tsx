@@ -499,8 +499,19 @@ function Assistant() {
   const request = async (county: string) => {
     if (!workspaceId) return;
     try {
-      await logRequest({ data: { workspaceId, county, recordType: spec.recordType } });
+      await logRequest({ data: { workspaceId, county, recordType: spec.recordType, type: "county" } });
       toast.success("County Request Logged");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Log Request");
+    }
+  };
+
+  /** Record types we can't fulfill yet land in the same backlog as county requests. */
+  const requestRecordType = async (requested: string) => {
+    if (!workspaceId) return;
+    try {
+      await logRequest({ data: { workspaceId, county: null, recordType: requested, type: "record_type" } });
+      toast.success("Logged — We'll Notify You When It's Available.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could Not Log Request");
     }
@@ -638,6 +649,7 @@ function Assistant() {
             onPickFile={(f) => void attachFile(f)}
             onRemoveUpload={() => { setUpload(null); setConfirmed(false); }}
             onEditMapping={() => setMapOpen(true)}
+            onRequestRecordType={requestRecordType}
           />
         </div>
         {specScroll.overflowing && !specScroll.atBottom && (
