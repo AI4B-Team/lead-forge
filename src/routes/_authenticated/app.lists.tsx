@@ -23,14 +23,18 @@ import {
   Activity,
   CalendarClock,
   SlidersHorizontal,
+  AlertTriangle,
+  RotateCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { setJobSchedule } from "@/lib/monitoring.functions";
 import { CADENCE_LABEL } from "@/lib/monitoring.shared";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { listJobs } from "@/lib/jobs.functions";
+import { listJobs, resumeJob } from "@/lib/jobs.functions";
 import { JobStageFlow } from "@/components/app/job-stage-flow";
 import { StatTile } from "@/components/app/stat-tile";
+import { buildPipelineStages, ROWS_PROCESSED_LABEL } from "@/lib/pipeline-stages";
+import { isStalled, isRunningStatus, stallReason, STALL_HOURS } from "@/lib/job-watchdog";
 import type { JobStatus } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/app/lists")({
@@ -44,8 +48,6 @@ const SOURCE_META: Record<string, { label: string; icon: typeof Landmark }> = {
   upload: { label: "Upload", icon: Upload },
   assistant: { label: "AI Assistant", icon: Sparkles },
 };
-
-const RUNNING_STATUSES = new Set(["scraping", "scrubbing", "skiptracing", "enriching"]);
 
 /** "Jul 31" / "Yesterday" plus a 12-hour time — far easier to scan than 7/31/2026. */
 function formatCreated(iso: string) {
@@ -64,6 +66,7 @@ function Jobs() {
   const navigate = useNavigate();
   const fetchJobs = useServerFn(listJobs);
   const saveSchedule = useServerFn(setJobSchedule);
+  const retryJob = useServerFn(resumeJob);
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["jobs-list", workspaceId],
@@ -77,41 +80,56 @@ function Jobs() {
   const [status, setStatus] = useState<string>("all");
   const [range, setRange] = useState<string>("all");
 
-  const rows = useMemo(() => {
+  const allRows = useMemo(() => {
     const jobs = data?.jobs ?? [];
+    // Stuck-job watchdog (§23): running with no progress events for 2h.
+    return jobs.map((j) => ({
+      ...j,
+      stalled: isStalled({ status: j.status, lastEventAt: j.last_event_at, createdAt: j.created_at }),
+    }));
+  }, [data]);
+
+  const rows = useMemo(() => {
+    const jobs = allRows;
     const needle = q.trim().toLowerCase();
     const cutoff = range === "all" ? 0 : Date.now() - Number(range) * 86400000;
     return jobs.filter((j) => {
       if (source !== "all" && j.source_type !== source) return false;
-      if (status !== "all" && j.status !== status) return false;
+      if (status === "attention") {
+        if (!j.stalled) return false;
+      } else if (status !== "all" && j.status !== status) return false;
       if (needle && !j.name.toLowerCase().includes(needle)) return false;
       if (cutoff && new Date(j.created_at).getTime() < cutoff) return false;
       return true;
     });
-  }, [data, q, source, status, range]);
+  }, [allRows, q, source, status, range]);
 
   const summary = useMemo(() => {
-    const jobs = data?.jobs ?? [];
-    let leads = 0;
+    const jobs = allRows;
+    let rowsProcessed = 0;
     let clean = 0;
     let scrubbed = 0;
     let running = 0;
     let scheduled = 0;
+    let attention = 0;
     for (const j of jobs) {
-      leads += j.rows_in ?? 0;
+      rowsProcessed += j.rows_in ?? 0;
       clean += j.counts.clean;
       scrubbed += j.counts.clean + j.counts.dnc + j.counts.litigator;
-      if (RUNNING_STATUSES.has(j.status ?? "")) running += 1;
+      // Running counts only genuinely active jobs — stalled ones move to Needs Attention.
+      if (isRunningStatus(j.status) && !j.stalled) running += 1;
+      if (j.stalled) attention += 1;
       if (j.schedule && j.schedule !== "one_time") scheduled += 1;
     }
     return {
       total: jobs.length,
-      leads,
+      rowsProcessed,
       cleanRate: scrubbed ? Math.round((clean / scrubbed) * 100) : 0,
       running,
       scheduled,
+      attention,
     };
-  }, [data]);
+  }, [allRows]);
 
   return (
     <div>
@@ -125,11 +143,17 @@ function Jobs() {
         }
       />
 
-      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-6">
         <StatTile label="Total Jobs" value={summary.total.toLocaleString()} icon={Layers} />
-        <StatTile label="Total Leads" value={summary.leads.toLocaleString()} icon={Users} />
+        <StatTile label={ROWS_PROCESSED_LABEL} value={summary.rowsProcessed.toLocaleString()} icon={Users} />
         <StatTile label="Clean Rate" value={`${summary.cleanRate}%`} icon={ShieldCheck} hint="Clean Of All Scrubbed" />
-        <StatTile label="Running" value={summary.running.toLocaleString()} icon={Activity} />
+        <StatTile label="Running" value={summary.running.toLocaleString()} icon={Activity} hint="Actively Progressing" />
+        <StatTile
+          label="Needs Attention"
+          value={summary.attention.toLocaleString()}
+          icon={AlertTriangle}
+          hint={`No Progress For ${STALL_HOURS}h+`}
+        />
         <StatTile label="Scheduled" value={summary.scheduled.toLocaleString()} icon={CalendarClock} hint="Recurring Rescans" />
       </div>
 
@@ -162,6 +186,7 @@ function Jobs() {
               <SelectItem value="scraping">Scraping</SelectItem>
               <SelectItem value="scrubbing">Scrubbing</SelectItem>
               <SelectItem value="ready">Ready</SelectItem>
+              <SelectItem value="attention">Needs Attention</SelectItem>
               <SelectItem value="failed">Failed</SelectItem>
             </SelectContent>
           </Select>
