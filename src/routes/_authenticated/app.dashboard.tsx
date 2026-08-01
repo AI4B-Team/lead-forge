@@ -328,7 +328,7 @@ function HeroStat({ label, value, info }: { label: string; value: string; info?:
           </Tooltip>
         )}
       </div>
-      <div className="mt-1 font-display text-xl font-bold tabular-nums whitespace-nowrap text-foreground">
+      <div className="mt-1 font-display text-xl font-bold tabular-nums whitespace-nowrap">
         {value}
       </div>
     </div>
