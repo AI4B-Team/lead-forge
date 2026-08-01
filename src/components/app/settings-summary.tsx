@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, ShieldCheck, Users, CreditCard, ArrowRight } from "lucide-react";
+import { Building2, ShieldCheck, Users, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -154,7 +154,7 @@ export function SettingsSummary({ ownerName }: { ownerName: string }) {
           </div>
           <Button asChild variant="outline" size="sm" className="w-full rounded-full">
             <Link to="/app/compliance">
-              <CreditCard className="mr-1.5 h-3.5 w-3.5" /> Open Compliance
+              <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Open Compliance
             </Link>
           </Button>
         </CardContent>
