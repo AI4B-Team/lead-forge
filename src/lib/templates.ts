@@ -397,6 +397,7 @@ export const TEMPLATES: Template[] = [
     prompt: "Pull all new probate filings in Hillsborough County FL from the last 90 days and skip trace the heirs",
     icon: Scale,
     tint: "bg-amber-500/10 text-amber-600",
+    placeholderHint: "e.g. Probate filings in Pasco County, FL from the last 90 days",
   },
   {
     id: "code",
@@ -406,6 +407,7 @@ export const TEMPLATES: Template[] = [
     prompt: "Find all code violation properties in Pinellas County FL and skip trace the owners",
     icon: FileWarning,
     tint: "bg-rose-500/10 text-rose-600",
+    placeholderHint: "e.g. Code violations in Pinellas County, FL from the last 60 days",
   },
   {
     id: "prefc",
@@ -415,6 +417,7 @@ export const TEMPLATES: Template[] = [
     prompt: "Get pre-foreclosure and lis pendens filings in Pasco County FL from the last 30 days",
     icon: Hammer,
     tint: "bg-orange-500/10 text-orange-600",
+    placeholderHint: "e.g. Pre-foreclosures in Pasco County, FL from the last 30 days",
   },
   {
     id: "tax",
