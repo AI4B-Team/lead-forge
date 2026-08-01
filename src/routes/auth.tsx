@@ -39,6 +39,11 @@ function AuthPage() {
   const [googleBusy, setGoogleBusy] = useState(false);
 
   useEffect(() => {
+    const hubError = new URLSearchParams(window.location.search).get("hub_error");
+    if (hubError) toast.error(`Real Elite sign-in failed: ${hubError}`);
+  }, []);
+
+  useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         const stashed = (() => { try { return sessionStorage.getItem("leadtrace_prompt"); } catch { return null; } })();
