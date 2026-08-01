@@ -18,7 +18,11 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
   if (spec.niches.length) steps.push({ label: "Industry", value: spec.niches.join(", ") });
   const stateName = spec.state ? US_STATES.find((s) => s.code === spec.state)?.name ?? spec.state : null;
   if (spec.counties.length) {
-    steps.push({ label: "Location", value: `${spec.counties.join(", ")}${spec.state ? `, ${spec.state}` : ""}` });
+    // Counties often already carry their state suffix ("Hillsborough, FL") — don't double it.
+    const suffix = spec.state && !spec.counties.some((c) => c.toUpperCase().endsWith(spec.state!.toUpperCase()))
+      ? `, ${spec.state}`
+      : "";
+    steps.push({ label: "Location", value: `${spec.counties.join(", ")}${suffix}` });
   } else if (stateName) {
     steps.push({ label: "Location", value: stateName });
   }
