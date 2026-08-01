@@ -11,9 +11,10 @@ import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search, Eye } from "lucide-react";
+import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search, Eye, Pause, Play, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs } from "@/lib/jobs.functions";
+import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs, pauseJob, resumeJob } from "@/lib/jobs.functions";
+import { RESCRUB_DAYS } from "@/lib/compliance-rules";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { PhoneLink } from "@/components/app/phone-link";
 import { setOnboardingPref } from "@/lib/onboarding.functions";
@@ -26,8 +27,17 @@ export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
 
 const STATUS_LABEL: Record<string, string> = {
   queued: "Queued", scraping: "Scraping", enriching: "Enriching",
-  skiptracing: "Skip Tracing", scrubbing: "Scrubbing", ready: "Ready", failed: "Failed",
+  skiptracing: "Skip Tracing", scrubbing: "Scrubbing", ready: "Ready", failed: "Needs Attention",
+  paused: "Paused",
 };
+
+function fmtDuration(ms: number) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ${s % 60}s`;
+  return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
 
 function toCsv(rows: Array<Record<string, unknown>>) {
   if (!rows.length) return "";
