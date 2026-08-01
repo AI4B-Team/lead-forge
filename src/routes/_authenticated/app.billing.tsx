@@ -134,6 +134,8 @@ function Billing() {
         </CardContent>
       </Card>
 
+        </div>
+
         <div className="space-y-6">
           <Card>
             <CardHeader>
