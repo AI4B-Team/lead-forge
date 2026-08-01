@@ -65,7 +65,7 @@ export const Route = createFileRoute("/_authenticated/app/templates")({
 
 function AppTemplates() {
   const navigate = useNavigate();
-  const workspaceId = useWorkspaceId();
+  const { workspaceId } = useWorkspaceId();
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("relevance");
   const [betaOnly, setBetaOnly] = useState(false);
