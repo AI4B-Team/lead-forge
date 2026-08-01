@@ -629,3 +629,10 @@ export function templateFields(t: Template): string[] {
       return base;
   }
 }
+
+/** The Job Spec source a template already determines on its own. */
+export function templateSourceType(t: Template): "business" | "records" | "upload" {
+  if (t.category === "upload") return "upload";
+  if (t.category === "records") return "records";
+  return "business";
+}
