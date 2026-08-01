@@ -19,6 +19,12 @@ import {
   submitCampaignToProvider, listNumbers, buyNumbers,
 } from "@/lib/numbers.functions";
 import { SettingsShell } from "@/components/app/settings-shell";
+import { StatTile } from "@/components/app/stat-tile";
+
+function titleize(v: string | null | undefined) {
+  const s = v ?? "pending";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 export const Route = createFileRoute("/_authenticated/app/registration")({
   head: () => ({
