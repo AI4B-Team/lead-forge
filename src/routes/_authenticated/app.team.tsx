@@ -254,6 +254,7 @@ function TeamPage() {
           </Card>
         </div>
       </div>
+      </SettingsShell>
     </div>
   );
 }
@@ -263,7 +264,6 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-center justify-between gap-3 border-t border-border pt-3 first:border-0 first:pt-0">
       <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
       <span className="truncate text-sm font-medium text-foreground">{value}</span>
-      </SettingsShell>
     </div>
   );
 }

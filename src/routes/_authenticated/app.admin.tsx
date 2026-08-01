@@ -454,6 +454,7 @@ function AdminPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </SettingsShell>
     </div>
   );
 }
@@ -464,7 +465,6 @@ function HealthRow({ label, value, tone }: { label: string; value: string; tone?
       <span className={`font-display text-sm font-bold tabular-nums ${tone === "danger" ? "text-danger" : "text-foreground"}`}>
         {value}
       </span>
-      </SettingsShell>
     </div>
   );
 }

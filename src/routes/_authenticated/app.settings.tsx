@@ -175,6 +175,7 @@ function Settings() {
           </Card>
         </div>
       </div>
+      </SettingsShell>
     </div>
   );
 }
@@ -200,7 +201,6 @@ function IntegrationCard({
       <div className="mt-3 text-sm font-semibold text-foreground">{title}</div>
       <p className="mt-1 text-xs text-muted-foreground">{description}</p>
       <div className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{action}</div>
-      </SettingsShell>
     </div>
   );
 }

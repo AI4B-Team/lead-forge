@@ -231,6 +231,7 @@ function Compliance() {
           </table>
         </CardContent>
       </Card>
+      </SettingsShell>
     </div>
   );
 }
@@ -254,7 +255,6 @@ function SupChip({
     <div className={`rounded-xl border px-3 py-3 ${styles}`}>
       <div className="font-display text-2xl font-black leading-none">{value.toLocaleString()}</div>
       <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] opacity-80">{label}</div>
-      </SettingsShell>
     </div>
   );
 }

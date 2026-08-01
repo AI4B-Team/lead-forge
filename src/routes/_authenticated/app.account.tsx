@@ -302,6 +302,7 @@ function AccountPage() {
           </div>
         </TabsContent>
       </Tabs>
+      </SettingsShell>
     </div>
   );
 }
@@ -324,7 +325,6 @@ function PrefRow({
         <div className="text-xs text-muted-foreground">{hint}</div>
       </div>
       <Switch checked={checked} onCheckedChange={onChange} />
-      </SettingsShell>
     </div>
   );
 }
