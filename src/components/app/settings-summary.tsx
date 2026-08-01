@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getBilling } from "@/lib/billing.functions";
-import { getRegistration } from "@/lib/numbers.functions";
+import { getComplianceState } from "@/lib/compliance.functions";
+import { computeCompliance } from "@/lib/compliance.shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 
