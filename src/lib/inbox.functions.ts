@@ -360,3 +360,110 @@ export const unreadCount = createServerFn({ method: "GET" })
       .is("read_at", null);
     return { count: count ?? 0 };
   });
+// ---------------------------------------------------------------------------
+// AI layer: conversation summary + suggested replies (grounded in the thread).
+// ---------------------------------------------------------------------------
+
+const threadTurns = async (
+  supabase: Awaited<ReturnType<typeof requireSupabaseAuth.options.server>> extends never ? never : any,
+  workspaceId: string,
+  threadKey: string,
+) => {
+  const { data: rows } = await supabase
+    .from("messages")
+    .select("direction, body, created_at")
+    .eq("workspace_id", workspaceId)
+    .eq("thread_key", threadKey)
+    .order("created_at", { ascending: true })
+    .limit(40);
+  return ((rows ?? []) as Array<{ direction: string; body: string | null }>)
+    .filter((m) => !!m.body)
+    .map((m) => ({ role: m.direction === "inbound" ? ("user" as const) : ("assistant" as const), content: m.body! }));
+};
+
+export const summarizeThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ workspaceId: z.string().uuid(), threadKey: z.string().min(1) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const turns = await threadTurns(context.supabase, data.workspaceId, data.threadKey);
+    if (!turns.length) return { summary: null };
+    const { summarizeConversation } = await import("@/lib/inbox.server");
+    return { summary: await summarizeConversation(turns) };
+  });
+
+export const suggestThreadReplies = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      workspaceId: z.string().uuid(),
+      threadKey: z.string().min(1),
+      command: z.string().max(40).nullable().optional(),
+      draft: z.string().max(1600).nullable().optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const turns = await threadTurns(context.supabase, data.workspaceId, data.threadKey);
+    if (!turns.length) return { suggestions: [] };
+
+    // Ground suggestions in the campaign's brand when one is linked.
+    const { data: msg } = await context.supabase
+      .from("messages")
+      .select("campaign_id")
+      .eq("workspace_id", data.workspaceId)
+      .eq("thread_key", data.threadKey)
+      .not("campaign_id", "is", null)
+      .limit(1)
+      .maybeSingle();
+    let brand: string | null = null;
+    let product: string | null = null;
+    if (msg?.campaign_id) {
+      const { data: c } = await context.supabase
+        .from("campaigns")
+        .select("brand_id, bot_config")
+        .eq("id", msg.campaign_id)
+        .maybeSingle();
+      const cfg = (c?.bot_config ?? {}) as { product?: string };
+      product = cfg.product ?? null;
+      if (c?.brand_id) {
+        const { data: b } = await context.supabase.from("brands").select("name").eq("id", c.brand_id).maybeSingle();
+        brand = b?.name ?? null;
+      }
+    }
+
+    const { suggestReplies } = await import("@/lib/inbox.server");
+    const suggestions = await suggestReplies({
+      turns,
+      brand,
+      product,
+      command: data.command ?? null,
+      draft: data.draft ?? null,
+    });
+    return { suggestions };
+  });
+
+/** Add the lead's phone to workspace suppression (Blacklist quick action). */
+export const blacklistThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ workspaceId: z.string().uuid(), threadKey: z.string().min(1) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: msg } = await context.supabase
+      .from("messages")
+      .select("lead_id")
+      .eq("workspace_id", data.workspaceId)
+      .eq("thread_key", data.threadKey)
+      .not("lead_id", "is", null)
+      .limit(1)
+      .maybeSingle();
+    if (!msg?.lead_id) throw new Error("No lead on this conversation");
+    const { data: lead } = await context.supabase.from("leads").select("phone").eq("id", msg.lead_id).maybeSingle();
+    if (!lead?.phone) throw new Error("No phone on this lead");
+    const { error } = await context.supabase
+      .from("suppression")
+      .upsert({ workspace_id: data.workspaceId, phone: lead.phone, reason: "manual_blacklist" } as never);
+    if (error) throw error;
+    return { ok: true, phone: lead.phone };
+  });
