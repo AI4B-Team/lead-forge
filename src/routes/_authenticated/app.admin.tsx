@@ -457,3 +457,13 @@ function AdminPage() {
     </div>
   );
 }
+function HealthRow({ label, value, tone }: { label: string; value: string; tone?: "danger" }) {
+  return (
+    <div className="flex items-center justify-between border-b border-border pb-2 last:border-0 last:pb-0">
+      <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className={`font-display text-sm font-bold tabular-nums ${tone === "danger" ? "text-danger" : "text-foreground"}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
