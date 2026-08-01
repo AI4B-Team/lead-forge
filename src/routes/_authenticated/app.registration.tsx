@@ -228,6 +228,21 @@ function RegistrationPage() {
         </p>
       </div>
 
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile label="Brand Status" value={titleize(reg?.brand_status)} hint="T-Mobile / AT&T Registry" />
+        <StatTile label="Campaign Status" value={titleize(reg?.campaign_status)} hint="A2P 10DLC Use Case" />
+        <StatTile
+          label="Trust Score"
+          value={reg?.brand_status === "approved" ? "75 / 100" : "—"}
+          hint="Sets Daily Throughput"
+        />
+        <StatTile
+          label="Est. Approval"
+          value={reg?.campaign_status === "approved" ? "Complete" : "2–5 Days"}
+          hint={`${completed} Of 5 Steps Done`}
+        />
+      </div>
+
       <div className="grid lg:grid-cols-[260px_1fr] gap-6">
         <aside className="space-y-3">
           <div className="rounded-2xl border border-border bg-background p-4">
