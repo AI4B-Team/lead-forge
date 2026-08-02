@@ -412,3 +412,137 @@ export const launchCampaignFromJob = createServerFn({ method: "POST" })
 
     return { campaignId: campaign.id };
   });
+// ---------------------------------------------------------------------------
+// Recurring-run controls. The RESCAN dropdown, the auto-launch toggle, the
+// channel override, and the "Run Now" button all land here.
+// ---------------------------------------------------------------------------
+
+const CADENCE_ENUM = z.enum(["one_time", "every_2h", "every_12h", "daily", "weekly", "custom"]);
+
+export const setListSchedule = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        jobId: z.string().uuid(),
+        cadence: CADENCE_ENUM,
+        customMinutes: z.number().int().min(15).max(43200).nullable().default(null),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { scheduleFieldsFor } = await import("./recurring.server");
+    const fields = scheduleFieldsFor(data.cadence, data.customMinutes);
+    const { error } = await context.supabase.from("jobs").update(fields).eq("id", data.jobId);
+    if (error) throw error;
+    return fields;
+  });
+
+export const setListScheduleActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ jobId: z.string().uuid(), active: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: job } = await context.supabase
+      .from("jobs")
+      .select("schedule, custom_interval_minutes")
+      .eq("id", data.jobId)
+      .maybeSingle();
+    const { nextRunFrom, normalizeCadence } = await import("./schedule.shared");
+    const cadence = normalizeCadence(job?.schedule ?? null);
+    const next =
+      data.active && cadence !== "one_time"
+        ? nextRunFrom(cadence, job?.custom_interval_minutes ?? null)
+        : null;
+    const { error } = await context.supabase
+      .from("jobs")
+      .update({ schedule_active: data.active, next_run_at: next })
+      .eq("id", data.jobId);
+    if (error) throw error;
+    return { active: data.active, next_run_at: next };
+  });
+
+export const setListAutoLaunch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ jobId: z.string().uuid(), autoLaunch: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("jobs")
+      .update({ auto_launch: data.autoLaunch })
+      .eq("id", data.jobId);
+    if (error) throw error;
+    return { ok: true, autoLaunch: data.autoLaunch };
+  });
+
+export const setListChannel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({ jobId: z.string().uuid(), channel: z.enum(["sms", "email", "direct_mail"]) })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const patch: Record<string, unknown> = { channel: data.channel };
+    // Only SMS lists can auto-send, so switching away turns auto-launch off.
+    if (data.channel !== "sms") patch.auto_launch = false;
+    const { error } = await context.supabase.from("jobs").update(patch).eq("id", data.jobId);
+    if (error) throw error;
+    return { ok: true, channel: data.channel };
+  });
+
+/** Run a saved list right now — same engine the cron uses, net-new only. */
+export const runListNow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ jobId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: list, error } = await context.supabase
+      .from("jobs")
+      .select(
+        "id, workspace_id, source_type, record_type, params, schedule, custom_interval_minutes, auto_launch, channel, name, created_by",
+      )
+      .eq("id", data.jobId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!list) throw new Error("List Not Found");
+    const { runListNow: run } = await import("./recurring.server");
+    return run(context.supabase, list as never, { manual: true });
+  });
+
+export const listNotifications = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("notifications")
+      .select("id, kind, title, body, job_id, read_at, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (error) throw error;
+    return {
+      rows: rows ?? [],
+      unread: (rows ?? []).filter((r) => !r.read_at).length,
+    };
+  });
+
+export const markNotificationsRead = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({ workspaceId: z.string().uuid(), ids: z.array(z.string().uuid()).optional() })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    let q = context.supabase
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("workspace_id", data.workspaceId)
+      .is("read_at", null);
+    if (data.ids?.length) q = q.in("id", data.ids);
+    const { error } = await q;
+    if (error) throw error;
+    return { ok: true };
+  });
