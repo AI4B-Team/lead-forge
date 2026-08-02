@@ -29,6 +29,7 @@ import {
 } from "@/lib/inbox.functions";
 import { listQuickReplies, createQuickReply, listTags } from "@/lib/tags.functions";
 import { LeadTagBar } from "@/components/app/lead-tag-picker";
+import { VoiceMessageItem } from "@/components/app/voice-message-item";
 import { listNumbers } from "@/lib/numbers.functions";
 import {
   AiActivityPill,
