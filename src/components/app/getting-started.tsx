@@ -232,7 +232,9 @@ export function FirstRunSetup({ workspaceId }: { workspaceId: string | null }) {
     },
   });
 
-  if (!data || data.firstRunDismissed) return null;
+  // Keyed to workspace setup completeness, not account age: an experienced user's
+  // Nth workspace still starts here, and a workspace graduates once it has data.
+  if (!data || !data.firstRun) return null;
 
   const items = [
     {
