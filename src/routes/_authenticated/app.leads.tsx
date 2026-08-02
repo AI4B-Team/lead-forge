@@ -300,8 +300,9 @@ function LeadsPageInner() {
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="p-4">Name / Business</th>
-                <th className="p-4">Phone</th>
-                <th className="p-4">Email</th>
+                {dynamicCols.map((k) => (
+                  <th key={k} className="p-4">{LEAD_FIELDS[k].label}</th>
+                ))}
                 <th className="p-4">Disposition</th>
                 <th className="p-4">Lists</th>
                 <th className="p-4">Last Seen</th>
@@ -309,10 +310,10 @@ function LeadsPageInner() {
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
+                <tr><td colSpan={colCount} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
               )}
               {!isLoading && rows.length === 0 && (
-                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">
+                <tr><td colSpan={colCount} className="p-8 text-center text-muted-foreground">
                   No Records Match These Filters Yet.
                 </td></tr>
               )}
