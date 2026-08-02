@@ -13,7 +13,8 @@ import {
   type MemberCostRow,
   type MemberLimits,
 } from "./accountability.shared";
-import { can, hasTeamControls, isAdminRole, roleOf, type TeamAction } from "./team-roles.shared";
+import { can, isAdminRole, roleOf, type TeamAction } from "./team-roles.shared";
+import { memberContext, usedThisMonth } from "./accountability.server";
 
 /**
  * Internal accountability layer: who spent, who exported, and what they are
@@ -22,56 +23,6 @@ import { can, hasTeamControls, isAdminRole, roleOf, type TeamAction } from "./te
  */
 
 const wsInput = z.object({ workspaceId: z.string().uuid() });
-
-async function memberContext(supabase: any, workspaceId: string, userId: string) {
-  const { data: member } = await supabase
-    .from("workspace_members")
-    .select("role")
-    .eq("workspace_id", workspaceId)
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (!member) throw new Error("Forbidden");
-  const { data: ws } = await supabase
-    .from("workspaces")
-    .select("billing_plan")
-    .eq("id", workspaceId)
-    .maybeSingle();
-  const { data: limits } = await supabase
-    .from("member_limits")
-    .select("monthly_credit_cap, monthly_export_row_cap, approval_threshold_credits, export_approval_threshold_rows")
-    .eq("workspace_id", workspaceId)
-    .eq("user_id", userId)
-    .maybeSingle();
-  return {
-    role: roleOf(member.role),
-    plan: ws?.billing_plan ?? "starter",
-    enforced: hasTeamControls(ws?.billing_plan),
-    limits: (limits ?? NO_LIMITS) as MemberLimits,
-  };
-}
-
-async function usedThisMonth(supabase: any, workspaceId: string, userId: string) {
-  const since = monthStart().toISOString();
-  const [{ data: ledger }, { data: exports }] = await Promise.all([
-    supabase
-      .from("credit_ledger")
-      .select("delta")
-      .eq("workspace_id", workspaceId)
-      .eq("actor_user_id", userId)
-      .lt("delta", 0)
-      .gte("created_at", since),
-    supabase
-      .from("export_events")
-      .select("row_count")
-      .eq("workspace_id", workspaceId)
-      .eq("actor_user_id", userId)
-      .gte("created_at", since),
-  ]);
-  return {
-    credits: (ledger ?? []).reduce((s: number, r: any) => s + Math.abs(r.delta ?? 0), 0),
-    exportRows: (exports ?? []).reduce((s: number, r: any) => s + (r.row_count ?? 0), 0),
-  };
-}
 
 /** What the signed-in member may do here, plus their spend against their caps. */
 export const getTeamContext = createServerFn({ method: "GET" })
