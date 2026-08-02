@@ -9,6 +9,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MarkerHighlight } from "@/components/marketing/marker-highlight";
 import { stashPrompt } from "@/lib/prompt-handoff";
+import type { Template } from "@/lib/templates";
+
+const GENERIC_PLACEHOLDER =
+  "Describe who you want to reach, paste a website, or upload a list…";
 
 const ROTATING = [
   "HVAC contractors in Georgia, remove franchises…",
@@ -17,7 +21,7 @@ const ROTATING = [
   "Upload my CSV and clean it for a campaign…",
 ];
 
-export function PromptHero() {
+export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template | null }) {
   const search = useSearch({ strict: false }) as { prompt?: string };
   const navigate = useNavigate();
   const [value, setValue] = useState(search.prompt ?? "");
@@ -88,14 +92,15 @@ export function PromptHero() {
 
   const submit = () => {
     const text = value.trim();
-    if (!text && files.length === 0) return;
+    if (!text && files.length === 0 && !selectedTemplate) return;
     // The prompt travels in the URL so it survives every auth path; the
     // sessionStorage stash is only a 10-minute fallback.
-    if (text) stashPrompt(text);
+    if (text || selectedTemplate) stashPrompt(text, selectedTemplate?.id ?? null);
     navigate({
       to: "/start",
       search: {
         ...(text ? { prompt: text } : {}),
+        ...(selectedTemplate ? { template: selectedTemplate.id } : {}),
         // Files cannot survive navigation, so send those users to the uploader.
         ...(files.length > 0 ? { upload: true } : {}),
       },
