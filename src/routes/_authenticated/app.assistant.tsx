@@ -769,7 +769,7 @@ function Assistant() {
           >
             {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {ctaLabel}
           </Button>
-          <div className="text-center text-[11px] text-muted-foreground">
+          <div className="text-center text-[11px] text-muted-foreground pb-4">
             The Assistant Assembles. You Run. Nothing Sends Without You.
           </div>
         </>
