@@ -318,12 +318,13 @@ export function JobSpecCard({
                   )}
                 </SelectContent>
               </Select>
-              <PopoverContent align="start" className="w-80 space-y-2">
+              <PopoverContent align="start" className="w-[28rem] space-y-2">
                 <div className="text-sm font-medium text-foreground">Request A Record Type</div>
                 <Input
                   autoFocus
                   value={requestText}
                   placeholder="What records do you want? e.g. Building Permits, New LLC Filings"
+                  title="What records do you want? e.g. Building Permits, New LLC Filings"
                   onChange={(e) => setRequestText(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
