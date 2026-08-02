@@ -557,7 +557,7 @@ export function KnowledgeSourceList({
                 isAdded
                   ? "bg-success/10 text-success"
                   : isThin
-                    ? "bg-warning/10 text-warning"
+                    ? "bg-warn/10 text-warn"
                     : "bg-muted text-muted-foreground"
               }`}
             >
@@ -572,7 +572,7 @@ export function KnowledgeSourceList({
                 {depth && depth.count > 0 ? (
                   <>
                     {depth.detail}
-                    {isThin && <span className="text-warning"> · Thin</span>}
+                    {isThin && <span className="text-warn"> · Thin</span>}
                   </>
                 ) : (
                   <>None Yet · {spec.action}</>
@@ -580,7 +580,7 @@ export function KnowledgeSourceList({
               </div>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ${isAdded ? "bg-success" : "bg-warning"}`}
+                  className={`h-full rounded-full transition-all duration-500 ${isAdded ? "bg-success" : "bg-warn"}`}
                   style={{ width: `${progress}%` }}
                 />
               </div>
