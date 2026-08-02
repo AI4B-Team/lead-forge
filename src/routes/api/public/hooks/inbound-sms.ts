@@ -64,9 +64,12 @@ export const Route = createFileRoute("/api/public/hooks/inbound-sms")({
           campaignId = last?.campaign_id ?? null;
         }
 
-        const isOptOut = /^\s*(stop|unsubscribe|quit|cancel|end|remove)\b/i.test(body);
+        const { getProvider } = await import("@/lib/sms");
+        const { classifyInbound, processInbound } = await import("@/lib/inbound.server");
+        const provider = getProvider();
+        const { isOptOut } = classifyInbound(body);
 
-        await admin.from("messages").insert({
+        const { data: inboundRow } = await admin.from("messages").insert({
           workspace_id: num.workspace_id,
           campaign_id: campaignId,
           lead_id: lead?.id ?? null,
@@ -75,15 +78,21 @@ export const Route = createFileRoute("/api/public/hooks/inbound-sms")({
           body,
           is_optout: isOptOut,
           status: "received",
-        });
+        }).select("id").maybeSingle();
 
-        if (isOptOut) {
-          await admin.from("suppression").upsert({
-            workspace_id: num.workspace_id,
-            phone: from,
-            reason: "user_optout",
-          });
-        }
+        // Identical compliance + bot behaviour as the Telnyx handler.
+        const outcome = await processInbound({
+          db: admin,
+          send: (f, t, b) => provider.send(f, t, b),
+          workspaceId: num.workspace_id,
+          toPhone: to,
+          sendingNumberId: num.id,
+          fromPhone: from,
+          body,
+          leadId: lead?.id ?? null,
+          campaignId,
+          inboundMessageId: inboundRow?.id ?? null,
+        });
 
         const { emitEvent } = await import("@/lib/events.server");
         await emitEvent(admin, num.workspace_id, "message.reply_received", {
@@ -93,7 +102,7 @@ export const Route = createFileRoute("/api/public/hooks/inbound-sms")({
           is_optout: isOptOut,
         });
 
-        return Response.json({ ok: true, optOut: isOptOut });
+        return Response.json({ ok: true, optOut: outcome.optOut, help: outcome.help, bot: outcome.bot });
       },
     },
   },

@@ -63,7 +63,7 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
         }
 
         const { classifyInbound, processInbound } = await import("@/lib/inbound.server");
-        const { isOptOut, isHelp } = classifyInbound(inbound.body);
+        const { isOptOut } = classifyInbound(inbound.body);
 
         const { data: inboundRow } = await admin.from("messages").insert({
           workspace_id: num.workspace_id,
