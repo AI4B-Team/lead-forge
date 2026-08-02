@@ -777,9 +777,12 @@ export type Database = {
           dedupe_key: string
           disposition: string
           email: string | null
+          engagement: string | null
           first_seen_at: string
           first_seen_job_id: string | null
+          followers: string | null
           full_name: string | null
+          handle: string | null
           id: string
           is_new: boolean
           last_seen_at: string
@@ -787,6 +790,7 @@ export type Database = {
           list_count: number
           phone: string | null
           phone_type: string | null
+          platform: string | null
           record_types: string[]
           socials: Json
           source_types: string[]
@@ -804,9 +808,12 @@ export type Database = {
           dedupe_key: string
           disposition?: string
           email?: string | null
+          engagement?: string | null
           first_seen_at?: string
           first_seen_job_id?: string | null
+          followers?: string | null
           full_name?: string | null
+          handle?: string | null
           id?: string
           is_new?: boolean
           last_seen_at?: string
@@ -814,6 +821,7 @@ export type Database = {
           list_count?: number
           phone?: string | null
           phone_type?: string | null
+          platform?: string | null
           record_types?: string[]
           socials?: Json
           source_types?: string[]
@@ -831,9 +839,12 @@ export type Database = {
           dedupe_key?: string
           disposition?: string
           email?: string | null
+          engagement?: string | null
           first_seen_at?: string
           first_seen_job_id?: string | null
+          followers?: string | null
           full_name?: string | null
+          handle?: string | null
           id?: string
           is_new?: boolean
           last_seen_at?: string
@@ -841,6 +852,7 @@ export type Database = {
           list_count?: number
           phone?: string | null
           phone_type?: string | null
+          platform?: string | null
           record_types?: string[]
           socials?: Json
           source_types?: string[]
