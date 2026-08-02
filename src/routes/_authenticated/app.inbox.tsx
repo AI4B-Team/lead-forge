@@ -48,14 +48,18 @@ export const Route = createFileRoute("/_authenticated/app/inbox")({
 
 type Filter = "all" | "needs_reply" | "interested" | "appointments" | "ai" | "unread" | "optouts";
 
-const FILTERS: Array<{ key: Filter; label: string }> = [
-  { key: "all", label: "All" },
-  { key: "needs_reply", label: "Needs Reply" },
-  { key: "interested", label: "Interested" },
-  { key: "appointments", label: "Appointments" },
+const PRIMARY_FILTERS: Array<{ key: Filter; label: string; short: string }> = [
+  { key: "all", label: "All", short: "All" },
+  { key: "needs_reply", label: "Needs Reply", short: "Replies" },
+  { key: "interested", label: "Interested", short: "Interest" },
+  { key: "appointments", label: "Appointments", short: "Appts" },
+];
+
+const OVERFLOW_FILTERS: Array<{ key: Filter | "archive"; label: string }> = [
+  { key: "optouts", label: "STOP" },
   { key: "ai", label: "AI" },
   { key: "unread", label: "Unread" },
-  { key: "optouts", label: "STOP" },
+  { key: "archive", label: "Archive" },
 ];
 
 const notesKey = (t: string) => `leadtrace:notes:${t}`;
