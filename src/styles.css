@@ -350,3 +350,12 @@
 .thin-scroll::-webkit-scrollbar-thumb:hover {
   background: color-mix(in oklab, var(--muted-foreground) 55%, transparent);
 }
+
+/* Tailwind v4 preflight sets buttons to cursor:default — restore the pointer so
+   every interactive control reads as clickable. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+label:has(> input[type="file"]),
+summary {
+  cursor: pointer;
+}
