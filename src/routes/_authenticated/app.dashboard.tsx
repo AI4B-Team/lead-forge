@@ -512,7 +512,7 @@ function HeroStat({ label, value, info }: { label: string; value: string; info?:
 }
 
 function Metric({
-  icon, label, value, note, noteNode, noteTone,
+  icon, label, value, note, noteNode, noteTone, help,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -520,12 +520,27 @@ function Metric({
   note?: string;
   noteNode?: React.ReactNode;
   noteTone?: "success";
+  help?: string;
 }) {
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
-          {icon} {label}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
+            {icon} {label}
+          </div>
+          {help && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[220px] text-xs">
+                <p>{help}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
         <div className="mt-2 font-display text-3xl font-black text-foreground">{value}</div>
         {(noteNode ?? note) && (
