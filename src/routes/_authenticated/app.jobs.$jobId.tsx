@@ -454,7 +454,7 @@ function LaunchCampaignDialog({ defaultJobId, defaultJobName }: { defaultJobId: 
 
   const { data } = useQuery({
     queryKey: ["launchable-jobs", workspaceId],
-    queryFn: () => fetchJobs({ data: { workspaceId: workspaceId! } }),
+    queryFn: () => fetchJobs({ data: { workspaceId: workspaceId!, timeZone: LOCAL_TZ } }),
     enabled: open && !!workspaceId,
   });
 
@@ -486,7 +486,7 @@ function LaunchCampaignDialog({ defaultJobId, defaultJobName }: { defaultJobId: 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="rounded-full">
-          <MessageSquare className="mr-1 h-4 w-4" /> Launch Campaign With Clean File
+          <MessageSquare className="mr-1 h-4 w-4" /> Launch Campaign
         </Button>
       </DialogTrigger>
       <DialogContent>
