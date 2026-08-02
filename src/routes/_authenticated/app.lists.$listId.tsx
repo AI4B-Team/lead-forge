@@ -17,8 +17,8 @@ import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, l
 import { RESCRUB_DAYS } from "@/lib/compliance-rules";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { buildFunnel, funnelViolations } from "@/lib/funnel-math";
-import { enrichmentProfile } from "@/lib/pipeline-options";
-import { exportShapeFor, shapeExportRows } from "@/lib/export-columns";
+import { enrichmentProfile, isDataSource, isNonUsRun } from "@/lib/pipeline-options";
+import { exportShapeFor, shapeExportRows, cleanFileType } from "@/lib/export-columns";
 import { launchEstimate, formatUsd } from "@/lib/launch-estimate";
 import { LOCAL_TZ } from "@/lib/local-tz";
 import { PhoneLink } from "@/components/app/phone-link";
@@ -113,7 +113,15 @@ function JobDetail() {
   // export columns all follow the creator layout.
   const runTemplateId = typeof params.templateId === "string" ? params.templateId : null;
   const isCreatorRun = enrichmentProfile(runTemplateId) === "creator";
-  const funnelVariant = isCreatorRun ? "creator" : "phone";
+  // Research datasets have no compliance pipeline: Found -> Deduped -> Exported.
+  const isDataRun = isDataSource(runTemplateId);
+  const nonUsRun = isNonUsRun({
+    templateId: runTemplateId,
+    country: typeof params.country === "string" ? params.country : null,
+  });
+  // SMS is US-only, and a dataset isn't contactable — neither can launch.
+  const campaignable = !isDataRun && !nonUsRun;
+  const funnelVariant = isDataRun ? "data" : isCreatorRun ? "creator" : "phone";
   const funnel = buildFunnel(
     {
       found: job.rows_in ?? 0,
@@ -219,6 +227,13 @@ function JobDetail() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Stat label="Records Found" value={funnel[0]!.remaining.toLocaleString()} />
         <Stat label="Unique Records" value={funnel[1]!.remaining.toLocaleString()} />
+        {isDataRun ? (
+          <>
+            <Stat label="Exported Rows" value={funnel[2]!.remaining.toLocaleString()} />
+            <Stat label="Deliverable" value="Dataset" muted />
+          </>
+        ) : (
+          <>
         <Stat label={isCreatorRun ? "Email Found" : "Mobile Verified"} value={funnel[2]!.remaining.toLocaleString()} />
         {isCreatorRun ? (
           <Stat label="Contact Emails" value={counts.clean.toLocaleString()} />
@@ -228,6 +243,8 @@ function JobDetail() {
             value={traced > 0 ? traced.toLocaleString() : "None Needed"}
             muted={traced === 0}
           />
+        )}
+          </>
         )}
       </div>
 
