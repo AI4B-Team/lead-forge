@@ -1,20 +1,39 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { Bell, Inbox, MessageSquare } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Bell, Inbox, MessageSquare, Repeat, Rocket, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { listThreads } from "@/lib/inbox.functions";
+import { listNotifications, markNotificationsRead } from "@/lib/jobs.functions";
 
-// Bell surfaces unread inbound replies for the active workspace and deep links
-// into the Inbox thread that needs attention.
+const RUN_ICON: Record<string, typeof Repeat> = {
+  run_complete: Repeat,
+  run_auto_launched: Rocket,
+  run_no_new: CheckCircle2,
+  run_failed: AlertTriangle,
+};
+
+function relative(iso: string) {
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
+  if (mins < 1) return "Just Now";
+  if (mins < 60) return `${mins}m Ago`;
+  if (mins < 1440) return `${Math.round(mins / 60)}h Ago`;
+  return `${Math.round(mins / 1440)}d Ago`;
+}
+
+// Bell surfaces two things that need the user: unread inbound replies, and
+// recurring runs that landed while they were away.
 export function NotificationBell() {
   const { workspaceId } = useWorkspaceId();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const fetchThreads = useServerFn(listThreads);
+  const fetchRuns = useServerFn(listNotifications);
+  const markRead = useServerFn(markNotificationsRead);
 
   const { data } = useQuery({
     queryKey: ["notifications-unread", workspaceId],
@@ -23,11 +42,28 @@ export function NotificationBell() {
     refetchInterval: 30_000,
   });
 
-  const threads = (data?.threads ?? []).slice(0, 6);
-  const count = data?.threads?.length ?? 0;
+  const { data: runData } = useQuery({
+    queryKey: ["run-notifications", workspaceId],
+    queryFn: () => fetchRuns({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId,
+    refetchInterval: 30_000,
+  });
+
+  const threads = (data?.threads ?? []).slice(0, 4);
+  const runs = (runData?.rows ?? []).slice(0, 6);
+  const count = (data?.threads?.length ?? 0) + (runData?.unread ?? 0);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={async (next) => {
+        setOpen(next);
+        if (!next && workspaceId && (runData?.unread ?? 0) > 0) {
+          await markRead({ data: { workspaceId } });
+          qc.invalidateQueries({ queryKey: ["run-notifications", workspaceId] });
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <Button size="icon" variant="ghost" className="relative" aria-label="Notifications">
           <Bell className="h-4 w-4" />
@@ -44,13 +80,46 @@ export function NotificationBell() {
           <span className="text-xs text-muted-foreground">{count} Unread</span>
         </div>
 
-        {threads.length === 0 ? (
+        {threads.length === 0 && runs.length === 0 ? (
           <div className="px-4 py-8 text-center">
             <Inbox className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground">You're All Caught Up</p>
           </div>
         ) : (
-          <ul className="max-h-80 overflow-auto divide-y divide-border">
+          <ul className="max-h-96 overflow-auto divide-y divide-border">
+            {runs.map((n) => {
+              const Icon = RUN_ICON[n.kind] ?? Repeat;
+              return (
+                <li key={n.id}>
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      if (n.job_id) {
+                        navigate({ to: "/app/lists/$listId", params: { listId: n.job_id } });
+                      } else {
+                        navigate({ to: "/app/lists" });
+                      }
+                    }}
+                    className={`w-full text-left px-4 py-3 hover:bg-muted transition-colors flex gap-3 ${
+                      n.read_at ? "" : "bg-primary/5"
+                    }`}
+                  >
+                    <Icon
+                      className={`h-4 w-4 mt-0.5 shrink-0 ${
+                        n.kind === "run_failed" ? "text-danger" : "text-primary"
+                      }`}
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium">{n.title}</span>
+                      <span className="block text-xs text-muted-foreground">{n.body ?? ""}</span>
+                      <span className="block text-[11px] text-muted-foreground/70">
+                        {relative(n.created_at)}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
             {threads.map((t) => (
               <li key={t.thread_key}>
                 <button
@@ -68,8 +137,8 @@ export function NotificationBell() {
                     <span className="block text-xs text-muted-foreground truncate">{t.last_body ?? ""}</span>
                   </span>
                 </button>
-              </li>
-            ))}
+              ))}
+            )}
           </ul>
         )}
 
