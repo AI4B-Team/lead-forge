@@ -327,13 +327,14 @@ function AdminPage() {
         </CardContent>
       </Card>
 
+      <SourceDemandCard enabled={gate.data?.isSuperAdmin === true} />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-display flex items-center gap-2">
             <ShieldAlert className="h-4 w-4 text-primary" /> Super Admins
           </CardTitle>
         </CardHeader>
-
         <CardContent>
           <div className="text-xs text-muted-foreground mb-3">
             Comp Accounts + Full Platform Access. Contact Support To Add A New Super Admin.
