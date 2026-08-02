@@ -325,9 +325,23 @@ function AccountPage() {
                 </CardContent>
               </Card>
 
-            </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base font-display">
+                    <KeyRoundIcon className="h-4 w-4 text-muted-foreground" /> API Keys
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-wrap items-center justify-between gap-4">
+                  <p className="max-w-xl text-sm text-muted-foreground">
+                    Workspace API Keys And Event Webhooks Are Managed On The Integrations Page.
+                  </p>
+                  <Button variant="outline" className="rounded-full" asChild>
+                    <Link to="/app/integrations" hash="developer">Open Integrations</Link>
+                  </Button>
+                </CardContent>
+              </Card>
 
-            <div className="lg:hidden" />
+            </div>
 
             <div className="space-y-6">
               <IdentityCard
