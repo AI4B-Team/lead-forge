@@ -176,7 +176,7 @@ function WorkspaceAdmin() {
                 <HealthRow
                   ok
                   label="Compliance Healthy"
-                  hint={`${n(data?.optOuts)} Suppressed Contacts Enforced On Every Send.`}
+                  hint={`${n(data?.optOuts)} Suppressed ${data?.optOuts === 1 ? "Contact" : "Contacts"} Enforced On Every Send.`}
                   to="/app/compliance"
                 />
                 <HealthRow
