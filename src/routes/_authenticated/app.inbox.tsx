@@ -386,43 +386,44 @@ function ConversationsPage() {
               </div>
 
               {/* Middle: scrollable message thread — flexes to absorb available height */}
-              <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto thin-scroll p-4">
-                <div className="min-h-full flex flex-col justify-end gap-2">
-                  {threadQ.data?.messages.map((m) => (
-                    <div key={m.id} className={cn("flex", m.direction === "outbound" ? "justify-end" : "justify-start")}>
+              <div
+                ref={scrollerRef}
+                className="flex-1 min-h-0 overflow-y-auto thin-scroll p-4 flex flex-col-reverse gap-2"
+              >
+                {suggestM.isPending && (
+                  <div className="flex justify-end">
+                    <AiActivityPill label="AI Composing" />
+                  </div>
+                )}
+                {[...(threadQ.data?.messages ?? [])].reverse().map((m) => (
+                  <div key={m.id} className={cn("flex", m.direction === "outbound" ? "justify-end" : "justify-start")}>
+                    <div
+                      className={cn(
+                        "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
+                        m.direction === "outbound"
+                          ? "bg-primary text-primary-foreground rounded-br-sm"
+                          : "bg-muted text-foreground rounded-bl-sm",
+                      )}
+                    >
+                      <div className="whitespace-pre-wrap">{m.body}</div>
                       <div
                         className={cn(
-                          "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
-                          m.direction === "outbound"
-                            ? "bg-primary text-primary-foreground rounded-br-sm"
-                            : "bg-muted text-foreground rounded-bl-sm",
+                          "text-[10px] mt-1 opacity-70 flex items-center gap-1",
+                          m.direction === "outbound" ? "text-primary-foreground" : "text-muted-foreground",
                         )}
                       >
-                        <div className="whitespace-pre-wrap">{m.body}</div>
-                        <div
-                          className={cn(
-                            "text-[10px] mt-1 opacity-70 flex items-center gap-1",
-                            m.direction === "outbound" ? "text-primary-foreground" : "text-muted-foreground",
-                          )}
-                        >
-                          {new Date(m.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} ·{" "}
-                          {dayLabel(m.created_at)} · {m.status}
-                          {m.is_bot && (
-                            <>
-                              {" · "}
-                              <Bot className="h-2.5 w-2.5" /> AI
-                            </>
-                          )}
-                        </div>
+                        {new Date(m.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} ·{" "}
+                        {dayLabel(m.created_at)} · {m.status}
+                        {m.is_bot && (
+                          <>
+                            {" · "}
+                            <Bot className="h-2.5 w-2.5" /> AI
+                          </>
+                        )}
                       </div>
                     </div>
-                  ))}
-                  {suggestM.isPending && (
-                    <div className="flex justify-end">
-                      <AiActivityPill label="AI Composing" />
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ))}
               </div>
 
               {/* Bottom: suggested replies, no-number banner, snippets, composer — pinned to fold */}
