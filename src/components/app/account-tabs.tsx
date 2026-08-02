@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Settings2,
   Plug,
+  KeyRound,
   type LucideIcon,
 } from "lucide-react";
 import { meIsSuperAdmin } from "@/lib/admin.functions";
@@ -28,6 +29,7 @@ export type AccountTabKey =
   | "numbers"
   | "registration"
   | "integrations"
+  | "api"
   | "compliance"
   | "admin";
 
@@ -35,7 +37,7 @@ type TabDef = {
   key: AccountTabKey;
   label: string;
   icon: LucideIcon;
-  to: "/app/account" | "/app/billing" | "/app/team" | "/app/settings" | "/app/registration" | "/app/compliance" | "/app/numbers" | "/app/integrations" | "/app/admin";
+  to: "/app/account" | "/app/billing" | "/app/team" | "/app/settings" | "/app/registration" | "/app/compliance" | "/app/numbers" | "/app/integrations" | "/app/api" | "/app/admin";
   search?: { tab: "profile" | "security" | "notifications" };
 };
 
@@ -50,6 +52,7 @@ const TABS: TabDef[] = [
   { key: "compliance", label: "Compliance", icon: ShieldCheck, to: "/app/compliance" },
   { key: "team", label: "Team", icon: Users, to: "/app/team" },
   { key: "integrations", label: "Integrations", icon: Plug, to: "/app/integrations" },
+  { key: "api", label: "API", icon: KeyRound, to: "/app/api" },
 ];
 
 export function AccountTabs({ current }: { current: AccountTabKey }) {
