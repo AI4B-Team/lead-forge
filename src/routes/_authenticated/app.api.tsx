@@ -1,18 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { KeyRound, ShieldCheck, Gauge, Terminal, BookOpen, Code2 } from "lucide-react";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { KeyRound, ShieldCheck, Gauge, Terminal, BookOpen, Code2, Webhook, Plug } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsShell } from "@/components/app/settings-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { WebhookEndpoints } from "@/components/app/webhook-endpoints";
 
 export const Route = createFileRoute("/_authenticated/app/api")({
   head: () => ({
     meta: [
-      { title: "Developer & API — LeadTrace" },
-      { name: "description", content: "Manage LeadTrace API keys, review rate limits, and browse endpoint and SDK references." },
-      { property: "og:title", content: "Developer & API — LeadTrace" },
-      { property: "og:description", content: "Manage LeadTrace API keys, review rate limits, and browse endpoint and SDK references." },
+      { title: "API — LeadTrace" },
+      { name: "description", content: "Manage LeadTrace API keys, event webhooks, rate limits, and endpoint references." },
+      { property: "og:title", content: "API — LeadTrace" },
+      { property: "og:description", content: "Manage LeadTrace API keys, event webhooks, rate limits, and endpoint references." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -33,8 +34,8 @@ function DeveloperPage() {
     <div className="mx-auto max-w-[1400px]">
       <SettingsShell current="developer">
         <PageHeader
-          title="Developer & API"
-          description="API Keys, Rate Limits, And Endpoint References For Building On LeadTrace."
+          title="API"
+          description="API Keys, Event Webhooks, Rate Limits, And Endpoint References For Building On LeadTrace."
         />
 
         <div className="max-w-4xl space-y-6">
@@ -56,10 +57,48 @@ function DeveloperPage() {
                 <Button size="sm" variant="outline" className="rounded-full" disabled>Revoke</Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Until Keys Ship, Event Webhooks On The Integrations Page Cover Most Custom Handoffs.
+                Until Keys Ship, The Event Webhooks Below Cover Most Custom Handoffs.
               </p>
             </CardContent>
           </Card>
+
+          <section id="webhooks" className="scroll-mt-24">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h2 className="font-display text-base font-bold text-foreground">Event Webhooks</h2>
+              <p className="text-xs text-muted-foreground">Endpoints, Delivery Status, And Payload Reference.</p>
+            </div>
+
+            <div className="mt-3">
+              <WebhookEndpoints />
+            </div>
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-sm font-display">
+                    <Webhook className="h-4 w-4 text-muted-foreground" /> Event Payloads
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-xs text-muted-foreground">
+                  Every Delivery Is Signed And Retried With Backoff. Events Cover List Completion,
+                  New Clean Leads, And Inbound Replies.
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-sm font-display">
+                    <Plug className="h-4 w-4 text-muted-foreground" /> Connector Apps
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <span>Zapier, Sheets, And The Real Elite Suite Live On Integrations.</span>
+                  <Button variant="outline" size="sm" className="rounded-full" asChild>
+                    <Link to="/app/integrations">Open</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Card>
