@@ -2,12 +2,18 @@
  * Presentation pieces for the Conversations workspace: AI summary, suggested
  * replies, the lead profile rail, and the AI activity timeline.
  */
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { PhoneLink } from "@/components/app/phone-link";
 import {
@@ -26,11 +32,13 @@ import {
   Ban,
   Bot,
   CalendarPlus,
+  ChevronDown,
   Copy,
   Home,
   Loader2,
   Mail,
   MessageSquare,
+  MoreHorizontal,
   Phone,
   Sparkles,
   Star,
@@ -109,7 +117,7 @@ export function ConversationRow({
     <button
       onClick={onSelect}
       className={cn(
-        "w-full text-left px-3 py-3 border-b transition-colors hover:bg-muted/40",
+        "w-full text-left px-3 py-4 border-b transition-colors hover:bg-muted/40",
         active && "bg-muted/70 border-l-2 border-l-primary",
       )}
     >
@@ -120,14 +128,17 @@ export function ConversationRow({
             <span className="font-semibold truncate text-sm">{name}</span>
             <span className="text-[10px] text-muted-foreground shrink-0">{dayLabel(thread.last_at)}</span>
           </div>
-          <p className="text-xs text-muted-foreground truncate mt-0.5">
+          <p className="text-xs text-muted-foreground truncate mt-1">
             {thread.last_direction === "outbound" ? "You: " : ""}
             {thread.last_body}
           </p>
-          <div className="flex items-center gap-1 mt-1.5 flex-wrap">
-            {thread.badges.slice(0, 2).map((b) => (
+          <div className="flex items-center gap-1 mt-2 flex-wrap">
+            {thread.badges.slice(0, 1).map((b) => (
               <ConvoBadgeChip key={b} badge={b} />
             ))}
+            {thread.badges.length > 1 && (
+              <span className="text-[10px] text-muted-foreground">+{thread.badges.length - 1}</span>
+            )}
             {thread.bot_active && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-[18px] gap-1">
                 <Bot className="h-2.5 w-2.5" /> AI
@@ -143,7 +154,7 @@ export function ConversationRow({
             </span>
           </div>
           {thread.campaign && (
-            <div className="text-[10px] text-muted-foreground mt-1 truncate">{thread.campaign.name}</div>
+            <div className="text-[10px] text-muted-foreground mt-1.5 truncate">{thread.campaign.name}</div>
           )}
         </div>
       </div>
