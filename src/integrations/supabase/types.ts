@@ -1910,6 +1910,7 @@ export type Database = {
       }
       is_workspace_admin: { Args: { _workspace_id: string }; Returns: boolean }
       is_workspace_member: { Args: { _workspace_id: string }; Returns: boolean }
+      is_workspace_owner: { Args: { _workspace_id: string }; Returns: boolean }
       workspace_role: { Args: { _workspace_id: string }; Returns: string }
     }
     Enums: {
