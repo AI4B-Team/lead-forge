@@ -7,6 +7,8 @@ export type OnboardingState = {
   checklistCollapsed: boolean;
   reviewedCleanList: boolean;
   firstRunDismissed: boolean;
+  /** True while THIS workspace is still empty and unset-up (per-workspace first run). */
+  firstRun: boolean;
   hasJob: boolean;
   hasBrand: boolean;
   hasAgent: boolean;
@@ -14,7 +16,11 @@ export type OnboardingState = {
   hasCampaign: boolean;
 };
 
-/** Reads onboarding prefs plus the auto-checked activation milestones. */
+/**
+ * Reads onboarding prefs plus the auto-checked activation milestones.
+ * First-run state is keyed to workspace setup completeness, never account age —
+ * every workspace has its own 10DLC brand, numbers, agent and suppression.
+ */
 export const getOnboarding = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
@@ -23,10 +29,16 @@ export const getOnboarding = createServerFn({ method: "GET" })
     const count = (table: "jobs" | "brands" | "sending_numbers" | "campaigns" | "registrations") =>
       context.supabase.from(table).select("id", { count: "exact", head: true }).eq("workspace_id", ws);
 
-    const [prefs, jobs, brands, numbers, campaigns, registrations] = await Promise.all([
+    const [prefs, wsPrefs, jobs, brands, numbers, campaigns, registrations] = await Promise.all([
       context.supabase
         .from("user_prefs")
         .select("welcome_dismissed, checklist_collapsed, reviewed_clean_list, first_run_dismissed")
+        .eq("user_id", context.userId)
+        .maybeSingle(),
+      context.supabase
+        .from("workspace_onboarding")
+        .select("first_run_dismissed")
+        .eq("workspace_id", ws)
         .eq("user_id", context.userId)
         .maybeSingle(),
       count("jobs"),
@@ -36,11 +48,17 @@ export const getOnboarding = createServerFn({ method: "GET" })
       count("registrations"),
     ]);
 
+    const dismissed = Boolean(wsPrefs.data?.first_run_dismissed);
+    const hasData = (jobs.count ?? 0) > 0 || (campaigns.count ?? 0) > 0;
+    const untouched =
+      !hasData && (brands.count ?? 0) === 0 && (numbers.count ?? 0) === 0 && (registrations.count ?? 0) === 0;
+
     return {
       welcomeDismissed: Boolean(prefs.data?.welcome_dismissed),
       checklistCollapsed: Boolean(prefs.data?.checklist_collapsed),
       reviewedCleanList: Boolean(prefs.data?.reviewed_clean_list),
-      firstRunDismissed: Boolean((prefs.data as { first_run_dismissed?: boolean } | null)?.first_run_dismissed),
+      firstRunDismissed: dismissed,
+      firstRun: untouched && !dismissed,
       hasJob: (jobs.count ?? 0) > 0,
       hasBrand: (registrations.count ?? 0) > 0,
       hasAgent: (brands.count ?? 0) > 0,
@@ -50,34 +68,38 @@ export const getOnboarding = createServerFn({ method: "GET" })
   });
 
 /**
- * Post-login landing decision. Route by account state, never a fixed page:
- * a brand-new account goes to Build (fastest path to first value) with the
- * setup checklist alongside; anyone with data lands on the Dashboard, where
- * unfinished setup steps sit pinned at the top.
+ * Landing decision, routed by WORKSPACE state — never a fixed page and never
+ * account age. A brand-new (or freshly created) empty workspace goes to Build,
+ * the fastest path to first value, with the send-side setup checklist alongside.
+ * Once the workspace has lists/campaigns — or the checklist is dismissed — that
+ * workspace defaults to the Dashboard on later entries.
  */
 export const getLandingTarget = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<{ target: "assistant" | "dashboard"; firstRun: boolean }> => {
     const ws = data.workspaceId;
-    const count = (table: "jobs" | "campaigns" | "brands" | "sending_numbers") =>
+    const count = (table: "jobs" | "campaigns" | "brands" | "sending_numbers" | "registrations") =>
       context.supabase.from(table).select("id", { count: "exact", head: true }).eq("workspace_id", ws);
 
-    const [prefs, jobs, campaigns, brands, numbers] = await Promise.all([
+    const [prefs, jobs, campaigns, brands, numbers, registrations] = await Promise.all([
       context.supabase
-        .from("user_prefs")
+        .from("workspace_onboarding")
         .select("first_run_dismissed")
+        .eq("workspace_id", ws)
         .eq("user_id", context.userId)
         .maybeSingle(),
       count("jobs"),
       count("campaigns"),
       count("brands"),
       count("sending_numbers"),
+      count("registrations"),
     ]);
 
-    const dismissed = Boolean((prefs.data as { first_run_dismissed?: boolean } | null)?.first_run_dismissed);
+    const dismissed = Boolean(prefs.data?.first_run_dismissed);
     const hasData = (jobs.count ?? 0) > 0 || (campaigns.count ?? 0) > 0;
-    const untouched = !hasData && (brands.count ?? 0) === 0 && (numbers.count ?? 0) === 0;
+    const untouched =
+      !hasData && (brands.count ?? 0) === 0 && (numbers.count ?? 0) === 0 && (registrations.count ?? 0) === 0;
     const firstRun = untouched && !dismissed;
     return { target: firstRun ? "assistant" : "dashboard", firstRun };
   });
@@ -87,6 +109,7 @@ export const setOnboardingPref = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z
       .object({
+        workspaceId: z.string().uuid().optional(),
         welcomeDismissed: z.boolean().optional(),
         checklistCollapsed: z.boolean().optional(),
         reviewedCleanList: z.boolean().optional(),
@@ -95,11 +118,24 @@ export const setOnboardingPref = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    // First-run dismissal is per workspace: dismissing it for one business must
+    // not skip setup for the next workspace the user spins up.
+    if (data.firstRunDismissed !== undefined && data.workspaceId) {
+      const { error } = await context.supabase.from("workspace_onboarding").upsert(
+        {
+          workspace_id: data.workspaceId,
+          user_id: context.userId,
+          first_run_dismissed: data.firstRunDismissed,
+          updated_at: new Date().toISOString(),
+        } as never,
+        { onConflict: "workspace_id,user_id" },
+      );
+      if (error) throw error;
+    }
     const patch: Record<string, boolean> = {};
     if (data.welcomeDismissed !== undefined) patch.welcome_dismissed = data.welcomeDismissed;
     if (data.checklistCollapsed !== undefined) patch.checklist_collapsed = data.checklistCollapsed;
     if (data.reviewedCleanList !== undefined) patch.reviewed_clean_list = data.reviewedCleanList;
-    if (data.firstRunDismissed !== undefined) patch.first_run_dismissed = data.firstRunDismissed;
     if (Object.keys(patch).length === 0) return { ok: true };
     const { error } = await context.supabase
       .from("user_prefs")
