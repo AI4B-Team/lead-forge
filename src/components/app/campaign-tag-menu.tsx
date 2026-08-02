@@ -75,7 +75,7 @@ export function CampaignTagMenu({
         <button
           type="button"
           aria-label="Change Tag"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          onClick={(e) => { e.stopPropagation(); }}
           className="inline-flex items-center"
         >
           {tag ? (
