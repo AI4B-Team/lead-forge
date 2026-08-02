@@ -744,6 +744,7 @@ function RescanControl({
 }: {
   job: {
     schedule: string;
+    source_type: string;
     custom_interval_minutes: number | null;
     schedule_active: boolean;
     auto_launch: boolean;
@@ -757,6 +758,8 @@ function RescanControl({
 }) {
   const cadence = normalizeCadence(job.schedule);
   const channel = normalizeChannel(job.channel);
+  /** A file import has nothing to re-scrape, so cadence is locked to one-time. */
+  const staticSource = job.source_type === "upload";
   const [customHours, setCustomHours] = useState(
     String(Math.max(1, Math.round((job.custom_interval_minutes ?? 360) / 60))),
   );
@@ -769,6 +772,16 @@ function RescanControl({
 
   return (
     <div className="flex w-[190px] flex-col gap-1.5">
+      {staticSource ? (
+        <>
+          <div className="flex h-8 w-full items-center rounded-md border border-border bg-muted/40 px-2 text-xs text-muted-foreground">
+            One-Time Only
+          </div>
+          <span className="text-[11px] leading-snug text-muted-foreground">
+            Uploaded Lists Can't Rescan — Upload A New File To Refresh.
+          </span>
+        </>
+      ) : (
       <Select
         value={cadence}
         onValueChange={(v) =>
@@ -789,8 +802,9 @@ function RescanControl({
           ))}
         </SelectContent>
       </Select>
+      )}
 
-      {cadence === "custom" && (
+      {!staticSource && cadence === "custom" && (
         <div className="flex items-center gap-1.5">
           <span className="text-[11px] text-muted-foreground">Every</span>
           <Input
@@ -804,7 +818,7 @@ function RescanControl({
         </div>
       )}
 
-      {cadence !== "one_time" && (
+      {!staticSource && cadence !== "one_time" && (
         <>
           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
             <Repeat className="h-3 w-3" /> {summary}
@@ -835,7 +849,7 @@ function RescanControl({
         >
           Run Now
         </button>
-        {cadence !== "one_time" && (
+        {!staticSource && cadence !== "one_time" && (
           <button
             type="button"
             onClick={() => onToggleActive(!job.schedule_active)}

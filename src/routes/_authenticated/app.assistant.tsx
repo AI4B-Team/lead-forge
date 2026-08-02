@@ -10,6 +10,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal,
@@ -145,6 +150,8 @@ function Assistant() {
   /** Inline upload state — survives a source switch so it can be restored. */
   const [upload, setUpload] = useState<UploadAttachment | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
+  /** File awaiting confirmation that it may replace a non-upload source. */
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   /** Beta waitlist: template ids already requested + the notify address. */
   const [requestedAdapters, setRequestedAdapters] = useState<Set<string>>(new Set());
   const [notifyEmail, setNotifyEmail] = useState<string | null>(null);
@@ -247,7 +254,7 @@ function Assistant() {
    * A file added from either entry point (panel dropzone or composer attach)
    * flips the source to Upload My List and runs the shared mapping step.
    */
-  const attachFile = async (file: File) => {
+  const attachFile = async (file: File, clearSetup = false) => {
     if (!isSpreadsheet(file)) {
       toast.error("Attach A .csv Or .xlsx File.");
       return;
@@ -255,6 +262,12 @@ function Assistant() {
     try {
       const next = await readAttachment(file);
       setUpload(next);
+      if (clearSetup) {
+        setSpec(withEnrichmentDefaults({ ...EMPTY_SPEC, sourceType: "upload" }, undefined));
+        setCoverage([]);
+        setEstimate(null);
+        setInferred(new Set());
+      }
       if (spec.sourceType !== "upload") {
         setSpec((s) => ({ ...s, sourceType: "upload" }));
         setInferred((prev) => { const out = new Set(prev); out.delete("sourceType"); return out; });
@@ -287,6 +300,27 @@ function Assistant() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could Not Read That File");
     }
+  };
+
+  /** Current non-upload setup, named for the swap confirmation. */
+  const currentSourceLabel =
+    selectedTemplate?.title ??
+    (spec.sourceType === "records" ? "Public Records" : "Business Search");
+
+  /**
+   * Composer/panel entry point. Attaching a file means "run this list through
+   * the pipeline", so a non-upload source must be confirmed before it's wiped.
+   */
+  const requestAttach = (file: File) => {
+    if (!isSpreadsheet(file)) {
+      toast.error("Attach A .csv Or .xlsx File.");
+      return;
+    }
+    if (spec.sourceType === "upload") {
+      void attachFile(file);
+      return;
+    }
+    setPendingFile(file);
   };
 
   const saveMapping = (map: ColumnMap) => {
@@ -839,7 +873,7 @@ function Assistant() {
             upload={upload}
             template={selectedTemplate}
             onChangeTemplate={() => setAllOpen(true)}
-            onPickFile={(f) => void attachFile(f)}
+            onPickFile={(f) => requestAttach(f)}
             onRemoveUpload={() => { setUpload(null); setConfirmed(false); }}
             onEditMapping={() => setMapOpen(true)}
             onRequestRecordType={requestRecordType}
@@ -870,15 +904,20 @@ function Assistant() {
         className="resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
       />
       <div className="mt-3 flex items-center justify-between gap-3">
-        <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-[11px] font-medium text-foreground hover:text-primary">
-          <Paperclip className="h-3.5 w-3.5" /> Attach File
-          <input
-            type="file"
-            className="hidden"
-            accept=".csv,.xlsx"
-            onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
-          />
-        </label>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-[11px] font-medium text-foreground hover:text-primary">
+              <Paperclip className="h-3.5 w-3.5" /> Upload List
+              <input
+                type="file"
+                className="hidden"
+                accept=".csv,.xlsx"
+                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) requestAttach(f); }}
+              />
+            </label>
+          </TooltipTrigger>
+          <TooltipContent>Upload A CSV Or Excel List To Clean, Scrub, And Enrich</TooltipContent>
+        </Tooltip>
         <Button
           className="rounded-full px-5"
           disabled={busy || (!input.trim() && !selectedTemplate && !upload)}
@@ -943,15 +982,20 @@ function Assistant() {
         />
         <div className="mt-4 flex items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-1">
-            <label className="inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
-              <Paperclip className="mr-1.5 h-4 w-4" /> Attach Files
-              <input
-                type="file"
-                className="hidden"
-                accept=".csv,.xlsx"
-                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
-              />
-            </label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <label className="inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
+                  <Paperclip className="mr-1.5 h-4 w-4" /> Upload List
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".csv,.xlsx"
+                    onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) requestAttach(f); }}
+                  />
+                </label>
+              </TooltipTrigger>
+              <TooltipContent>Upload A CSV Or Excel List To Clean, Scrub, And Enrich</TooltipContent>
+            </Tooltip>
             {/* Panel-only path: no chat needed, straight into the List Builder. */}
             <button
               type="button"
@@ -1167,6 +1211,30 @@ function Assistant() {
         selectedId={selectedTemplate?.id ?? null}
         onSelect={selectTemplate}
       />
+
+      {/* Attaching a file replaces a scrape setup — always confirmed first. */}
+      <AlertDialog open={!!pendingFile} onOpenChange={(o) => { if (!o) setPendingFile(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Switch To Upload My List And Use This File?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your Current {currentSourceLabel} Setup Will Be Cleared.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingFile(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const f = pendingFile;
+                setPendingFile(null);
+                if (f) void attachFile(f, true);
+              }}
+            >
+              Switch And Map Columns
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
