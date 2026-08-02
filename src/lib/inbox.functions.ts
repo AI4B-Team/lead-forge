@@ -309,6 +309,17 @@ export const sendReply = createServerFn({ method: "POST" })
     const toPhone = lead?.phone;
     if (!toPhone) throw new Error("No phone on lead");
 
+    // Authoritative TCPA gate — independent of the UI's disabled state.
+    const { assertCanText } = await import("@/lib/optout.server");
+    await assertCanText(context.supabase, {
+      workspaceId: data.workspaceId,
+      leadId: existing.lead_id,
+      threadKey: data.threadKey,
+      phone: toPhone,
+      source: "inbox_reply",
+      actorId: context.userId,
+    });
+
     let fromNumber = existing.sending_number_id
       ? (await context.supabase.from("sending_numbers").select("id, phone").eq("id", existing.sending_number_id).maybeSingle()).data
       : null;
