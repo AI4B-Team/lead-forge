@@ -272,18 +272,45 @@ function Jobs() {
                   No Lists Match. <Link to="/app/new-list" className="text-primary underline">Start A New List</Link>.
                 </td></tr>
               )}
-              {rows.map((j) => {
+              {entries.flatMap(({ latest, prior }) => {
+                const open = expanded.has(latest.group_key);
+                const shown = open ? [latest, ...prior] : [latest];
+                return shown.map((j, idx) => {
+                const isChild = idx > 0;
+                const isParent = prior.length > 0 && idx === 0;
                 const src = SOURCE_META[j.source_type] ?? { label: j.source_type, icon: Layers };
                 const created = formatCreated(j.created_at);
                 return (
                 <tr
                   key={j.id}
                   onClick={() => navigate({ to: "/app/lists/$listId", params: { listId: j.id } })}
-                  className="group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-muted"
+                  className={`group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-muted ${
+                    isChild ? "bg-surface-muted/40" : ""
+                  }`}
                 >
-                  <td className="p-4">
+                  <td className={`p-4 ${isChild ? "pl-10" : ""}`}>
                     <div className="flex items-center gap-2">
-                      <span className="whitespace-nowrap font-medium text-foreground group-hover:text-primary">{j.name}</span>
+                      {isParent && (
+                        <button
+                          type="button"
+                          aria-label={open ? "Hide Prior Runs" : "Show Prior Runs"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleGroup(latest.group_key);
+                          }}
+                          className="grid h-5 w-5 shrink-0 place-items-center rounded border border-border text-muted-foreground hover:text-foreground"
+                        >
+                          <ChevronRight className={`h-3 w-3 transition-transform ${open ? "rotate-90" : ""}`} />
+                        </button>
+                      )}
+                      <span className="whitespace-nowrap font-medium text-foreground group-hover:text-primary">
+                        {isChild ? `Run #${j.run_index}` : listBaseName(j.name)}
+                      </span>
+                      {isParent && (
+                        <span className="whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                          {prior.length + 1} Runs
+                        </span>
+                      )}
                       {j.cadence_badge && (
                         <span className="whitespace-nowrap rounded-full border border-border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
                           {j.cadence_badge}
