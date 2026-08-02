@@ -24,6 +24,8 @@ export const assistantChat = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { askAssistant, estimate, precheckCompliance } = await import("@/lib/assistant.server");
     const { COUNTIES, NICHES, RECORD_TYPES } = await import("@/lib/mock-data");
+    const { TEMPLATES } = await import("@/lib/templates");
+    const { templateAdapterStatus } = await import("@/lib/template-schema");
 
     const refusal = precheckCompliance(data.message);
     if (refusal) {
@@ -45,6 +47,7 @@ export const assistantChat = createServerFn({ method: "POST" })
       coveredCounties: covered,
       niches: [...NICHES],
       recordTypes: [...RECORD_TYPES],
+      templateCatalog: TEMPLATES.map((t) => `${t.id} — ${t.title} — ${templateAdapterStatus(t)}`).join("\n"),
     });
 
     // Coverage is decided by real adapter data, never by the model.
