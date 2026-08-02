@@ -770,12 +770,42 @@ function Assistant() {
         </>
       ) : (
         <>
-          <Button className="w-full rounded-full" variant="outline" onClick={() => void requestTemplateAdapter()}>
-            <Sparkles className="mr-1 h-4 w-4" /> This Source Is Coming — Request Early Access
-          </Button>
-          <div className="text-center text-[11px] text-muted-foreground">
-            {selectedTemplate?.title} Is In Beta. We'll Email You The Day Its Adapter Goes Live.
-          </div>
+          {adapterRequested ? (
+            <>
+              <Button
+                disabled
+                variant="outline"
+                className="w-full rounded-full border-2 border-emerald-500 bg-emerald-500/10 font-semibold text-emerald-600 disabled:opacity-100 dark:text-emerald-400"
+              >
+                <Check className="mr-1 h-4 w-4" /> You're On The List
+              </Button>
+              <div className="text-center text-sm text-foreground/70">
+                We'll notify you at {notifyEmail ?? "your email"}
+                {selectedTemplate ? ` when ${selectedTemplate.title} goes live.` : "."}
+              </div>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                disabled={requesting}
+                className="h-9 w-full rounded-full border-2 border-primary bg-primary/5 font-semibold text-primary hover:bg-primary/10 hover:text-primary"
+                onClick={() => void requestTemplateAdapter()}
+              >
+                {requesting ? (
+                  <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Requesting…</>
+                ) : (
+                  <><BellPlus className="mr-1 h-4 w-4" /> This Source Is Coming — Request Early Access</>
+                )}
+              </Button>
+              {requestError && (
+                <div className="text-center text-sm text-destructive">{requestError}</div>
+              )}
+              <div className="text-center text-sm text-foreground/70">
+                {selectedTemplate?.title} is in beta — we'll email you the day it goes live.
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
