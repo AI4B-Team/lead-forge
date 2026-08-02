@@ -60,8 +60,8 @@ function IntegrationsPage() {
     enabled: !!workspaceId,
   });
 
-  const hookCount = Array.isArray(hooks) ? hooks.length : 0;
-  const hubConnected = Boolean((hub as { connected?: boolean } | undefined)?.connected);
+  const hookCount = hooks?.rows?.length ?? 0;
+  const hubConnected = Boolean(hub?.linked);
 
   const groups: { label: string; hint: string; items: Connector[] }[] = [
     {
