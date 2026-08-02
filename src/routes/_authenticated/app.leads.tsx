@@ -170,6 +170,15 @@ function LeadsPageInner() {
 
   const stats = data?.stats;
   const rows = data?.rows ?? [];
+  // Data-driven columns: the Leads master merges many list shapes, so its
+  // columns follow what's present in the CURRENT filtered view — never one
+  // list's criteria. Website is a display field, never a contact channel.
+  const candidates: LeadFieldKey[] = ["phone", "email", "address", "website"];
+  const present = presentFieldKeys(rows as Array<Record<string, unknown>>, candidates);
+  const dynamicCols: LeadFieldKey[] = rows.length === 0
+    ? ["phone", "email"]
+    : candidates.filter((k) => present.has(k));
+  const colCount = dynamicCols.length + 4;
   const byRecordType = Object.entries(data?.byRecordType ?? {});
   const bySource = Object.entries(data?.bySource ?? {});
 
