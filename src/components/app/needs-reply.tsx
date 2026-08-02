@@ -53,7 +53,7 @@ export function InboxNavButton() {
           <Link to="/app/inbox" search={count > 0 ? { filter: "needs_reply" } : undefined}>
             <InboxIcon className="h-4 w-4" />
             {count > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-danger text-danger-foreground text-[10px] font-semibold flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold flex items-center justify-center">
                 {count > 9 ? "9+" : count}
               </span>
             )}
