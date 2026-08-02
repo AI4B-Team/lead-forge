@@ -519,6 +519,7 @@ function SourceDemandCard({ enabled }: { enabled: boolean }) {
                 <TableHead>Source</TableHead>
                 <TableHead className="w-[90px]">Workspaces</TableHead>
                 <TableHead className="w-[80px]">Queued</TableHead>
+                <TableHead className="w-[90px]">In Review</TableHead>
                 <TableHead>Fields</TableHead>
                 <TableHead className="w-[130px]">Cadence</TableHead>
                 <TableHead className="w-[110px]">Last Ask</TableHead>
@@ -538,9 +539,23 @@ function SourceDemandCard({ enabled }: { enabled: boolean }) {
                         {Number(d.screened_out)} Screened Out
                       </Badge>
                     )}
+                    {(d.logins ?? []).length > 0 && (
+                      <div className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                        {(d.logins ?? []).map((l: string) => LOGIN_LABEL[l] ?? l).join(" · ")}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="tabular-nums">{Number(d.workspaces).toLocaleString()}</TableCell>
                   <TableCell className="tabular-nums">{Number(d.queued).toLocaleString()}</TableCell>
+                  <TableCell className="tabular-nums">
+                    {Number(d.needs_review ?? 0) > 0 ? (
+                      <Badge variant="outline" className="border-warning/40 text-[10px] text-warning">
+                        {Number(d.needs_review)}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {(d.desired_fields ?? []).slice(0, 4).join(", ") || "—"}
                   </TableCell>
