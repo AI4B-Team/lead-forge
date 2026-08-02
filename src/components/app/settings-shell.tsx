@@ -11,12 +11,23 @@ import {
   BadgeCheck,
   ShieldCheck,
   Plug,
-  KeyRound,
   LayoutDashboard,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { AccountTabKey } from "@/components/app/account-tabs";
+
+export type AccountTabKey =
+  | "profile"
+  | "security"
+  | "notifications"
+  | "billing"
+  | "workspace"
+  | "team"
+  | "numbers"
+  | "registration"
+  | "integrations"
+  | "compliance"
+  | "workspace-admin";
 
 type NavDef = {
   key: AccountTabKey;
@@ -31,7 +42,6 @@ type NavDef = {
     | "/app/compliance"
     | "/app/numbers"
     | "/app/integrations"
-    | "/app/api"
     | "/app/workspace";
   search?: { tab: "profile" | "security" | "notifications" };
 };
@@ -59,7 +69,6 @@ const GROUPS: { label: string; items: NavDef[] }[] = [
     label: "Automation",
     items: [
       { key: "integrations", label: "Integrations", icon: Plug, to: "/app/integrations" },
-      { key: "api", label: "API", icon: KeyRound, to: "/app/api" },
     ],
   },
   {
