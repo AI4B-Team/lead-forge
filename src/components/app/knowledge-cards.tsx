@@ -528,36 +528,44 @@ export function KnowledgeSourceList({
       {KNOWLEDGE_CARDS.map((spec) => {
         const Icon = ICONS[spec.key] ?? FileText;
         const items = sources.filter((s) => s.category === spec.key);
+        const chars = items.reduce((a, s) => a + s.chars, 0);
+        const isAdded = items.length > 0;
+        const progress = isAdded ? 100 : 0;
         return (
           <div
             key={spec.key}
             id={`knowledge-card-${spec.key}`}
-            className="flex scroll-mt-24 items-center gap-3 px-4 py-2.5"
+            className="group flex scroll-mt-24 items-center gap-4 px-4 py-3"
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <Icon className="h-3.5 w-3.5" />
+            <span
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${
+                isAdded ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <Icon className="h-4.5 w-4.5" />
             </span>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold text-foreground">{spec.title}</div>
+              <div className="flex items-center gap-1.5">
+                <div className="truncate text-sm font-semibold text-foreground">{spec.title}</div>
+                {isAdded && <Check className="h-3.5 w-3.5 text-success" />}
+              </div>
               <div className="truncate text-[11px] text-muted-foreground">{spec.action}</div>
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-success transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
-            <div className="shrink-0 text-xs">
-              {items.length === 0 ? (
-                <span className="text-muted-foreground/70">Missing</span>
+            <div className="shrink-0 pl-2">
+              {brandId ? (
+                <AddSourceDialog spec={spec} brandId={brandId} items={items} trigger="row" />
               ) : (
-                <span className="inline-flex items-center gap-1 font-medium text-success">
-                  <Check className="h-3.5 w-3.5" />
-                  {items.length} {items.length === 1 ? spec.unit : `${spec.unit}s`}
-                </span>
+                <Button size="sm" variant="ghost" className="h-8 shrink-0 rounded-full px-3 text-xs" disabled>
+                  <Lock className="h-3.5 w-3.5" />
+                </Button>
               )}
             </div>
-            {brandId ? (
-              <AddSourceDialog spec={spec} brandId={brandId} items={items} trigger="row" />
-            ) : (
-              <Button size="sm" variant="ghost" className="h-8 shrink-0 rounded-full px-3 text-xs" disabled>
-                <Lock className="h-3.5 w-3.5" />
-              </Button>
-            )}
           </div>
         );
       })}

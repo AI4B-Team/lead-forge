@@ -304,7 +304,9 @@ function AgentPage() {
           {/* 4 — Improve Your Agent */}
           <div className="mt-8">
             <h2 className="font-display text-xl font-bold text-foreground">Improve Your Agent</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Add Training From Any Of These Sources.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Everything Your Agent Knows, By Source — Click Any Row To Add Or Manage It.
+            </p>
             <div className="mt-3">
               <KnowledgeSourceList brandId={agent.id} sources={sources} />
             </div>
