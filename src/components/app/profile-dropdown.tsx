@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Settings, LogOut, Users, CreditCard, KeyRound, Sun, Shield } from "lucide-react";
+import { User, Settings, LogOut, Users, CreditCard, KeyRound, Sun, Shield, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/app/theme-toggle";
 import { useWorkspaceId } from "@/hooks/use-workspace";
@@ -111,16 +111,21 @@ export function ProfileDropdown({ className }: { className?: string }) {
         side="bottom"
         align="end"
         sideOffset={8}
-        className="w-72 p-0 bg-background shadow-xl border z-50"
+        className="w-80 p-0 rounded-2xl border shadow-2xl bg-background overflow-hidden z-50"
       >
-        <div className="px-3.5 py-3 flex items-center gap-3">
-          <div
-            className={cn(
-              "h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold text-white",
-              tone,
-            )}
-          >
-            {initials || <User className="h-5 w-5" />}
+        <div className="px-4 py-4 flex items-center gap-3.5">
+          <div className="relative">
+            <div
+              className={cn(
+                "h-12 w-12 rounded-full flex items-center justify-center text-sm font-semibold text-white",
+                tone,
+              )}
+            >
+              {initials || <User className="h-5 w-5" />}
+            </div>
+            <div className="absolute -right-0.5 -bottom-0.5 h-5 w-5 rounded-full bg-highlight border border-background flex items-center justify-center">
+              <User className="h-3 w-3 text-foreground" />
+            </div>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
@@ -128,19 +133,16 @@ export function ProfileDropdown({ className }: { className?: string }) {
           </div>
         </div>
 
-        <div className="border-t border-border px-3.5 py-2.5 flex items-baseline justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Credits
-          </span>
-          <span className="text-sm text-foreground">
-            <span className="font-semibold tabular-nums">
-              {credits === null ? "—" : credits.toLocaleString()}
-            </span>{" "}
-            <span className="text-muted-foreground">remaining</span>
+        <div className="mx-4 mb-3 rounded-xl bg-muted/50 px-3 py-2.5 flex items-center justify-between">
+          <span className="text-xs font-medium text-muted-foreground">Credits</span>
+          <span className="text-sm font-semibold text-foreground tabular-nums">
+            {credits === null ? "—" : credits.toLocaleString()}
           </span>
         </div>
 
-        <div className="border-t border-border py-1.5">
+        <div className="h-px bg-border mx-4" />
+
+        <div className="py-2 px-2">
           <MenuItem icon={<Settings className="h-4 w-4" />} label="Account" onClick={() => go("/app/account")} />
           <MenuItem icon={<Users className="h-4 w-4" />} label="Team" onClick={() => go("/app/team")} />
           <MenuItem icon={<CreditCard className="h-4 w-4" />} label="Billing" onClick={() => go("/app/billing")} />
@@ -153,7 +155,9 @@ export function ProfileDropdown({ className }: { className?: string }) {
           />
         </div>
 
-        <div className="border-t border-border py-1.5">
+        <div className="h-px bg-border mx-4" />
+
+        <div className="py-2 px-2">
           {admin?.isSuperAdmin && (
             <MenuItem
               icon={<Shield className="h-4 w-4" />}
@@ -164,7 +168,7 @@ export function ProfileDropdown({ className }: { className?: string }) {
           <MenuItem icon={<LogOut className="h-4 w-4" />} label="Log Out" onClick={handleSignOut} />
         </div>
 
-        <div className="border-t border-border px-3.5 py-2.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="border-t border-border px-4 py-3 flex items-center gap-1.5 text-xs text-muted-foreground">
           <Link to="/compliance" onClick={() => setOpen(false)} className="hover:text-foreground">Terms</Link>
           <span aria-hidden>•</span>
           <Link to="/compliance" onClick={() => setOpen(false)} className="hover:text-foreground">Privacy</Link>
@@ -174,15 +178,32 @@ export function ProfileDropdown({ className }: { className?: string }) {
   );
 }
 
-function MenuItem({ icon, label, onClick, trailing }: { icon: React.ReactNode; label: string; onClick: () => void; trailing?: string }) {
+function MenuItem({
+  icon,
+  label,
+  onClick,
+  trailing,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  trailing?: string;
+}) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-3.5 py-2 hover:bg-muted transition-colors text-left"
+      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left group hover:bg-muted"
     >
       <span className="text-muted-foreground">{icon}</span>
       <span className="text-sm font-medium">{label}</span>
-      {trailing && <span className="ml-auto text-xs text-muted-foreground">{trailing}</span>}
+      {trailing ? (
+        <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+          {trailing}
+          <ChevronRight className="h-4 w-4 opacity-60" />
+        </span>
+      ) : (
+        <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/60" />
+      )}
     </button>
   );
 }
