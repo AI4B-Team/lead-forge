@@ -35,6 +35,21 @@ function list(v: unknown): string[] {
   return Array.isArray(v) ? v.map(str).filter(Boolean) : [];
 }
 
+/** "roofer" / "hvac contractor" → "Roofer" / "HVAC Contractor". */
+const ACRONYMS = new Set(["hvac", "hoa", "mls", "b2b", "llc", "cpa", "hd", "ac", "it", "rv"]);
+
+export function titleCaseLabel(raw: string): string {
+  return raw
+    .trim()
+    .split(/\s+/)
+    .map((w) =>
+      ACRONYMS.has(w.toLowerCase())
+        ? w.toUpperCase()
+        : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+    )
+    .join(" ");
+}
+
 /** What kind of records this job pulls — the first half of the title. */
 export function jobRecordLabel(job: NamableJob): string {
   const p = (job.params ?? {}) as Record<string, unknown>;
@@ -42,9 +57,9 @@ export function jobRecordLabel(job: NamableJob): string {
   if (job.source_type === "records") {
     return str(p.record_type) || str(job.record_type) || "Public Records";
   }
-  const niches = list(p.niches);
-  if (niches.length === 1) return niches[0]!;
-  if (niches.length > 1) return `${niches[0]} +${niches.length - 1}`;
+  // Full labels, title-cased, joined with " + " — never truncated to "X +1".
+  const niches = list(p.niches).map(titleCaseLabel);
+  if (niches.length) return niches.join(" + ");
   return str(p.record_type) || "Business Search";
 }
 
@@ -61,10 +76,16 @@ export function jobLocationLabel(job: NamableJob): string {
   return state || "All Areas";
 }
 
-function monthDay(iso: string): string {
+/**
+ * "Mon DD" in the VIEWER's time zone. Names are also computed server-side
+ * (Workers run in UTC), which rolled evening jobs to the next day — callers
+ * pass the browser's resolved time zone to keep the title in sync with the
+ * Last Scrub timestamp.
+ */
+function monthDay(iso: string, timeZone?: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone });
 }
 
 /** Stable identity of the underlying search, used to number repeat runs. */
@@ -74,8 +95,8 @@ export function jobSearchKey(job: NamableJob): string {
     .toLowerCase();
 }
 
-export function formatJobName(job: NamableJob, runIndex = 1): string {
-  const base = `${jobRecordLabel(job)} – ${jobLocationLabel(job)} – ${monthDay(job.created_at)}`;
+export function formatJobName(job: NamableJob, runIndex = 1, timeZone?: string): string {
+  const base = `${jobRecordLabel(job)} – ${jobLocationLabel(job)} – ${monthDay(job.created_at, timeZone)}`;
   return runIndex > 1 ? `${base} · Run #${runIndex}` : base;
 }
 
@@ -85,6 +106,7 @@ export function formatJobName(job: NamableJob, runIndex = 1): string {
  */
 export function assignJobNames<T extends NamableJob>(
   jobs: T[],
+  timeZone?: string,
 ): Map<string, { name: string; runIndex: number; runTotal: number }> {
   const groups = new Map<string, T[]>();
   for (const j of jobs) {
@@ -101,7 +123,7 @@ export function assignJobNames<T extends NamableJob>(
     ordered.forEach((j, i) => {
       const runIndex = i + 1;
       out.set(j.id, {
-        name: formatJobName(j, runIndex),
+        name: formatJobName(j, runIndex, timeZone),
         runIndex,
         runTotal: ordered.length,
       });
