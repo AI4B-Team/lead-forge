@@ -235,6 +235,7 @@ function JobDetail() {
             <LeadsBrowser
               jobId={jobId}
               templateId={runTemplateId}
+              outputFields={runOutputFields}
               disabled={!isReady}
               open={browserOpen}
               onOpenChange={setBrowserOpen}
@@ -670,9 +671,10 @@ type LeadRow = {
   source_meta?: unknown;
 };
 
-function LeadsBrowser({ jobId, templateId, disabled, open, onOpenChange, bucket, onBucketChange }: {
+function LeadsBrowser({ jobId, templateId, outputFields, disabled, open, onOpenChange, bucket, onBucketChange }: {
   jobId: string;
   templateId: string | null;
+  outputFields?: CustomFieldSchema | null;
   disabled: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -696,7 +698,7 @@ function LeadsBrowser({ jobId, templateId, disabled, open, onOpenChange, bucket,
   // from that template's output schema — never a phone column for a source
   // that can't produce phones.
   const fields = populatedFields(
-    resultFieldsForTemplate(templateId),
+    resultFieldsForTemplate(templateId, leads as Array<Record<string, unknown>>, outputFields),
     leads as Array<Record<string, unknown>>,
   );
   return (
