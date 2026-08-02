@@ -1,6 +1,7 @@
 # Project Memory
 
 ## Core
+Internal accountability log (who spent/exported) stays separate from the compliance audit log (legal evidence).
 Multi-source lead data — never call Google Maps the primary source. Uploads and skip trace are first-class.
 Franchise removal is an optional toggle, never a headline benefit.
 Title Case headings and marketing labels. Lucide icons, no emoji in UI.
