@@ -57,7 +57,12 @@ export const listThreads = createServerFn({ method: "GET" })
       if (!cur) {
         cur = {
           thread_key: r.thread_key,
-          last_body: r.body,
+          last_body:
+            (r as { channel?: string | null }).channel === "voice"
+              ? `📞 ${(r as { call_event?: string | null }).call_event === "missed" ? "Missed Call" : "Voicemail"}${
+                  (r as { transcript?: string | null }).transcript ? `: ${(r as { transcript?: string | null }).transcript}` : ""
+                }`
+              : r.body,
           last_direction: r.direction,
           last_at: r.created_at,
           unread: 0,
