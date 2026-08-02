@@ -352,15 +352,91 @@ function JobDetail() {
         </CardContent>
       </Card>
 
-      <div className="mt-8 flex justify-end gap-2">
-        <Button variant="outline" className="rounded-full" onClick={onExportAudit}>
-          <Download className="mr-1 h-4 w-4" /> Export Scrub Audit
-        </Button>
-        <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/lists" })}>
-          Back To Lists
-        </Button>
-        <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />
+      {/* The money moment: what launching this list reaches and costs. */}
+      {isReady && counts.clean > 0 && (
+        <Card className="mt-6 border-primary/40 bg-primary/5">
+          <CardHeader className="flex flex-row items-center gap-2">
+            <Rocket className="h-4 w-4 text-primary" />
+            <CardTitle className="text-base font-display">
+              {counts.clean.toLocaleString()} Launch-Ready Leads
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <MoneyStat
+              icon={<Smartphone className="h-3.5 w-3.5" />}
+              label="Estimated Reach"
+              value={`${estimate.reach.toLocaleString()} Mobile Phones`}
+            />
+            <MoneyStat
+              icon={<Send className="h-3.5 w-3.5" />}
+              label="Expected Campaign Size"
+              value={`${estimate.messages.toLocaleString()} Messages`}
+              note={`${DEFAULT_SEQUENCE_STEPS}-Step Drip`}
+            />
+            <MoneyStat
+              icon={<DollarSign className="h-3.5 w-3.5" />}
+              label="Estimated SMS Cost"
+              value={`≈ ${formatUsd(estimate.cost)}`}
+              note="Flat Rate Per Segment"
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Celebratory sticky finish line. */}
+      <div className="sticky bottom-4 z-10 mt-8">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/40 bg-background/95 p-4 shadow-lg backdrop-blur">
+          <div className="flex items-center gap-3">
+            {isReady && counts.clean > 0 && (
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <Check className="h-4 w-4" strokeWidth={3} />
+              </span>
+            )}
+            <div>
+              <div className="font-display text-base font-black text-foreground">
+                {isReady
+                  ? counts.clean > 0
+                    ? "Your List Is Ready"
+                    : "No Clean Leads In This Run"
+                  : "Building Your List…"}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {isReady && counts.clean > 0
+                  ? `${counts.clean.toLocaleString()} Mobile Verified Leads`
+                  : isReady
+                    ? "Try A Wider Area Or Another Niche."
+                    : "You Can Close This Tab — We Keep Working."}
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" className="rounded-full" onClick={onExportAudit}>
+              <Download className="mr-1 h-4 w-4" /> Scrub Audit
+            </Button>
+            <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/lists" })}>
+              Back To Jobs
+            </Button>
+            <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function MoneyStat({ icon, label, value, note }: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  note?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-4">
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {icon} {label}
+      </div>
+      <div className="mt-1.5 font-display text-xl font-black tabular-nums text-foreground">{value}</div>
+      {note && <div className="mt-0.5 text-xs text-muted-foreground">{note}</div>}
     </div>
   );
 }
