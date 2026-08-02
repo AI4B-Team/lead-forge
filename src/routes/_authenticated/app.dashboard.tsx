@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { ActivityList, useActivity } from "@/components/app/activity-feed";
+import { NeedsReplyCard } from "@/components/app/needs-reply";
 
 export const Route = createFileRoute("/_authenticated/app/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — LeadTrace" }] }),
@@ -314,7 +315,11 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Composition order locked by spec §18: digest + stats → quick run → checklist → templates. */}
+      {/* Composition order locked by spec §18: digest + stats → quick run → checklist → templates.
+          The needs-reply callout sits first: a hot lead who just replied outranks everything. */}
+      <div className="mb-6">
+        <NeedsReplyCard />
+      </div>
       <ScanDigest workspaceId={workspaceId ?? null} />
       <TooltipProvider>
         <div className="grid grid-cols-2 gap-4 mb-6">
