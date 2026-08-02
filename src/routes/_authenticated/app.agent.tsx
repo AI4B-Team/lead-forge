@@ -121,10 +121,7 @@ function AgentSetup({ workspaceId }: { workspaceId: string }) {
             <span className="text-xs text-muted-foreground">Takes Under 2 Minutes — Training Comes Next.</span>
           </div>
 
-          <div className="mt-6 border-t border-border pt-5">
-            <KnowledgeFlow />
-          </div>
-          <div className="mt-5">
+          <div className="mt-6">
             <NothingInvented />
           </div>
 
@@ -143,24 +140,12 @@ function AgentSetup({ workspaceId }: { workspaceId: string }) {
       </Card>
 
       <div className="mb-4">
-        <h2 className="font-display text-xl font-bold text-foreground">Knowledge Sources</h2>
+        <h2 className="font-display text-xl font-bold text-foreground">Improve Your Agent</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Feed Your Agent Any Of These — It Only Speaks From What You Approve.
         </p>
       </div>
-      <KnowledgeSourceCards />
-
-      <div className="mt-8 mb-4">
-        <h2 className="font-display text-xl font-bold text-foreground">How It Works</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Your Uploads Become Capabilities — Here's What Your Agent Walks Away Knowing.
-        </p>
-      </div>
-      <Card>
-        <CardContent className="pt-6">
-          <KnowledgeOutcome />
-        </CardContent>
-      </Card>
+      <KnowledgeSourceList />
     </>
   );
 }
