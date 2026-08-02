@@ -12,15 +12,16 @@ describe("funnel arithmetic", () => {
   it("shows remaining counts, not removals", () => {
     const stages = buildFunnel(ROOFER_RUN);
     expect(stages.map((s) => s.remaining)).toEqual([168, 12, 12, 12, 12, 8]);
-    expect(stages[1]!.delta).toBe("−156");
+    expect(stages[1]!.delta).toBe("−156 Removed");
     expect(stages[5]!.remaining).toBe(8);
-    expect(stages[5]!.delta).toBe("−4 Scrubbed");
+    expect(stages[5]!.delta).toBeNull();
+    expect(stages[5]!.annotation).toBe("Launch Ready");
   });
 
   it("never renders a negative number for skip trace", () => {
     const none = buildFunnel(ROOFER_RUN)[3]!;
     expect(none.delta).toBeNull();
-    expect(none.annotation).toBe("0 Traced — All Had Phones");
+    expect(none.annotation).toBe("Not Needed");
     const traced = buildFunnel({ ...ROOFER_RUN, traced: 5 })[3]!;
     expect(traced.remaining).toBe(12);
     expect(traced.annotation).toBe("5 Traced");
