@@ -19,7 +19,18 @@ export function ProfileDropdown({ className }: { className?: string }) {
     user?.email?.split("@")[0] ||
     "User";
   const userEmail = user?.email || "";
-  const initials = userName.slice(0, 2).toUpperCase();
+  // First + last name initials (e.g. "Dana O'Neil" → "DO"); falls back to the
+  // first two characters when only one word is available.
+  const initials = (() => {
+    const parts = userName
+      .replace(/[^\p{L}\p{N}\s'-]/gu, " ")
+      .split(/[\s]+/)
+      .filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase();
+    }
+    return (parts[0] ?? userName).slice(0, 2).toUpperCase();
+  })();
 
   const go = (path: string) => {
     setOpen(false);
