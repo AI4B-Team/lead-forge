@@ -50,7 +50,7 @@ function fmtDuration(ms: number) {
 }
 
 function JobDetail() {
-  const { jobId } = Route.useParams();
+  const { listId: jobId } = Route.useParams();
   const navigate = useNavigate();
   const fetchReview = useServerFn(getJobReview);
   const fetchBucket = useServerFn(getLeadsByBucket);
