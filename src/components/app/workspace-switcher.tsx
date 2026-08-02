@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Check, ChevronsUpDown, Plus, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Loader2, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -12,14 +12,25 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useWorkspaceId, useCreateWorkspace } from "@/hooks/use-workspace";
+import {
+  useWorkspaceId, useCreateWorkspace, useWorkspaceRole,
+  renameWorkspace, deleteWorkspace,
+} from "@/hooks/use-workspace";
 
 export function WorkspaceSwitcher() {
   const { workspaceId, workspaceName, workspaces, switchWorkspace } = useWorkspaceId();
   const { create, creating } = useCreateWorkspace();
+  const { canRename, canDelete } = useWorkspaceRole();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmValue, setConfirmValue] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const isLastWorkspace = workspaces.length <= 1;
 
   const onCreate = async () => {
     const trimmed = name.trim();
@@ -34,6 +45,40 @@ export function WorkspaceSwitcher() {
       navigate({ to: "/app/assistant" });
     } catch {
       toast.error("Could Not Create Workspace");
+    }
+  };
+
+  const onRename = async () => {
+    const trimmed = renameValue.trim();
+    if (!trimmed || !workspaceId || trimmed === workspaceName) {
+      setRenameOpen(false);
+      return;
+    }
+    setSavingName(true);
+    try {
+      await renameWorkspace(workspaceId, trimmed);
+      toast.success("Workspace Renamed");
+      setRenameOpen(false);
+    } catch {
+      toast.error("Could Not Rename Workspace");
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const onDelete = async () => {
+    if (!workspaceId) return;
+    setDeleting(true);
+    try {
+      const next = await deleteWorkspace(workspaceId);
+      toast.success("Workspace Deleted");
+      setDeleteOpen(false);
+      setConfirmValue("");
+      navigate({ to: next ? "/app" : "/app/assistant" });
+    } catch {
+      toast.error("Could Not Delete Workspace");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -74,6 +119,37 @@ export function WorkspaceSwitcher() {
           <DropdownMenuItem onSelect={() => setOpen(true)} className="gap-2">
             <Plus className="h-3.5 w-3.5" /> New Workspace
           </DropdownMenuItem>
+          {(canRename || canDelete) && workspaceId ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                This Workspace
+              </DropdownMenuLabel>
+              {canRename ? (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    setRenameValue(workspaceName ?? "");
+                    setRenameOpen(true);
+                  }}
+                  className="gap-2"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Rename Workspace
+                </DropdownMenuItem>
+              ) : null}
+              {canDelete ? (
+                <DropdownMenuItem
+                  disabled={isLastWorkspace}
+                  onSelect={() => {
+                    setConfirmValue("");
+                    setDeleteOpen(true);
+                  }}
+                  className="gap-2 text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Delete Workspace
+                </DropdownMenuItem>
+              ) : null}
+            </>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -120,6 +196,72 @@ export function WorkspaceSwitcher() {
             >
               {creating && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
               Create Workspace
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">Rename Workspace</DialogTitle>
+            <DialogDescription>
+              The name is how this workspace appears to you and your team. Nothing else changes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="ws-rename">Workspace</Label>
+            <Input
+              id="ws-rename"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") void onRename(); }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRenameOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => void onRename()}
+              disabled={savingName || !renameValue.trim()}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {savingName && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+              Save Name
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">Delete Workspace</DialogTitle>
+            <DialogDescription>
+              This permanently deletes <span className="font-medium text-foreground">{workspaceName}</span> and
+              everything in it — leads, lists, campaigns, conversations, phone numbers, and suppression records.
+              This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="ws-confirm">
+              Type <span className="font-medium text-foreground">{workspaceName}</span> To Confirm
+            </Label>
+            <Input
+              id="ws-confirm"
+              value={confirmValue}
+              onChange={(e) => setConfirmValue(e.target.value)}
+              placeholder={workspaceName ?? ""}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleteOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => void onDelete()}
+              disabled={deleting || confirmValue.trim() !== (workspaceName ?? "")}
+            >
+              {deleting && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+              Delete Workspace
             </Button>
           </DialogFooter>
         </DialogContent>
