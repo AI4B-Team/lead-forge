@@ -85,7 +85,7 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* Base DialogContent is `display:grid`, which wins over `flex` in the
           Tailwind cascade — so size the two rows explicitly and let row 2 scroll. */}
-      <DialogContent className="max-h-[85vh] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-0 sm:max-w-[62rem]">
+      <DialogContent className="max-h-[85vh] grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-0 sm:max-w-[62rem]">
         <DialogHeader className="min-w-0 border-b px-6 pb-4 pt-6">
           <DialogTitle>All Templates</DialogTitle>
           <div className="relative mt-3">
