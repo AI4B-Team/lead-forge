@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Trash2, UserPlus, Mail, Users, Clock, Armchair } from "lucide-react";
+import { Copy, Trash2, UserPlus, Mail, Users, Clock, Armchair, Coins } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsShell } from "@/components/app/settings-shell";
 import { StatTile } from "@/components/app/stat-tile";
@@ -14,7 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { listTeam, inviteTeamMember, revokeInvite, removeMember } from "@/lib/team.functions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { listTeam, inviteTeamMember, revokeInvite } from "@/lib/team.functions";
+import { revokeSeat, setMemberRole } from "@/lib/accountability.functions";
+import { ROLE_BLURB, ROLE_LABEL, WORKSPACE_ROLES, type WorkspaceRole } from "@/lib/team-roles.shared";
+import { useTeamContext } from "@/hooks/use-team-context";
+import {
+  ApprovalsQueue, AttributionLog, MemberCostDashboard, RevokeSeatButton,
+} from "@/components/app/team-accountability";
 
 export const Route = createFileRoute("/_authenticated/app/team")({
   head: () => ({ meta: [{ title: "Team — LeadTrace" }] }),
@@ -27,10 +34,12 @@ function TeamPage() {
   const fetchList = useServerFn(listTeam);
   const doInvite = useServerFn(inviteTeamMember);
   const doRevoke = useServerFn(revokeInvite);
-  const doRemove = useServerFn(removeMember);
+  const doRevokeSeat = useServerFn(revokeSeat);
+  const doSetRole = useServerFn(setMemberRole);
+  const team = useTeamContext();
 
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "member">("member");
+  const [role, setRole] = useState<WorkspaceRole>("member");
   const [busy, setBusy] = useState(false);
 
   const { data } = useQuery({
@@ -39,7 +48,11 @@ function TeamPage() {
     enabled: !!workspaceId,
   });
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["team", workspaceId] });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["team", workspaceId] });
+    qc.invalidateQueries({ queryKey: ["member-costs", workspaceId] });
+    qc.invalidateQueries({ queryKey: ["attribution-log", workspaceId] });
+  };
 
   const members = data?.members ?? [];
   const invites = (data?.invites ?? []) as any[];
