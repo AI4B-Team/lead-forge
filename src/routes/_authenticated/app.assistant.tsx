@@ -910,7 +910,7 @@ function Assistant() {
   }, [recents]);
 
   const heroState = (
-    <div className="mx-auto w-full max-w-5xl space-y-8 py-2">
+    <div className="w-full space-y-8 py-2">
       <div>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">AI Lead Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -1019,126 +1019,128 @@ function Assistant() {
 
   return (
     <div className={started ? "assistant-shell flex flex-col" : "flex flex-col"}>
-      {started && (
-        <div className="shrink-0">
-          <PageHeader
-            title="AI Lead Assistant"
-            description="Describe The Leads You Want — Or Build It Yourself In The List Builder. Nothing Runs Until You Approve."
-            descriptionClassName="whitespace-nowrap !max-w-none"
-            actions={
-              <Button variant="outline" className="rounded-full" onClick={startOver}>
-                <RotateCcw className="mr-1.5 h-4 w-4" /> Start Over
-              </Button>
-            }
-          />
-        </div>
-      )}
+      <div className={started ? "mx-auto w-[90%] flex-1 flex flex-col" : "mx-auto w-[90%]"}>
+        {started && (
+          <div className="shrink-0">
+            <PageHeader
+              title="AI Lead Assistant"
+              description="Describe The Leads You Want — Or Build It Yourself In The List Builder. Nothing Runs Until You Approve."
+              descriptionClassName="whitespace-nowrap !max-w-none"
+              actions={
+                <Button variant="outline" className="rounded-full" onClick={startOver}>
+                  <RotateCcw className="mr-1.5 h-4 w-4" /> Start Over
+                </Button>
+              }
+            />
+          </div>
+        )}
 
-      {!started && heroState}
+        {!started && heroState}
 
-      {started && (
-      <div className="grid min-h-0 flex-1 items-start gap-6 lg:grid-cols-[1fr_400px]">
-        {/* Chat column: thread scrolls, composer stays pinned to the bottom. */}
-        <Card className="flex min-h-0 flex-col lg:h-full">
-          <CardContent className="flex min-h-0 flex-1 flex-col p-4 md:p-5">
-            <div ref={scroller} className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
-              {!hasChat && (
-                // Panel-only mode: the assembly checklist still leads, with no chat turn.
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    LeadTrace
-                  </div>
-                  <div className="mt-1.5 text-sm text-foreground">
-                    Build it in the List Builder on the right, or type below and I'll fill it in for you.
-                  </div>
-                  <div className="mt-3">
-                    <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
-                  </div>
-                </div>
-              )}
-              {thread.map((m, i) => (
-                  <div key={i}>
-                    {m.role === "system" ? (
-                      <div className="flex justify-center">
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[11px] text-muted-foreground">
-                          <SlidersHorizontal className="h-3 w-3" /> {m.content}
-                        </span>
+        {started && (
+          <div className="grid min-h-0 flex-1 items-start gap-6 lg:grid-cols-[1fr_400px]">
+            {/* Chat column: thread scrolls, composer stays pinned to the bottom. */}
+            <Card className="flex min-h-0 flex-col lg:h-full">
+              <CardContent className="flex min-h-0 flex-1 flex-col p-4 md:p-5">
+                <div ref={scroller} className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
+                  {!hasChat && (
+                    // Panel-only mode: the assembly checklist still leads, with no chat turn.
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                        LeadTrace
                       </div>
-                    ) : (
-                      <>
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                          {m.role === "user" ? "You" : "LeadTrace"}
-                        </div>
-                        <div
-                          className={`mt-1.5 whitespace-pre-wrap text-sm ${
-                            m.role === "user"
-                              ? "inline-block rounded-2xl bg-primary px-4 py-2 text-primary-foreground"
-                              : "text-foreground"
-                          }`}
-                        >
-                          {m.content}
-                        </div>
-                        {/* Assembly status lives inline, in chronological order. */}
-                        {m.role === "assistant" && (
-                          <div className="mt-3">
-                            {i === lastAssistantIndex ? (
-                              <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
-                            ) : (
-                              <AssistantTrace
-                                steps={buildTraceSteps(m.spec ?? EMPTY_SPEC)}
-                                revealed={buildTraceSteps(m.spec ?? EMPTY_SPEC).length}
-                                thinking={false}
-                                open={openSlots(m.spec ?? EMPTY_SPEC, uploadReady)}
-                              />
-                            )}
+                      <div className="mt-1.5 text-sm text-foreground">
+                        Build it in the List Builder on the right, or type below and I'll fill it in for you.
+                      </div>
+                      <div className="mt-3">
+                        <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
+                      </div>
+                    </div>
+                  )}
+                  {thread.map((m, i) => (
+                      <div key={i}>
+                        {m.role === "system" ? (
+                          <div className="flex justify-center">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[11px] text-muted-foreground">
+                              <SlidersHorizontal className="h-3 w-3" /> {m.content}
+                            </span>
                           </div>
+                        ) : (
+                          <>
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                              {m.role === "user" ? "You" : "LeadTrace"}
+                            </div>
+                            <div
+                              className={`mt-1.5 whitespace-pre-wrap text-sm ${
+                                m.role === "user"
+                                  ? "inline-block rounded-2xl bg-primary px-4 py-2 text-primary-foreground"
+                                  : "text-foreground"
+                              }`}
+                            >
+                              {m.content}
+                            </div>
+                            {/* Assembly status lives inline, in chronological order. */}
+                            {m.role === "assistant" && (
+                              <div className="mt-3">
+                                {i === lastAssistantIndex ? (
+                                  <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
+                                ) : (
+                                  <AssistantTrace
+                                    steps={buildTraceSteps(m.spec ?? EMPTY_SPEC)}
+                                    revealed={buildTraceSteps(m.spec ?? EMPTY_SPEC).length}
+                                    thinking={false}
+                                    open={openSlots(m.spec ?? EMPTY_SPEC, uploadReady)}
+                                  />
+                                )}
+                              </div>
+                            )}
+                          </>
                         )}
-                      </>
-                    )}
-                  </div>
-              ))}
-              {busy && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Sparkles className="h-3.5 w-3.5 animate-pulse text-primary" /> Thinking…
+                      </div>
+                  ))}
+                  {busy && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Sparkles className="h-3.5 w-3.5 animate-pulse text-primary" /> Thinking…
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {templateChips.length > 0 && (
-              <div className="mt-4 flex shrink-0 flex-wrap gap-2">
-                {templateChips.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => send(t.prompt)}
-                    className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary"
-                  >
-                    {t.title}
-                  </button>
-                ))}
-              </div>
-            )}
+                {templateChips.length > 0 && (
+                  <div className="mt-4 flex shrink-0 flex-wrap gap-2">
+                    {templateChips.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => send(t.prompt)}
+                        className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary"
+                      >
+                        {t.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-            <div className="mt-4 shrink-0">{composerBox}</div>
+                <div className="mt-4 shrink-0">{composerBox}</div>
 
-            {started && (
-              <div className="mt-4 shrink-0 lg:hidden">
-                <Collapsible>
-                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-sm">
-                    <span className="text-foreground">{describeSpec(spec)}</span>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-4">{specPanel}</CollapsibleContent>
-                </Collapsible>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                {started && (
+                  <div className="mt-4 shrink-0 lg:hidden">
+                    <Collapsible>
+                      <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-sm">
+                        <span className="text-foreground">{describeSpec(spec)}</span>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="pt-4">{specPanel}</CollapsibleContent>
+                    </Collapsible>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* One consolidated List Builder rail, sticky Generate at its bottom. */}
-        <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>
+            {/* One consolidated List Builder rail, sticky Generate at its bottom. */}
+            <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>
+          </div>
+        )}
       </div>
-      )}
 
       {upload?.parseable && (
         <ColumnMapperDialog
