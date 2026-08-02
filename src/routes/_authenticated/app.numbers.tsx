@@ -202,6 +202,8 @@ function Numbers() {
         total={numbers.length}
         currentForward={numbers.find((n) => n.forward_calls_to)?.forward_calls_to ?? ""}
         currentGreeting={numbers.find((n) => n.voicemail_greeting)?.voicemail_greeting ?? ""}
+        recordingEnabled={numbers.some((n) => (n as { recording_enabled?: boolean }).recording_enabled)}
+        recordingDisclosure={numbers.some((n) => (n as { recording_disclosure?: boolean }).recording_disclosure)}
       />
 
       <Card>
