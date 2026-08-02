@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   User,
   Lock,
+  Bell,
   CreditCard,
   Users,
   Building2,
@@ -31,7 +32,7 @@ type NavDef = {
     | "/app/compliance"
     | "/app/numbers"
     | "/app/admin";
-  search?: { tab: "profile" | "security" };
+  search?: { tab: "profile" | "security" | "notifications" };
 };
 
 const GROUPS: { label: string; items: NavDef[] }[] = [
@@ -40,6 +41,7 @@ const GROUPS: { label: string; items: NavDef[] }[] = [
     items: [
       { key: "profile", label: "Profile", icon: User, to: "/app/account", search: { tab: "profile" } },
       { key: "security", label: "Security", icon: Lock, to: "/app/account", search: { tab: "security" } },
+      { key: "notifications", label: "Notifications", icon: Bell, to: "/app/account", search: { tab: "notifications" } },
       { key: "billing", label: "Billing", icon: CreditCard, to: "/app/billing" },
     ],
   },
