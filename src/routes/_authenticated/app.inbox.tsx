@@ -91,8 +91,21 @@ function ConversationsPage() {
   const runSummary = useServerFn(summarizeThread);
   const runSuggest = useServerFn(suggestThreadReplies);
   const runBlacklist = useServerFn(blacklistThread);
+  const fetchNumbers = useServerFn(listNumbers);
 
   useEffect(() => setArchived(readArchive()), []);
+
+  // A reply can only leave the building from an active sending number. Without
+  // one every send path fails server-side, so we surface it instead of letting
+  // "Use" look like a no-op.
+  const numbersQ = useQuery({
+    queryKey: ["inbox-sending-numbers", workspaceId],
+    queryFn: () => fetchNumbers({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId,
+    staleTime: 60_000,
+  });
+  const hasSendingNumber = (numbersQ.data?.rows ?? []).some((n) => n.status === "active");
+  const numbersKnown = !!numbersQ.data;
 
   const threadsQ = useQuery({
     queryKey: ["inbox-threads", workspaceId, filter],
