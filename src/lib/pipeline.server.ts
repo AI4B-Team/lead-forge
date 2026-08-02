@@ -73,9 +73,20 @@ const businessAdapter: SourceAdapter = {
   async run(params) {
     const { getBusinessScraper } = await import("./data-providers");
     const scraper = getBusinessScraper();
+    // A parameter file fans the same search out across every uploaded value.
+    const targets = (params.scrape_targets as string[] | undefined) ?? [];
+    const kind = params.scrape_target_kind as string | undefined;
+    const niches =
+      kind === "keywords" && targets.length
+        ? targets
+        : (params.niches as string[] | undefined) ?? ["HVAC"];
+    const counties =
+      kind === "areas" && targets.length
+        ? targets
+        : (params.counties as string[] | undefined) ?? [];
     return scraper.scrape({
-      niches: (params.niches as string[] | undefined) ?? ["HVAC"],
-      counties: (params.counties as string[] | undefined) ?? [],
+      niches,
+      counties,
       state: (params.state as string | undefined) ?? "FL",
     });
   },
