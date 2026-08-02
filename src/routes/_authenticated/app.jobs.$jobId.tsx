@@ -23,6 +23,8 @@ import { PhoneLink } from "@/components/app/phone-link";
 import { setOnboardingPref } from "@/lib/onboarding.functions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { isStalled, stallReason } from "@/lib/job-watchdog";
+import { qualityGrade } from "@/lib/quality-grade";
+import { ChevronDown, Database, Coins } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
   head: () => ({ meta: [{ title: "Pipeline Review — LeadTrace" }] }),
@@ -71,6 +73,9 @@ function JobDetail() {
   const doResume = useServerFn(resumeJob);
   const [browserOpen, setBrowserOpen] = useState(false);
   const [browserBucket, setBrowserBucket] = useState<"clean" | "dnc" | "litigator" | "all">("clean");
+  const [logOpen, setLogOpen] = useState(true);
+  // Nobody rereads the log once the run lands — collapse it on completion.
+  const [collapsedOnce, setCollapsedOnce] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["job-review", jobId],
@@ -125,11 +130,23 @@ function JobDetail() {
     clean: counts.clean,
   });
   const traced = job.rows_skiptraced ?? 0;
+  const sourceLabel =
+    job.source_type === "upload"
+      ? "Uploaded CSV"
+      : job.source_type === "records"
+        ? "Public Records"
+        : "Business Directories";
   const estimate = launchEstimate(counts.clean);
+  const grade = qualityGrade(quality);
   // Never ship a funnel whose arithmetic disagrees with the Ready To Send card.
   if (import.meta.env.DEV) {
     const bad = funnelViolations(funnel, { readyToSend: counts.clean });
     if (bad.length) console.warn("[funnel] arithmetic mismatch:", bad);
+  }
+
+  if (job.status === "ready" && !collapsedOnce) {
+    setCollapsedOnce(true);
+    setLogOpen(false);
   }
 
   const toggleRun = async () => {
@@ -235,16 +252,17 @@ function JobDetail() {
 
       <Card className="mt-6">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base font-display">Pipeline</CardTitle>
+          <CardTitle className="text-base font-display">Lead Processing</CardTitle>
           {isReady && (
-            <Badge className="gap-1.5 rounded-full px-3 py-1 text-sm font-semibold">
-              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+            <Badge className="gap-2 rounded-full px-4 py-1.5 text-base font-black">
+              <Check className="h-4 w-4" strokeWidth={3} />
               {counts.clean.toLocaleString()} Ready To Launch
             </Badge>
           )}
         </CardHeader>
         <CardContent className="space-y-5">
           <PipelineFunnel
+            animate={isReady}
             traced={traced}
             stages={{
               found: job.rows_in ?? 0,
@@ -256,9 +274,22 @@ function JobDetail() {
             }}
           />
           <div className="rounded-xl border border-border bg-muted/40 p-4">
-            <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-              Live Progress
-            </div>
+            <button
+              type="button"
+              className="flex w-full items-center justify-between gap-2 text-left"
+              onClick={() => setLogOpen((v) => !v)}
+              aria-expanded={logOpen}
+            >
+              <span className="text-sm font-semibold text-foreground">
+                {isReady ? "Pipeline Complete" : "Live Progress"}
+              </span>
+              <span className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                {logOpen ? "Hide Processing Log" : "Show Processing Log"}
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${logOpen ? "rotate-180" : ""}`} />
+              </span>
+            </button>
+            {logOpen && (
+            <>
             <ul className="mt-3 space-y-2">
               {(eventData?.events ?? []).map((e) => (
                 <li key={e.id} className="flex items-start gap-3 text-sm text-foreground">
@@ -280,26 +311,35 @@ function JobDetail() {
                 You Can Close This Tab — The Job Keeps Running On Our Servers.
               </div>
             )}
+            </>
+            )}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <MiniStat label="Elapsed" value={fmtDuration(elapsedMs)} />
-            <MiniStat label="Rate" value={perMin > 0 ? `${perMin.toLocaleString()} records/min` : "—"} />
-            <MiniStat
-              label="Est. Time Left"
-              value={isRunning ? (etaMs > 0 ? `~${fmtDuration(etaMs)}` : "Finishing Up") : "Complete"}
-            />
-            <MiniStat
-              label="Last Scrub"
-              value={
-                scrubFreshness.scrubbedAt
-                  ? new Date(scrubFreshness.scrubbedAt).toLocaleString([], {
-                      month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-                    })
-                  : "Not Scrubbed"
-              }
-              tone={scrubFreshness.stale ? "danger" : "default"}
-            />
+            {isRunning ? (
+              <>
+                <MiniStat icon={<Clock className="h-3 w-3" />} label="Elapsed" value={fmtDuration(elapsedMs)} />
+                <MiniStat icon={<Activity className="h-3 w-3" />} label="Rate" value={perMin > 0 ? `${perMin.toLocaleString()} Records/Min` : "—"} />
+                <MiniStat icon={<Hourglass className="h-3 w-3" />} label="Est. Time Left" value={etaMs > 0 ? `~${fmtDuration(etaMs)}` : "Finishing Up"} />
+                <MiniStat icon={<Database className="h-3 w-3" />} label="Source" value={sourceLabel} />
+              </>
+            ) : (
+              <>
+                <MiniStat
+                  icon={<Check className="h-3 w-3" />}
+                  label="Completed"
+                  value={new Date(endedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                />
+                <MiniStat icon={<Clock className="h-3 w-3" />} label="Processing Time" value={fmtDuration(elapsedMs)} />
+                <MiniStat icon={<Coins className="h-3 w-3" />} label="Rows Processed" value={processed.toLocaleString()} />
+                <MiniStat
+                  icon={<Database className="h-3 w-3" />}
+                  label="Source"
+                  value={sourceLabel}
+                  tone={scrubFreshness.stale ? "danger" : "default"}
+                />
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -343,8 +383,18 @@ function JobDetail() {
             <Activity className="h-4 w-4 text-primary" />
             <CardTitle className="text-base font-display">List Quality Score</CardTitle>
           </div>
-          <div className="font-display text-3xl font-black text-foreground">
-            {isReady ? quality : "—"}<span className="text-base text-muted-foreground">/100</span>
+          <div className="flex items-baseline gap-3">
+            <span
+              className={`font-display text-4xl font-black leading-none ${
+                grade.tone === "success" ? "text-success" : grade.tone === "warn" ? "text-warn" : "text-danger"
+              }`}
+            >
+              {isReady ? grade.letter : "—"}
+            </span>
+            <span className="font-display text-2xl font-black tabular-nums text-foreground">
+              {isReady ? quality : "—"}<span className="text-sm text-muted-foreground">/100</span>
+            </span>
+            {isReady && <span className="text-sm font-semibold text-muted-foreground">{grade.label}</span>}
           </div>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
@@ -357,26 +407,25 @@ function JobDetail() {
         <Card className="mt-6 border-primary/40 bg-primary/5">
           <CardHeader className="flex flex-row items-center gap-2">
             <Rocket className="h-4 w-4 text-primary" />
-            <CardTitle className="text-base font-display">
-              {counts.clean.toLocaleString()} Launch-Ready Leads
-            </CardTitle>
+            <CardTitle className="text-base font-display">Launch Estimate</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <MoneyStat
               icon={<Smartphone className="h-3.5 w-3.5" />}
-              label="Estimated Reach"
-              value={`${estimate.reach.toLocaleString()} Mobile Phones`}
+              value={estimate.reach.toLocaleString()}
+              label="Launch-Ready Leads"
+              note="Mobile Phones"
             />
             <MoneyStat
               icon={<Send className="h-3.5 w-3.5" />}
-              label="Expected Campaign Size"
-              value={`${estimate.messages.toLocaleString()} Messages`}
+              value={estimate.messages.toLocaleString()}
+              label="Messages"
               note={`${DEFAULT_SEQUENCE_STEPS}-Step Drip`}
             />
             <MoneyStat
               icon={<DollarSign className="h-3.5 w-3.5" />}
-              label="Estimated SMS Cost"
               value={`≈ ${formatUsd(estimate.cost)}`}
+              label="Estimated Cost"
               note="Flat Rate Per Segment"
             />
           </CardContent>
@@ -432,10 +481,10 @@ function MoneyStat({ icon, label, value, note }: {
 }) {
   return (
     <div className="rounded-xl border border-border bg-background p-4">
-      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="font-display text-4xl font-black leading-none tabular-nums text-foreground">{value}</div>
+      <div className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-foreground/80">
         {icon} {label}
       </div>
-      <div className="mt-1.5 font-display text-xl font-black tabular-nums text-foreground">{value}</div>
       {note && <div className="mt-0.5 text-xs text-muted-foreground">{note}</div>}
     </div>
   );
@@ -685,7 +734,7 @@ function Stat({ label, value, muted = false }: { label: string; value: string; m
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">{label}</div>
+        <div className="text-sm font-semibold text-muted-foreground">{label}</div>
         <div
           className={`mt-2 font-display font-black tabular-nums ${
             muted ? "text-xl text-muted-foreground" : "text-3xl text-foreground"
@@ -727,11 +776,11 @@ function EventIcon({ stage, message }: { stage: string | null; message: string }
 }
 
 // Compact run telemetry used under the funnel: elapsed, rate, ETA, scrub stamp.
-function MiniStat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "danger" }) {
+function MiniStat({ label, value, tone = "default", icon }: { label: string; value: string; tone?: "default" | "danger"; icon?: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-border bg-background p-3">
       <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-        <Clock className="h-3 w-3" /> {label}
+        {icon} {label}
       </div>
       <div className={`mt-1 text-sm font-semibold tabular-nums ${tone === "danger" ? "text-destructive" : "text-foreground"}`}>
         {value}
