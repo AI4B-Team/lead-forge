@@ -1,6 +1,7 @@
 import { ChevronRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buildFunnel, stageFillPercent } from "@/lib/funnel-math";
+import { useCountUp } from "@/hooks/use-count-up";
 
 export type FunnelStages = {
   found: number;
@@ -26,12 +27,15 @@ export function PipelineFunnel({
   stages,
   traced,
   size = "lg",
+  animate = false,
   className,
 }: {
   stages: FunnelStages;
   /** How many records were skip traced (fills, never removals). */
   traced?: number;
   size?: "lg" | "sm";
+  /** Cascade the counts up one card at a time (results view only). */
+  animate?: boolean;
   className?: string;
 }) {
   const small = size === "sm";
@@ -57,38 +61,33 @@ export function PipelineFunnel({
               <div
                 className={cn(
                   "relative w-full overflow-hidden rounded-xl border",
-                  small ? "h-9" : "h-28",
+                  small ? "h-9" : "h-32",
                   isClean
-                    ? "border-primary bg-primary/5 shadow-[0_0_0_1px_var(--primary)]"
-                    : "border-border bg-muted/60",
+                    ? "border-2 border-primary bg-primary/5 shadow-[0_6px_20px_-8px_var(--primary)]"
+                    : "border-border/60 bg-muted/30",
                 )}
               >
                 <div
                   className={cn(
                     "absolute bottom-0 left-0 right-0 transition-[height] duration-700 ease-out",
-                    isClean ? "bg-primary" : "bg-foreground/12",
+                    isClean ? "bg-primary" : "bg-foreground/[0.07]",
                   )}
                   style={{ height: `${pct}%` }}
                 />
                 {!small && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-                    {isClean && <Check className="h-4 w-4 text-primary" strokeWidth={3} />}
-                    <span
-                      className={cn(
-                        "font-display font-black tabular-nums",
-                        isClean ? "text-2xl text-primary" : "text-xl text-foreground",
-                      )}
-                    >
-                      {s.remaining.toLocaleString()}
-                    </span>
-                  </div>
+                  <StageValue
+                    remaining={s.remaining}
+                    isClean={isClean}
+                    animate={animate}
+                    index={i}
+                  />
                 )}
               </div>
               <div
                 className={cn(
-                  "mt-1.5 truncate text-center font-semibold uppercase tracking-wider",
-                  small ? "text-[9px]" : "text-[10px]",
-                  isClean ? "text-primary" : "text-muted-foreground",
+                  "mt-1.5 truncate text-center font-semibold",
+                  small ? "text-[9px] uppercase tracking-wider" : "text-xs",
+                  isClean ? "text-primary" : "text-foreground/70",
                 )}
               >
                 {s.label}
@@ -108,12 +107,16 @@ export function PipelineFunnel({
               <div
                 className={cn(
                   "flex shrink-0 items-center justify-center",
-                  small ? "h-9 w-4" : "h-28 w-6",
+                  small ? "h-9 w-4" : "h-32 w-6",
                 )}
                 aria-hidden
               >
                 <ChevronRight
-                  className={cn("text-muted-foreground/60", small ? "h-3 w-3" : "h-4 w-4")}
+                  className={cn(
+                    // Completed hops glow brand-red: "we processed this successfully".
+                    complete ? "text-primary" : "text-muted-foreground/40",
+                    small ? "h-3 w-3" : "h-4 w-4",
+                  )}
                   strokeWidth={2.5}
                 />
               </div>
@@ -121,6 +124,33 @@ export function PipelineFunnel({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function StageValue({
+  remaining,
+  isClean,
+  animate,
+  index,
+}: {
+  remaining: number;
+  isClean: boolean;
+  animate: boolean;
+  index: number;
+}) {
+  const shown = useCountUp(remaining, { enabled: animate, delay: index * 450, duration: 700 });
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+      {isClean && <Check className="h-5 w-5 text-primary" strokeWidth={3} />}
+      <span
+        className={cn(
+          "font-display font-black tabular-nums",
+          isClean ? "text-3xl text-primary" : "text-xl text-foreground/80",
+        )}
+      >
+        {shown.toLocaleString()}
+      </span>
     </div>
   );
 }
