@@ -161,19 +161,6 @@ export const removeLeadTag = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const _listQuickRepliesLegacy = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
-  .handler(async ({ data, context }) => {
-    const { data: rows, error } = await context.supabase
-      .from("quick_replies")
-      .select("id, title, body")
-      .eq("workspace_id", data.workspaceId)
-      .order("created_at", { ascending: true });
-    if (error) throw error;
-    return { snippets: rows ?? [] };
-  });
-
 export const createQuickReply = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
