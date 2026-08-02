@@ -327,242 +327,251 @@ function ConversationsPage() {
         </Card>
 
         {/* Conversation */}
-        <Card className="flex flex-col min-h-0">
+        <Card className="flex flex-col h-full min-h-0">
           {!selected ? (
             <div className="flex-1 grid place-items-center text-sm text-muted-foreground">Select A Conversation.</div>
           ) : (
-            <>
-              <div className="p-3 border-b space-y-2">
-                <div className="flex items-start gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-display font-bold truncate">
-                      {threadQ.data?.lead?.full_name ||
-                        threadQ.data?.lead?.business_name ||
-                        threadQ.data?.lead?.phone ||
-                        activeThread?.thread_key}
+            <div className="flex flex-col flex-1 min-h-0">
+              {/* Top: contact header, actions, AI summary — stays fixed */}
+              <div className="shrink-0">
+                <div className="p-3 border-b space-y-2">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-display font-bold truncate">
+                        {threadQ.data?.lead?.full_name ||
+                          threadQ.data?.lead?.business_name ||
+                          threadQ.data?.lead?.phone ||
+                          activeThread?.thread_key}
+                      </div>
+                      <div className="text-xs text-muted-foreground flex items-center flex-wrap gap-x-2">
+                        {threadQ.data?.campaign && <span>{threadQ.data.campaign.name}</span>}
+                        {threadQ.data?.campaign && <span>· Touch {threadQ.data.campaign.touch}</span>}
+                        {threadQ.data?.number && <span>· From {threadQ.data.number.phone}</span>}
+                        {activeThread && <span>· {dayLabel(activeThread.last_at)}</span>}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground flex items-center flex-wrap gap-x-2">
-                      {threadQ.data?.campaign && <span>{threadQ.data.campaign.name}</span>}
-                      {threadQ.data?.campaign && <span>· Touch {threadQ.data.campaign.touch}</span>}
-                      {threadQ.data?.number && <span>· From {threadQ.data.number.phone}</span>}
-                      {activeThread && <span>· {dayLabel(activeThread.last_at)}</span>}
-                    </div>
+                    {aiHandling && <AiActivityPill label="AI Handling" />}
+                    {threadQ.data?.handoff && (
+                      <Badge variant="outline" className="bg-warn/10 text-warn border-warn/20 text-xs">
+                        Needs Human
+                      </Badge>
+                    )}
+                    {activeThread?.is_optout && (
+                      <Badge variant="outline" className="bg-danger/10 text-danger border-danger/20">
+                        Opted Out
+                      </Badge>
+                    )}
                   </div>
-                  {aiHandling && <AiActivityPill label="AI Handling" />}
-                  {threadQ.data?.handoff && (
-                    <Badge variant="outline" className="bg-warn/10 text-warn border-warn/20 text-xs">
-                      Needs Human
-                    </Badge>
-                  )}
-                  {activeThread?.is_optout && (
-                    <Badge variant="outline" className="bg-danger/10 text-danger border-danger/20">
-                      Opted Out
-                    </Badge>
-                  )}
+                  <QuickActions
+                    phone={threadQ.data?.lead?.phone}
+                    email={threadQ.data?.lead?.email}
+                    onAppointment={() => {
+                      setReply("Great — I have a couple of times open. Does tomorrow morning or afternoon work better?");
+                      toast.success("Appointment Ask Drafted");
+                    }}
+                    onArchive={toggleArchive}
+                    onTag={() => toast.info("Campaign Tags Are Managed On The Campaigns Page")}
+                    onBlacklist={doBlacklist}
+                    archived={!!selected && archived.includes(selected)}
+                    blacklisting={false}
+                  />
                 </div>
-                <QuickActions
-                  phone={threadQ.data?.lead?.phone}
-                  email={threadQ.data?.lead?.email}
-                  onAppointment={() => {
-                    setReply("Great — I have a couple of times open. Does tomorrow morning or afternoon work better?");
-                    toast.success("Appointment Ask Drafted");
-                  }}
-                  onArchive={toggleArchive}
-                  onTag={() => toast.info("Campaign Tags Are Managed On The Campaigns Page")}
-                  onBlacklist={doBlacklist}
-                  archived={!!selected && archived.includes(selected)}
-                  blacklisting={false}
+
+                <AiSummary
+                  bullets={summaryQ.data?.summary?.bullets ?? []}
+                  nextStep={summaryQ.data?.summary?.nextStep ?? null}
+                  loading={summaryQ.isFetching}
+                  onUseNextStep={() => suggestM.mutate({ command: null, draft: summaryQ.data?.summary?.nextStep ?? null })}
                 />
               </div>
 
-              <AiSummary
-                bullets={summaryQ.data?.summary?.bullets ?? []}
-                nextStep={summaryQ.data?.summary?.nextStep ?? null}
-                loading={summaryQ.isFetching}
-                onUseNextStep={() => suggestM.mutate({ command: null, draft: summaryQ.data?.summary?.nextStep ?? null })}
-              />
-
-              <div ref={scrollerRef} className="flex-1 overflow-y-auto p-4 space-y-2">
-                {threadQ.data?.messages.map((m) => (
-                  <div key={m.id} className={cn("flex", m.direction === "outbound" ? "justify-end" : "justify-start")}>
-                    <div
-                      className={cn(
-                        "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
-                        m.direction === "outbound"
-                          ? "bg-primary text-primary-foreground rounded-br-sm"
-                          : "bg-muted text-foreground rounded-bl-sm",
-                      )}
-                    >
-                      <div className="whitespace-pre-wrap">{m.body}</div>
+              {/* Middle: scrollable message thread — flexes to absorb available height */}
+              <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto thin-scroll p-4">
+                <div className="min-h-full flex flex-col justify-end gap-2">
+                  {threadQ.data?.messages.map((m) => (
+                    <div key={m.id} className={cn("flex", m.direction === "outbound" ? "justify-end" : "justify-start")}>
                       <div
                         className={cn(
-                          "text-[10px] mt-1 opacity-70 flex items-center gap-1",
-                          m.direction === "outbound" ? "text-primary-foreground" : "text-muted-foreground",
+                          "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
+                          m.direction === "outbound"
+                            ? "bg-primary text-primary-foreground rounded-br-sm"
+                            : "bg-muted text-foreground rounded-bl-sm",
                         )}
                       >
-                        {new Date(m.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} ·{" "}
-                        {dayLabel(m.created_at)} · {m.status}
-                        {m.is_bot && (
-                          <>
-                            {" · "}
-                            <Bot className="h-2.5 w-2.5" /> AI
-                          </>
-                        )}
+                        <div className="whitespace-pre-wrap">{m.body}</div>
+                        <div
+                          className={cn(
+                            "text-[10px] mt-1 opacity-70 flex items-center gap-1",
+                            m.direction === "outbound" ? "text-primary-foreground" : "text-muted-foreground",
+                          )}
+                        >
+                          {new Date(m.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} ·{" "}
+                          {dayLabel(m.created_at)} · {m.status}
+                          {m.is_bot && (
+                            <>
+                              {" · "}
+                              <Bot className="h-2.5 w-2.5" /> AI
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                {suggestM.isPending && (
-                  <div className="flex justify-end">
-                    <AiActivityPill label="AI Composing" />
-                  </div>
-                )}
+                  ))}
+                  {suggestM.isPending && (
+                    <div className="flex justify-end">
+                      <AiActivityPill label="AI Composing" />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <SuggestedReplies
-                suggestions={suggestions}
-                loading={suggestM.isPending}
-                onUse={(body) => {
-                  setReply(body);
-                  if (numbersKnown && !hasSendingNumber) {
-                    warnNoNumber();
-                    return;
-                  }
-                  void handleSendWith(body);
-                }}
-                onEdit={(body) => setReply(body)}
-                onRegenerate={() => suggestM.mutate({})}
-              />
+              {/* Bottom: suggested replies, no-number banner, snippets, composer — pinned to fold */}
+              <div className="shrink-0">
+                <SuggestedReplies
+                  suggestions={suggestions}
+                  loading={suggestM.isPending}
+                  onUse={(body) => {
+                    setReply(body);
+                    if (numbersKnown && !hasSendingNumber) {
+                      warnNoNumber();
+                      return;
+                    }
+                    void handleSendWith(body);
+                  }}
+                  onEdit={(body) => setReply(body)}
+                  onRegenerate={() => suggestM.mutate({})}
+                />
 
-              {numbersKnown && !hasSendingNumber && (
-                <div className="mx-3 mt-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 flex items-center gap-2">
-                  <PhoneOff className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <p className="text-[11px] text-muted-foreground flex-1">
-                    No Active Sending Number — Replies Cannot Be Delivered Yet. Drafts Are Still Saved Here.
-                  </p>
-                  <Button asChild size="sm" className="h-6 rounded-full text-[10px] px-2.5 shrink-0">
-                    <Link to="/app/numbers">Get A Number</Link>
-                  </Button>
-                </div>
-              )}
-              {!!snippetsQ.data?.snippets.length && (
-                <div className="px-3 pt-2 flex flex-wrap gap-1">
-                  {snippetsQ.data.snippets.map((s) => (
-                    <Button
-                      key={s.id}
-                      size="sm"
-                      variant="outline"
-                      className="rounded-full h-7 text-xs"
-                      onClick={() => setReply(s.body)}
-                    >
-                      {s.title}
+                {numbersKnown && !hasSendingNumber && (
+                  <div className="mx-3 mt-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 flex items-center gap-2">
+                    <PhoneOff className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <p className="text-[11px] text-muted-foreground flex-1">
+                      No Active Sending Number — Replies Cannot Be Delivered Yet. Drafts Are Still Saved Here.
+                    </p>
+                    <Button asChild size="sm" className="h-6 rounded-full text-[10px] px-2.5 shrink-0">
+                      <Link to="/app/numbers">Get A Number</Link>
                     </Button>
-                  ))}
-                </div>
-              )}
-
-              <div className="p-3 border-t relative">
-                {slashOpen && (
-                  <div className="absolute bottom-full left-3 mb-1 w-72 rounded-xl border bg-popover shadow-lg overflow-hidden z-20">
-                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b">
-                      AI Commands
-                    </div>
-                    {SLASH_COMMANDS.filter((c) => c.cmd.startsWith(reply.trim().split(" ")[0] || "/")).map((c) => (
-                      <button
-                        key={c.cmd}
-                        onClick={() => applyCommand(c.cmd)}
-                        className="w-full text-left px-3 py-2 hover:bg-muted/60 flex items-center gap-2"
+                  </div>
+                )}
+                {!!snippetsQ.data?.snippets.length && (
+                  <div className="px-3 pt-2 flex flex-wrap gap-1">
+                    {snippetsQ.data.snippets.map((s) => (
+                      <Button
+                        key={s.id}
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full h-7 text-xs"
+                        onClick={() => setReply(s.body)}
                       >
-                        <Sparkles className="h-3 w-3 text-primary shrink-0" />
-                        <span className="text-xs font-semibold">{c.label}</span>
-                        <span className="text-[10px] text-muted-foreground ml-auto">{c.cmd}</span>
-                      </button>
+                        {s.title}
+                      </Button>
                     ))}
                   </div>
                 )}
-                <div className="rounded-2xl border bg-background focus-within:ring-2 focus-within:ring-ring transition-shadow">
-                  <textarea
-                    value={reply}
-                    onChange={(e) => {
-                      setReply(e.target.value);
-                      setSlashOpen(e.target.value.startsWith("/"));
-                    }}
-                    rows={3}
-                    placeholder={
-                      activeThread?.is_optout
-                        ? "Contact has opted out — replies disabled."
-                        : "Type a reply… / for AI commands"
-                    }
-                    disabled={activeThread?.is_optout || sending}
-                    onKeyDown={(e) => {
-                      if (e.key === "Escape") setSlashOpen(false);
-                      if (e.key === "Escape" && !slashOpen) setReply("");
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        if (slashOpen) {
-                          const match = SLASH_COMMANDS.find((c) => c.cmd === reply.trim());
-                          if (match) return applyCommand(match.cmd);
-                        }
-                        handleSend();
+
+                <div className="p-3 border-t relative">
+                  {slashOpen && (
+                    <div className="absolute bottom-full left-3 mb-1 w-72 rounded-xl border bg-popover shadow-lg overflow-hidden z-20">
+                      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b">
+                        AI Commands
+                      </div>
+                      {SLASH_COMMANDS.filter((c) => c.cmd.startsWith(reply.trim().split(" ")[0] || "/")).map((c) => (
+                        <button
+                          key={c.cmd}
+                          onClick={() => applyCommand(c.cmd)}
+                          className="w-full text-left px-3 py-2 hover:bg-muted/60 flex items-center gap-2"
+                        >
+                          <Sparkles className="h-3 w-3 text-primary shrink-0" />
+                          <span className="text-xs font-semibold">{c.label}</span>
+                          <span className="text-[10px] text-muted-foreground ml-auto">{c.cmd}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="rounded-2xl border bg-background focus-within:ring-2 focus-within:ring-ring transition-shadow">
+                    <textarea
+                      value={reply}
+                      onChange={(e) => {
+                        setReply(e.target.value);
+                        setSlashOpen(e.target.value.startsWith("/"));
+                      }}
+                      rows={4}
+                      placeholder={
+                        activeThread?.is_optout
+                          ? "Contact has opted out — replies disabled."
+                          : "Type a reply… / for AI commands"
                       }
-                    }}
-                    className="w-full min-h-[72px] max-h-48 bg-transparent px-4 pt-3 pb-1 text-sm resize-none focus-visible:outline-none disabled:opacity-60"
-                  />
-                  <div className="flex items-center gap-1 px-2 pb-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 rounded-full text-xs cursor-pointer"
-                      title="Save As Quick Reply"
-                      onClick={saveSnippet}
-                      disabled={!reply.trim()}
-                    >
-                      <Plus className="h-3.5 w-3.5 mr-1" /> Save
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 rounded-full text-xs cursor-pointer"
-                      title="Ask AI For A Reply"
-                      onClick={() => suggestM.mutate({ draft: reply.trim() || null })}
-                      disabled={suggestM.isPending}
-                    >
-                      <Sparkles className="h-3.5 w-3.5 mr-1 text-primary" /> AI
-                    </Button>
-                    {!!reply.trim() && (
+                      disabled={activeThread?.is_optout || sending}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") setSlashOpen(false);
+                        if (e.key === "Escape" && !slashOpen) setReply("");
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          if (slashOpen) {
+                            const match = SLASH_COMMANDS.find((c) => c.cmd === reply.trim());
+                            if (match) return applyCommand(match.cmd);
+                          }
+                          handleSend();
+                        }
+                      }}
+                      className="w-full min-h-[96px] max-h-56 bg-transparent px-4 pt-3 pb-1 text-sm resize-none focus-visible:outline-none disabled:opacity-60"
+                    />
+                    <div className="flex items-center gap-1 px-2 pb-2">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 rounded-full text-xs cursor-pointer text-muted-foreground"
-                        title="Discard This Draft (Esc)"
-                        onClick={() => setReply("")}
-                        disabled={sending}
+                        className="h-7 rounded-full text-xs cursor-pointer"
+                        title="Save As Quick Reply"
+                        onClick={saveSnippet}
+                        disabled={!reply.trim()}
                       >
-                        <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                        <Plus className="h-3.5 w-3.5 mr-1" /> Save
                       </Button>
-                    )}
-                    <Button
-                      onClick={handleSend}
-                      disabled={
-                        activeThread?.is_optout ||
-                        sending ||
-                        !reply.trim() ||
-                        (numbersKnown && !hasSendingNumber)
-                      }
-                      size="sm"
-                      className="ml-auto h-8 rounded-full px-4 cursor-pointer"
-                      title={
-                        numbersKnown && !hasSendingNumber
-                          ? "Add An Active Sending Number To Send Replies"
-                          : undefined
-                      }
-                    >
-                      {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-3.5 w-3.5 mr-1" /> Send</>}
-                    </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 rounded-full text-xs cursor-pointer"
+                        title="Ask AI For A Reply"
+                        onClick={() => suggestM.mutate({ draft: reply.trim() || null })}
+                        disabled={suggestM.isPending}
+                      >
+                        <Sparkles className="h-3.5 w-3.5 mr-1 text-primary" /> AI
+                      </Button>
+                      {!!reply.trim() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 rounded-full text-xs cursor-pointer text-muted-foreground"
+                          title="Discard This Draft (Esc)"
+                          onClick={() => setReply("")}
+                          disabled={sending}
+                        >
+                          <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                        </Button>
+                      )}
+                      <Button
+                        onClick={handleSend}
+                        disabled={
+                          activeThread?.is_optout ||
+                          sending ||
+                          !reply.trim() ||
+                          (numbersKnown && !hasSendingNumber)
+                        }
+                        size="sm"
+                        className="ml-auto h-8 rounded-full px-4 cursor-pointer"
+                        title={
+                          numbersKnown && !hasSendingNumber
+                            ? "Add An Active Sending Number To Send Replies"
+                            : undefined
+                        }
+                      >
+                        {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-3.5 w-3.5 mr-1" /> Send</>}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </Card>
 
