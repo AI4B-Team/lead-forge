@@ -81,6 +81,99 @@ export const listQuickReplies = createServerFn({ method: "GET" })
     return { snippets: rows ?? [] };
   });
 
+// ── Lead / conversation tags ────────────────────────────────────────────────
+// Per-contact labels ("callback", "quoted", "not now") applied while working
+// the inbox. They draw from the same workspace `tags` vocabulary used by
+// campaigns, but attaching one to a lead never changes campaign membership.
+
+export const listLeadTags = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ workspaceId: z.string().uuid(), leadId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("lead_tags")
+      .select("tag_id, tags(id, name, color)")
+      .eq("workspace_id", data.workspaceId)
+      .eq("lead_id", data.leadId);
+    if (error) throw error;
+    const tags = (rows ?? [])
+      .map((r) => (r as unknown as { tags: { id: string; name: string; color: string } | null }).tags)
+      .filter((t): t is { id: string; name: string; color: string } => !!t);
+    return { tags };
+  });
+
+// Attach an existing tag, or create it inline by name (type + enter).
+export const addLeadTag = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      workspaceId: z.string().uuid(),
+      leadId: z.string().uuid(),
+      tagId: z.string().uuid().optional(),
+      name: z.string().min(1).max(40).optional(),
+      color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    let tagId = data.tagId ?? null;
+    if (!tagId) {
+      if (!data.name) throw new Error("A Tag Name Is Required");
+      const { data: tag, error } = await context.supabase
+        .from("tags")
+        .upsert(
+          { workspace_id: data.workspaceId, name: data.name.trim(), color: data.color ?? "#e11d48" },
+          { onConflict: "workspace_id,name" },
+        )
+        .select("id")
+        .single();
+      if (error) throw error;
+      tagId = tag.id;
+    }
+    const { error: linkErr } = await context.supabase
+      .from("lead_tags")
+      .upsert(
+        { workspace_id: data.workspaceId, lead_id: data.leadId, tag_id: tagId },
+        { onConflict: "lead_id,tag_id" },
+      );
+    if (linkErr) throw linkErr;
+    return { ok: true, tagId };
+  });
+
+export const removeLeadTag = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      workspaceId: z.string().uuid(),
+      leadId: z.string().uuid(),
+      tagId: z.string().uuid(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("lead_tags")
+      .delete()
+      .eq("workspace_id", data.workspaceId)
+      .eq("lead_id", data.leadId)
+      .eq("tag_id", data.tagId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+const _listQuickRepliesLegacy = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("quick_replies")
+      .select("id, title, body")
+      .eq("workspace_id", data.workspaceId)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return { snippets: rows ?? [] };
+  });
+
 export const createQuickReply = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
