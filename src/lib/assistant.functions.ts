@@ -80,6 +80,19 @@ export const requestCoverage = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    // Beta waitlist clicks are idempotent — one row per workspace + template.
+    if (data.type === "template_adapter" && data.templateId) {
+      const { data: existing } = await context.supabase
+        .from("adapter_requests")
+        .select("id")
+        .eq("workspace_id", data.workspaceId)
+        .eq("type", "template_adapter")
+        .eq("template_id", data.templateId)
+        .limit(1);
+      if (existing && existing.length > 0) {
+        return { ok: true, email: context.claims?.email ?? null, alreadyRequested: true };
+      }
+    }
     const { error } = await context.supabase.from("adapter_requests").insert({
       workspace_id: data.workspaceId,
       county: data.county,
@@ -88,7 +101,24 @@ export const requestCoverage = createServerFn({ method: "POST" })
       type: data.type,
     });
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true, email: context.claims?.email ?? null, alreadyRequested: false };
+  });
+
+/** Which beta sources this workspace already joined the waitlist for. */
+export const listAdapterRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("adapter_requests")
+      .select("template_id")
+      .eq("workspace_id", data.workspaceId)
+      .eq("type", "template_adapter");
+    if (error) throw new Error(error.message);
+    return {
+      templateIds: (rows ?? []).map((r) => r.template_id).filter((id): id is string => Boolean(id)),
+      email: context.claims?.email ?? null,
+    };
   });
 
 /**

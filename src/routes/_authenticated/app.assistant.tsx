@@ -13,7 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "sonner";
 import {
   Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal,
-  Paperclip, Mic, Send,
+  Paperclip, Mic, Send, BellPlus, Loader2, Check,
 } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +23,7 @@ import {
   attachmentReady, attachmentRows, isSpreadsheet, readAttachment, type UploadAttachment,
 } from "@/lib/upload-attachment";
 import type { ColumnMap } from "@/lib/csv";
-import { assistantChat, createJobFromSpec, requestCoverage } from "@/lib/assistant.functions";
+import { assistantChat, createJobFromSpec, requestCoverage, listAdapterRequests } from "@/lib/assistant.functions";
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, specStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { PIPELINE_OPTION_LABELS } from "@/lib/pipeline-options";
@@ -116,6 +116,7 @@ function Assistant() {
   const chat = useServerFn(assistantChat);
   const createJob = useServerFn(createJobFromSpec);
   const logRequest = useServerFn(requestCoverage);
+  const fetchAdapterRequests = useServerFn(listAdapterRequests);
   const runJobFn = useServerFn(runJob);
 
   const [thread, setThread] = useState<ThreadItem[]>([]);
@@ -142,6 +143,11 @@ function Assistant() {
   /** Inline upload state — survives a source switch so it can be restored. */
   const [upload, setUpload] = useState<UploadAttachment | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
+  /** Beta waitlist: template ids already requested + the notify address. */
+  const [requestedAdapters, setRequestedAdapters] = useState<Set<string>>(new Set());
+  const [notifyEmail, setNotifyEmail] = useState<string | null>(null);
+  const [requesting, setRequesting] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
   const lastTemplateId = useRef<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const sentPrompt = useRef(false);
@@ -575,6 +581,25 @@ function Assistant() {
 
   const uncovered = coverage.filter((c) => c.coverage === "requested" || c.coverage === "unknown");
 
+  // Confirmed waitlist state must survive a reload, so it comes from the table.
+  useEffect(() => {
+    if (!workspaceId) return;
+    let alive = true;
+    fetchAdapterRequests({ data: { workspaceId } })
+      .then((res) => {
+        if (!alive) return;
+        setRequestedAdapters(new Set(res.templateIds));
+        setNotifyEmail(res.email);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId]);
+
+  const adapterRequested = Boolean(selectedTemplate && requestedAdapters.has(selectedTemplate.id));
+
   const request = async (county: string) => {
     if (!workspaceId) return;
     try {
@@ -599,8 +624,11 @@ function Assistant() {
   /** Waitlist click for a source whose adapter isn't wired yet (roadmap signal). */
   const requestTemplateAdapter = async () => {
     if (!workspaceId || !selectedTemplate) return;
+    if (requestedAdapters.has(selectedTemplate.id)) return;
+    setRequesting(true);
+    setRequestError(null);
     try {
-      await logRequest({
+      const res = await logRequest({
         data: {
           workspaceId,
           county: null,
@@ -609,9 +637,14 @@ function Assistant() {
           type: "template_adapter",
         },
       });
+      setRequestedAdapters((prev) => new Set(prev).add(selectedTemplate.id));
+      if (res?.email) setNotifyEmail(res.email);
       toast.success(`Logged — We'll Email You When ${selectedTemplate.title} Goes Live.`);
     } catch (e) {
+      setRequestError("Couldn't log your request — try again");
       toast.error(e instanceof Error ? e.message : "Could Not Log Request");
+    } finally {
+      setRequesting(false);
     }
   };
 
@@ -737,12 +770,42 @@ function Assistant() {
         </>
       ) : (
         <>
-          <Button className="w-full rounded-full" variant="outline" onClick={() => void requestTemplateAdapter()}>
-            <Sparkles className="mr-1 h-4 w-4" /> This Source Is Coming — Request Early Access
-          </Button>
-          <div className="text-center text-[11px] text-muted-foreground">
-            {selectedTemplate?.title} Is In Beta. We'll Email You The Day Its Adapter Goes Live.
-          </div>
+          {adapterRequested ? (
+            <>
+              <Button
+                disabled
+                variant="outline"
+                className="w-full rounded-full border-2 border-emerald-500 bg-emerald-500/10 font-semibold text-emerald-600 disabled:opacity-100 dark:text-emerald-400"
+              >
+                <Check className="mr-1 h-4 w-4" /> You're On The List
+              </Button>
+              <div className="text-center text-sm text-foreground/70">
+                We'll notify you at {notifyEmail ?? "your email"}
+                {selectedTemplate ? ` when ${selectedTemplate.title} goes live.` : "."}
+              </div>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                disabled={requesting}
+                className="h-9 w-full rounded-full border-2 border-primary bg-primary/5 font-semibold text-primary hover:bg-primary/10 hover:text-primary"
+                onClick={() => void requestTemplateAdapter()}
+              >
+                {requesting ? (
+                  <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Requesting…</>
+                ) : (
+                  <><BellPlus className="mr-1 h-4 w-4" /> This Source Is Coming — Request Early Access</>
+                )}
+              </Button>
+              {requestError && (
+                <div className="text-center text-sm text-destructive">{requestError}</div>
+              )}
+              <div className="text-center text-sm text-foreground/70">
+                {selectedTemplate?.title} is in beta — we'll email you the day it goes live.
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
