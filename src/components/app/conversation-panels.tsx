@@ -521,9 +521,8 @@ export function LeadProfilePanel({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-4">
-        <section>
-          <SectionTitle icon={UserRound} title="Contact" />
+      <div className="flex-1 overflow-y-auto p-2 divide-y">
+        <RailSection icon={UserRound} title="Lead" defaultOpen>
           <Field label="Phone">
             <PhoneLink phone={lead?.phone} showIcon={false} />
           </Field>
@@ -534,12 +533,20 @@ export function LeadProfilePanel({
             <Field label="Location">{[lead?.city, lead?.state, lead?.zip].filter(Boolean).join(", ")}</Field>
           )}
           {thread && <Field label="Last Contact">{relativeShort(thread.last_at)}</Field>}
-        </section>
+          {property && (
+            <div className="mt-2 pt-2 border-t">
+              <SectionTitle icon={Home} title="Property" />
+              {property.estimated_value && <Field label="Estimated Value">{property.estimated_value}</Field>}
+              {property.owner_since && <Field label="Owner Since">{property.owner_since}</Field>}
+              {property.sqft && <Field label="Square Feet">{property.sqft}</Field>}
+              {property.beds && <Field label="Beds">{property.beds}</Field>}
+              {property.tax_delinquent && <Field label="Tax Delinquent">{property.tax_delinquent}</Field>}
+              {property.violations && <Field label="Code Violations">{property.violations}</Field>}
+            </div>
+          )}
+        </RailSection>
 
-        <Separator />
-
-        <section>
-          <SectionTitle icon={MessageSquare} title="Campaign Context" />
+        <RailSection icon={MessageSquare} title="Campaign">
           <Field label="Campaign">{ctx?.campaign?.name ?? "Not In A Campaign"}</Field>
           {ctx?.campaign && (
             <>
@@ -580,29 +587,10 @@ export function LeadProfilePanel({
               Suppressed — Do Not Contact
             </Badge>
           )}
-        </section>
+        </RailSection>
 
-        {property && (
-          <>
-            <Separator />
-            <section>
-              <SectionTitle icon={Home} title="Property" />
-              {lead?.address && <Field label="Address">{lead.address}</Field>}
-              {property.estimated_value && <Field label="Estimated Value">{property.estimated_value}</Field>}
-              {property.owner_since && <Field label="Owner Since">{property.owner_since}</Field>}
-              {property.sqft && <Field label="Square Feet">{property.sqft}</Field>}
-              {property.beds && <Field label="Beds">{property.beds}</Field>}
-              {property.tax_delinquent && <Field label="Tax Delinquent">{property.tax_delinquent}</Field>}
-              {property.violations && <Field label="Code Violations">{property.violations}</Field>}
-            </section>
-          </>
-        )}
-
-        <Separator />
-
-        <section>
-          <SectionTitle icon={TagIcon} title="Tags" />
-          <div className="flex flex-wrap gap-1">
+        <RailSection icon={Sparkles} title="Activity">
+          <div className="flex flex-wrap gap-1 mb-3">
             {ctx?.tag && (
               <Badge variant="outline" className="text-[10px]" style={{ borderColor: ctx.tag.color, color: ctx.tag.color }}>
                 {ctx.tag.name}
@@ -618,18 +606,8 @@ export function LeadProfilePanel({
               <span className="text-xs text-muted-foreground">No Tags Yet.</span>
             )}
           </div>
-        </section>
-
-        <Separator />
-
-        <section>
-          <SectionTitle icon={Sparkles} title="AI Timeline" />
           <AiTimeline events={events} />
-        </section>
-
-        <Separator />
-
-        <section>
+          <div className="mt-3 pt-2 border-t">
           <SectionTitle icon={Copy} title="Notes" />
           <textarea
             value={notes}
@@ -638,9 +616,35 @@ export function LeadProfilePanel({
             className="w-full min-h-[72px] rounded-lg border bg-background p-2 text-xs resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           <p className="text-[10px] text-muted-foreground mt-1">Saved On This Device.</p>
-        </section>
+          </div>
+        </RailSection>
       </div>
     </Card>
+  );
+}
+
+/** Collapsible rail section — only expand what you need while replying. */
+function RailSection({
+  icon: Icon,
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  icon: typeof UserRound;
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} className="py-1">
+      <CollapsibleTrigger className="w-full flex items-center gap-1.5 px-1 py-2 cursor-pointer hover:bg-muted/40 rounded-md">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</span>
+        <ChevronDown className={cn("h-3.5 w-3.5 ml-auto text-muted-foreground transition-transform", open && "rotate-180")} />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="px-1 pb-2">{children}</CollapsibleContent>
+    </Collapsible>
   );
 }
 
