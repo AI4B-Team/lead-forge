@@ -13,7 +13,7 @@ import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assis
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
 import { StateMultiSelect } from "@/components/app/state-multi-select";
 import { countiesForState, parseCounty } from "@/lib/us-geo";
-import { UploadCloud, X, FileSpreadsheet } from "lucide-react";
+import { UploadCloud, X, FileSpreadsheet, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   attachmentMappedCount, isSpreadsheet, type UploadAttachment,
@@ -130,10 +130,47 @@ function Confidence({ value, show }: { value: number; show: boolean }) {
   );
 }
 
-function FieldLabel({ children, confidence, show }: { children: React.ReactNode; confidence?: number; show?: boolean }) {
+/**
+ * Click-to-open "?" hint. Popover (not a tooltip) so it works on touch and
+ * stays open while the user reads it.
+ */
+function HelpHint({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`What Does ${title} Mean?`}
+          className="text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" side="left" className="w-72 space-y-1">
+        <div className="text-sm font-semibold text-foreground">{title}</div>
+        <p className="text-xs leading-relaxed text-muted-foreground">{children}</p>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function FieldLabel({
+  children,
+  confidence,
+  show,
+  hint,
+  hintTitle,
+}: {
+  children: React.ReactNode;
+  confidence?: number;
+  show?: boolean;
+  hint?: string;
+  hintTitle?: string;
+}) {
   return (
     <div className="flex items-center gap-2">
       <Label>{children}</Label>
+      {hint ? <HelpHint title={hintTitle ?? (typeof children === "string" ? children : "This Field")}>{hint}</HelpHint> : null}
       {confidence ? <Confidence value={confidence} show={Boolean(show)} /> : null}
     </div>
   );
