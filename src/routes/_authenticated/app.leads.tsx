@@ -45,7 +45,7 @@ const DISPOSITION_TONE: Record<string, string> = {
   litigator: "bg-danger/10 text-danger border-danger/20",
 };
 
-function Stat({ icon, label, value, tone, help }: { icon: React.ReactNode; label: string; value: string; tone?: string; help?: string }) {
+function Stat({ icon, label, value, tone, help, sub }: { icon: React.ReactNode; label: string; value: string; tone?: string; help?: string; sub?: string }) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -68,6 +68,7 @@ function Stat({ icon, label, value, tone, help }: { icon: React.ReactNode; label
           )}
         </div>
         <div className={`mt-2 font-display text-2xl font-bold ${tone ?? "text-foreground"}`}>{value}</div>
+        {sub && <div className="mt-0.5 text-[11px] text-muted-foreground">{sub}</div>}
       </CardContent>
     </Card>
   );
