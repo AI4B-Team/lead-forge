@@ -1109,7 +1109,16 @@ function Assistant() {
                   </div>
                 )}
 
-                <div className="mt-4 shrink-0">{composerBox}</div>
+                <div className="mt-3 shrink-0">{composerBox}</div>
+                <div className="mt-2 shrink-0 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <CornerDownLeft className="h-3 w-3" /> Enter To Send · Shift + Enter For A New Line
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="text-[10px] uppercase">Beta</Badge>
+                    AI May Make Mistakes. You Review Everything Before Anything Runs.
+                  </span>
+                </div>
 
                 {started && (
                   <div className="mt-4 shrink-0 lg:hidden">
