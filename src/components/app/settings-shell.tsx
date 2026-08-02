@@ -13,6 +13,7 @@ import {
   BadgeCheck,
   ShieldCheck,
   Settings2,
+  Plug,
   type LucideIcon,
 } from "lucide-react";
 import { meIsSuperAdmin } from "@/lib/admin.functions";
@@ -31,6 +32,7 @@ type NavDef = {
     | "/app/registration"
     | "/app/compliance"
     | "/app/numbers"
+    | "/app/integrations"
     | "/app/admin";
   search?: { tab: "profile" | "security" | "notifications" };
 };
@@ -51,6 +53,12 @@ const GROUPS: { label: string; items: NavDef[] }[] = [
       { key: "workspace", label: "Workspace", icon: Building2, to: "/app/settings" },
       { key: "team", label: "Team", icon: Users, to: "/app/team" },
       { key: "numbers", label: "Numbers", icon: Smartphone, to: "/app/numbers" },
+    ],
+  },
+  {
+    label: "Connect",
+    items: [
+      { key: "integrations", label: "Integrations", icon: Plug, to: "/app/integrations" },
     ],
   },
   {
