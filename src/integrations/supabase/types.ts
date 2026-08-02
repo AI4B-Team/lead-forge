@@ -1436,6 +1436,7 @@ export type Database = {
       user_prefs: {
         Row: {
           checklist_collapsed: boolean
+          first_run_dismissed: boolean
           real_elite_user_id: string | null
           reviewed_clean_list: boolean
           theme: string
@@ -1446,6 +1447,7 @@ export type Database = {
         }
         Insert: {
           checklist_collapsed?: boolean
+          first_run_dismissed?: boolean
           real_elite_user_id?: string | null
           reviewed_clean_list?: boolean
           theme?: string
@@ -1456,6 +1458,7 @@ export type Database = {
         }
         Update: {
           checklist_collapsed?: boolean
+          first_run_dismissed?: boolean
           real_elite_user_id?: string | null
           reviewed_clean_list?: boolean
           theme?: string

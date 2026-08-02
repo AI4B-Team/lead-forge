@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getOnboarding, setOnboardingPref } from "@/lib/onboarding.functions";
 import { ProductTour } from "@/components/app/product-tour";
 import {
-  Check, ChevronDown, ChevronUp, X, Sparkles, Search, ListChecks, ShieldCheck, Phone, Send,
+  Check, ChevronDown, ChevronUp, X, Sparkles, Search, ListChecks, ShieldCheck, Phone, Send, Bot,
 } from "lucide-react";
 
 type Step = {
@@ -204,5 +204,108 @@ export function GettingStarted({ workspaceId }: { workspaceId: string | null }) 
         </CardContent>
       </Card>
     </>
+  );
+}
+
+/**
+ * Compact first-run companion for the Build page. Building a list is never
+ * gated on setup — the send-side prerequisites just stay visible so nothing
+ * gets skipped before launch. Dismissing it persists, after which the
+ * Dashboard becomes the user's default landing surface.
+ */
+export function FirstRunSetup({ workspaceId }: { workspaceId: string | null }) {
+  const load = useServerFn(getOnboarding);
+  const save = useServerFn(setOnboardingPref);
+  const qc = useQueryClient();
+
+  const { data } = useQuery({
+    queryKey: ["onboarding", workspaceId],
+    queryFn: () => load({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId,
+  });
+
+  const dismiss = useMutation({
+    mutationFn: () => save({ data: { firstRunDismissed: true } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["onboarding", workspaceId] }),
+  });
+
+  if (!data || data.firstRunDismissed) return null;
+
+  const items = [
+    {
+      key: "brand",
+      title: "Register Your Texting Brand",
+      body: "Carrier approval takes a few days — start it now.",
+      icon: <ShieldCheck className="h-4 w-4" />,
+      to: "/app/registration",
+      done: data.hasBrand,
+    },
+    {
+      key: "numbers",
+      title: "Add A Sending Number",
+      body: "Needed before any campaign can send.",
+      icon: <Phone className="h-4 w-4" />,
+      to: "/app/numbers",
+      done: data.hasNumbers,
+    },
+    {
+      key: "agent",
+      title: "Set Up Your AI Agent",
+      body: "Train it once so replies get handled for you.",
+      icon: <Bot className="h-4 w-4" />,
+      to: "/app/agent",
+      done: data.hasAgent,
+    },
+  ];
+
+  const doneCount = items.filter((i) => i.done).length;
+  if (doneCount === items.length) return null;
+
+  return (
+    <Card className="mb-6 border-primary/40">
+      <CardContent className="pt-5">
+        <div className="flex items-start gap-3">
+          <div className="flex-1">
+            <h2 className="font-display text-sm font-bold text-foreground">Finish Setup Before You Launch</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Build Your First List Right Now — These Only Matter When You're Ready To Send.
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label="Dismiss setup checklist"
+            onClick={() => dismiss.mutate()}
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <ul className="mt-3 space-y-2">
+          {items.map((i) => (
+            <li key={i.key} className="flex items-center gap-3">
+              <div
+                className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${
+                  i.done ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {i.done ? <Check className="h-4 w-4" /> : i.icon}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className={`text-sm font-medium ${i.done ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                  {i.title}
+                </div>
+                {!i.done && <div className="text-xs text-muted-foreground">{i.body}</div>}
+              </div>
+              {!i.done && (
+                <Button asChild size="sm" variant="outline" className="rounded-full shrink-0">
+                  <Link to={i.to}>Set Up</Link>
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }

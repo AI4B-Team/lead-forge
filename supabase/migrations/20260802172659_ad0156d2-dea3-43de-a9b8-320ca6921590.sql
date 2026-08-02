@@ -1,0 +1,1 @@
+ALTER TABLE public.user_prefs ADD COLUMN IF NOT EXISTS first_run_dismissed boolean NOT NULL DEFAULT false;
