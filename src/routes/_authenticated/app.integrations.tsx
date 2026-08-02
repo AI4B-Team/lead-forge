@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
-  Webhook, KeyRound, Zap, Link2, Sheet, Mail, Plug, ChevronDown,
+  Webhook, Zap, Link2, Sheet, Mail, Plug, ChevronDown,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { WebhookEndpoints } from "@/components/app/webhook-endpoints";
 import { HubConnection } from "@/components/app/hub-connection";
 import { listWebhooks } from "@/lib/monitoring.functions";
 import { getHubLink } from "@/lib/hub.functions";
@@ -40,7 +39,8 @@ type Connector = {
   description: string;
   icon: LucideIcon;
   status: Status;
-  detail?: "webhooks" | "hub";
+  detail?: "hub";
+  href?: string;
 };
 
 function IntegrationsPage() {
@@ -74,7 +74,7 @@ function IntegrationsPage() {
           description: "Push List, Lead, And Reply Events To Any Endpoint.",
           icon: Webhook,
           status: hookCount > 0 ? "connected" : "not_connected",
-          detail: "webhooks",
+          href: "/app/api#webhooks",
         },
         {
           key: "zapier",
@@ -144,7 +144,6 @@ function IntegrationsPage() {
 
               {g.items.some((c) => c.detail && open === c.key) && (
                 <div className="mt-4">
-                  {open === "webhooks" && <WebhookEndpoints />}
                   {open === "hub" && <HubConnection />}
                 </div>
               )}
@@ -204,7 +203,11 @@ function ConnectorCard({
       <p className="mt-1 flex-1 text-xs text-muted-foreground">{connector.description}</p>
 
       <div className="mt-3">
-        {connector.detail ? (
+        {connector.href ? (
+          <Button variant="outline" size="sm" className="rounded-full" asChild>
+            <a href={connector.href}>{connected ? "Manage" : "Set Up"}</a>
+          </Button>
+        ) : connector.detail ? (
           <Button
             variant={expanded ? "secondary" : "outline"}
             size="sm"
