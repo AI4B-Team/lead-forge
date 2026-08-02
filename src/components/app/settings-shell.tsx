@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Settings2,
   Plug,
+  KeyRound,
   type LucideIcon,
 } from "lucide-react";
 import { meIsSuperAdmin } from "@/lib/admin.functions";
@@ -33,6 +34,7 @@ type NavDef = {
     | "/app/compliance"
     | "/app/numbers"
     | "/app/integrations"
+    | "/app/api"
     | "/app/admin";
   search?: { tab: "profile" | "security" | "notifications" };
 };
@@ -59,6 +61,7 @@ const GROUPS: { label: string; items: NavDef[] }[] = [
     label: "Connect",
     items: [
       { key: "integrations", label: "Integrations", icon: Plug, to: "/app/integrations" },
+      { key: "api", label: "API", icon: KeyRound, to: "/app/api" },
     ],
   },
   {
