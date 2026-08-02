@@ -719,7 +719,7 @@ function LeadsBrowser({ jobId, disabled, open, onOpenChange, bucket, onBucketCha
                 {l.email && <span>{l.email}</span>}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
-                {[l.address, l.city, l.state].filter(Boolean).join(", ") || "—"}
+                {formatLocation(l.city, l.state, l.address) || "—"}
               </div>
             </button>
           ))}
