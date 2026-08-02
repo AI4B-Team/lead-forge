@@ -69,10 +69,12 @@ function AddSourceDialog({
   spec,
   brandId,
   items,
+  trigger = "card",
 }: {
   spec: KnowledgeCardSpec;
   brandId: string;
   items: KnowledgeItem[];
+  trigger?: "card" | "row";
 }) {
   const qc = useQueryClient();
   const add = useServerFn(addBotKnowledge);
@@ -229,9 +231,15 @@ function AddSourceDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="mt-4 w-full rounded-full">
-          <Plus className="mr-1 h-3.5 w-3.5" /> {spec.addLabel}
-        </Button>
+        {trigger === "row" ? (
+          <Button size="sm" variant="ghost" className="h-8 shrink-0 rounded-full px-3 text-xs text-primary">
+            {items.length ? "Manage" : "Add"} <ChevronRight className="ml-0.5 h-3.5 w-3.5" />
+          </Button>
+        ) : (
+          <Button size="sm" variant="outline" className="mt-4 w-full rounded-full">
+            <Plus className="mr-1 h-3.5 w-3.5" /> {spec.addLabel}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
