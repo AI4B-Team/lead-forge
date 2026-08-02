@@ -314,9 +314,17 @@ function InboundCallCard({
         <div className="flex-1">
           <div className="font-display font-bold text-foreground">Inbound Call Handling</div>
           <div className="text-sm text-muted-foreground">
-            {currentForward
-              ? `Calls To Your Pool Forward To ${currentForward}. Unanswered Calls Leave A Voicemail With A Transcript In Your Inbox.`
-              : "Leads Will Call The Numbers That Text Them. Forward Those Calls To Your Phone, Or Let Voicemail Catch Them — Recordings And Transcripts Land In Your Inbox."}
+            {currentForward ? (
+              <>
+                Calls To Your Pool Forward To {currentForward}. Unanswered Calls Leave A Voicemail With A Transcript In Your Inbox.
+              </>
+            ) : (
+              <>
+                Leads Will Call The Numbers That Text Them. Forward Those Calls To Your Phone, Or Let Voicemail Catch Them.
+                <br />
+                Recordings And Transcripts Land In Your Inbox.
+              </>
+            )}
           </div>
           {total > 0 && unforwarded > 0 && (
             <div className="mt-1 text-xs text-warn">
