@@ -5,7 +5,7 @@
 // the inbound reply bot's knowledge brief picks it up automatically.
 // ---------------------------------------------------------------------------
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -47,7 +47,6 @@ import {
   addBotKnowledgeFromUrls,
   deleteBotKnowledge,
 } from "@/lib/bot-training.functions";
-import { agentIntelligence } from "@/lib/agent-intelligence.shared";
 import {
   KNOWLEDGE_CARDS,
   TEXTUAL_FILE,
@@ -72,14 +71,11 @@ function AddSourceDialog({
   brandId,
   items,
   trigger = "card",
-  rowContent,
 }: {
   spec: KnowledgeCardSpec;
   brandId: string;
   items: KnowledgeItem[];
-  trigger?: "card" | "row" | "rowFull";
-  /** Whole-row trigger content — the entire row becomes the click target. */
-  rowContent?: ReactNode;
+  trigger?: "card" | "row";
 }) {
   const qc = useQueryClient();
   const add = useServerFn(addBotKnowledge);
@@ -236,14 +232,7 @@ function AddSourceDialog({
       }}
     >
       <DialogTrigger asChild>
-        {trigger === "rowFull" ? (
-          <button
-            type="button"
-            className="w-full cursor-pointer px-4 py-3 text-left transition hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
-          >
-            {rowContent}
-          </button>
-        ) : trigger === "row" ? (
+        {trigger === "row" ? (
           <Button size="sm" variant="ghost" className="h-8 shrink-0 rounded-full px-3 text-xs text-primary">
             {items.length ? "Manage" : "Add"} <ChevronRight className="ml-0.5 h-3.5 w-3.5" />
           </Button>
@@ -534,56 +523,40 @@ export function KnowledgeSourceList({
   brandId?: string;
   sources?: KnowledgeItem[];
 }) {
-  const { categories } = agentIntelligence(sources);
-
   return (
-    <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="divide-y divide-border rounded-2xl border border-border bg-card">
       {KNOWLEDGE_CARDS.map((spec) => {
         const Icon = ICONS[spec.key] ?? FileText;
         const items = sources.filter((s) => s.category === spec.key);
-        const progress = categories.find((c) => c.key === spec.key)?.progress ?? 0;
-        const added = items.length > 0;
-        const count = items.length;
-
-        const row = (
-          <div className="flex items-center gap-3">
-            <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                added ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
+        return (
+          <div
+            key={spec.key}
+            id={`knowledge-card-${spec.key}`}
+            className="flex scroll-mt-24 items-center gap-3 px-4 py-2.5"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Icon className="h-3.5 w-3.5" />
             </span>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="truncate text-sm font-semibold text-foreground">{spec.title}</span>
-                {added && <Check className="h-3.5 w-3.5 shrink-0 text-success" />}
-              </div>
+              <div className="truncate text-sm font-semibold text-foreground">{spec.title}</div>
               <div className="truncate text-[11px] text-muted-foreground">{spec.action}</div>
-              {/* Progress, not a status word — the bar makes growth visible. */}
-              <div className="mt-1.5 h-1.5 w-full max-w-[380px] overflow-hidden rounded-full bg-muted">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${added ? "bg-success" : "bg-transparent"}`}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
             </div>
-            <div className="shrink-0 text-right">
-              <div className={`text-xs font-semibold tabular-nums ${added ? "text-foreground" : "text-muted-foreground/70"}`}>
-                {added ? `${count} ${count === 1 ? spec.unit : `${spec.unit}s`}` : `0 ${spec.unit}s`}
-              </div>
-              <div className="text-[11px] text-muted-foreground/80">{added ? "Indexed" : "Nothing Yet"}</div>
+            <div className="shrink-0 text-xs">
+              {items.length === 0 ? (
+                <span className="text-muted-foreground/70">Missing</span>
+              ) : (
+                <span className="inline-flex items-center gap-1 font-medium text-success">
+                  <Check className="h-3.5 w-3.5" />
+                  {items.length} {items.length === 1 ? spec.unit : `${spec.unit}s`}
+                </span>
+              )}
             </div>
-            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" />
-          </div>
-        );
-
-        return (
-          <div key={spec.key} id={`knowledge-card-${spec.key}`} className="scroll-mt-24">
             {brandId ? (
-              <AddSourceDialog spec={spec} brandId={brandId} items={items} trigger="rowFull" rowContent={row} />
+              <AddSourceDialog spec={spec} brandId={brandId} items={items} trigger="row" />
             ) : (
-              <div className="px-4 py-3 opacity-70">{row}</div>
+              <Button size="sm" variant="ghost" className="h-8 shrink-0 rounded-full px-3 text-xs" disabled>
+                <Lock className="h-3.5 w-3.5" />
+              </Button>
             )}
           </div>
         );
