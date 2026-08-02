@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Mic, MicOff, Paperclip, Loader2, Trash2, Sparkles } from "lucide-react";
+import { Mic, MicOff, Paperclip, Loader2, Trash2, Sparkles, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { addBotKnowledge, deleteBotKnowledge } from "@/lib/bot-training.functions";
@@ -33,6 +33,14 @@ function getRecognition(): SpeechRecognitionLike | null {
   return Ctor ? new Ctor() : null;
 }
 
+const EXAMPLES = [
+  "Explain Your Services",
+  "Paste Your FAQs",
+  "Describe Your Ideal Customer",
+  "Paste Your Sales Script",
+  "What You Never Promise",
+] as const;
+
 export function AgentComposer({ brandId }: { brandId: string }) {
   const qc = useQueryClient();
   const add = useServerFn(addBotKnowledge);
@@ -41,6 +49,12 @@ export function AgentComposer({ brandId }: { brandId: string }) {
   const [listening, setListening] = useState(false);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const textRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const insert = (snippet: string) => {
+    setText((prev) => (prev.trim() ? `${prev.trim()}\n${snippet}` : snippet));
+    textRef.current?.focus();
+  };
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["bot-knowledge", `brand:${brandId}`] });
 
@@ -127,15 +141,17 @@ export function AgentComposer({ brandId }: { brandId: string }) {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-3">
+    <div>
+    <div className="rounded-2xl border border-border bg-background p-3 shadow-sm">
       <Textarea
+        ref={textRef}
         rows={3}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Who you are, what you offer, how you talk, what you never promise…"
+        placeholder="Paste anything — what you do, your FAQs, a sales script, a call transcript, or just your website link…"
         className="min-h-[84px] resize-none border-0 bg-transparent px-1 py-1 shadow-none focus-visible:ring-0"
       />
-      <div className="mt-1 flex items-center gap-1.5">
+      <div className="mt-1 flex items-center gap-1">
         <Button
           type="button"
           size="sm"
@@ -143,7 +159,16 @@ export function AgentComposer({ brandId }: { brandId: string }) {
           className="h-8 rounded-full px-2.5 text-muted-foreground"
           onClick={() => fileRef.current?.click()}
         >
-          <Paperclip className="mr-1 h-3.5 w-3.5" /> Attach
+          <Paperclip className="mr-1 h-3.5 w-3.5" /> Attach Files
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-8 rounded-full px-2.5 text-muted-foreground"
+          onClick={() => insert("https://")}
+        >
+          <Link2 className="mr-1 h-3.5 w-3.5" /> Paste Website
         </Button>
         <Button
           type="button"
@@ -152,7 +177,7 @@ export function AgentComposer({ brandId }: { brandId: string }) {
           className={`h-8 rounded-full px-2.5 ${listening ? "" : "text-muted-foreground"}`}
           onClick={toggleMic}
         >
-          {listening ? <><MicOff className="mr-1 h-3.5 w-3.5" /> Stop</> : <><Mic className="mr-1 h-3.5 w-3.5" /> Dictate</>}
+          {listening ? <><MicOff className="mr-1 h-3.5 w-3.5" /> Stop</> : <><Mic className="mr-1 h-3.5 w-3.5" /> Start Dictating</>}
         </Button>
         {listening && (
           <span className="flex items-center gap-1 text-[11px] text-primary">
@@ -181,6 +206,22 @@ export function AgentComposer({ brandId }: { brandId: string }) {
           if (files.length) void attach(files);
         }}
       />
+    </div>
+      <div className="mt-3">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Examples</div>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {EXAMPLES.map((e) => (
+            <button
+              key={e}
+              type="button"
+              onClick={() => insert(`${e}: `)}
+              className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-surface-muted"
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
