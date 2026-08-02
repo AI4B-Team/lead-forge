@@ -7,13 +7,14 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { HelpHint } from "@/components/app/help-hint";
 import { INDUSTRIES, COUNTIES } from "@/lib/mock-data";
 import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
 import { StateMultiSelect } from "@/components/app/state-multi-select";
 import { countiesForState, parseCounty } from "@/lib/us-geo";
-import { UploadCloud, X, FileSpreadsheet, HelpCircle } from "lucide-react";
+import { UploadCloud, X, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   attachmentMappedCount, isSpreadsheet, type UploadAttachment,
@@ -130,30 +131,6 @@ function Confidence({ value, show }: { value: number; show: boolean }) {
     <span className="rounded-full bg-success/12 px-1.5 py-0.5 text-[10px] font-semibold text-success">
       {value}%
     </span>
-  );
-}
-
-/**
- * Click-to-open "?" hint. Popover (not a tooltip) so it works on touch and
- * stays open while the user reads it.
- */
-function HelpHint({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={`What Does ${title} Mean?`}
-          className="text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <HelpCircle className="h-3.5 w-3.5" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" side="left" className="w-72 space-y-1">
-        <div className="text-sm font-semibold text-foreground">{title}</div>
-        <p className="text-xs leading-relaxed text-muted-foreground">{children}</p>
-      </PopoverContent>
-    </Popover>
   );
 }
 
