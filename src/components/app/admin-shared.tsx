@@ -16,6 +16,7 @@ export type WsRow = {
   billing_plan: string | null;
   monthly_sms_cap: number | null;
   owner_email: string;
+  created_at?: string;
   stats: { leads: number; sent: number; sent_month: number; numbers: number };
 };
 
