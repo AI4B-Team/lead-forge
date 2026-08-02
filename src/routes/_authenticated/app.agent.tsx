@@ -162,7 +162,12 @@ function AgentPage() {
     enabled: !!agent,
   });
   const sources = knowledge ?? [];
-  const buckets = bucketKnowledge(sources);
+  const catCounts = KNOWLEDGE_CARDS.map((c) => ({
+    key: c.key,
+    label: c.title,
+    unit: c.unit,
+    count: sources.filter((x) => x.category === c.key).length,
+  }));
   const score = knowledgeScore(sources);
   const totalChars = sources.reduce((a, s) => a + s.chars, 0);
   const lastTrained = sources[0]?.created_at;
