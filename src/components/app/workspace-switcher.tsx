@@ -83,15 +83,16 @@ export function WorkspaceSwitcher() {
             <div className="pt-1 text-xs text-muted-foreground">
               <span className="font-medium text-foreground/70">Examples:</span>{" "}
               {["Tampa Roofing", "Chicago Investors", "Client: ABC Plumbing"].map((ex, i) => (
-                <button
-                  key={ex}
-                  type="button"
-                  onClick={() => setName(ex)}
-                  className="cursor-pointer underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground"
-                >
-                  {i > 0 ? <span className="no-underline">{" · "}</span> : null}
-                  {ex}
-                </button>
+                <span key={ex}>
+                  {i > 0 ? " · " : null}
+                  <button
+                    type="button"
+                    onClick={() => setName(ex)}
+                    className="cursor-pointer underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground"
+                  >
+                    {ex}
+                  </button>
+                </span>
               ))}
             </div>
           </div>
