@@ -588,8 +588,31 @@ function Assistant() {
     }
   };
 
+  /** Waitlist click for a source whose adapter isn't wired yet (roadmap signal). */
+  const requestTemplateAdapter = async () => {
+    if (!workspaceId || !selectedTemplate) return;
+    try {
+      await logRequest({
+        data: {
+          workspaceId,
+          county: null,
+          recordType: selectedTemplate.title,
+          templateId: selectedTemplate.id,
+          type: "template_adapter",
+        },
+      });
+      toast.success(`Logged — We'll Email You When ${selectedTemplate.title} Goes Live.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Log Request");
+    }
+  };
+
   const reviewAndRun = async () => {
     if (!workspaceId) return;
+    if (!adapterLive) {
+      void requestTemplateAdapter();
+      return;
+    }
     if (!confirmed) {
       setConfirmed(true);
       return;
