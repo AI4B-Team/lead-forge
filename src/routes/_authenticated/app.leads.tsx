@@ -175,13 +175,15 @@ function LeadsPageInner() {
         description="Every Record You Own, De-Duplicated Across Every List."
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Stat icon={<Users className="h-4 w-4" />} label="Total Leads" value={(stats?.total ?? 0).toLocaleString()} />
-        <Stat icon={<ShieldCheck className="h-4 w-4" />} label="Clean / Textable" value={(stats?.clean ?? 0).toLocaleString()} tone="text-success" />
-        <Stat icon={<ShieldAlert className="h-4 w-4" />} label="DNC Suppressed" value={(stats?.dnc ?? 0).toLocaleString()} tone="text-warn" />
-        <Stat icon={<Ban className="h-4 w-4" />} label="Litigators Blocked" value={(stats?.litigator ?? 0).toLocaleString()} tone="text-danger" />
-        <Stat icon={<Sparkles className="h-4 w-4" />} label="New This Week" value={(stats?.newThisWeek ?? 0).toLocaleString()} tone="text-primary" />
-      </div>
+      <TooltipProvider>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <Stat icon={<Users className="h-4 w-4" />} label="Total Leads" value={(stats?.total ?? 0).toLocaleString()} help="The total number of unique lead records across every list in this workspace, after de-duplication." />
+          <Stat icon={<ShieldCheck className="h-4 w-4" />} label="Clean / Textable" value={(stats?.clean ?? 0).toLocaleString()} tone="text-success" help="Leads that passed DNC, litigator, and line-type checks and are safe to message." />
+          <Stat icon={<ShieldAlert className="h-4 w-4" />} label="DNC Suppressed" value={(stats?.dnc ?? 0).toLocaleString()} tone="text-warn" help="Leads suppressed because they matched the Do Not Call list or opted out." />
+          <Stat icon={<Ban className="h-4 w-4" />} label="Litigators Blocked" value={(stats?.litigator ?? 0).toLocaleString()} tone="text-danger" help="Leads flagged as known litigators or serial TCPA plaintiffs and blocked from outreach." />
+          <Stat icon={<Sparkles className="h-4 w-4" />} label="New This Week" value={(stats?.newThisWeek ?? 0).toLocaleString()} tone="text-primary" help="New lead records first seen in the last 7 days across any list." />
+        </div>
+      </TooltipProvider>
 
       {(stats?.multiList ?? 0) > 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
