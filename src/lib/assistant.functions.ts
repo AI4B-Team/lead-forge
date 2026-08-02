@@ -88,6 +88,9 @@ export const requestCoverage = createServerFn({ method: "POST" })
         geo: z.string().max(200).nullable().default(null),
         frequency: z.enum(["one_time", "daily", "weekly", "monthly"]).default("one_time"),
         notes: z.string().max(2000).nullable().default(null),
+        loginRequired: z
+          .enum(["none", "free_public_records", "restricted_platform", "unsure"])
+          .default("none"),
       })
       .parse(input),
   )
@@ -101,6 +104,7 @@ export const requestCoverage = createServerFn({ method: "POST" })
       geo: data.geo,
       frequency: data.frequency,
       notes: data.notes,
+      loginRequired: data.loginRequired,
     });
 
     // Beta waitlist clicks are idempotent — one row per workspace + template.
@@ -119,6 +123,8 @@ export const requestCoverage = createServerFn({ method: "POST" })
           alreadyRequested: true,
           screened: false,
           reason: null as string | null,
+          tier: "standard" as const,
+          outreach: screen.outreach,
         };
       }
     }
@@ -135,18 +141,25 @@ export const requestCoverage = createServerFn({ method: "POST" })
       frequency: data.frequency,
       notes: data.notes,
       requested_by: context.userId,
-      status: screen.ok ? "queued" : "screened_out",
-      screening_reason: screen.ok ? null : screen.reason,
+      login_required: data.loginRequired,
+      risk_tier: screen.tier,
+      status: TIER_STATUS[screen.tier],
+      screening_reason: screen.reason,
+      outreach_level: screen.outreach.level,
+      outreach_note: screen.outreach.text,
     });
     if (error) throw new Error(error.message);
     {
       const { logActivity } = await import("./activity.server");
       await logActivity(context.supabase, data.workspaceId, {
         type: "adapter_requested",
-        summary: screen.ok
-          ? `Source Requested — ${label ?? data.templateId ?? "New Source"}`
-          : `Source Request Not Buildable — ${label ?? "New Source"}`,
-        detail: screen.ok ? data.county ?? data.recordType ?? data.targetUrl ?? null : screen.reason,
+        summary:
+          screen.tier === "standard"
+            ? `Source Requested — ${label ?? data.templateId ?? "New Source"}`
+            : screen.tier === "review"
+              ? `Source Request Flagged For Review — ${label ?? "New Source"}`
+              : `Source Request Not Buildable — ${label ?? "New Source"}`,
+        detail: screen.reason ?? data.county ?? data.recordType ?? data.targetUrl ?? null,
         refType: "template",
       });
     }
@@ -154,8 +167,10 @@ export const requestCoverage = createServerFn({ method: "POST" })
       ok: screen.ok,
       email: context.claims?.email ?? null,
       alreadyRequested: false,
-      screened: !screen.ok,
-      reason: screen.ok ? null : screen.reason,
+      screened: screen.tier === "rejected",
+      reason: screen.reason,
+      tier: screen.tier,
+      outreach: screen.outreach,
     };
   });
 
