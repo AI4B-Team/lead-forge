@@ -34,7 +34,7 @@ import { TemplatePickerDialog } from "@/components/app/template-picker-dialog";
 import { useOverflow } from "@/hooks/use-overflow";
 import { US_STATES } from "@/lib/us-geo";
 import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@/lib/recent-templates";
-import { takeStashedPrompt, clearStashedPrompt } from "@/lib/prompt-handoff";
+import { takeStashedHandoff, clearStashedPrompt } from "@/lib/prompt-handoff";
 
 export const Route = createFileRoute("/_authenticated/app/assistant")({
   validateSearch: z.object({
@@ -137,6 +137,8 @@ function Assistant() {
   const lastTemplateId = useRef<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const sentPrompt = useRef(false);
+  /** Handoff text waiting for its template selection to land before sending. */
+  const pendingHandoff = useRef<{ templateId: string; text: string } | null>(null);
   const restored = useRef(false);
   const composer = useRef<HTMLTextAreaElement>(null);
   const specScroll = useOverflow<HTMLDivElement>();
