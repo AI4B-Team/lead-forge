@@ -21,7 +21,7 @@ import {
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { listBrands } from "@/lib/brands.functions";
 import { listBotKnowledge } from "@/lib/bot-training.functions";
-import { Brain, CheckCircle2, Globe, MessageSquareQuote, Plus, RefreshCw } from "lucide-react";
+import { Brain, CheckCircle2, FileStack, FileText, Globe, MessageSquareQuote, Plus, RefreshCw, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/brands")({
   head: () => ({
