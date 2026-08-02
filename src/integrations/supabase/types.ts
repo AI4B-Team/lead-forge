@@ -374,6 +374,7 @@ export type Database = {
           drop_size: number
           drop_times: string[]
           duplicate_policy: string
+          forward_calls_to: string | null
           id: string
           list_job_id: string | null
           name: string
@@ -392,6 +393,7 @@ export type Database = {
           drop_size?: number
           drop_times?: string[]
           duplicate_policy?: string
+          forward_calls_to?: string | null
           id?: string
           list_job_id?: string | null
           name: string
@@ -410,6 +412,7 @@ export type Database = {
           drop_size?: number
           drop_times?: string[]
           duplicate_policy?: string
+          forward_calls_to?: string | null
           id?: string
           list_job_id?: string | null
           name?: string
@@ -1140,7 +1143,9 @@ export type Database = {
       messages: {
         Row: {
           body: string | null
+          call_event: string | null
           campaign_id: string | null
+          channel: string
           created_at: string
           direction: string
           error_code: string | null
@@ -1151,14 +1156,19 @@ export type Database = {
           lead_id: string | null
           provider_sid: string | null
           read_at: string | null
+          recording_seconds: number | null
+          recording_url: string | null
           sending_number_id: string | null
           status: string | null
           thread_key: string | null
+          transcript: string | null
           workspace_id: string
         }
         Insert: {
           body?: string | null
+          call_event?: string | null
           campaign_id?: string | null
+          channel?: string
           created_at?: string
           direction: string
           error_code?: string | null
@@ -1169,14 +1179,19 @@ export type Database = {
           lead_id?: string | null
           provider_sid?: string | null
           read_at?: string | null
+          recording_seconds?: number | null
+          recording_url?: string | null
           sending_number_id?: string | null
           status?: string | null
           thread_key?: string | null
+          transcript?: string | null
           workspace_id: string
         }
         Update: {
           body?: string | null
+          call_event?: string | null
           campaign_id?: string | null
+          channel?: string
           created_at?: string
           direction?: string
           error_code?: string | null
@@ -1187,9 +1202,12 @@ export type Database = {
           lead_id?: string | null
           provider_sid?: string | null
           read_at?: string | null
+          recording_seconds?: number | null
+          recording_url?: string | null
           sending_number_id?: string | null
           status?: string | null
           thread_key?: string | null
+          transcript?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -1512,6 +1530,8 @@ export type Database = {
           optout_rate: number | null
           phone: string
           provider_sid: string | null
+          recording_disclosure: boolean
+          recording_enabled: boolean
           region: string | null
           status: string | null
           voicemail_greeting: string | null
@@ -1527,6 +1547,8 @@ export type Database = {
           optout_rate?: number | null
           phone: string
           provider_sid?: string | null
+          recording_disclosure?: boolean
+          recording_enabled?: boolean
           region?: string | null
           status?: string | null
           voicemail_greeting?: string | null
@@ -1542,6 +1564,8 @@ export type Database = {
           optout_rate?: number | null
           phone?: string
           provider_sid?: string | null
+          recording_disclosure?: boolean
+          recording_enabled?: boolean
           region?: string | null
           status?: string | null
           voicemail_greeting?: string | null

@@ -29,6 +29,7 @@ import {
 } from "@/lib/inbox.functions";
 import { listQuickReplies, createQuickReply, listTags } from "@/lib/tags.functions";
 import { LeadTagBar } from "@/components/app/lead-tag-picker";
+import { VoiceMessageItem } from "@/components/app/voice-message-item";
 import { listNumbers } from "@/lib/numbers.functions";
 import {
   AiActivityPill,
@@ -510,7 +511,17 @@ function ConversationsPage() {
                     <AiActivityPill label="AI Composing" />
                   </div>
                 )}
-                {[...(threadQ.data?.messages ?? [])].reverse().map((m) => (
+                {[...(threadQ.data?.messages ?? [])].reverse().map((m) =>
+                  (m as { channel?: string | null }).channel === "voice" ? (
+                    <VoiceMessageItem
+                      key={m.id}
+                      event={(m as { call_event?: string | null }).call_event ?? null}
+                      createdAt={m.created_at}
+                      recordingUrl={(m as { recording_url?: string | null }).recording_url ?? null}
+                      seconds={(m as { recording_seconds?: number | null }).recording_seconds ?? null}
+                      transcript={(m as { transcript?: string | null }).transcript ?? null}
+                    />
+                  ) : (
                   <div key={m.id} className={cn("flex", m.direction === "outbound" ? "justify-end" : "justify-start")}>
                     <div
                       className={cn(
@@ -538,7 +549,8 @@ function ConversationsPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  ),
+                )}
               </div>
 
               {/* Bottom: suggested replies, no-number banner, snippets, composer — pinned to fold */}

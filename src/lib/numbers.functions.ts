@@ -349,16 +349,24 @@ export const isSendingAllowed = createServerFn({ method: "GET" })
       .maybeSingle();
     return { allowed: reg?.campaign_status === "approved" };
   });
-/** Inbound call handling: forward to a real phone, or fall back to voicemail. */
+/**
+ * Inbound call handling: forward to a real phone, or fall back to voicemail.
+ * Scoped, not pool-hardcoded: "pool" is today's default, while "numbers" and
+ * "campaign" reuse the same contract when narrower routing ships.
+ */
 export const updateInboundSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
       .object({
         workspaceId: z.string().uuid(),
+        scope: z.enum(["pool", "numbers", "campaign"]).default("pool"),
         numberIds: z.array(z.string().uuid()).min(1).optional(),
+        campaignId: z.string().uuid().optional(),
         forwardCallsTo: z.string().max(20).nullable(),
         voicemailGreeting: z.string().max(500).nullable(),
+        recordingEnabled: z.boolean().default(false),
+        recordingDisclosure: z.boolean().default(false),
       })
       .parse(input),
   )
@@ -369,16 +377,31 @@ export const updateInboundSettings = createServerFn({ method: "POST" })
     }
     const forward = digits ? (digits.length === 10 ? `+1${digits}` : `+${digits}`) : null;
 
+    // Per-campaign routing: store the override on the campaign, leave the pool
+    // default untouched so campaign callbacks can reach a different rep.
+    if (data.scope === "campaign") {
+      if (!data.campaignId) throw new Error("Pick a campaign to route callbacks for.");
+      const { error: cErr } = await context.supabase
+        .from("campaigns")
+        .update({ forward_calls_to: forward } as never)
+        .eq("id", data.campaignId)
+        .eq("workspace_id", data.workspaceId);
+      if (cErr) throw cErr;
+      return { ok: true, forwardCallsTo: forward, scope: data.scope };
+    }
+
     let q = context.supabase
       .from("sending_numbers")
       .update({
         forward_calls_to: forward,
         voicemail_greeting: data.voicemailGreeting?.trim() || null,
+        recording_enabled: data.recordingEnabled,
+        recording_disclosure: data.recordingEnabled ? data.recordingDisclosure : false,
       } as never)
       .eq("workspace_id", data.workspaceId);
-    if (data.numberIds?.length) q = q.in("id", data.numberIds);
+    if (data.scope === "numbers" && data.numberIds?.length) q = q.in("id", data.numberIds);
 
     const { error } = await q;
     if (error) throw error;
-    return { ok: true, forwardCallsTo: forward };
+    return { ok: true, forwardCallsTo: forward, scope: data.scope };
   });
