@@ -310,6 +310,7 @@ function Jobs() {
           value={summary.total.toLocaleString()}
           icon={Layers}
           help="Every list you've built in this workspace."
+          hint={`${summary.builtThisWeek} built this week`}
         />
         <StatTile
           label="Clean Leads"
