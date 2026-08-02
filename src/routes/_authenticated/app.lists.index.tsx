@@ -132,6 +132,39 @@ function Jobs() {
     };
   }, [allRows]);
 
+  // Recurring framing (§ runs under lists): where a list has a recurring
+  // cadence, its runs collapse under one row — latest run on top, prior runs
+  // revealed on expand. One-off lists keep rendering as single rows.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleGroup = (key: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  const entries = useMemo(() => {
+    const byKey = new Map<string, typeof rows>();
+    for (const r of rows) {
+      const arr = byKey.get(r.group_key);
+      if (arr) arr.push(r);
+      else byKey.set(r.group_key, [r]);
+    }
+    const out: { latest: (typeof rows)[number]; prior: typeof rows }[] = [];
+    for (const group of byKey.values()) {
+      const ordered = [...group].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+      const recurring = ordered.some((r) => r.schedule && r.schedule !== "one_time");
+      if (recurring && ordered.length > 1) out.push({ latest: ordered[0]!, prior: ordered.slice(1) });
+      else for (const r of ordered) out.push({ latest: r, prior: [] });
+    }
+    return out.sort(
+      (a, b) => new Date(b.latest.created_at).getTime() - new Date(a.latest.created_at).getTime(),
+    );
+  }, [rows]);
+
   return (
     <div>
       <PageHeader
