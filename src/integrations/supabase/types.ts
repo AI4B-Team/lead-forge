@@ -413,20 +413,26 @@ export type Database = {
       feedback: {
         Row: {
           body: string
+          category: string | null
           created_at: string
           id: string
+          screenshot_url: string | null
           user_id: string
         }
         Insert: {
           body: string
+          category?: string | null
           created_at?: string
           id?: string
+          screenshot_url?: string | null
           user_id: string
         }
         Update: {
           body?: string
+          category?: string | null
           created_at?: string
           id?: string
+          screenshot_url?: string | null
           user_id?: string
         }
         Relationships: []
