@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { jobSpecSchema, specStates } from "@/lib/assistant.shared";
-import { screenSourceRequest } from "@/lib/source-request.shared";
+import { screenSourceRequest, TIER_STATUS } from "@/lib/source-request.shared";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
