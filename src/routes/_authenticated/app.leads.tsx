@@ -45,7 +45,7 @@ const DISPOSITION_TONE: Record<string, string> = {
   litigator: "bg-danger/10 text-danger border-danger/20",
 };
 
-function Stat({ icon, label, value, tone, help }: { icon: React.ReactNode; label: string; value: string; tone?: string; help?: string }) {
+function Stat({ icon, label, value, tone, help, sub }: { icon: React.ReactNode; label: string; value: string; tone?: string; help?: string; sub?: string }) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -68,6 +68,7 @@ function Stat({ icon, label, value, tone, help }: { icon: React.ReactNode; label
           )}
         </div>
         <div className={`mt-2 font-display text-2xl font-bold ${tone ?? "text-foreground"}`}>{value}</div>
+        {sub && <div className="mt-0.5 text-[11px] text-muted-foreground">{sub}</div>}
       </CardContent>
     </Card>
   );
@@ -180,43 +181,43 @@ function LeadsPageInner() {
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Stat icon={<Users className="h-4 w-4" />} label="Total Leads" value={(stats?.total ?? 0).toLocaleString()} help="The total number of unique lead records across every list in this workspace, after de-duplication." />
-          <Stat icon={<ShieldCheck className="h-4 w-4" />} label="Clean / Textable" value={(stats?.clean ?? 0).toLocaleString()} tone="text-success" help="Leads that passed DNC, litigator, and line-type checks and are safe to message." />
+          <Stat
+            icon={<ShieldCheck className="h-4 w-4" />}
+            label="Clean / Textable"
+            value={(stats?.clean ?? 0).toLocaleString()}
+            tone="text-success"
+            sub={`Reachable — SMS ${(stats?.smsEligible ?? 0).toLocaleString()} · Email ${(stats?.emailReachable ?? 0).toLocaleString()} · Mail ${(stats?.mailable ?? 0).toLocaleString()}`}
+            help={`Leads that passed DNC, litigator, and line-type checks and are safe to message. Reachable by SMS: ${(stats?.smsEligible ?? 0).toLocaleString()}, email: ${(stats?.emailReachable ?? 0).toLocaleString()}, direct mail: ${(stats?.mailable ?? 0).toLocaleString()}.`}
+          />
           <Stat icon={<ShieldAlert className="h-4 w-4" />} label="DNC Suppressed" value={(stats?.dnc ?? 0).toLocaleString()} tone="text-warn" help="Leads suppressed because they matched the Do Not Call list or opted out." />
           <Stat icon={<Ban className="h-4 w-4" />} label="Litigators Blocked" value={(stats?.litigator ?? 0).toLocaleString()} tone="text-danger" help="Leads flagged as known litigators or serial TCPA plaintiffs and blocked from outreach." />
           <Stat icon={<Sparkles className="h-4 w-4" />} label="New This Week" value={(stats?.newThisWeek ?? 0).toLocaleString()} tone="text-primary" help="New lead records first seen in the last 7 days across any list." />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="uppercase tracking-wide">Reachable By</span>
-        <Badge variant="secondary" className="font-normal">SMS · {(stats?.smsEligible ?? 0).toLocaleString()}</Badge>
-        <Badge variant="secondary" className="font-normal">Email · {(stats?.emailReachable ?? 0).toLocaleString()}</Badge>
-        <Badge variant="secondary" className="font-normal">Direct Mail · {(stats?.mailable ?? 0).toLocaleString()}</Badge>
-      </div>
+      {/* One condensed metadata line: mix, record types, and de-dupe note. */}
+      <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+        {bySource.length > 0 && (
+          <span>
+            <span className="uppercase tracking-wide">Sources</span>{" "}
+            {bySource.map(([s, n]) => `${SOURCE_LABEL[s] ?? s} ${n.toLocaleString()}`).join(" · ")}
+          </span>
+        )}
+        {bySource.length > 0 && byRecordType.length > 0 && <span className="text-border">|</span>}
+        {byRecordType.length > 0 && (
+          <span>
+            <span className="uppercase tracking-wide">Types</span>{" "}
+            {byRecordType.map(([t, n]) => `${RECORD_TYPE_LABEL[t] ?? t} ${n.toLocaleString()}`).join(" · ")}
+          </span>
+        )}
+        {(stats?.multiList ?? 0) > 0 && (
+          <>
+            <span className="text-border">|</span>
+            <span>{(stats?.multiList ?? 0).toLocaleString()} In 2+ Lists, De-Duplicated</span>
+          </>
+        )}
+      </p>
 
-      {(stats?.multiList ?? 0) > 0 && (
-        <p className="mt-3 text-xs text-muted-foreground">
-          {(stats?.multiList ?? 0).toLocaleString()} Leads Appear In 2+ Lists — De-Duplicated Into One Row Each.
-        </p>
-      )}
-
-      {(bySource.length > 0 || byRecordType.length > 0) && (
-        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span className="uppercase tracking-wide">By Source</span>
-          {bySource.map(([s, n]) => (
-            <Badge key={s} variant="secondary" className="font-normal">
-              {SOURCE_LABEL[s] ?? s} · {n.toLocaleString()}
-            </Badge>
-          ))}
-          {byRecordType.length > 0 && <span className="ml-2 uppercase tracking-wide">By Record Type</span>}
-          {byRecordType.map(([t, n]) => (
-            <Badge key={t} variant="outline" className="font-normal">
-              {RECORD_TYPE_LABEL[t] ?? t} · {n.toLocaleString()}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      <Card className="mt-6 mb-4">
+      <Card className="mt-4 mb-4">
         <CardContent className="p-4 flex flex-col lg:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
