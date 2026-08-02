@@ -117,7 +117,6 @@ export const CREATOR_TEMPLATE_IDS: readonly string[] = [
   "instagram-hashtag",
   "youtube",
   "youtube-search",
-  "pinterest",
 ];
 
 /** B2B prospecting templates where direct dials matter. */
