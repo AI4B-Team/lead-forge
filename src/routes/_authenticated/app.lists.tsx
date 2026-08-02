@@ -70,7 +70,7 @@ function Jobs() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["jobs-list", workspaceId],
-    queryFn: () => fetchJobs({ data: { workspaceId: workspaceId! } }),
+    queryFn: () => fetchJobs({ data: { workspaceId: workspaceId!, timeZone: LOCAL_TZ } }),
     enabled: !!workspaceId,
     refetchInterval: 5000,
   });
