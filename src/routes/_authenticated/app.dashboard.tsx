@@ -15,7 +15,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { assignJobNames, cadenceBadge } from "@/lib/job-naming";
 import {
   Users, ListChecks, MessageSquare, CreditCard, Plus, ArrowUpRight, Landmark, MapPin,
-  Upload, TrendingUp, Info, Activity, Zap, CheckCircle2,
+  Upload, TrendingUp, Info, Activity, Zap, CheckCircle2, HelpCircle,
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { ActivityList, useActivity } from "@/components/app/activity-feed";
@@ -313,35 +313,39 @@ function Dashboard() {
 
       {/* Composition order locked by spec §18: digest + stats → quick run → checklist → templates. */}
       <ScanDigest workspaceId={workspaceId ?? null} />
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <Metric
-          icon={<ListChecks className="h-4 w-4" />}
-          label="Lists"
-          value={metrics.lists.toString()}
-          note={metrics.processing ? `${metrics.processing} Running` : "All Processed"}
-          noteTone={metrics.processing ? "success" : undefined}
-        />
-        <Metric
-          icon={<MessageSquare className="h-4 w-4" />}
-          label="Live Campaigns"
-          value={(metrics.sending + metrics.scheduled).toString()}
-          note={
-            metrics.sending + metrics.scheduled
-              ? `${metrics.sending} Sending · ${metrics.scheduled} Scheduled`
-              : undefined
-          }
-          noteNode={
-            metrics.sending + metrics.scheduled ? undefined : (
-              <>
-                None Running Yet —{" "}
-                <Link to="/app/campaigns/new" className="font-semibold text-primary underline-offset-2 hover:underline">
-                  Launch Your First
-                </Link>
-              </>
-            )
-          }
-        />
-      </div>
+      <TooltipProvider>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Metric
+            icon={<ListChecks className="h-4 w-4" />}
+            label="Lists"
+            value={metrics.lists.toString()}
+            note={metrics.processing ? `${metrics.processing} Running` : "All Processed"}
+            noteTone={metrics.processing ? "success" : undefined}
+            help="The number of lists you have built or uploaded, including one-time and recurring lists."
+          />
+          <Metric
+            icon={<MessageSquare className="h-4 w-4" />}
+            label="Live Campaigns"
+            value={(metrics.sending + metrics.scheduled).toString()}
+            note={
+              metrics.sending + metrics.scheduled
+                ? `${metrics.sending} Sending · ${metrics.scheduled} Scheduled`
+                : undefined
+            }
+            noteNode={
+              metrics.sending + metrics.scheduled ? undefined : (
+                <>
+                  None Running Yet —{" "}
+                  <Link to="/app/campaigns/new" className="font-semibold text-primary underline-offset-2 hover:underline">
+                    Launch Your First
+                  </Link>
+                </>
+              )
+            }
+            help="Campaigns that are currently sending or scheduled to send messages."
+          />
+        </div>
+      </TooltipProvider>
 
       <QuickRun />
       <GettingStarted workspaceId={workspaceId ?? null} />
@@ -512,7 +516,7 @@ function HeroStat({ label, value, info }: { label: string; value: string; info?:
 }
 
 function Metric({
-  icon, label, value, note, noteNode, noteTone,
+  icon, label, value, note, noteNode, noteTone, help,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -520,12 +524,27 @@ function Metric({
   note?: string;
   noteNode?: React.ReactNode;
   noteTone?: "success";
+  help?: string;
 }) {
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
-          {icon} {label}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
+            {icon} {label}
+          </div>
+          {help && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[220px] text-xs">
+                <p>{help}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
         <div className="mt-2 font-display text-3xl font-black text-foreground">{value}</div>
         {(noteNode ?? note) && (
