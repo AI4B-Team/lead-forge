@@ -21,7 +21,7 @@ import {
   listAllWorkspaces, setBillingPlan, listSuperAdmins, revokeSuperAdmin,
   meIsSuperAdmin, setMonthlySmsCap, grantCredits, listSourceDemand, listSourceRequesters,
 } from "@/lib/admin.functions";
-import { FREQUENCY_LABEL } from "@/lib/source-request.shared";
+import { FREQUENCY_LABEL, LOGIN_LABEL } from "@/lib/source-request.shared";
 
 export const Route = createFileRoute("/_authenticated/app/admin")({
   head: () => ({ meta: [{ title: "Super Admin — LeadTrace" }] }),
