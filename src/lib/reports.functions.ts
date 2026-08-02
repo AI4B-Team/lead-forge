@@ -273,7 +273,7 @@ export const getWorkspacePerformance = createServerFn({ method: "GET" })
       recent.push({
         id: m.id,
         name: lead?.full_name ?? lead?.business_name ?? "Unknown Lead",
-        place: [lead?.city, lead?.state].filter(Boolean).join(", "),
+        place: formatLocation(lead?.city, lead?.state),
         body: m.body ?? "",
         intent: classifyIntent(m.body, m.is_optout),
         at: m.created_at,
