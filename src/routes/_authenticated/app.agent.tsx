@@ -20,6 +20,7 @@ import {
   knowledgeScore,
 } from "@/components/app/brand-knowledge";
 import { KnowledgeSourceCards } from "@/components/app/knowledge-cards";
+import { AgentQuestionTester } from "@/components/app/agent-questions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { useWorkspaceAgent } from "@/hooks/use-agent";
 import { createBrand } from "@/lib/brands.functions";
@@ -313,6 +314,12 @@ function AgentPage() {
             </p>
           </div>
           <KnowledgeSourceCards brandId={agent.id} sources={sources} />
+
+          <Card className="mt-8">
+            <CardContent className="pt-6">
+              <AgentQuestionTester brandId={agent.id} sources={sources} />
+            </CardContent>
+          </Card>
         </>
       )}
     </div>
