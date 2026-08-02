@@ -7,6 +7,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/comp
 import { WorkspaceSwitcher } from "@/components/app/workspace-switcher";
 import { ProfileDropdown } from "@/components/app/profile-dropdown";
 import { NotificationBell } from "@/components/app/notification-bell";
+import { ActivityPanel } from "@/components/app/activity-panel";
 import { HelpMenu } from "@/components/app/help-menu";
 import { ProductTour, useProductTour } from "@/components/app/product-tour";
 import { CreditMenu } from "@/components/app/credit-menu";
@@ -59,6 +60,12 @@ function AppLayout() {
                     <span className="inline-flex"><NotificationBell /></span>
                   </TooltipTrigger>
                   <TooltipContent>Notifications</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex"><ActivityPanel /></span>
+                  </TooltipTrigger>
+                  <TooltipContent>Activity</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>

@@ -131,6 +131,15 @@ export const buySpecificNumber = createServerFn({ method: "POST" })
       provider_sid: bought.providerSid,
     });
     if (error) throw error;
+    {
+      const { logActivity } = await import("./activity.server");
+      await logActivity(context.supabase, data.workspaceId, {
+        type: "number_added",
+        summary: `Sending Number Added — ${bought.phone}`,
+        detail: `Area Code ${data.areaCode}`,
+        refType: "number",
+      });
+    }
     return { ok: true, phone: bought.phone };
   });
 
@@ -209,6 +218,14 @@ export const advanceRegistration = createServerFn({ method: "POST" })
     if (data.brand_status === "approved" && existing?.brand_status !== "approved") {
       const { emitEvent } = await import("./events.server");
       await emitEvent(context.supabase, data.workspaceId, "brand.approved", {});
+    }
+    if (data.brand_status && data.brand_status !== existing?.brand_status) {
+      const { logActivity } = await import("./activity.server");
+      await logActivity(context.supabase, data.workspaceId, {
+        type: "brand_status",
+        summary: `10DLC Brand Status — ${data.brand_status.replace(/^./, (c) => c.toUpperCase())}`,
+        refType: "registration",
+      });
     }
     return { ok: true };
   });
