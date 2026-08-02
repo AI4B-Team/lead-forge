@@ -9,11 +9,12 @@
 // ---------------------------------------------------------------------------
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import type { RawLead } from "./data-providers";
 import { normalizeChannel, channelUsesPhonePipeline, type Channel } from "./channels";
 import type { LineType } from "./line-type";
 
-type AnyClient = SupabaseClient<any, any, any>;
+type AnyClient = SupabaseClient<Database>;
 type JobParams = Record<string, unknown>;
 
 function digits(v: unknown): string {

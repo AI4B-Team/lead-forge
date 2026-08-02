@@ -6,12 +6,13 @@
 // ---------------------------------------------------------------------------
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { nextRunFrom, normalizeCadence, type Cadence } from "./schedule.shared";
 import { normalizeChannel } from "./channels";
 import { executePipeline } from "./pipeline.server";
 import { planDrops } from "./drops";
 
-type AnyClient = SupabaseClient<any, any, any>;
+type AnyClient = SupabaseClient<Database>;
 
 export type DueList = {
   id: string;
