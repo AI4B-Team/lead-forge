@@ -178,15 +178,32 @@ export function ProfileDropdown({ className }: { className?: string }) {
   );
 }
 
-function MenuItem({ icon, label, onClick, trailing }: { icon: React.ReactNode; label: string; onClick: () => void; trailing?: string }) {
+function MenuItem({
+  icon,
+  label,
+  onClick,
+  trailing,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  trailing?: string;
+}) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-3.5 py-2 hover:bg-muted transition-colors text-left"
+      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left group hover:bg-muted"
     >
       <span className="text-muted-foreground">{icon}</span>
       <span className="text-sm font-medium">{label}</span>
-      {trailing && <span className="ml-auto text-xs text-muted-foreground">{trailing}</span>}
+      {trailing ? (
+        <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+          {trailing}
+          <ChevronRight className="h-4 w-4 opacity-60" />
+        </span>
+      ) : (
+        <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/60" />
+      )}
     </button>
   );
 }
