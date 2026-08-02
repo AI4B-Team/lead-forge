@@ -336,5 +336,17 @@ export function withEnrichmentDefaults(spec: JobSpec, templateId?: string | null
     const shown = visible.find((v) => v.id === option.id);
     next[option.id] = shown ? shown.defaultOn : false;
   }
+  // A non-US source is a country, not a US state/county. Pre-fill the country
+  // the source implies and drop any stale US geography.
+  next.country = ctx.country ?? null;
+  if (ctx.nonUs) {
+    next.state = null;
+    next.states = [];
+    next.counties = [];
+  }
+  // Only US real-estate portals ask whose details to collect.
+  if (!US_REALESTATE_PORTAL_IDS.includes(id ?? "")) next.contactTarget = null;
+  // Job-board runs are only useful when fresh; the posting date is the trigger.
+  if (isJobBoard(id) && !next.recencyDays) next.recencyDays = 30;
   return next;
 }
