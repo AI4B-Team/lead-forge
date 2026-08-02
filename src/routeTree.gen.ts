@@ -46,7 +46,11 @@ import { Route as LeadsSlugRouteImport } from './routes/leads.$slug'
 import { Route as AuthHubRouteImport } from './routes/auth.hub'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedPlatformIndexRouteImport } from './routes/_authenticated/platform.index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedPlatformWorkspacesRouteImport } from './routes/_authenticated/platform.workspaces'
+import { Route as AuthenticatedPlatformSourcesRouteImport } from './routes/_authenticated/platform.sources'
+import { Route as AuthenticatedPlatformAccessRouteImport } from './routes/_authenticated/platform.access'
 import { Route as AuthenticatedAppTemplatesRouteImport } from './routes/_authenticated/app.templates'
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
@@ -69,7 +73,6 @@ import { Route as AuthenticatedAppNewJobIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppListsIndexRouteImport } from './routes/_authenticated/app.lists.index'
 import { Route as AuthenticatedAppJobsIndexRouteImport } from './routes/_authenticated/app.jobs.index'
 import { Route as AuthenticatedAppCampaignsIndexRouteImport } from './routes/_authenticated/app.campaigns.index'
-import { Route as AuthenticatedAppAdminIndexRouteImport } from './routes/_authenticated/app.admin.index'
 import { Route as ApiPublicV1LeadsRouteImport } from './routes/api/public/v1/leads'
 import { Route as ApiPublicV1JobsRouteImport } from './routes/api/public/v1/jobs'
 import { Route as ApiPublicV1CampaignsRouteImport } from './routes/api/public/v1/campaigns'
@@ -86,9 +89,6 @@ import { Route as AuthenticatedAppListsListIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppJobsSplatRouteImport } from './routes/_authenticated/app.jobs.$'
 import { Route as AuthenticatedAppCampaignsNewRouteImport } from './routes/_authenticated/app.campaigns.new'
 import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
-import { Route as AuthenticatedAppAdminWorkspacesRouteImport } from './routes/_authenticated/app.admin.workspaces'
-import { Route as AuthenticatedAppAdminSourcesRouteImport } from './routes/_authenticated/app.admin.sources'
-import { Route as AuthenticatedAppAdminAccessRouteImport } from './routes/_authenticated/app.admin.access'
 import { Route as ApiPublicV1JobsJobIdRouteImport } from './routes/api/public/v1/jobs.$jobId'
 
 const TutorialsRoute = TutorialsRouteImport.update({
@@ -275,11 +275,35 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPlatformIndexRoute =
+  AuthenticatedPlatformIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPlatformRoute,
+  } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedPlatformWorkspacesRoute =
+  AuthenticatedPlatformWorkspacesRouteImport.update({
+    id: '/workspaces',
+    path: '/workspaces',
+    getParentRoute: () => AuthenticatedPlatformRoute,
+  } as any)
+const AuthenticatedPlatformSourcesRoute =
+  AuthenticatedPlatformSourcesRouteImport.update({
+    id: '/sources',
+    path: '/sources',
+    getParentRoute: () => AuthenticatedPlatformRoute,
+  } as any)
+const AuthenticatedPlatformAccessRoute =
+  AuthenticatedPlatformAccessRouteImport.update({
+    id: '/access',
+    path: '/access',
+    getParentRoute: () => AuthenticatedPlatformRoute,
+  } as any)
 const AuthenticatedAppTemplatesRoute =
   AuthenticatedAppTemplatesRouteImport.update({
     id: '/templates',
@@ -402,12 +426,6 @@ const AuthenticatedAppCampaignsIndexRoute =
     path: '/campaigns/',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppAdminIndexRoute =
-  AuthenticatedAppAdminIndexRouteImport.update({
-    id: '/admin/',
-    path: '/admin/',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
 const ApiPublicV1LeadsRoute = ApiPublicV1LeadsRouteImport.update({
   id: '/api/public/v1/leads',
   path: '/api/public/v1/leads',
@@ -498,24 +516,6 @@ const AuthenticatedAppCampaignsCampaignIdRoute =
     path: '/campaigns/$campaignId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppAdminWorkspacesRoute =
-  AuthenticatedAppAdminWorkspacesRouteImport.update({
-    id: '/admin/workspaces',
-    path: '/admin/workspaces',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppAdminSourcesRoute =
-  AuthenticatedAppAdminSourcesRouteImport.update({
-    id: '/admin/sources',
-    path: '/admin/sources',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppAdminAccessRoute =
-  AuthenticatedAppAdminAccessRouteImport.update({
-    id: '/admin/access',
-    path: '/admin/access',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
 const ApiPublicV1JobsJobIdRoute = ApiPublicV1JobsJobIdRouteImport.update({
   id: '/$jobId',
   path: '/$jobId',
@@ -550,7 +550,7 @@ export interface FileRoutesByFullPath {
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
-  '/platform': typeof AuthenticatedPlatformRoute
+  '/platform': typeof AuthenticatedPlatformRouteWithChildren
   '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -576,10 +576,11 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
+  '/platform/access': typeof AuthenticatedPlatformAccessRoute
+  '/platform/sources': typeof AuthenticatedPlatformSourcesRoute
+  '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/app/': typeof AuthenticatedAppIndexRoute
-  '/app/admin/access': typeof AuthenticatedAppAdminAccessRoute
-  '/app/admin/sources': typeof AuthenticatedAppAdminSourcesRoute
-  '/app/admin/workspaces': typeof AuthenticatedAppAdminWorkspacesRoute
+  '/platform/': typeof AuthenticatedPlatformIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
@@ -596,7 +597,6 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
-  '/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
   '/app/jobs/': typeof AuthenticatedAppJobsIndexRoute
   '/app/lists/': typeof AuthenticatedAppListsIndexRoute
@@ -631,7 +631,6 @@ export interface FileRoutesByTo {
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
-  '/platform': typeof AuthenticatedPlatformRoute
   '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -657,10 +656,11 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
+  '/platform/access': typeof AuthenticatedPlatformAccessRoute
+  '/platform/sources': typeof AuthenticatedPlatformSourcesRoute
+  '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/app': typeof AuthenticatedAppIndexRoute
-  '/app/admin/access': typeof AuthenticatedAppAdminAccessRoute
-  '/app/admin/sources': typeof AuthenticatedAppAdminSourcesRoute
-  '/app/admin/workspaces': typeof AuthenticatedAppAdminWorkspacesRoute
+  '/platform': typeof AuthenticatedPlatformIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
@@ -677,7 +677,6 @@ export interface FileRoutesByTo {
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
-  '/app/admin': typeof AuthenticatedAppAdminIndexRoute
   '/app/campaigns': typeof AuthenticatedAppCampaignsIndexRoute
   '/app/jobs': typeof AuthenticatedAppJobsIndexRoute
   '/app/lists': typeof AuthenticatedAppListsIndexRoute
@@ -715,7 +714,7 @@ export interface FileRoutesById {
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
-  '/_authenticated/platform': typeof AuthenticatedPlatformRoute
+  '/_authenticated/platform': typeof AuthenticatedPlatformRouteWithChildren
   '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -741,10 +740,11 @@ export interface FileRoutesById {
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
   '/_authenticated/app/templates': typeof AuthenticatedAppTemplatesRoute
+  '/_authenticated/platform/access': typeof AuthenticatedPlatformAccessRoute
+  '/_authenticated/platform/sources': typeof AuthenticatedPlatformSourcesRoute
+  '/_authenticated/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
-  '/_authenticated/app/admin/access': typeof AuthenticatedAppAdminAccessRoute
-  '/_authenticated/app/admin/sources': typeof AuthenticatedAppAdminSourcesRoute
-  '/_authenticated/app/admin/workspaces': typeof AuthenticatedAppAdminWorkspacesRoute
+  '/_authenticated/platform/': typeof AuthenticatedPlatformIndexRoute
   '/_authenticated/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/_authenticated/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/_authenticated/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
@@ -761,7 +761,6 @@ export interface FileRoutesById {
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
-  '/_authenticated/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/_authenticated/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
   '/_authenticated/app/jobs/': typeof AuthenticatedAppJobsIndexRoute
   '/_authenticated/app/lists/': typeof AuthenticatedAppListsIndexRoute
@@ -825,10 +824,11 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/team'
     | '/app/templates'
+    | '/platform/access'
+    | '/platform/sources'
+    | '/platform/workspaces'
     | '/app/'
-    | '/app/admin/access'
-    | '/app/admin/sources'
-    | '/app/admin/workspaces'
+    | '/platform/'
     | '/app/campaigns/$campaignId'
     | '/app/campaigns/new'
     | '/app/jobs/$'
@@ -845,7 +845,6 @@ export interface FileRouteTypes {
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
-    | '/app/admin/'
     | '/app/campaigns/'
     | '/app/jobs/'
     | '/app/lists/'
@@ -880,7 +879,6 @@ export interface FileRouteTypes {
     | '/solar'
     | '/start'
     | '/tutorials'
-    | '/platform'
     | '/auth/hub'
     | '/leads/$slug'
     | '/templates/$templateId'
@@ -906,10 +904,11 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/team'
     | '/app/templates'
+    | '/platform/access'
+    | '/platform/sources'
+    | '/platform/workspaces'
     | '/app'
-    | '/app/admin/access'
-    | '/app/admin/sources'
-    | '/app/admin/workspaces'
+    | '/platform'
     | '/app/campaigns/$campaignId'
     | '/app/campaigns/new'
     | '/app/jobs/$'
@@ -926,7 +925,6 @@ export interface FileRouteTypes {
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
-    | '/app/admin'
     | '/app/campaigns'
     | '/app/jobs'
     | '/app/lists'
@@ -989,10 +987,11 @@ export interface FileRouteTypes {
     | '/_authenticated/app/settings'
     | '/_authenticated/app/team'
     | '/_authenticated/app/templates'
+    | '/_authenticated/platform/access'
+    | '/_authenticated/platform/sources'
+    | '/_authenticated/platform/workspaces'
     | '/_authenticated/app/'
-    | '/_authenticated/app/admin/access'
-    | '/_authenticated/app/admin/sources'
-    | '/_authenticated/app/admin/workspaces'
+    | '/_authenticated/platform/'
     | '/_authenticated/app/campaigns/$campaignId'
     | '/_authenticated/app/campaigns/new'
     | '/_authenticated/app/jobs/$'
@@ -1009,7 +1008,6 @@ export interface FileRouteTypes {
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
-    | '/_authenticated/app/admin/'
     | '/_authenticated/app/campaigns/'
     | '/_authenticated/app/jobs/'
     | '/_authenticated/app/lists/'
@@ -1326,12 +1324,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/platform/': {
+      id: '/_authenticated/platform/'
+      path: '/'
+      fullPath: '/platform/'
+      preLoaderRoute: typeof AuthenticatedPlatformIndexRouteImport
+      parentRoute: typeof AuthenticatedPlatformRoute
+    }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/platform/workspaces': {
+      id: '/_authenticated/platform/workspaces'
+      path: '/workspaces'
+      fullPath: '/platform/workspaces'
+      preLoaderRoute: typeof AuthenticatedPlatformWorkspacesRouteImport
+      parentRoute: typeof AuthenticatedPlatformRoute
+    }
+    '/_authenticated/platform/sources': {
+      id: '/_authenticated/platform/sources'
+      path: '/sources'
+      fullPath: '/platform/sources'
+      preLoaderRoute: typeof AuthenticatedPlatformSourcesRouteImport
+      parentRoute: typeof AuthenticatedPlatformRoute
+    }
+    '/_authenticated/platform/access': {
+      id: '/_authenticated/platform/access'
+      path: '/access'
+      fullPath: '/platform/access'
+      preLoaderRoute: typeof AuthenticatedPlatformAccessRouteImport
+      parentRoute: typeof AuthenticatedPlatformRoute
     }
     '/_authenticated/app/templates': {
       id: '/_authenticated/app/templates'
@@ -1487,13 +1513,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCampaignsIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/admin/': {
-      id: '/_authenticated/app/admin/'
-      path: '/admin'
-      fullPath: '/app/admin/'
-      preLoaderRoute: typeof AuthenticatedAppAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
     '/api/public/v1/leads': {
       id: '/api/public/v1/leads'
       path: '/api/public/v1/leads'
@@ -1606,27 +1625,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCampaignsCampaignIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/admin/workspaces': {
-      id: '/_authenticated/app/admin/workspaces'
-      path: '/admin/workspaces'
-      fullPath: '/app/admin/workspaces'
-      preLoaderRoute: typeof AuthenticatedAppAdminWorkspacesRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/admin/sources': {
-      id: '/_authenticated/app/admin/sources'
-      path: '/admin/sources'
-      fullPath: '/app/admin/sources'
-      preLoaderRoute: typeof AuthenticatedAppAdminSourcesRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/admin/access': {
-      id: '/_authenticated/app/admin/access'
-      path: '/admin/access'
-      fullPath: '/app/admin/access'
-      preLoaderRoute: typeof AuthenticatedAppAdminAccessRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
     '/api/public/v1/jobs/$jobId': {
       id: '/api/public/v1/jobs/$jobId'
       path: '/$jobId'
@@ -1656,16 +1654,12 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
   AuthenticatedAppTemplatesRoute: typeof AuthenticatedAppTemplatesRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
-  AuthenticatedAppAdminAccessRoute: typeof AuthenticatedAppAdminAccessRoute
-  AuthenticatedAppAdminSourcesRoute: typeof AuthenticatedAppAdminSourcesRoute
-  AuthenticatedAppAdminWorkspacesRoute: typeof AuthenticatedAppAdminWorkspacesRoute
   AuthenticatedAppCampaignsCampaignIdRoute: typeof AuthenticatedAppCampaignsCampaignIdRoute
   AuthenticatedAppCampaignsNewRoute: typeof AuthenticatedAppCampaignsNewRoute
   AuthenticatedAppJobsSplatRoute: typeof AuthenticatedAppJobsSplatRoute
   AuthenticatedAppListsListIdRoute: typeof AuthenticatedAppListsListIdRoute
   AuthenticatedAppNewJobSplatRoute: typeof AuthenticatedAppNewJobSplatRoute
   AuthenticatedAppNewListSplatRoute: typeof AuthenticatedAppNewListSplatRoute
-  AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
   AuthenticatedAppCampaignsIndexRoute: typeof AuthenticatedAppCampaignsIndexRoute
   AuthenticatedAppJobsIndexRoute: typeof AuthenticatedAppJobsIndexRoute
   AuthenticatedAppListsIndexRoute: typeof AuthenticatedAppListsIndexRoute
@@ -1692,9 +1686,6 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
   AuthenticatedAppTemplatesRoute: AuthenticatedAppTemplatesRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
-  AuthenticatedAppAdminAccessRoute: AuthenticatedAppAdminAccessRoute,
-  AuthenticatedAppAdminSourcesRoute: AuthenticatedAppAdminSourcesRoute,
-  AuthenticatedAppAdminWorkspacesRoute: AuthenticatedAppAdminWorkspacesRoute,
   AuthenticatedAppCampaignsCampaignIdRoute:
     AuthenticatedAppCampaignsCampaignIdRoute,
   AuthenticatedAppCampaignsNewRoute: AuthenticatedAppCampaignsNewRoute,
@@ -1702,7 +1693,6 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppListsListIdRoute: AuthenticatedAppListsListIdRoute,
   AuthenticatedAppNewJobSplatRoute: AuthenticatedAppNewJobSplatRoute,
   AuthenticatedAppNewListSplatRoute: AuthenticatedAppNewListSplatRoute,
-  AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
   AuthenticatedAppCampaignsIndexRoute: AuthenticatedAppCampaignsIndexRoute,
   AuthenticatedAppJobsIndexRoute: AuthenticatedAppJobsIndexRoute,
   AuthenticatedAppListsIndexRoute: AuthenticatedAppListsIndexRoute,
@@ -1713,14 +1703,33 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
 const AuthenticatedAppRouteWithChildren =
   AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
 
+interface AuthenticatedPlatformRouteChildren {
+  AuthenticatedPlatformAccessRoute: typeof AuthenticatedPlatformAccessRoute
+  AuthenticatedPlatformSourcesRoute: typeof AuthenticatedPlatformSourcesRoute
+  AuthenticatedPlatformWorkspacesRoute: typeof AuthenticatedPlatformWorkspacesRoute
+  AuthenticatedPlatformIndexRoute: typeof AuthenticatedPlatformIndexRoute
+}
+
+const AuthenticatedPlatformRouteChildren: AuthenticatedPlatformRouteChildren = {
+  AuthenticatedPlatformAccessRoute: AuthenticatedPlatformAccessRoute,
+  AuthenticatedPlatformSourcesRoute: AuthenticatedPlatformSourcesRoute,
+  AuthenticatedPlatformWorkspacesRoute: AuthenticatedPlatformWorkspacesRoute,
+  AuthenticatedPlatformIndexRoute: AuthenticatedPlatformIndexRoute,
+}
+
+const AuthenticatedPlatformRouteWithChildren =
+  AuthenticatedPlatformRoute._addFileChildren(
+    AuthenticatedPlatformRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
-  AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
+  AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
-  AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
+  AuthenticatedPlatformRoute: AuthenticatedPlatformRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -1797,13 +1806,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
