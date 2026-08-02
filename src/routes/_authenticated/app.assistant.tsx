@@ -931,8 +931,8 @@ function Assistant() {
   );
 
   const specPanel = (
-    <div className="flex min-h-0 flex-col gap-4 lg:h-full">
-      <div className="relative min-h-0 lg:flex-1">
+    <div className="flex flex-col gap-4">
+      <div className="relative">
         <div
           ref={specScroll.ref}
           className={`h-full min-h-0 lg:overflow-y-auto ${specScroll.overflowing ? "thin-scroll lg:pr-1" : ""}`}
@@ -1141,8 +1141,8 @@ function Assistant() {
   );
 
   return (
-    <div className={started ? "assistant-shell flex flex-col" : "flex flex-col"}>
-      <div className={started ? "mx-auto w-[90%] flex-1 flex flex-col" : "mx-auto w-[90%]"}>
+    <div className="flex flex-col">
+      <div className="mx-auto w-[90%]">
         {/* Per-workspace first run: building is never gated, but the send-side
             prerequisites (10DLC, number, agent) stay visible until they're done. */}
         <FirstRunSetup workspaceId={workspaceId ?? null} />
@@ -1165,11 +1165,11 @@ function Assistant() {
         {!started && heroState}
 
         {started && (
-          <div className="grid min-h-0 flex-1 items-start gap-6 lg:grid-cols-[1fr_400px]">
+          <div className="grid items-start gap-6 lg:grid-cols-[1fr_400px]">
             {/* Chat column: thread scrolls, composer stays pinned to the bottom. */}
-            <Card className="flex min-h-0 flex-col lg:h-full">
-              <CardContent className="flex min-h-0 flex-1 flex-col p-4 md:p-5">
-                <div ref={scroller} className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
+            <Card className="flex flex-col">
+              <CardContent className="flex flex-1 flex-col p-4 md:p-5">
+                <div ref={scroller} className="space-y-5 pr-1">
                   {!hasChat && (
                     // Panel-only mode: the assembly checklist still leads, with no chat turn.
                     <div>
