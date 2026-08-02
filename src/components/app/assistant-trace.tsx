@@ -1,13 +1,21 @@
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Square } from "lucide-react";
 import { specStates, type JobSpec } from "@/lib/assistant.shared";
 import { US_STATES } from "@/lib/us-geo";
-import { enabledOptions } from "@/lib/pipeline-options";
+import { availableOptions, enabledOptions } from "@/lib/pipeline-options";
 import { getTemplate, type Template } from "@/lib/templates";
 import {
   FIELD_SLOT_LABEL, fieldFilled, fieldsForSpec, isOptionalField,
 } from "@/lib/template-schema";
 
-export type TraceStep = { label: string; value: string };
+export type TraceStep = {
+  label: string;
+  value: string;
+  /**
+   * "on" = filled green check, it will happen. "available" = empty checkbox,
+   * an option that is offered but off by default.
+   */
+  state?: "on" | "available";
+};
 
 /**
  * Required slots come from the selected template's field schema, so a URL
@@ -63,6 +71,10 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
   for (const option of enabledOptions(spec)) {
     steps.push({ label: option.checklistLabel ?? option.label, value: "Enabled" });
   }
+  // Relevant-but-off options read as "available", never as a committed step.
+  for (const option of availableOptions(spec)) {
+    steps.push({ label: option.checklistLabel ?? option.label, value: "Available — Off", state: "available" });
+  }
   if (spec.industry) steps.push({ label: "Recommended Playbook", value: spec.industry });
   return steps;
 }
@@ -103,20 +115,37 @@ export function AssistantTrace({
       </div>
 
       <ul className="mt-4 space-y-2.5">
-        {visible.map((s, i) => (
-          <li
-            key={`${s.label}-${i}`}
-            className="trace-in flex items-baseline gap-2.5 text-sm"
-            style={{ animationDelay: `${i * 40}ms` }}
-          >
-            <Check
-              className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${complete ? "text-success" : "text-muted-foreground"}`}
-              strokeWidth={3}
-            />
-            <span className="text-muted-foreground">{s.label}:</span>
-            <span className={complete ? "font-medium text-foreground" : "text-foreground/80"}>{s.value}</span>
-          </li>
-        ))}
+        {visible.map((s, i) => {
+          const offered = s.state === "available";
+          return (
+            <li
+              key={`${s.label}-${i}`}
+              className="trace-in flex items-baseline gap-2.5 text-sm"
+              style={{ animationDelay: `${i * 40}ms` }}
+            >
+              {offered ? (
+                <Square className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/50" strokeWidth={2} />
+              ) : (
+                <Check
+                  className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${complete ? "text-success" : "text-muted-foreground"}`}
+                  strokeWidth={3}
+                />
+              )}
+              <span className={offered ? "text-muted-foreground/70" : "text-muted-foreground"}>{s.label}:</span>
+              <span
+                className={
+                  offered
+                    ? "text-muted-foreground/70"
+                    : complete
+                      ? "font-medium text-foreground"
+                      : "text-foreground/80"
+                }
+              >
+                {s.value}
+              </span>
+            </li>
+          );
+        })}
         {open.map((label) => (
           <li key={`open-${label}`} className="flex items-baseline gap-2.5 text-sm text-muted-foreground">
             <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full border border-muted-foreground/50" />
