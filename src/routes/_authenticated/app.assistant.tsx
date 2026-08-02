@@ -780,8 +780,7 @@ function Assistant() {
                 <Check className="mr-1 h-4 w-4" /> You're On The List
               </Button>
               <div className="text-center text-sm text-foreground/70">
-                We'll notify you at {notifyEmail ?? "your email"}
-                {selectedTemplate ? ` when ${selectedTemplate.title} goes live.` : "."}
+                We'll Email You As Soon As It's Available.
               </div>
             </>
           ) : (
