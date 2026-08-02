@@ -978,15 +978,20 @@ function Assistant() {
         />
         <div className="mt-4 flex items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-1">
-            <label className="inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
-              <Paperclip className="mr-1.5 h-4 w-4" /> Attach Files
-              <input
-                type="file"
-                className="hidden"
-                accept=".csv,.xlsx"
-                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
-              />
-            </label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <label className="inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
+                  <Paperclip className="mr-1.5 h-4 w-4" /> Upload List
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".csv,.xlsx"
+                    onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) requestAttach(f); }}
+                  />
+                </label>
+              </TooltipTrigger>
+              <TooltipContent>Upload A CSV Or Excel List To Clean, Scrub, And Enrich</TooltipContent>
+            </Tooltip>
             {/* Panel-only path: no chat needed, straight into the List Builder. */}
             <button
               type="button"
