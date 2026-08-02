@@ -2,11 +2,22 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { jobLabel, type JobRef } from "@/lib/compliance.shared";
-import { phoneVariants } from "@/lib/optout.server";
 
 /** Digits-only form used for partial phone matching. */
 function digitsOnly(v: string): string {
   return v.replace(/\D/g, "");
+}
+
+/** All plausible stored spellings of a US phone, for exact-match lookups. */
+function phoneVariants(phone: string): string[] {
+  const d = digitsOnly(phone);
+  const ten = d.length === 11 && d.startsWith("1") ? d.slice(1) : d;
+  const set = new Set<string>([phone, d, ten, `1${ten}`, `+1${ten}`]);
+  if (ten.length === 10) {
+    set.add(`(${ten.slice(0, 3)}) ${ten.slice(3, 6)}-${ten.slice(6)}`);
+    set.add(`${ten.slice(0, 3)}-${ten.slice(3, 6)}-${ten.slice(6)}`);
+  }
+  return [...set].filter(Boolean);
 }
 
 /** Canonical +1XXXXXXXXXX when possible, otherwise the raw input. */
