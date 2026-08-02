@@ -37,14 +37,14 @@ function getRecognition(): SpeechRecognitionLike | null {
 }
 
 /**
- * Brand training console — feed the warm-up bot your brand voice through
+ * Agent training console — feed the workspace AI agent your voice through
  * pasted text, dictation, single/batch file upload, or public URLs.
  * Everything stored here becomes the bot's approved source of truth.
  */
 export function BotTrainer({
   campaignId,
   brandId,
-  heading = "Train The Bot On Your Brand",
+  heading = "Train Your AI Agent",
 }: {
   campaignId?: string;
   brandId?: string;
@@ -100,7 +100,7 @@ export function BotTrainer({
     recRef.current = rec;
     rec.start();
     setListening(true);
-    toast.message("Listening…", { description: "Speak Your Brand Details. Tap The Mic To Stop." });
+    toast.message("Listening…", { description: "Speak Your Business Details. Tap The Mic To Stop." });
   };
 
   const saveText = async (kind: "text" | "voice") => {
@@ -110,7 +110,7 @@ export function BotTrainer({
       await add({
         data: {
           ...scope,
-          items: [{ source_type: kind, title: title.trim() || (kind === "voice" ? "Dictated Brand Notes" : "Brand Notes"), content: text }],
+          items: [{ source_type: kind, title: title.trim() || (kind === "voice" ? "Dictated Agent Notes" : "Agent Notes"), content: text }],
         },
       });
       toast.success("Bot Trained");
@@ -210,11 +210,11 @@ export function BotTrainer({
           <TabsContent value="text" className="space-y-3 pt-4">
             <div>
               <Label>Source Title (Optional)</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Brand Voice & Offer Notes" />
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Voice & Offer Notes" />
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <Label>Brand Knowledge</Label>
+                <Label>Agent Knowledge</Label>
                 <Button
                   type="button"
                   size="sm"
