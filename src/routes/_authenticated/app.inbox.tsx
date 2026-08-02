@@ -496,6 +496,7 @@ function ConversationsPage() {
                     disabled={activeThread?.is_optout || sending}
                     onKeyDown={(e) => {
                       if (e.key === "Escape") setSlashOpen(false);
+                      if (e.key === "Escape" && !slashOpen) setReply("");
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         if (slashOpen) {
@@ -528,6 +529,18 @@ function ConversationsPage() {
                     >
                       <Sparkles className="h-3.5 w-3.5 mr-1 text-primary" /> AI
                     </Button>
+                    {!!reply.trim() && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 rounded-full text-xs cursor-pointer text-muted-foreground"
+                        title="Discard This Draft (Esc)"
+                        onClick={() => setReply("")}
+                        disabled={sending}
+                      >
+                        <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                      </Button>
+                    )}
                     <Button
                       onClick={handleSend}
                       disabled={
