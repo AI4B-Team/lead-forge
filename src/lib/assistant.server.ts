@@ -6,6 +6,7 @@
 // suppressed leads, and never launches anything. A human clicks Run.
 
 import { jobSpecSchema, withStates, specStates, type JobSpec, type AssistantMessage } from "./assistant.shared";
+import { enrichmentProfile } from "./pipeline-options";
 import { countiesForState, formatCounty, parseCounty } from "./us-geo";
 
 /** Snap model-provided county names onto real counties in the spec's state. */
@@ -60,10 +61,17 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "- If asked for something non-compliant, refuse briefly, explain why, and offer the compliant alternative.",
     "- removeFranchises defaults to FALSE. Set removeFranchises true ONLY when the operator asks for it (\"remove franchises\", \"no franchises\", \"no chains\", \"independents only\", \"local mom-and-pop only\"), and only for the business source. Never set it for records or upload sources.",
     "",
+    "ENRICHMENT BY SOURCE TYPE (important):",
+    "- Creator sources (TikTok, Instagram, YouTube, Pinterest, and their hashtag/search variants): the deliverable is contact email + profile + engagement. NEVER offer skip tracing or mobile-number filtering for these, and never set skipTrace or mobileOnly true. Set emailRequired true instead.",
+    "- If the operator asks for creators' phone numbers or wants to text creators: explain plainly that creator outreach runs on email and DMs, that cold-texting individuals raises TCPA consent issues LeadTrace will not take on, and then offer the email-required creator list instead. Do not refuse the whole request — redirect it.",
+    "- LinkedIn / B2B prospecting: skip trace is legitimate (direct dials for decision-makers) but defaults OFF. Only set skipTrace true if the operator asks for direct dials.",
+    "- Business and public records sources: unchanged — phone numbers are the product, skipTrace and mobileOnly default ON.",
+    "- Dedupe is universal for every source.",
+    "",
     "STYLE: Short, plain, confident. Title Case for headings. No em-dashes. Ask at most two clarifying questions per turn. Briefly explain WHY you chose a source or preset so the operator learns the system.",
     "",
     "Respond with STRICT JSON only, no markdown fence:",
-    '{"reply": string, "specPatch": { any of: sourceType("business"|"records"|"upload"), templateId, name, niches[], recordType, state(2-letter), states(array of 2-letter codes when several states are wanted), counties[], recencyDays, targetUrl, filters, removeFranchises, dedupe, mobileOnly, skipTrace, industry, messageAngle }, "suggestedTemplates": string[] }',
+'{"reply": string, "specPatch": { any of: sourceType("business"|"records"|"upload"), templateId, name, niches[], recordType, state(2-letter), states(array of 2-letter codes when several states are wanted), counties[], recencyDays, targetUrl, filters, removeFranchises, dedupe, mobileOnly, skipTrace, emailRequired, industry, messageAngle }, "suggestedTemplates": string[] }',
     "Only include specPatch keys you actually resolved this turn. Leave the rest out.",
   ].join("\n");
 }
@@ -140,6 +148,8 @@ export async function askAssistant(opts: {
 /** Rough, honest pre-run estimate. Never presented as an exact bill. */
 export function estimate(spec: JobSpec): { rows: number; skipTraceCredits: number; scrapeCredits: number } | null {
   if (!spec.sourceType || spec.sourceType === "upload") return null;
+  // Creator sources never skip trace, so they never quote skip-trace credits.
+  const creator = enrichmentProfile(spec.templateId) === "creator";
   const geo = Math.max(1, spec.counties.length || 1);
   const rows =
     spec.sourceType === "records"
@@ -147,7 +157,8 @@ export function estimate(spec: JobSpec): { rows: number; skipTraceCredits: numbe
       : geo * Math.max(1, spec.niches.length) * 800;
   return {
     rows,
-    skipTraceCredits: spec.skipTrace ? Math.round(rows * (spec.sourceType === "records" ? 0.8 : 0.25)) : 0,
+    skipTraceCredits:
+      spec.skipTrace && !creator ? Math.round(rows * (spec.sourceType === "records" ? 0.8 : 0.25)) : 0,
     scrapeCredits: Math.round(rows / 10),
   };
 }
