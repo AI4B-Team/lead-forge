@@ -174,7 +174,12 @@ function Jobs() {
     const needle = q.trim().toLowerCase();
     const cutoff = range === "all" ? 0 : Date.now() - Number(range) * 86400000;
     return jobs.filter((j) => {
-      if (source !== "all" && j.identity.key !== source) return false;
+      if (source !== "all") {
+        // "cat:<category>" filters a whole group; anything else is one template.
+        if (source.startsWith("cat:")) {
+          if (j.identity.group !== source.slice(4)) return false;
+        } else if (j.identity.key !== source) return false;
+      }
       if (status === "attention") {
         if (!j.stalled && j.status !== "failed") return false;
       } else if (status === "running") {
@@ -206,21 +211,24 @@ function Jobs() {
    * and its single child render as duplicate rows, so we flatten.
    */
   const sourceOptions = useMemo(() => {
-    const byGroup = new Map<string, Map<string, string>>();
+    const byGroup = new Map<SourceGroup, Map<string, { label: string; count: number }>>();
+    const groupCounts = new Map<SourceGroup, number>();
     for (const j of allRows) {
       const { group, key, label } = j.identity;
-      const bucket = byGroup.get(group) ?? new Map<string, string>();
-      bucket.set(key, label);
+      const bucket = byGroup.get(group) ?? new Map<string, { label: string; count: number }>();
+      const prev = bucket.get(key);
+      bucket.set(key, { label, count: (prev?.count ?? 0) + 1 });
       byGroup.set(group, bucket);
+      groupCounts.set(group, (groupCounts.get(group) ?? 0) + 1);
     }
-    const groups = GROUP_ORDER.filter((g) => byGroup.has(g)).map((g) => ({
+    return GROUP_ORDER.filter((g) => byGroup.has(g)).map((g) => ({
       group: g,
+      label: GROUP_LABEL(g),
+      count: groupCounts.get(g) ?? 0,
       items: [...byGroup.get(g)!.entries()]
-        .map(([key, label]) => ({ key, label }))
+        .map(([key, v]) => ({ key, label: v.label, count: v.count }))
         .sort((a, b) => a.label.localeCompare(b.label)),
     }));
-    const grouped = groups.some((g) => g.items.length > 1);
-    return { grouped, groups, flat: groups.flatMap((g) => g.items) };
   }, [allRows]);
 
   const summary = useMemo(() => {
