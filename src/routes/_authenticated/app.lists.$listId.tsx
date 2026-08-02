@@ -747,7 +747,7 @@ function LeadsBrowser({ jobId, templateId, disabled, open, onOpenChange, bucket,
               </div>
               {/* Remaining schema fields, in the run's own output order. */}
               <dl className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
-                {fields.slice(1).map((f) => {
+                {fields.slice(1).map((f: LeadField) => {
                   const v = f.value(l as Record<string, unknown>);
                   return (
                     <div key={f.key} className="flex min-w-0 items-center gap-1">
