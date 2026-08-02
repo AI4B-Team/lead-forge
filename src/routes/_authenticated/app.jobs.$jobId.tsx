@@ -24,6 +24,7 @@ import { setOnboardingPref } from "@/lib/onboarding.functions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { isStalled, stallReason } from "@/lib/job-watchdog";
 import { qualityGrade } from "@/lib/quality-grade";
+import { brandedFileName, brandedJobTitle, BUCKET_FILE_TYPE } from "@/lib/download-name";
 import { ChevronDown, Database, Coins } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
@@ -166,7 +167,7 @@ function JobDetail() {
   const onDownload = async (bucket: "clean" | "dnc" | "litigator") => {
     const res = await fetchBucket({ data: { jobId, bucket } });
     if (!res.rows.length) return toast.info("No Rows In This Bucket.");
-    downloadCsv(`${jobName.replace(/\s+/g, "_")}_${bucket}.csv`, toCsv(res.rows));
+    downloadCsv(brandedFileName(jobName, BUCKET_FILE_TYPE[bucket]), toCsv(res.rows));
   };
 
   // Scrub audit trail: provider, timestamp and per-bucket outcome, exportable.
@@ -174,7 +175,7 @@ function JobDetail() {
     const s = data.scrub as Record<string, unknown> | null;
     if (!s) return toast.info("No Scrub Run Recorded Yet.");
     downloadCsv(
-      `${jobName.replace(/\s+/g, "_")}_scrub_audit.csv`,
+      brandedFileName(jobName, "Scrub Audit"),
       toCsv([{
         job: jobName,
         provider: s.provider ?? "internal",
@@ -190,7 +191,7 @@ function JobDetail() {
   return (
     <div>
       <PageHeader
-        title={jobName}
+        title={brandedJobTitle(jobName)}
         description="Pipeline Review · Every Row Passed Through De-Dupe, Enrich, Skip Trace, And Scrub."
         actions={
           <>
