@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Bot, Inbox as InboxIcon, Loader2, PhoneOff, Plus, Send, Sparkles, X } from "lucide-react";
+import { Bot, ChevronDown, Inbox as InboxIcon, Loader2, PhoneOff, Plus, Send, Sparkles, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import {
@@ -48,14 +54,18 @@ export const Route = createFileRoute("/_authenticated/app/inbox")({
 
 type Filter = "all" | "needs_reply" | "interested" | "appointments" | "ai" | "unread" | "optouts";
 
-const FILTERS: Array<{ key: Filter; label: string }> = [
-  { key: "all", label: "All" },
-  { key: "needs_reply", label: "Needs Reply" },
-  { key: "interested", label: "Interested" },
-  { key: "appointments", label: "Appointments" },
+const PRIMARY_FILTERS: Array<{ key: Filter; label: string; short: string }> = [
+  { key: "all", label: "All", short: "All" },
+  { key: "needs_reply", label: "Needs Reply", short: "Replies" },
+  { key: "interested", label: "Interested", short: "Interest" },
+  { key: "appointments", label: "Appointments", short: "Appts" },
+];
+
+const OVERFLOW_FILTERS: Array<{ key: Filter | "archive"; label: string }> = [
+  { key: "optouts", label: "STOP" },
   { key: "ai", label: "AI" },
   { key: "unread", label: "Unread" },
-  { key: "optouts", label: "STOP" },
+  { key: "archive", label: "Archive" },
 ];
 
 const notesKey = (t: string) => `leadtrace:notes:${t}`;
@@ -273,32 +283,79 @@ function ConversationsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_288px] gap-4 flex-1 min-h-0">
         {/* Conversation list */}
         <Card className="flex flex-col min-h-0">
-          <div className="p-2 border-b flex gap-1 flex-wrap">
-            {FILTERS.map((f) => (
-              <Button
-                key={f.key}
-                size="sm"
-                variant={filter === f.key && !showArchived ? "default" : "ghost"}
-                className="rounded-full text-xs h-7 px-2.5"
-                onClick={() => {
-                  setFilter(f.key);
-                  setShowArchived(false);
-                }}
-              >
-                {f.label}
-                {counts && counts[f.key] > 0 && (
-                  <span className="ml-1 opacity-70">{counts[f.key]}</span>
-                )}
-              </Button>
-            ))}
-            <Button
-              size="sm"
-              variant={showArchived ? "default" : "ghost"}
-              className="rounded-full text-xs h-7 px-2.5"
-              onClick={() => setShowArchived((v) => !v)}
-            >
-              Archive
-            </Button>
+          <div className="p-2 border-b flex items-center gap-0.5 flex-nowrap overflow-hidden">
+            {PRIMARY_FILTERS.map((f) => {
+              const active = filter === f.key && !showArchived;
+              const count = counts ? counts[f.key] : 0;
+              return (
+                <Button
+                  key={f.key}
+                  size="sm"
+                  variant={active ? "default" : "ghost"}
+                  className="rounded-full text-xs h-7 px-2 shrink-0 min-w-0"
+                  onClick={() => {
+                    setFilter(f.key);
+                    setShowArchived(false);
+                  }}
+                >
+                  <span className="truncate">
+                    <span className="hidden 2xl:inline">{f.label}</span>
+                    <span className="2xl:hidden">{f.short}</span>
+                  </span>
+                  {count > 0 && (
+                    <span
+                      className={cn(
+                        "ml-1 rounded-full px-1 text-[10px] leading-4 tabular-nums",
+                        active ? "bg-primary-foreground/20" : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </Button>
+              );
+            })}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant={
+                    showArchived || !PRIMARY_FILTERS.some((f) => f.key === filter) ? "default" : "ghost"
+                  }
+                  className="rounded-full text-xs h-7 px-2 shrink-0 ml-auto"
+                >
+                  More <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {OVERFLOW_FILTERS.map((f) => {
+                  const isArchive = f.key === "archive";
+                  const count = !isArchive && counts ? counts[f.key as Filter] : 0;
+                  const active = isArchive ? showArchived : filter === f.key && !showArchived;
+                  return (
+                    <DropdownMenuItem
+                      key={f.key}
+                      onClick={() => {
+                        if (isArchive) {
+                          setShowArchived(true);
+                        } else {
+                          setFilter(f.key as Filter);
+                          setShowArchived(false);
+                        }
+                      }}
+                      className={cn("text-xs justify-between", active && "font-semibold")}
+                    >
+                      <span>{f.label}</span>
+                      {count > 0 && (
+                        <span className="rounded-full bg-muted px-1 text-[10px] leading-4 text-muted-foreground tabular-nums">
+                          {count}
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <div className="flex-1 overflow-y-auto">
             {threadsQ.isLoading ? (
