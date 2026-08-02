@@ -53,6 +53,63 @@ export function switchWorkspace(id: string) {
   emit();
 }
 
+export async function renameWorkspace(id: string, name: string) {
+  const { error } = await supabase.from("workspaces").update({ name }).eq("id", id);
+  if (error) throw error;
+  await refreshWorkspaces();
+}
+
+export async function deleteWorkspace(id: string) {
+  const remaining = workspaces.filter((w) => w.id !== id);
+  const { error } = await supabase.from("workspaces").delete().eq("id", id);
+  if (error) throw error;
+  const next = remaining[0]?.id ?? null;
+  if (selectedId === id) {
+    selectedId = next;
+    if (typeof window !== "undefined") {
+      if (next) window.localStorage.setItem(STORAGE_KEY, next);
+      else window.localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+  await refreshWorkspaces();
+  return next;
+}
+
+/** Current user's role in the active workspace — gates rename/delete affordances. */
+export function useWorkspaceRole() {
+  const { workspaceId } = useWorkspaceId();
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!workspaceId) {
+      setRole(null);
+      return;
+    }
+    void (async () => {
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes.user?.id;
+      if (!userId) return;
+      const { data } = await supabase
+        .from("workspace_members")
+        .select("role")
+        .eq("workspace_id", workspaceId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!cancelled) setRole((data?.role as string | undefined) ?? null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceId]);
+
+  return {
+    role,
+    canRename: role === "owner" || role === "admin",
+    canDelete: role === "owner",
+  };
+}
+
 export function useWorkspaceId() {
   useSyncExternalStore(subscribe, snapshot, snapshot);
 
