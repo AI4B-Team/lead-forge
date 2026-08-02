@@ -352,12 +352,6 @@ function LeadsPageInner() {
                           {location || "Location Unknown"}
                           {sources ? <span className="text-muted-foreground/70"> · {sources}</span> : null}
                         </div>
-                        {/* Direct mail stays out of the scanned columns — it lives with the record detail. */}
-                        {r.address && (
-                          <div className="mt-0.5 truncate text-xs text-muted-foreground/70" title={mailingAddress(contact)}>
-                            {r.address}
-                          </div>
-                        )}
                         {!!r.tags?.length && (
                           <div className="mt-1">
                             <LeadTagChips tags={r.tags} max={4} />
@@ -366,12 +360,36 @@ function LeadsPageInner() {
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <PhoneCell contact={contact} />
-                  </td>
-                  <td className="p-4">
-                    <EmailCell contact={contact} />
-                  </td>
+                  {dynamicCols.map((k) => (
+                    <td key={k} className="p-4">
+                      {k === "phone" ? (
+                        <PhoneCell contact={contact} />
+                      ) : k === "email" ? (
+                        <EmailCell contact={contact} />
+                      ) : k === "address" ? (
+                        r.address ? (
+                          <div className="max-w-[200px]">
+                            <div className="truncate text-foreground" title={mailingAddress(contact)}>{r.address}</div>
+                            <div className="text-xs text-muted-foreground">Mailable</div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground/40">—</span>
+                        )
+                      ) : r.website ? (
+                        <a
+                          href={/^https?:/.test(r.website) ? r.website : `https://${r.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block max-w-[180px] truncate text-foreground underline-offset-2 hover:underline"
+                          title={r.website}
+                        >
+                          {r.website.replace(/^https?:\/\//, "")}
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground/40">—</span>
+                      )}
+                    </td>
+                  ))}
                   <td className="p-4">
                     <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${DISPOSITION_TONE[r.disposition] ?? "border-border text-muted-foreground"}`}>
                       {r.disposition}
