@@ -25,6 +25,9 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { isStalled, stallReason } from "@/lib/job-watchdog";
 import { qualityGrade } from "@/lib/quality-grade";
 import { brandedFileName, brandedJobTitle, BUCKET_FILE_TYPE } from "@/lib/download-name";
+import { downloadRows, toCsv, downloadCsv, type ExportFormat } from "@/lib/export-file";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { FileSpreadsheet, FileText, Files } from "lucide-react";
 import { ChevronDown, Database, Coins } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
@@ -44,24 +47,6 @@ function fmtDuration(ms: number) {
   const m = Math.floor(s / 60);
   if (m < 60) return `${m}m ${s % 60}s`;
   return `${Math.floor(m / 60)}h ${m % 60}m`;
-}
-
-function toCsv(rows: Array<Record<string, unknown>>) {
-  if (!rows.length) return "";
-  const headers = Object.keys(rows[0]!);
-  const esc = (v: unknown) => {
-    const s = v == null ? "" : String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  return [headers.join(","), ...rows.map((r) => headers.map((h) => esc(r[h])).join(","))].join("\n");
-}
-
-function downloadCsv(name: string, csv: string) {
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = name; a.click();
-  URL.revokeObjectURL(url);
 }
 
 function JobDetail() {
@@ -164,10 +149,11 @@ function JobDetail() {
     }
   };
 
-  const onDownload = async (bucket: "clean" | "dnc" | "litigator") => {
+  const onDownload = async (bucket: "clean" | "dnc" | "litigator", format: ExportFormat) => {
     const res = await fetchBucket({ data: { jobId, bucket } });
     if (!res.rows.length) return toast.info("No Rows In This Bucket.");
-    downloadCsv(brandedFileName(jobName, BUCKET_FILE_TYPE[bucket]), toCsv(res.rows));
+    const type = BUCKET_FILE_TYPE[bucket];
+    await downloadRows(res.rows, format, (ext) => brandedFileName(jobName, type, ext), type);
   };
 
   // Scrub audit trail: provider, timestamp and per-bucket outcome, exportable.
@@ -355,7 +341,7 @@ function JobDetail() {
           count={counts.clean}
           note="Ready To Send"
           ready={isReady}
-          onDownload={() => onDownload("clean")}
+          onDownload={(f) => onDownload("clean", f)}
           onView={() => { setBrowserBucket("clean"); setBrowserOpen(true); }}
         />
         <BucketCard
@@ -365,7 +351,7 @@ function JobDetail() {
           count={counts.dnc}
           note="Download For Suppression"
           ready={isReady}
-          onDownload={() => onDownload("dnc")}
+          onDownload={(f) => onDownload("dnc", f)}
           onView={() => { setBrowserBucket("dnc"); setBrowserOpen(true); }}
         />
         <BucketCard
@@ -375,7 +361,7 @@ function JobDetail() {
           count={counts.litigator}
           note="Download For Analytics"
           ready={isReady}
-          onDownload={() => onDownload("litigator")}
+          onDownload={(f) => onDownload("litigator", f)}
           onView={() => { setBrowserBucket("litigator"); setBrowserOpen(true); }}
         />
       </div>
@@ -801,7 +787,7 @@ function BucketCard({ tone, icon, title, count, note, ready, onDownload, onView 
   count: number;
   note: string;
   ready: boolean;
-  onDownload: () => void;
+  onDownload: (format: ExportFormat) => void;
   onView: () => void;
 }) {
   const toneClasses = {
@@ -821,11 +807,28 @@ function BucketCard({ tone, icon, title, count, note, ready, onDownload, onView 
       <div className="mt-1 text-sm text-muted-foreground">{note}</div>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button size="sm" variant="outline" className="rounded-full" disabled={!ready || count === 0} onClick={onView}>
-          <Eye className="mr-1 h-3.5 w-3.5" /> View Online
+          <Eye className="mr-1 h-3.5 w-3.5" /> View
         </Button>
-        <Button size="sm" variant="outline" className="rounded-full" disabled={!ready || count === 0} onClick={onDownload}>
-          <Download className="mr-1 h-3.5 w-3.5" /> Download File
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="outline" className="rounded-full" disabled={!ready || count === 0}>
+              <Download className="mr-1 h-3.5 w-3.5" /> Download
+              <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-60" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-52">
+            <DropdownMenuLabel>Download As</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => onDownload("csv")}>
+              <FileText className="mr-2 h-4 w-4" /> CSV (.csv)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDownload("xlsx")}>
+              <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel (.xlsx)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDownload("both")}>
+              <Files className="mr-2 h-4 w-4" /> Both Files
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
