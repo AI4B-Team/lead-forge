@@ -29,6 +29,11 @@ export type AdapterStatus = "live" | "beta" | "requested";
 /** Site scrapers take a URL, not a geography. */
 const URL_TEMPLATES = new Set(["contact-details", "universal-crawl", "web-scraper", "site-crawler"]);
 
+/** Templates whose fields don't follow their catalog category. */
+const SCHEMA_BY_ID: Record<string, BuilderField[]> = {
+  linkedin: ["keyword", "audienceFilter"],
+};
+
 const BY_CATEGORY: Record<TemplateCategory, BuilderField[]> = {
   upload: ["upload"],
   records: ["recordType", "state", "counties", "recency"],
@@ -52,6 +57,9 @@ const LIVE_CATEGORIES = new Set<TemplateCategory>(["business", "records", "uploa
 
 export function templateAdapterStatus(t: Template): AdapterStatus {
   if (t.adapterStatus) return t.adapterStatus;
+  // Anything already flagged Beta in the catalog has no live adapter either,
+  // and site scrapers aren't wired to the pipeline yet.
+  if (t.beta || URL_TEMPLATES.has(t.id)) return "beta";
   if (LIVE_CATEGORIES.has(t.category)) return "live";
   return "beta";
 }
@@ -59,6 +67,7 @@ export function templateAdapterStatus(t: Template): AdapterStatus {
 export function templateFieldSchema(t: Template): BuilderField[] {
   if (t.fieldSchema?.length) return t.fieldSchema as BuilderField[];
   if (URL_TEMPLATES.has(t.id)) return ["url"];
+  if (SCHEMA_BY_ID[t.id]) return SCHEMA_BY_ID[t.id];
   return BY_CATEGORY[t.category] ?? ["keyword", "state", "counties"];
 }
 
