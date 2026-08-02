@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { formatLocation } from "@/lib/location";
 
 // 30-day rollup: outbound sent, delivered, replies, opt-outs bucketed by day.
 // Also returns per-campaign funnels and per-number health.
@@ -273,7 +274,7 @@ export const getWorkspacePerformance = createServerFn({ method: "GET" })
       recent.push({
         id: m.id,
         name: lead?.full_name ?? lead?.business_name ?? "Unknown Lead",
-        place: [lead?.city, lead?.state].filter(Boolean).join(", "),
+        place: formatLocation(lead?.city, lead?.state),
         body: m.body ?? "",
         intent: classifyIntent(m.body, m.is_optout),
         at: m.created_at,

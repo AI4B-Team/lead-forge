@@ -12,6 +12,7 @@ import { Link } from "@tanstack/react-router";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Users, ShieldCheck, ShieldAlert, Ban, Sparkles, Layers } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { formatLocation } from "@/lib/location";
 import { listLeadRecords, getLeadListMemberships } from "@/lib/monitoring.functions";
 import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
 import { PhoneLink } from "@/components/app/phone-link";
@@ -76,14 +77,20 @@ function ListMembershipCell({ leadId, count }: { leadId: string; count: number }
       <PopoverTrigger asChild>
         <button
           type="button"
-          className={`cursor-pointer inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors ${
+          className={
             count > 1
-              ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
-              : "border-border text-muted-foreground hover:bg-surface-muted"
-          }`}
+              ? "cursor-pointer inline-flex items-center gap-1 rounded-full border border-info/30 bg-info/10 px-2 py-0.5 text-[11px] font-medium text-info transition-colors hover:bg-info/20"
+              : "cursor-pointer inline-flex items-center text-[13px] text-muted-foreground underline-offset-2 hover:underline"
+          }
         >
-          {count > 1 ? <Layers className="h-3 w-3" /> : null}
-          {count} {count === 1 ? "List" : "Lists"}
+          {count > 1 ? (
+            <>
+              <Layers className="h-3 w-3" />
+              {count} Lists
+            </>
+          ) : (
+            "1"
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-72 p-2">
@@ -266,11 +273,13 @@ function LeadsPageInner() {
                 <tr key={r.id} className="border-b border-border last:border-0 hover:bg-surface-muted">
                   <td className="p-4">
                     <div className="flex items-center gap-2">
+                      <span className="w-11 shrink-0">
+                        {r.is_new && <Badge className="bg-primary text-primary-foreground text-[10px]">NEW</Badge>}
+                      </span>
                       <span className="font-medium text-foreground">{r.business_name || r.full_name || "—"}</span>
-                      {r.is_new && <Badge className="bg-primary text-primary-foreground text-[10px]">NEW</Badge>}
                     </div>
                     {r.business_name && r.full_name && (
-                      <div className="text-xs text-muted-foreground">{r.full_name}</div>
+                      <div className="ml-[3.25rem] text-xs text-muted-foreground">{r.full_name}</div>
                     )}
                   </td>
                   <td className="p-4">{r.phone ? <PhoneLink phone={r.phone} /> : <span className="text-muted-foreground">—</span>}</td>
@@ -287,7 +296,7 @@ function LeadsPageInner() {
                     <ListMembershipCell leadId={r.id} count={r.list_count} />
                   </td>
                   <td className="p-4 text-muted-foreground">
-                    {[r.city, r.state].filter(Boolean).join(", ") || "—"}
+                    {formatLocation(r.city, r.state) || "—"}
                   </td>
                   <td className="p-4 text-muted-foreground whitespace-nowrap">
                     {new Date(r.first_seen_at).toLocaleDateString()} → {new Date(r.last_seen_at).toLocaleDateString()}

@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { formatLocation } from "@/lib/location";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -719,7 +720,7 @@ function LeadsBrowser({ jobId, disabled, open, onOpenChange, bucket, onBucketCha
                 {l.email && <span>{l.email}</span>}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
-                {[l.address, l.city, l.state].filter(Boolean).join(", ") || "—"}
+                {formatLocation(l.city, l.state, l.address) || "—"}
               </div>
             </button>
           ))}
