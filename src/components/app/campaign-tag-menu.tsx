@@ -108,15 +108,22 @@ export function CampaignTagMenu({
           {!tags.length && <li className="px-3 py-2 text-sm text-muted-foreground">No Tags Yet</li>}
         </ul>
         <div className="border-t border-border p-3 space-y-2">
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="New Tag Name" className="h-8" />
-          <div className="flex items-center gap-1.5">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. HVAC, VIP, Follow Up"
+            className="h-8"
+          />
+          <div className="flex items-center gap-2">
             {TAG_SWATCHES.map((c) => (
               <button
                 key={c}
                 type="button"
                 aria-label={`Color ${c}`}
                 onClick={() => setColor(c)}
-                className={`h-5 w-5 rounded-full border ${color === c ? "ring-2 ring-offset-1 ring-primary" : ""}`}
+                className={`h-7 w-7 rounded-full transition-transform hover:scale-110 ${
+                  color === c ? "ring-2 ring-offset-2 ring-offset-background ring-foreground/70" : ""
+                }`}
                 style={{ backgroundColor: c }}
               />
             ))}
