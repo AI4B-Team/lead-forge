@@ -290,57 +290,51 @@ function DayTooltip({ active, payload, label }: { active?: boolean; payload?: Ar
   );
 }
 
-/** Campaign leaderboard ranked by appointments booked. */
+/** Campaign performance — Stripe-style rows that never reserve empty space. */
 export function CampaignLeaderboard({
   campaigns,
 }: {
   campaigns: Array<{ id: string; name: string; status: string; sent: number; replies: number; appointments: number; qualified: number; replyRate: number; optOutRate: number }>;
 }) {
-  const top = Math.max(...campaigns.map((c) => c.appointments || c.replies), 1);
+  if (campaigns.length === 0) {
+    return <div className="text-sm text-muted-foreground">No Campaign Activity Yet.</div>;
+  }
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-display flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-primary" /> Campaign Leaderboard
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {campaigns.length === 0 ? (
-          <div className="text-sm text-muted-foreground py-6 text-center">No Campaign Activity Yet.</div>
-        ) : (
-          <div className="space-y-3">
-            {campaigns.map((c, i) => (
-              <Link
-                key={c.id}
-                to="/app/campaigns/$campaignId"
-                params={{ campaignId: c.id }}
-                className="block rounded-xl border border-border p-3 transition hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-sm"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-display font-black text-muted-foreground text-sm w-5">{i + 1}</span>
-                  <span className="font-display font-bold text-foreground text-sm truncate">{c.name}</span>
-                  <Badge variant="outline" className="ml-auto uppercase text-[10px] shrink-0">{c.status}</Badge>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-surface-muted overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${Math.max(((c.appointments || c.replies) / top) * 100, 3)}%` }}
-                  />
-                </div>
-                <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-xs">
-                  <span className="font-display font-bold text-foreground">{c.appointments} Appointments</span>
-                  <span className="text-muted-foreground">{(c.replyRate * 100).toFixed(1)}% Reply Rate</span>
-                  <span className="text-muted-foreground">{c.qualified} Qualified</span>
-                  <span className={c.optOutRate > 0.05 ? "text-danger" : "text-muted-foreground"}>
-                    {(c.optOutRate * 100).toFixed(1)}% Opt-Out
-                  </span>
-                </div>
-              </Link>
-            ))}
+    <div className="divide-y divide-border rounded-xl border border-border">
+      {campaigns.map((c) => (
+        <Link
+          key={c.id}
+          to="/app/campaigns/$campaignId"
+          params={{ campaignId: c.id }}
+          className="flex flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3 transition hover:bg-surface-muted/60"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-display text-sm font-bold text-foreground">{c.name}</div>
+            <Badge variant="outline" className="mt-0.5 text-[10px] uppercase">{c.status}</Badge>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <RowStat label="Reply Rate" value={`${(c.replyRate * 100).toFixed(0)}%`} />
+          <RowStat label="Appointments" value={String(c.appointments)} />
+          <RowStat label="Pipeline" value={formatMoney(c.appointments * 2000 * 0.22)} />
+          <RowStat
+            label="Opt-Out"
+            value={`${(c.optOutRate * 100).toFixed(1)}%`}
+            tone={c.optOutRate > 0.05 ? "danger" : undefined}
+          />
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function RowStat({ label, value, tone }: { label: string; value: string; tone?: "danger" }) {
+  return (
+    <div className="w-24 shrink-0">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={`font-display text-sm font-bold ${tone === "danger" ? "text-danger" : "text-foreground"}`}>
+        {value}
+      </div>
+    </div>
   );
 }
 
@@ -440,20 +434,30 @@ export function BestMessagePanel({
 }) {
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-display flex items-center gap-2">
-          <Quote className="h-4 w-4 text-primary" /> Best Performing Message
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-display">
+          <Quote className="h-4 w-4 text-primary" /> Top Performing Message
         </CardTitle>
+        {best && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 rounded-full text-xs"
+            onClick={() => void navigator.clipboard.writeText(best.body)}
+          >
+            <Copy className="mr-1 h-3 w-3" /> Copy
+          </Button>
+        )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="pb-4">
         {!best ? (
-          <div className="text-sm text-muted-foreground py-6 text-center">No Outbound Copy To Score Yet.</div>
+          <div className="text-sm text-muted-foreground">No Outbound Copy To Score Yet.</div>
         ) : (
           <>
-            <div className="rounded-2xl rounded-bl-sm bg-primary px-4 py-3 text-sm text-primary-foreground">
+            <div className="rounded-2xl rounded-bl-sm bg-primary px-4 py-2.5 text-[13px] leading-snug text-primary-foreground">
               {best.body}
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <div className="mt-3 flex flex-wrap gap-x-8 gap-y-2">
               <MiniStat label="Reply Rate" value={`${(best.replyRate * 100).toFixed(0)}%`} />
               <MiniStat label="Times Sent" value={best.sent.toLocaleString()} />
               <MiniStat label="Used In" value={`${best.campaigns} Campaign${best.campaigns === 1 ? "" : "s"}`} />
@@ -467,9 +471,9 @@ export function BestMessagePanel({
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border p-2">
+    <div>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="font-display font-bold text-sm text-foreground">{value}</div>
+      <div className="font-display text-sm font-bold text-foreground">{value}</div>
     </div>
   );
 }
