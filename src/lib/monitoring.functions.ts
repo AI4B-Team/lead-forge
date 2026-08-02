@@ -45,7 +45,7 @@ export const listLeadRecords = createServerFn({ method: "GET" })
     if (data.search?.trim()) {
       const s = `%${data.search.trim()}%`;
       q = q.or(
-        `full_name.ilike.${s},business_name.ilike.${s},phone.ilike.${s},email.ilike.${s},city.ilike.${s}`,
+        `full_name.ilike.${s},business_name.ilike.${s},phone.ilike.${s},email.ilike.${s},city.ilike.${s},state.ilike.${s}`,
       );
     }
 

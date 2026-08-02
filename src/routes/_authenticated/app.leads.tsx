@@ -124,7 +124,7 @@ function LeadsPage() {
         <CardContent className="p-4 flex flex-col lg:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search Name, Phone, City…" className="pl-9" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search By Name, Phone, Email, Or Location…" className="pl-9" />
           </div>
           <Select value={disposition} onValueChange={(v) => setDisposition(v as typeof disposition)}>
             <SelectTrigger className="lg:w-[170px]"><SelectValue /></SelectTrigger>
