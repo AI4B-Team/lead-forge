@@ -93,7 +93,7 @@ export function ScanDigest({ workspaceId }: { workspaceId: string | null }) {
               <div className="min-w-0">
                 <Link
                   to="/app/lists/$listId"
-                  params={{ jobId: j.id }}
+                  params={{ listId: j.id }}
                   className="font-medium text-foreground hover:text-primary truncate block"
                 >
                   {j.name}

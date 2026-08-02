@@ -566,7 +566,7 @@ function Assistant() {
           },
         });
         clearDraft(workspaceId);
-        navigate({ to: "/app/lists/$listId", params: { jobId: id } });
+        navigate({ to: "/app/lists/$listId", params: { listId: id } });
         if (duplicate) {
           toast.info("This File Was Already Queued — Opening That Run.");
           return;
@@ -592,7 +592,7 @@ function Assistant() {
       // A template-originated run counts as usage, so it stays near the front.
       if (lastTemplateId.current) setRecents(touchRecentTemplate(workspaceId, lastTemplateId.current));
       toast.success("List Queued. Running Pipeline…");
-      navigate({ to: "/app/lists/$listId", params: { jobId } });
+      navigate({ to: "/app/lists/$listId", params: { listId: jobId } });
       runJobFn({ data: { jobId } }).catch((e) =>
         toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
       );

@@ -72,7 +72,7 @@ function Wizard() {
           rows: attached ? attachmentRows({ ...attached, map: mapping }) : null,
         },
       });
-      navigate({ to: "/app/lists/$listId", params: { jobId: id } });
+      navigate({ to: "/app/lists/$listId", params: { listId: id } });
       if (duplicate) {
         toast.info("This File Was Already Queued — Opening That Run.");
         return;

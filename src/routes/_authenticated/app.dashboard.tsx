@@ -365,7 +365,7 @@ function Dashboard() {
                     <Link
                       key={j.id}
                       to="/app/lists/$listId"
-                      params={{ jobId: j.id }}
+                      params={{ listId: j.id }}
                       className="-mx-2 flex items-start gap-4 rounded-lg px-2 py-3 hover:bg-surface-muted"
                     >
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">

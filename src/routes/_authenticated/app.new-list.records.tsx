@@ -62,7 +62,7 @@ function Wizard() {
           date_to: to || null,
         },
       });
-      navigate({ to: "/app/lists/$listId", params: { jobId: id } });
+      navigate({ to: "/app/lists/$listId", params: { listId: id } });
       if (duplicate) {
         toast.info("This Search Was Already Queued — Opening That Run.");
         return;

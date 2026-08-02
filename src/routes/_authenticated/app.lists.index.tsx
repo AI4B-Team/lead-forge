@@ -245,7 +245,7 @@ function Jobs() {
                 return (
                 <tr
                   key={j.id}
-                  onClick={() => navigate({ to: "/app/lists/$listId", params: { jobId: j.id } })}
+                  onClick={() => navigate({ to: "/app/lists/$listId", params: { listId: j.id } })}
                   className="group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-muted"
                 >
                   <td className="p-4">
