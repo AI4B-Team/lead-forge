@@ -209,34 +209,39 @@ export const runJob = createServerFn({ method: "POST" })
       deduped.length,
     );
 
+    const shouldSkiptrace =
+      job.source_type === "records" || (job.source_type === "upload" && params.skip_trace !== false);
+
     // 2b) CARRIER CHECK — classify every number and, when Mobile Numbers Only
     // is enabled, drop landline/VoIP so the Mobile Verified stage reports a
-    // real removal instead of passing everything through.
-    const { verifyLineTypes } = await import("./line-type");
+    // real removal instead of passing everything through. Rows with no number
+    // yet are held back for skip trace and gated again afterwards.
+    const { verifyPending, verifyLineTypes, classifyLineType } = await import("./line-type");
     const mobileOnly = params.mobile_only === true;
-    const verify = verifyLineTypes(deduped, mobileOnly);
-    const verified = verify.kept;
+    const verify = shouldSkiptrace
+      ? verifyPending(deduped, mobileOnly)
+      : verifyLineTypes(deduped, mobileOnly);
+    let verified = verify.kept;
     await supabase.from("jobs").update({ rows_enriched: verified.length }).eq("id", jobId);
     await say(
       "enriching",
       mobileOnly
         ? verify.removed > 0
-          ? `Carrier check removed ${verify.removed.toLocaleString()} landline, VoIP, and unverified numbers — ${verified.length.toLocaleString()} mobile numbers remain.`
-          : `Carrier check confirmed all ${verified.length.toLocaleString()} numbers are mobile.`
+          ? `Carrier check removed ${verify.removed.toLocaleString()} landline and VoIP numbers — ${verified.length.toLocaleString()} records remain.`
+          : `Carrier check confirmed every number is mobile — ${verified.length.toLocaleString()} records remain.`
         : `Carrier check complete — ${verify.counts.mobile.toLocaleString()} mobile, ${(verify.counts.landline + verify.counts.voip).toLocaleString()} landline or VoIP.`,
       verified.length,
     );
 
     // 3) SKIPTRACE (fill missing phones for records + upload w/ opt-in) --------
     await supabase.from("jobs").update({ status: "skiptracing" }).eq("id", jobId);
-    const shouldSkiptrace =
-      job.source_type === "records" || (job.source_type === "upload" && params.skip_trace !== false);
     let skiptraced = 0;
     if (shouldSkiptrace) {
       for (let i = 0; i < verified.length; i++) {
         if (!verified[i]!.phone) {
-          verified[i]!.phone = fakePhone(1_000_000 + i);
-          verified[i]!.line_type = "mobile";
+          const filled = fakePhone(1_000_000 + i);
+          verified[i]!.phone = filled;
+          verified[i]!.line_type = classifyLineType(filled);
           skiptraced++;
         }
       }
@@ -271,6 +276,20 @@ export const runJob = createServerFn({ method: "POST" })
         : "No skip tracing needed — every record already had a phone number.",
       skiptraced,
     );
+
+    // Final carrier gate for anything skip trace just filled in.
+    if (shouldSkiptrace && mobileOnly) {
+      const finalGate = verifyLineTypes(verified, true);
+      if (finalGate.removed > 0) {
+        verified = finalGate.kept;
+        await say(
+          "enriching",
+          `Carrier check removed ${finalGate.removed.toLocaleString()} newly traced numbers that were not mobile — ${verified.length.toLocaleString()} mobile records remain.`,
+          verified.length,
+        );
+      }
+      await supabase.from("jobs").update({ rows_enriched: verified.length }).eq("id", jobId);
+    }
 
     // 4) INSERT LEADS ----------------------------------------------------------
     const leadRows = verified.map((r) => ({
