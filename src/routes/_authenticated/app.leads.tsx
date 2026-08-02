@@ -272,11 +272,13 @@ function LeadsPageInner() {
                 <tr key={r.id} className="border-b border-border last:border-0 hover:bg-surface-muted">
                   <td className="p-4">
                     <div className="flex items-center gap-2">
+                      <span className="w-11 shrink-0">
+                        {r.is_new && <Badge className="bg-primary text-primary-foreground text-[10px]">NEW</Badge>}
+                      </span>
                       <span className="font-medium text-foreground">{r.business_name || r.full_name || "—"}</span>
-                      {r.is_new && <Badge className="bg-primary text-primary-foreground text-[10px]">NEW</Badge>}
                     </div>
                     {r.business_name && r.full_name && (
-                      <div className="text-xs text-muted-foreground">{r.full_name}</div>
+                      <div className="ml-[3.25rem] text-xs text-muted-foreground">{r.full_name}</div>
                     )}
                   </td>
                   <td className="p-4">{r.phone ? <PhoneLink phone={r.phone} /> : <span className="text-muted-foreground">—</span>}</td>
@@ -293,7 +295,7 @@ function LeadsPageInner() {
                     <ListMembershipCell leadId={r.id} count={r.list_count} />
                   </td>
                   <td className="p-4 text-muted-foreground">
-                    {[r.city, r.state].filter(Boolean).join(", ") || "—"}
+                    {formatLocation(r.city, r.state) || "—"}
                   </td>
                   <td className="p-4 text-muted-foreground whitespace-nowrap">
                     {new Date(r.first_seen_at).toLocaleDateString()} → {new Date(r.last_seen_at).toLocaleDateString()}
