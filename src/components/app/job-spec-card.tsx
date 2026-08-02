@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import {
   attachmentMappedCount, isSpreadsheet, type UploadAttachment,
 } from "@/lib/upload-attachment";
+import { optionsForSource } from "@/lib/pipeline-options";
 
 /**
  * Inline dropzone + mapping summary. Uploads never leave the assistant page.
@@ -253,24 +254,8 @@ export function JobSpecCard({
     }
   };
 
-  const toggles = isUpload
-    ? ([
-        ["skipTrace", "Skip Trace Missing Numbers"],
-        ["dedupe", "Dedupe Against Past Lists"],
-        ["mobileOnly", "Mobile Numbers Only"],
-      ] as const)
-    : isRecords
-      ? ([
-          ["skipTrace", "Skip Trace Missing Numbers"],
-          ["dedupe", "Dedupe Against Past Lists"],
-          ["mobileOnly", "Mobile Numbers Only"],
-        ] as const)
-      : ([
-          ["skipTrace", "Skip Trace Missing Numbers"],
-          ["removeFranchises", "Remove Franchises"],
-          ["dedupe", "Dedupe Against Past Lists"],
-          ["mobileOnly", "Mobile Numbers Only"],
-        ] as const);
+  // Labels and ordering come from the shared config the checklist also uses.
+  const toggles = optionsForSource(spec.sourceType);
 
   return (
     <Card>
@@ -476,10 +461,10 @@ export function JobSpecCard({
         </div>
 
         <div className="space-y-3">
-          {toggles.map(([key, label]) => (
-            <div key={key} className="flex items-center justify-between">
-              <span className="text-sm text-foreground">{label}</span>
-              <Switch checked={spec[key]} onCheckedChange={(v) => set(key, v)} />
+          {toggles.map((option) => (
+            <div key={option.id} className="flex items-center justify-between">
+              <span className="text-sm text-foreground">{option.label}</span>
+              <Switch checked={spec[option.id]} onCheckedChange={(v) => set(option.id, v)} />
             </div>
           ))}
         </div>
