@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Link } from "@tanstack/react-router";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Users, ShieldCheck, ShieldAlert, Ban, Sparkles, Layers } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { listLeadRecords } from "@/lib/monitoring.functions";
+import { listLeadRecords, getLeadListMemberships } from "@/lib/monitoring.functions";
 import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
 import { PhoneLink } from "@/components/app/phone-link";
 
@@ -55,6 +57,61 @@ function Stat({ icon, label, value, tone }: { icon: React.ReactNode; label: stri
 }
 
 function LeadsPage() {
+  return <LeadsPageInner />;
+}
+
+function ListMembershipCell({ leadId, count }: { leadId: string; count: number }) {
+  const { workspaceId } = useWorkspaceId();
+  const [open, setOpen] = useState(false);
+  const fetchLists = useServerFn(getLeadListMemberships);
+  const { data, isLoading } = useQuery({
+    queryKey: ["lead-lists", workspaceId, leadId],
+    queryFn: () => fetchLists({ data: { workspaceId: workspaceId!, leadRecordId: leadId } }),
+    enabled: open && !!workspaceId,
+  });
+  const lists = data?.lists ?? [];
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={`cursor-pointer inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors ${
+            count > 1
+              ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
+              : "border-border text-muted-foreground hover:bg-surface-muted"
+          }`}
+        >
+          {count > 1 ? <Layers className="h-3 w-3" /> : null}
+          {count} {count === 1 ? "List" : "Lists"}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 p-2">
+        <div className="px-2 pb-2 text-xs uppercase tracking-wide text-muted-foreground">Appears In</div>
+        {isLoading && <div className="px-2 py-1 text-sm text-muted-foreground">Loading…</div>}
+        {!isLoading && lists.length === 0 && (
+          <div className="px-2 py-1 text-sm text-muted-foreground">No List Found.</div>
+        )}
+        <div className="max-h-64 overflow-y-auto">
+          {lists.map((l) => (
+            <Link
+              key={l.id}
+              to="/app/lists/$listId"
+              params={{ listId: l.listId }}
+              className="block rounded-md px-2 py-1.5 hover:bg-surface-muted"
+              onClick={() => setOpen(false)}
+            >
+              <div className="text-sm font-medium text-foreground">{l.name}</div>
+              <div className="text-xs text-muted-foreground">{new Date(l.created_at).toLocaleDateString()}</div>
+            </Link>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function LeadsPageInner() {
   const { workspaceId } = useWorkspaceId();
   const { onlyNew: onlyNewParam } = Route.useSearch();
   const fetchRecords = useServerFn(listLeadRecords);
@@ -102,6 +159,12 @@ function LeadsPage() {
         <Stat icon={<Ban className="h-4 w-4" />} label="Litigators Blocked" value={(stats?.litigator ?? 0).toLocaleString()} tone="text-danger" />
         <Stat icon={<Sparkles className="h-4 w-4" />} label="New This Week" value={(stats?.newThisWeek ?? 0).toLocaleString()} tone="text-primary" />
       </div>
+
+      {(stats?.multiList ?? 0) > 0 && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          {(stats?.multiList ?? 0).toLocaleString()} Leads Appear In 2+ Lists — De-Duplicated Into One Row Each.
+        </p>
+      )}
 
       {(bySource.length > 0 || byRecordType.length > 0) && (
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -221,9 +284,7 @@ function LeadsPage() {
                     {(r.source_types ?? []).map((s) => SOURCE_LABEL[s] ?? s).join(", ") || "—"}
                   </td>
                   <td className="p-4">
-                    <Badge variant={r.list_count > 1 ? "default" : "secondary"} className="font-normal">
-                      {r.list_count}
-                    </Badge>
+                    <ListMembershipCell leadId={r.id} count={r.list_count} />
                   </td>
                   <td className="p-4 text-muted-foreground">
                     {[r.city, r.state].filter(Boolean).join(", ") || "—"}
