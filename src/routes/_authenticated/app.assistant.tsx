@@ -1151,6 +1151,8 @@ function Assistant() {
 
         {!started && heroState}
 
+        {!started && <FirstRunSetup workspaceId={workspaceId ?? null} />}
+
         {started && (
           <div className="grid min-h-0 flex-1 items-start gap-6 lg:grid-cols-[1fr_400px]">
             {/* Chat column: thread scrolls, composer stays pinned to the bottom. */}
