@@ -1,0 +1,34 @@
+import { describe, expect, it } from "vitest";
+import { classifyLineType, verifyLineTypes } from "./line-type";
+
+describe("line type verification", () => {
+  it("classifies by carrier exchange", () => {
+    expect(classifyLineType("+18132001234")).toBe("landline"); // exchange 200
+    expect(classifyLineType("+18132011234")).toBe("voip"); // exchange 201
+    expect(classifyLineType("+18132021234")).toBe("mobile"); // exchange 202
+    expect(classifyLineType("123")).toBe("unknown");
+    expect(classifyLineType(null)).toBe("unknown");
+  });
+
+  it("removes landline and voip rows when Mobile Numbers Only is on", () => {
+    const rows = [
+      { phone: "+18132001234" }, // landline
+      { phone: "+18132011234" }, // voip
+      { phone: "+18132021234" }, // mobile
+      { phone: "+18132031234" }, // mobile
+      { phone: null }, // unknown
+    ];
+    const res = verifyLineTypes(rows, true);
+    expect(res.kept).toHaveLength(2);
+    expect(res.removed).toBe(3);
+    expect(res.counts).toEqual({ mobile: 2, landline: 1, voip: 1, unknown: 1 });
+    expect(res.kept.every((r) => r.line_type === "mobile")).toBe(true);
+  });
+
+  it("keeps every row but still tags line types when the toggle is off", () => {
+    const rows = [{ phone: "+18132001234" }, { phone: "+18132021234" }];
+    const res = verifyLineTypes(rows, false);
+    expect(res.removed).toBe(0);
+    expect(res.kept.map((r) => r.line_type)).toEqual(["landline", "mobile"]);
+  });
+});
