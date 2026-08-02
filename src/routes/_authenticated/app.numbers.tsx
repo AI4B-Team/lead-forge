@@ -272,18 +272,25 @@ function InboundCallCard({
   total,
   currentForward,
   currentGreeting,
+  recordingEnabled = false,
+  recordingDisclosure = false,
 }: {
   workspaceId: string | null;
   unforwarded: number;
   total: number;
   currentForward: string;
   currentGreeting: string;
+  recordingEnabled?: boolean;
+  recordingDisclosure?: boolean;
 }) {
   const save = useServerFn(updateInboundSettings);
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [scope, setScope] = useState<ForwardScope>("pool");
   const [forward, setForward] = useState(currentForward);
   const [greeting, setGreeting] = useState(currentGreeting);
+  const [recording, setRecording] = useState(recordingEnabled);
+  const [disclose, setDisclose] = useState(recordingDisclosure);
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
@@ -293,8 +300,11 @@ function InboundCallCard({
       await save({
         data: {
           workspaceId,
+          scope,
           forwardCallsTo: forward.trim() ? forward.trim() : null,
-          voicemailGreeting: greeting.trim() ? greeting.trim() : null,
+          voicemailGreeting: withDisclosure(greeting, recording && disclose) || null,
+          recordingEnabled: recording,
+          recordingDisclosure: disclose,
         },
       });
       toast.success(forward.trim() ? "Inbound Calls Will Forward." : "Inbound Calls Go To Voicemail.");
@@ -340,6 +350,24 @@ function InboundCallCard({
             <DialogHeader><DialogTitle>Inbound Call Handling</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div>
+                <Label>Apply Forwarding To</Label>
+                <select
+                  value={scope}
+                  onChange={(e) => setScope(e.target.value as ForwardScope)}
+                  className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  {FORWARD_SCOPES.map((s) => (
+                    <option key={s.value} value={s.value} disabled={!s.available}>
+                      {s.label}
+                      {s.available ? "" : " (Coming Soon)"}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  {FORWARD_SCOPES.find((s) => s.value === scope)?.hint}
+                </p>
+              </div>
+              <div>
                 <Label>Forward Calls To</Label>
                 <Input
                   placeholder="(555) 123-4567"
@@ -347,7 +375,7 @@ function InboundCallCard({
                   onChange={(e) => setForward(e.target.value)}
                 />
                 <p className="mt-1.5 text-xs text-muted-foreground">
-                  Applies To Every Number In Your Pool. Leave Blank To Use Voicemail Only.
+                  Applies To Every Number In Your Pool Today. Leave Blank To Use Voicemail Only.
                 </p>
               </div>
               <div>
@@ -361,6 +389,45 @@ function InboundCallCard({
                 <p className="mt-1.5 text-xs text-muted-foreground">
                   Used When A Call Isn't Answered. Recordings And Transcripts Appear In The Inbox On The Lead's Thread.
                 </p>
+              </div>
+
+              {/* Recording is a second regulatory surface (wiretap law), separate from TCPA. */}
+              <div className="rounded-xl border border-warn/40 bg-warn/5 p-3">
+                <div className="flex items-start gap-2">
+                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warn" />
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold text-foreground">Record Inbound Calls</div>
+                    <p className="mt-1 text-xs text-muted-foreground">{RECORDING_CONSENT_NOTICE}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      All-Party Consent States Commonly Include: {ALL_PARTY_CONSENT_STATES.join(", ")}. Have Counsel Review
+                      Your Disclosure Before Enabling Recording Broadly. This Is Not Legal Advice.
+                    </p>
+                    <label className="mt-2 flex items-center gap-2 text-xs text-foreground">
+                      <input
+                        type="checkbox"
+                        checked={recording}
+                        onChange={(e) => setRecording(e.target.checked)}
+                        className="h-4 w-4 accent-primary"
+                      />
+                      Record Calls And Generate Transcripts
+                    </label>
+                    <label className="mt-1.5 flex items-center gap-2 text-xs text-foreground">
+                      <input
+                        type="checkbox"
+                        checked={disclose}
+                        disabled={!recording}
+                        onChange={(e) => setDisclose(e.target.checked)}
+                        className="h-4 w-4 accent-primary"
+                      />
+                      Add A Recording Disclosure To The Greeting
+                    </label>
+                    {recording && disclose && (
+                      <p className="mt-1.5 text-[11px] italic text-muted-foreground">
+                        Callers Will Hear: “{RECORDING_DISCLOSURE_LINE}”
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
             <DialogFooter>
