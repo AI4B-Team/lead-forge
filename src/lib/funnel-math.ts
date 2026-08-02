@@ -16,6 +16,7 @@ export type FunnelStageKey =
   | "found"
   | "deduped"
   | "verified"
+  | "emailFound"
   | "skipTraced"
   | "scrubbed"
   | "clean";
@@ -45,11 +46,18 @@ export type FunnelInput = {
 
 const n = (v: number | null | undefined) => Math.max(0, Math.round(v ?? 0));
 
+export type FunnelVariant = "phone" | "creator";
+
 /**
  * Normalize raw job counters into a monotonically narrowing funnel. Each stage
  * is clamped to the previous one so the story is always a drop.
+ *
+ * Creator-source runs (TikTok/Instagram/YouTube) deliver emails, not phones, so
+ * their funnel replaces the verify stage with "Email Found" and never renders
+ * "Mobile Verified" or "Skip Traced" at all.
  */
-export function buildFunnel(input: FunnelInput): FunnelStage[] {
+export function buildFunnel(input: FunnelInput, opts?: { variant?: FunnelVariant }): FunnelStage[] {
+  const variant = opts?.variant ?? "phone";
   const found = n(input.found);
   const deduped = Math.min(n(input.deduped), found);
   const verified = Math.min(n(input.verified), deduped);
@@ -81,19 +89,29 @@ export function buildFunnel(input: FunnelInput): FunnelStage[] {
     };
   };
 
-  return [
+  const stages: FunnelStage[] = [
     stage("found", "Found", found, null, { annotation: "Source Records" }),
     stage("deduped", "Deduped", deduped, found, { removalNoun: "Removed" }),
-    stage("verified", "Mobile Verified", verified, deduped, { annotation: "Carrier Checked" }),
-    stage("skipTraced", "Skip Traced", skipTraced, skipTraced, {
-      annotation: traced > 0 ? `${traced.toLocaleString()} Traced` : "Not Needed",
-    }),
+    variant === "creator"
+      ? stage("emailFound", "Email Found", verified, deduped, {
+          removalNoun: "No Contact Info",
+          annotation: "Contact Email Present",
+        })
+      : stage("verified", "Mobile Verified", verified, deduped, { annotation: "Carrier Checked" }),
+    ...(variant === "creator"
+      ? []
+      : [
+          stage("skipTraced", "Skip Traced", skipTraced, skipTraced, {
+            annotation: traced > 0 ? `${traced.toLocaleString()} Traced` : "Not Needed",
+          }),
+        ]),
     stage("scrubbed", "Scrubbed", scrubbed, skipTraced, {
       removalNoun: "DNC & Litigators Removed",
       annotation: "Compliance Checked",
     }),
     stage("clean", "Clean", clean, scrubbed, { annotation: "Launch Ready", alwaysAnnotate: true }),
   ];
+  return stages;
 }
 
 /** Bar fill for a stage, proportional to Found with a visible floor. */
