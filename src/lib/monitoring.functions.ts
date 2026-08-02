@@ -61,12 +61,13 @@ export const listLeadRecords = createServerFn({ method: "GET" })
     }
 
     const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
-    const [total, clean, dnc, litigator, thisWeek] = await Promise.all([
+    const [total, clean, dnc, litigator, thisWeek, multi] = await Promise.all([
       baseCount(),
       baseCount().eq("disposition", "clean"),
       baseCount().eq("disposition", "dnc"),
       baseCount().eq("disposition", "litigator"),
       baseCount().gte("first_seen_at", weekAgo),
+      baseCount().gt("list_count", 1),
     ]);
 
     const { data: sourceRows } = await supabase
@@ -90,10 +91,63 @@ export const listLeadRecords = createServerFn({ method: "GET" })
         dnc: dnc.count ?? 0,
         litigator: litigator.count ?? 0,
         newThisWeek: thisWeek.count ?? 0,
+        multiList: multi.count ?? 0,
       },
       bySource,
       byRecordType,
     };
+  });
+
+// Which lists (runs) a single de-duplicated lead appears in. Membership is
+// derived from the raw `leads` rows that rolled up into this record.
+export const getLeadListMemberships = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ workspaceId: z.string().uuid(), leadRecordId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+
+    const { data: record } = await supabase
+      .from("lead_records")
+      .select("phone, business_name, full_name, first_seen_job_id, last_seen_job_id")
+      .eq("workspace_id", data.workspaceId)
+      .eq("id", data.leadRecordId)
+      .maybeSingle();
+    if (!record) return { lists: [] as Array<{ id: string; name: string; created_at: string }> };
+
+    let rawQ = supabase
+      .from("leads")
+      .select("job_id")
+      .eq("workspace_id", data.workspaceId)
+      .limit(500);
+    if (record.phone) rawQ = rawQ.eq("phone", record.phone);
+    else if (record.business_name) rawQ = rawQ.eq("business_name", record.business_name);
+    else if (record.full_name) rawQ = rawQ.eq("full_name", record.full_name);
+    const { data: raw } = await rawQ;
+
+    const jobIds = new Set<string>();
+    for (const r of raw ?? []) if (r.job_id) jobIds.add(r.job_id);
+    if (record.first_seen_job_id) jobIds.add(record.first_seen_job_id);
+    if (record.last_seen_job_id) jobIds.add(record.last_seen_job_id);
+    if (jobIds.size === 0) return { lists: [] };
+
+    const { data: jobs } = await supabase
+      .from("jobs")
+      .select("id, name, source_type, record_type, params, schedule, created_at, parent_job_id")
+      .eq("workspace_id", data.workspaceId)
+      .in("id", [...jobIds]);
+
+    const lists = (jobs ?? [])
+      .map((j) => ({
+        id: j.id,
+        listId: j.parent_job_id ?? j.id,
+        name: j.name ?? formatJobName(j as never, 1),
+        created_at: j.created_at,
+      }))
+      .sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+
+    return { lists };
   });
 
 // "Since your last visit" digest — only counts things that really happened.
