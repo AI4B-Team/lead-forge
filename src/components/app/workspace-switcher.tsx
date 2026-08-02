@@ -65,26 +65,45 @@ export function WorkspaceSwitcher() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display">Create Workspace</DialogTitle>
+            <DialogTitle className="font-display">New Workspace</DialogTitle>
             <DialogDescription>
-              Leads, jobs, numbers, and campaigns stay separate per workspace.
+              Create a separate workspace for each business, client, or market. Leads,
+              campaigns, phone numbers, and settings stay organized automatically.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="ws-name">Workspace Name</Label>
+            <Label htmlFor="ws-name">Workspace</Label>
             <Input
               id="ws-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Roofing Division"
+              placeholder="e.g. Tampa Roofing"
               onKeyDown={(e) => { if (e.key === "Enter") void onCreate(); }}
             />
+            <div className="pt-1 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground/70">Examples:</span>{" "}
+              {["Tampa Roofing", "Chicago Investors", "Client: ABC Plumbing"].map((ex, i) => (
+                <button
+                  key={ex}
+                  type="button"
+                  onClick={() => setName(ex)}
+                  className="cursor-pointer underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground"
+                >
+                  {i > 0 ? <span className="no-underline">{" · "}</span> : null}
+                  {ex}
+                </button>
+              ))}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => void onCreate()} disabled={creating || !name.trim()}>
+            <Button
+              onClick={() => void onCreate()}
+              disabled={creating || !name.trim()}
+              className="min-w-[11rem] bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               {creating && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-              Create
+              Create Workspace
             </Button>
           </DialogFooter>
         </DialogContent>
