@@ -435,7 +435,7 @@ function JobDetail() {
       </Card>
 
       {/* The money moment: what launching this list reaches and costs. */}
-      {isReady && counts.clean > 0 && (
+      {isReady && counts.clean > 0 && estimate && (
         <Card className="mt-6 border-primary/40 bg-primary/5">
           <CardHeader className="flex flex-row items-center gap-2">
             <Rocket className="h-4 w-4 text-primary" />
