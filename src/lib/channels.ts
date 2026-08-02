@@ -5,7 +5,10 @@
 // ---------------------------------------------------------------------------
 
 import {
-  enrichmentProfile, isDataSource, isNonUsRun, US_REALESTATE_PORTAL_IDS,
+  enrichmentProfile,
+  isDataSource,
+  isNonUsRun,
+  US_REALESTATE_PORTAL_IDS,
 } from "@/lib/pipeline-options";
 
 export type Channel = "sms" | "email" | "direct_mail";
@@ -18,14 +21,25 @@ export const CHANNEL_LABEL: Record<Channel, string> = {
 
 export const CHANNEL_HINT: Record<Channel, string> = {
   sms: "Texting is the only channel LeadTrace sends on. Numbers are line-type checked and DNC scrubbed.",
-  email: "Email lists deliver a contact-email file. LeadTrace does not send email — export it or hand it to your email tool.",
-  direct_mail: "Direct-mail lists deliver a standardized mailing-address file. LeadTrace does not print or mail anything.",
+  email:
+    "Email lists deliver a contact-email file. LeadTrace does not send email — export it or hand it to your email tool.",
+  direct_mail:
+    "Direct-mail lists deliver a standardized mailing-address file. LeadTrace does not print or mail anything.",
 };
 
 /** Distress record types where a mailed letter is the normal play. */
 const DIRECT_MAIL_RECORD_TYPES = [
-  "probate", "pre_foreclosure", "pre-foreclosure", "tax", "tax delinquent",
-  "code_violation", "code violation", "vacancy", "eviction", "divorce", "lien",
+  "probate",
+  "pre_foreclosure",
+  "pre-foreclosure",
+  "tax",
+  "tax delinquent",
+  "code_violation",
+  "code violation",
+  "vacancy",
+  "eviction",
+  "divorce",
+  "lien",
 ];
 
 function normalizeRecordType(v?: string | null) {
@@ -93,10 +107,8 @@ export function verifyStageLabel(channel: Channel): string {
 
 /** The primary action on a finished run. */
 export function channelPrimaryAction(channel: Channel): { label: string; note: string } {
-  if (channel === "email")
-    return { label: "Export", note: "Export Or Connect Your Email Tool" };
-  if (channel === "direct_mail")
-    return { label: "Export", note: "Export For Your Mail House" };
+  if (channel === "email") return { label: "Export", note: "Export Or Connect Your Email Tool" };
+  if (channel === "direct_mail") return { label: "Export", note: "Export For Your Mail House" };
   return { label: "Launch Campaign", note: "Text Your Clean Leads" };
 }
 

@@ -181,20 +181,27 @@ export async function runListNow(
   // Always advance the clock, even on failure, so one bad source can't turn
   // into a retry storm every time the cron ticks.
   const nextRunAt =
-    cadence === "one_time"
-      ? null
-      : nextRunFrom(cadence, list.custom_interval_minutes, now);
+    cadence === "one_time" ? null : nextRunFrom(cadence, list.custom_interval_minutes, now);
   await supabase
     .from("jobs")
     .update({ last_run_at: now.toISOString(), next_run_at: nextRunAt })
     .eq("id", list.id);
 
   if (runErr || !run?.id) {
-    return { listId: list.id, runId: null, netNew: 0, clean: 0, campaignId: null, error: "Could Not Queue Run" };
+    return {
+      listId: list.id,
+      runId: null,
+      netNew: 0,
+      clean: 0,
+      campaignId: null,
+      error: "Could Not Queue Run",
+    };
   }
 
   try {
-    const result = await executePipeline(supabase, run.id as string, { priorRunJobIds: priorRunIds });
+    const result = await executePipeline(supabase, run.id as string, {
+      priorRunJobIds: priorRunIds,
+    });
     const netNew = "netNew" in result ? result.netNew : 0;
     const clean = "clean" in result ? result.clean : 0;
 
@@ -234,14 +241,24 @@ export async function runListNow(
     return { listId: list.id, runId: run.id as string, netNew, clean, campaignId };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Run Failed";
-    await supabase.from("jobs").update({ status: "failed", error: message }).eq("id", run.id as string);
+    await supabase
+      .from("jobs")
+      .update({ status: "failed", error: message })
+      .eq("id", run.id as string);
     await notify(supabase, list.workspace_id, {
       kind: "run_failed",
       title: `Run Failed — ${list.name ?? "Your List"}`,
       body: message,
       jobId: run.id as string,
     });
-    return { listId: list.id, runId: run.id as string, netNew: 0, clean: 0, campaignId: null, error: message };
+    return {
+      listId: list.id,
+      runId: run.id as string,
+      netNew: 0,
+      clean: 0,
+      campaignId: null,
+      error: message,
+    };
   }
 }
 

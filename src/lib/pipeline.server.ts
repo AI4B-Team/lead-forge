@@ -31,8 +31,30 @@ interface SourceAdapter {
   run(params: JobParams): Promise<RawLead[]>;
 }
 
-const FIRST_NAMES = ["Alex", "Jordan", "Taylor", "Casey", "Morgan", "Riley", "Sam", "Jamie", "Drew", "Reese"];
-const LAST_NAMES = ["Nguyen", "Patel", "Garcia", "Smith", "Johnson", "Lopez", "Kim", "Davis", "Martinez", "Chen"];
+const FIRST_NAMES = [
+  "Alex",
+  "Jordan",
+  "Taylor",
+  "Casey",
+  "Morgan",
+  "Riley",
+  "Sam",
+  "Jamie",
+  "Drew",
+  "Reese",
+];
+const LAST_NAMES = [
+  "Nguyen",
+  "Patel",
+  "Garcia",
+  "Smith",
+  "Johnson",
+  "Lopez",
+  "Kim",
+  "Davis",
+  "Martinez",
+  "Chen",
+];
 
 function pick<T>(arr: T[], i: number) {
   return arr[i % arr.length]!;
@@ -282,11 +304,15 @@ export async function executePipeline(
         verified.length,
       );
     }
-    await supabase.from("jobs").update({ rows_enriched: verified.length, rows_skiptraced: 0 }).eq("id", jobId);
+    await supabase
+      .from("jobs")
+      .update({ rows_enriched: verified.length, rows_skiptraced: 0 })
+      .eq("id", jobId);
   } else {
     const { verifyPending, verifyLineTypes, classifyLineType } = await import("./line-type");
     const shouldSkiptrace =
-      job.source_type === "records" || (job.source_type === "upload" && params.skip_trace !== false);
+      job.source_type === "records" ||
+      (job.source_type === "upload" && params.skip_trace !== false);
     const mobileOnly = params.mobile_only === true;
     const verify = shouldSkiptrace
       ? verifyPending(deduped, mobileOnly)
@@ -400,10 +426,7 @@ export async function executePipeline(
   });
 
   // 5) SCRUB — SMS only. Email/direct-mail files are not phone campaigns. ----
-  const { data: inserted } = await supabase
-    .from("leads")
-    .select("id, phone")
-    .eq("job_id", jobId);
+  const { data: inserted } = await supabase.from("leads").select("id, phone").eq("job_id", jobId);
   let clean = 0;
   let dnc = 0;
   let litigator = 0;
@@ -480,9 +503,13 @@ export async function executePipeline(
   if (clean > 0) {
     await emitEvent(supabase, workspaceId, "leads.new", { job_id: jobId, count: clean });
   }
-  if (dnc > 0) await emitEvent(supabase, workspaceId, "lead.flagged_dnc", { job_id: jobId, count: dnc });
+  if (dnc > 0)
+    await emitEvent(supabase, workspaceId, "lead.flagged_dnc", { job_id: jobId, count: dnc });
   if (litigator > 0) {
-    await emitEvent(supabase, workspaceId, "lead.flagged_litigator", { job_id: jobId, count: litigator });
+    await emitEvent(supabase, workspaceId, "lead.flagged_litigator", {
+      job_id: jobId,
+      count: litigator,
+    });
   }
 
   return {
