@@ -26,7 +26,8 @@ export type AccountTabKey =
   | "registration"
   | "integrations"
   | "api"
-  | "compliance";
+  | "compliance"
+  | "workspace-admin";
 
 type TabDef = {
   key: AccountTabKey;
