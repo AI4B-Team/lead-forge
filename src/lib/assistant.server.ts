@@ -164,8 +164,15 @@ export async function askAssistant(opts: {
 /** Rough, honest pre-run estimate. Never presented as an exact bill. */
 export function estimate(spec: JobSpec): { rows: number; skipTraceCredits: number; scrapeCredits: number } | null {
   if (!spec.sourceType || spec.sourceType === "upload") return null;
-  // Creator sources never skip trace, so they never quote skip-trace credits.
-  const creator = enrichmentProfile(spec.templateId) === "creator";
+  // Sources that never skip trace never quote skip-trace credits: creators and
+  // marketplace sellers are email-first, datasets have no enrichment at all,
+  // and non-US runs are email-only because SMS is US-only.
+  const profile = enrichmentProfile(spec.templateId);
+  const noPhoneWork =
+    profile === "creator" ||
+    profile === "seller" ||
+    templateOutputType(spec.templateId) === "data" ||
+    isNonUsRun({ templateId: spec.templateId, country: spec.country });
   const geo = Math.max(1, spec.counties.length || 1);
   const rows =
     spec.sourceType === "records"
@@ -174,7 +181,7 @@ export function estimate(spec: JobSpec): { rows: number; skipTraceCredits: numbe
   return {
     rows,
     skipTraceCredits:
-      spec.skipTrace && !creator ? Math.round(rows * (spec.sourceType === "records" ? 0.8 : 0.25)) : 0,
+      spec.skipTrace && !noPhoneWork ? Math.round(rows * (spec.sourceType === "records" ? 0.8 : 0.25)) : 0,
     scrapeCredits: Math.round(rows / 10),
   };
 }
