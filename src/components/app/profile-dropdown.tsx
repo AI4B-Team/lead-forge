@@ -153,28 +153,6 @@ export function ProfileDropdown({ className }: { className?: string }) {
           />
         </div>
 
-        {workspaces.length > 0 && (
-          <div className="border-t border-border py-1.5">
-            <p className="px-3.5 pb-1 pt-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Switch Workspace
-            </p>
-            {workspaces.map((w) => (
-              <button
-                key={w.id}
-                onClick={() => {
-                  switchWorkspace(w.id);
-                  setOpen(false);
-                }}
-                className="flex w-full items-center gap-2.5 px-3.5 py-1.5 text-left text-sm text-foreground hover:bg-muted"
-              >
-                {w.id === workspaceId
-                  ? <Check className="h-4 w-4 shrink-0 text-primary" />
-                  : <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />}
-                <span className="truncate">{w.name}</span>
-              </button>
-            ))}
-          </div>
-        )}
 
         <div className="border-t border-border py-1.5">
           {admin?.isSuperAdmin && (
