@@ -15,7 +15,8 @@ import { launchCampaignFromJob } from "@/lib/jobs.functions";
 import { updateCampaignConfig, previewCampaign, scheduleCampaignDrops } from "@/lib/campaigns.functions";
 import { getRegistration } from "@/lib/numbers.functions";
 import { TagPicker } from "@/components/app/tag-picker";
-import { BrandPicker } from "@/components/app/brand-picker";
+import { useWorkspaceAgent } from "@/hooks/use-agent";
+import { Bot } from "lucide-react";
 import { BotTrainer } from "@/components/app/bot-trainer";
 import { BrainCircuit, Zap, CalendarClock, BadgeCheck, ArrowRight, Users, Database, Upload, Bot, Landmark, Search, Check } from "lucide-react";
 import {
@@ -78,7 +79,8 @@ function NewCampaign() {
   const [quietStart, setQuietStart] = useState("21:00");
   const [quietEnd, setQuietEnd] = useState("09:00");
   const [tagId, setTagId] = useState<string | null>(null);
-  const [brandId, setBrandId] = useState<string | null>(null);
+  const { agent } = useWorkspaceAgent(workspaceId);
+  const brandId = agent?.id ?? null;
   const [dropSize, setDropSize] = useState(500);
   const [dropTimes, setDropTimes] = useState<string[]>(DEFAULT_DROP_TIMES);
   const [sendMode, setSendMode] = useState<"now" | "schedule">("now");
@@ -139,7 +141,7 @@ function NewCampaign() {
   });
 
   const submit = async (mode: "now" | "schedule" = sendMode) => {
-    if (!brandId) return toast.error("Pick Or Create A Brand First");
+    if (!brandId) return toast.error("Set Up Your AI Agent First");
     if (!selectedJob) return toast.error("Pick A Ready List First");
     if (!name.trim()) return toast.error("Name Your Campaign");
     const cleanSteps = steps.filter((s) => s.body.trim().length > 0);
@@ -195,22 +197,13 @@ function NewCampaign() {
   const numberRows = Array.isArray(numbers) ? numbers : (numbers?.rows ?? []);
   const activeNumbers = numberRows.filter((n) => n.status !== "cooling").length;
 
-  const { data: brands } = useQuery({
-    queryKey: ["brand-names", workspaceId],
-    queryFn: async () => {
-      const { data } = await supabase.from("brands").select("id, name").eq("workspace_id", workspaceId!);
-      return data ?? [];
-    },
-    enabled: !!workspaceId,
-  });
-
   const cleanSteps = steps.filter((s) => s.body.trim().length > 0);
   const bodies = cleanSteps.map((s) => s.body);
   const selectedJobRow = jobs?.find((j) => j.id === selectedJob);
   const listName = selectedJobRow
     ? ((selectedJobRow.params ?? {}) as { name?: string }).name ?? `List ${selectedJobRow.id.slice(0, 8)}`
     : "";
-  const brandName = brands?.find((b) => b.id === brandId)?.name ?? "";
+  const brandName = agent?.name ?? "";
   const recipients = preview?.recipients ?? selectedJobRow?.rows_deduped ?? 0;
   const totalDelayMinutes = cleanSteps.reduce((n, s) => n + s.delay_minutes, 0);
   const projection = projectCampaign({ recipients, bodies, dailyCap, totalDelayMinutes });
@@ -237,7 +230,7 @@ function NewCampaign() {
   }));
   const wizardSteps = [
     { id: "name", label: "Campaign Name", done: name.trim().length > 0 },
-    { id: "brand", label: "Choose Brand", done: !!brandId },
+    { id: "brand", label: "Your AI Agent", done: !!brandId },
     { id: "list", label: "Choose List", done: !!selectedJob },
     { id: "sending", label: "Configure Sending", done: dropTimes.length > 0 && dailyCap > 0 },
     { id: "sequence", label: "Review Sequence", done: cleanSteps.length > 0 },
@@ -280,19 +273,38 @@ function NewCampaign() {
             </Card>
           </Step>
 
-          <Step id="brand" n={2} title="Choose Brand" hint="The Bot Only Speaks From Approved Brand Material.">
+          <Step id="brand" n={2} title="Your AI Agent" hint="Your Agent Only Speaks From Knowledge You Approve.">
             <Card>
               <CardContent className="pt-6 space-y-4">
-                {workspaceId && <BrandPicker workspaceId={workspaceId} value={brandId} onChange={setBrandId} />}
                 {brandId ? (
-                  <BotTrainer key={brandId} brandId={brandId} heading="Train This Brand" />
+                  <>
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Bot className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                          Speaking As
+                        </div>
+                        <div className="font-display font-bold text-foreground">{brandName}</div>
+                      </div>
+                      <Button asChild variant="outline" size="sm" className="rounded-full ml-auto">
+                        <Link to="/app/agent">Manage Agent</Link>
+                      </Button>
+                    </div>
+                    <BotTrainer key={brandId} brandId={brandId} heading={`Train ${brandName}`} />
+                  </>
                 ) : (
                   <div className="rounded-xl border border-dashed border-border p-6 text-center">
-                    <BrainCircuit className="h-5 w-5 text-primary mx-auto" />
-                    <div className="font-display font-bold text-foreground mt-2">Start With Your Brand</div>
+                    <Bot className="h-5 w-5 text-primary mx-auto" />
+                    <div className="font-display font-bold text-foreground mt-2">Set Up Your AI Agent</div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      Select A Brand Above, Or Create One — Then Train The Bot With Text, Dictation, Files Or URLs.
+                      Every Campaign Speaks As Your Workspace's Agent — Create It Once, Then Train It With Text,
+                      Dictation, Files Or URLs.
                     </div>
+                    <Button asChild className="rounded-full mt-4">
+                      <Link to="/app/agent">Set Up Agent</Link>
+                    </Button>
                   </div>
                 )}
               </CardContent>
