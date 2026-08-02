@@ -269,8 +269,8 @@ function JobDetail() {
             }}
             readyPill={
               isReady ? (
-                <Badge className="gap-2 rounded-full px-4 py-1.5 text-base font-black">
-                  <Check className="h-4 w-4" strokeWidth={3} />
+                <Badge className="gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-base font-black">
+                  <Check className="h-4 w-4 shrink-0" strokeWidth={3} />
                   {counts.clean.toLocaleString()} Ready To Launch
                 </Badge>
               ) : undefined

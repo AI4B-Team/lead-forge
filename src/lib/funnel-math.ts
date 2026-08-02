@@ -64,7 +64,7 @@ export function buildFunnel(input: FunnelInput): FunnelStage[] {
     label: string,
     remaining: number,
     prev: number | null,
-    opts?: { annotation?: string; removalNoun?: string },
+    opts?: { annotation?: string; removalNoun?: string; alwaysAnnotate?: boolean },
   ): FunnelStage => {
     const removed = prev == null ? 0 : Math.max(0, prev - remaining);
     return {
@@ -72,20 +72,24 @@ export function buildFunnel(input: FunnelInput): FunnelStage[] {
       label,
       remaining,
       removed,
-      delta: removed > 0 ? `−${removed.toLocaleString()}${opts?.removalNoun ? ` ${opts.removalNoun}` : ""}` : null,
-      annotation: removed > 0 ? null : (opts?.annotation ?? null),
+      delta:
+        removed > 0 && !opts?.alwaysAnnotate
+          ? `−${removed.toLocaleString()}${opts?.removalNoun ? ` ${opts.removalNoun}` : ""}`
+          : null,
+      annotation:
+        removed > 0 && !opts?.alwaysAnnotate ? null : (opts?.annotation ?? null),
     };
   };
 
   return [
-    stage("found", "Found", found, null, { annotation: "Raw Records" }),
-    stage("deduped", "Deduped", deduped, found, { annotation: "No Duplicates" }),
-    stage("verified", "Verified", verified, deduped, { annotation: "All Verified" }),
+    stage("found", "Found", found, null, { annotation: "Source Records" }),
+    stage("deduped", "Deduped", deduped, found, { removalNoun: "Removed" }),
+    stage("verified", "Mobile Verified", verified, deduped, { annotation: "Carrier Checked" }),
     stage("skipTraced", "Skip Traced", skipTraced, skipTraced, {
-      annotation: traced > 0 ? `${traced.toLocaleString()} Traced` : "0 Traced — All Had Phones",
+      annotation: traced > 0 ? `${traced.toLocaleString()} Traced` : "Not Needed",
     }),
-    stage("scrubbed", "Scrubbed", scrubbed, skipTraced, { annotation: "All Checked" }),
-    stage("clean", "Clean", clean, scrubbed, { removalNoun: "Scrubbed" }),
+    stage("scrubbed", "Scrubbed", scrubbed, skipTraced, { removalNoun: "DNC & Litigators Removed" }),
+    stage("clean", "Clean", clean, scrubbed, { annotation: "Launch Ready", alwaysAnnotate: true }),
   ];
 }
 
