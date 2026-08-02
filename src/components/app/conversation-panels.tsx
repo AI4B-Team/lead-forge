@@ -2,12 +2,18 @@
  * Presentation pieces for the Conversations workspace: AI summary, suggested
  * replies, the lead profile rail, and the AI activity timeline.
  */
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { PhoneLink } from "@/components/app/phone-link";
 import {
@@ -26,11 +32,13 @@ import {
   Ban,
   Bot,
   CalendarPlus,
+  ChevronDown,
   Copy,
   Home,
   Loader2,
   Mail,
   MessageSquare,
+  MoreHorizontal,
   Phone,
   Sparkles,
   Star,
@@ -109,7 +117,7 @@ export function ConversationRow({
     <button
       onClick={onSelect}
       className={cn(
-        "w-full text-left px-3 py-3 border-b transition-colors hover:bg-muted/40",
+        "w-full text-left px-3 py-4 border-b transition-colors hover:bg-muted/40",
         active && "bg-muted/70 border-l-2 border-l-primary",
       )}
     >
@@ -120,14 +128,17 @@ export function ConversationRow({
             <span className="font-semibold truncate text-sm">{name}</span>
             <span className="text-[10px] text-muted-foreground shrink-0">{dayLabel(thread.last_at)}</span>
           </div>
-          <p className="text-xs text-muted-foreground truncate mt-0.5">
+          <p className="text-xs text-muted-foreground truncate mt-1">
             {thread.last_direction === "outbound" ? "You: " : ""}
             {thread.last_body}
           </p>
-          <div className="flex items-center gap-1 mt-1.5 flex-wrap">
-            {thread.badges.slice(0, 2).map((b) => (
+          <div className="flex items-center gap-1 mt-2 flex-wrap">
+            {thread.badges.slice(0, 1).map((b) => (
               <ConvoBadgeChip key={b} badge={b} />
             ))}
+            {thread.badges.length > 1 && (
+              <span className="text-[10px] text-muted-foreground">+{thread.badges.length - 1}</span>
+            )}
             {thread.bot_active && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-[18px] gap-1">
                 <Bot className="h-2.5 w-2.5" /> AI
@@ -143,7 +154,7 @@ export function ConversationRow({
             </span>
           </div>
           {thread.campaign && (
-            <div className="text-[10px] text-muted-foreground mt-1 truncate">{thread.campaign.name}</div>
+            <div className="text-[10px] text-muted-foreground mt-1.5 truncate">{thread.campaign.name}</div>
           )}
         </div>
       </div>
@@ -164,8 +175,8 @@ export function AiSummary({
   onUseNextStep?: () => void;
 }) {
   return (
-    <div className="border-b bg-muted/30 px-4 py-3">
-      <div className="flex items-center gap-1.5 mb-2">
+    <div className="border-b bg-muted/20 px-4 py-2.5">
+      <div className="flex items-center gap-1.5 mb-1.5">
         <Sparkles className="h-3.5 w-3.5 text-primary" />
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">AI Summary</span>
         {loading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
@@ -185,14 +196,14 @@ export function AiSummary({
         <p className="text-xs text-muted-foreground">No Summary Yet — Send Or Receive A Message.</p>
       )}
       {nextStep && (
-        <div className="mt-2 flex items-start gap-2 rounded-lg border border-primary/25 bg-primary/5 px-2.5 py-1.5">
-          <Zap className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-          <div className="text-xs flex-1">
-            <span className="font-semibold">Recommended Next Step: </span>
+        <div className="mt-1.5 flex items-start gap-1.5 text-xs">
+          <Zap className="h-3 w-3 text-primary mt-[3px] shrink-0" />
+          <span className="flex-1">
+            <span className="font-semibold">Recommended: </span>
             {nextStep}
-          </div>
+          </span>
           {onUseNextStep && (
-            <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={onUseNextStep}>
+            <Button size="sm" variant="ghost" className="h-5 text-[10px] px-1.5 shrink-0" onClick={onUseNextStep}>
               Draft It
             </Button>
           )}
@@ -202,7 +213,10 @@ export function AiSummary({
   );
 }
 
-/** Tone-varied AI reply suggestions with Use / Edit affordances. */
+/**
+ * One compact suggestion at a time — the AI supports the conversation instead of
+ * dominating it. Cycle tones with Next; expand only when curious.
+ */
 export function SuggestedReplies({
   suggestions,
   loading,
@@ -216,42 +230,64 @@ export function SuggestedReplies({
   onEdit: (body: string) => void;
   onRegenerate: () => void;
 }) {
+  const [i, setI] = useState(0);
+  useEffect(() => setI(0), [suggestions]);
   if (!loading && !suggestions.length) return null;
+
+  const active = suggestions[Math.min(i, Math.max(suggestions.length - 1, 0))];
+
   return (
-    <div className="border-t bg-muted/20 px-3 py-2.5">
-      <div className="flex items-center gap-1.5 mb-2">
-        <Sparkles className="h-3.5 w-3.5 text-primary" />
-        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-          {loading ? "Generating Replies…" : `${suggestions.length} Suggested Replies`}
+    <div className="border-t bg-muted/20 px-3 py-2">
+      <div className="flex items-center gap-1.5">
+        <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
+          {loading ? "Drafting…" : "Suggested"}
         </span>
+        {active && (
+          <span className="text-[10px] font-semibold text-primary uppercase tracking-wider shrink-0">
+            {active.tone}
+          </span>
+        )}
         {loading ? (
           <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
         ) : (
-          <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 ml-auto" onClick={onRegenerate}>
-            Regenerate
-          </Button>
+          <div className="ml-auto flex items-center gap-1 shrink-0">
+            {suggestions.length > 1 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 text-[10px] px-2"
+                onClick={() => setI((v) => (v + 1) % suggestions.length)}
+              >
+                Next ({(i % suggestions.length) + 1}/{suggestions.length})
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={onRegenerate}>
+              Regenerate
+            </Button>
+          </div>
         )}
       </div>
-      <div className="grid md:grid-cols-3 gap-2">
-        {loading && !suggestions.length
-          ? [0, 1, 2].map((i) => (
-              <div key={i} className="rounded-xl border bg-card p-2.5 h-24 animate-pulse" />
-            ))
-          : suggestions.map((s) => (
-              <div key={s.tone} className="rounded-xl border bg-card p-2.5 flex flex-col">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-primary mb-1">{s.tone}</div>
-                <p className="text-xs text-foreground flex-1 whitespace-pre-wrap">{s.body}</p>
-                <div className="flex gap-1 mt-2">
-                  <Button size="sm" className="h-6 text-[10px] px-2 rounded-full" onClick={() => onUse(s.body)}>
-                    Use
-                  </Button>
-                  <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 rounded-full" onClick={() => onEdit(s.body)}>
-                    Edit
-                  </Button>
-                </div>
-              </div>
-            ))}
-      </div>
+      {loading && !active ? (
+        <div className="mt-1.5 h-8 rounded-lg bg-muted animate-pulse" />
+      ) : active ? (
+        <div className="mt-1.5 flex items-start gap-2">
+          <p className="text-xs text-foreground flex-1 whitespace-pre-wrap line-clamp-3">{active.body}</p>
+          <div className="flex gap-1 shrink-0">
+            <Button size="sm" className="h-6 text-[10px] px-2 rounded-full" onClick={() => onUse(active.body)}>
+              Use
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-6 text-[10px] px-2 rounded-full"
+              onClick={() => onEdit(active.body)}
+            >
+              Edit
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -387,21 +423,28 @@ export function QuickActions({
       <Button size="sm" variant="outline" className="h-7 rounded-full text-xs" onClick={onAppointment}>
         <CalendarPlus className="h-3 w-3 mr-1" /> Appointment
       </Button>
-      <Button size="sm" variant="outline" className="h-7 rounded-full text-xs" onClick={onTag}>
-        <TagIcon className="h-3 w-3 mr-1" /> Tag
-      </Button>
-      <Button size="sm" variant="outline" className="h-7 rounded-full text-xs" onClick={onArchive}>
-        <Archive className="h-3 w-3 mr-1" /> {archived ? "Unarchive" : "Archive"}
-      </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        className="h-7 rounded-full text-xs text-danger hover:text-danger"
-        onClick={onBlacklist}
-        disabled={blacklisting}
-      >
-        {blacklisting ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Ban className="h-3 w-3 mr-1" />} Blacklist
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" variant="ghost" className="h-7 w-7 rounded-full p-0" aria-label="More Actions">
+            {blacklisting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <MoreHorizontal className="h-3.5 w-3.5" />
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onClick={onTag} className="cursor-pointer text-xs">
+            <TagIcon className="h-3.5 w-3.5" /> Tag
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onArchive} className="cursor-pointer text-xs">
+            <Archive className="h-3.5 w-3.5" /> {archived ? "Unarchive" : "Archive"}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onBlacklist} disabled={blacklisting} className="cursor-pointer text-xs text-danger focus:text-danger">
+            <Ban className="h-3.5 w-3.5" /> Blacklist
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
@@ -467,20 +510,17 @@ export function LeadProfilePanel({
           <Progress value={score} className="h-1.5 mt-2" />
           {thread && (
             <div className="flex items-center gap-1 mt-2 flex-wrap">
-              {thread.badges.map((b) => (
+              {thread.badges.slice(0, 1).map((b) => (
                 <ConvoBadgeChip key={b} badge={b} />
               ))}
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-[18px]">
-                {SENTIMENT_LABEL[thread.sentiment]}
-              </Badge>
+              <span className="text-[10px] text-muted-foreground">{SENTIMENT_LABEL[thread.sentiment]}</span>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-4">
-        <section>
-          <SectionTitle icon={UserRound} title="Contact" />
+      <div className="flex-1 overflow-y-auto p-2 divide-y">
+        <RailSection icon={UserRound} title="Lead" defaultOpen>
           <Field label="Phone">
             <PhoneLink phone={lead?.phone} showIcon={false} />
           </Field>
@@ -491,12 +531,20 @@ export function LeadProfilePanel({
             <Field label="Location">{[lead?.city, lead?.state, lead?.zip].filter(Boolean).join(", ")}</Field>
           )}
           {thread && <Field label="Last Contact">{relativeShort(thread.last_at)}</Field>}
-        </section>
+          {property && (
+            <div className="mt-2 pt-2 border-t">
+              <SectionTitle icon={Home} title="Property" />
+              {property.estimated_value && <Field label="Estimated Value">{property.estimated_value}</Field>}
+              {property.owner_since && <Field label="Owner Since">{property.owner_since}</Field>}
+              {property.sqft && <Field label="Square Feet">{property.sqft}</Field>}
+              {property.beds && <Field label="Beds">{property.beds}</Field>}
+              {property.tax_delinquent && <Field label="Tax Delinquent">{property.tax_delinquent}</Field>}
+              {property.violations && <Field label="Code Violations">{property.violations}</Field>}
+            </div>
+          )}
+        </RailSection>
 
-        <Separator />
-
-        <section>
-          <SectionTitle icon={MessageSquare} title="Campaign Context" />
+        <RailSection icon={MessageSquare} title="Campaign">
           <Field label="Campaign">{ctx?.campaign?.name ?? "Not In A Campaign"}</Field>
           {ctx?.campaign && (
             <>
@@ -537,29 +585,10 @@ export function LeadProfilePanel({
               Suppressed — Do Not Contact
             </Badge>
           )}
-        </section>
+        </RailSection>
 
-        {property && (
-          <>
-            <Separator />
-            <section>
-              <SectionTitle icon={Home} title="Property" />
-              {lead?.address && <Field label="Address">{lead.address}</Field>}
-              {property.estimated_value && <Field label="Estimated Value">{property.estimated_value}</Field>}
-              {property.owner_since && <Field label="Owner Since">{property.owner_since}</Field>}
-              {property.sqft && <Field label="Square Feet">{property.sqft}</Field>}
-              {property.beds && <Field label="Beds">{property.beds}</Field>}
-              {property.tax_delinquent && <Field label="Tax Delinquent">{property.tax_delinquent}</Field>}
-              {property.violations && <Field label="Code Violations">{property.violations}</Field>}
-            </section>
-          </>
-        )}
-
-        <Separator />
-
-        <section>
-          <SectionTitle icon={TagIcon} title="Tags" />
-          <div className="flex flex-wrap gap-1">
+        <RailSection icon={Sparkles} title="Activity">
+          <div className="flex flex-wrap gap-1 mb-3">
             {ctx?.tag && (
               <Badge variant="outline" className="text-[10px]" style={{ borderColor: ctx.tag.color, color: ctx.tag.color }}>
                 {ctx.tag.name}
@@ -575,18 +604,8 @@ export function LeadProfilePanel({
               <span className="text-xs text-muted-foreground">No Tags Yet.</span>
             )}
           </div>
-        </section>
-
-        <Separator />
-
-        <section>
-          <SectionTitle icon={Sparkles} title="AI Timeline" />
           <AiTimeline events={events} />
-        </section>
-
-        <Separator />
-
-        <section>
+          <div className="mt-3 pt-2 border-t">
           <SectionTitle icon={Copy} title="Notes" />
           <textarea
             value={notes}
@@ -595,9 +614,35 @@ export function LeadProfilePanel({
             className="w-full min-h-[72px] rounded-lg border bg-background p-2 text-xs resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           <p className="text-[10px] text-muted-foreground mt-1">Saved On This Device.</p>
-        </section>
+          </div>
+        </RailSection>
       </div>
     </Card>
+  );
+}
+
+/** Collapsible rail section — only expand what you need while replying. */
+function RailSection({
+  icon: Icon,
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  icon: typeof UserRound;
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} className="py-1">
+      <CollapsibleTrigger className="w-full flex items-center gap-1.5 px-1 py-2 cursor-pointer hover:bg-muted/40 rounded-md">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</span>
+        <ChevronDown className={cn("h-3.5 w-3.5 ml-auto text-muted-foreground transition-transform", open && "rotate-180")} />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="px-1 pb-2">{children}</CollapsibleContent>
+    </Collapsible>
   );
 }
 

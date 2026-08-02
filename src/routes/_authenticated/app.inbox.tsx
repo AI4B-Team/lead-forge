@@ -254,7 +254,7 @@ function ConversationsPage() {
         title="Conversations"
         description="Where AI And You Work Leads Together — Summaries, Suggested Replies, And Full Context."
       />
-      <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_320px] gap-4 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_288px] gap-4 flex-1 min-h-0">
         {/* Conversation list */}
         <Card className="flex flex-col min-h-0">
           <div className="p-2 border-b flex gap-1 flex-wrap">
@@ -449,18 +449,18 @@ function ConversationsPage() {
                     ))}
                   </div>
                 )}
-                <div className="flex gap-2">
+                <div className="rounded-2xl border bg-background focus-within:ring-2 focus-within:ring-ring transition-shadow">
                   <textarea
                     value={reply}
                     onChange={(e) => {
                       setReply(e.target.value);
                       setSlashOpen(e.target.value.startsWith("/"));
                     }}
-                    rows={1}
+                    rows={3}
                     placeholder={
                       activeThread?.is_optout
                         ? "Contact has opted out — replies disabled."
-                        : "Reply… type / for AI commands"
+                        : "Type a reply… / for AI commands"
                     }
                     disabled={activeThread?.is_optout || sending}
                     onKeyDown={(e) => {
@@ -474,25 +474,38 @@ function ConversationsPage() {
                         handleSend();
                       }
                     }}
-                    className="flex-1 min-h-9 max-h-32 rounded-full border bg-background px-4 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                    className="w-full min-h-[72px] max-h-48 bg-transparent px-4 pt-3 pb-1 text-sm resize-none focus-visible:outline-none disabled:opacity-60"
                   />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="rounded-full shrink-0"
-                    title="Save As Quick Reply"
-                    onClick={saveSnippet}
-                    disabled={!reply.trim()}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    onClick={handleSend}
-                    disabled={activeThread?.is_optout || sending || !reply.trim()}
-                    className="rounded-full"
-                  >
-                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  </Button>
+                  <div className="flex items-center gap-1 px-2 pb-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 rounded-full text-xs cursor-pointer"
+                      title="Save As Quick Reply"
+                      onClick={saveSnippet}
+                      disabled={!reply.trim()}
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Save
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 rounded-full text-xs cursor-pointer"
+                      title="Ask AI For A Reply"
+                      onClick={() => suggestM.mutate({ draft: reply.trim() || null })}
+                      disabled={suggestM.isPending}
+                    >
+                      <Sparkles className="h-3.5 w-3.5 mr-1 text-primary" /> AI
+                    </Button>
+                    <Button
+                      onClick={handleSend}
+                      disabled={activeThread?.is_optout || sending || !reply.trim()}
+                      size="sm"
+                      className="ml-auto h-8 rounded-full px-4 cursor-pointer"
+                    >
+                      {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-3.5 w-3.5 mr-1" /> Send</>}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </>
