@@ -370,5 +370,6 @@ function LeadsPageInner() {
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 }
