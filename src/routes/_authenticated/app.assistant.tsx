@@ -1207,6 +1207,30 @@ function Assistant() {
         selectedId={selectedTemplate?.id ?? null}
         onSelect={selectTemplate}
       />
+
+      {/* Attaching a file replaces a scrape setup — always confirmed first. */}
+      <AlertDialog open={!!pendingFile} onOpenChange={(o) => { if (!o) setPendingFile(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Switch To Upload My List And Use This File?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your Current {currentSourceLabel} Setup Will Be Cleared.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingFile(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const f = pendingFile;
+                setPendingFile(null);
+                if (f) void attachFile(f, true);
+              }}
+            >
+              Switch And Map Columns
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
