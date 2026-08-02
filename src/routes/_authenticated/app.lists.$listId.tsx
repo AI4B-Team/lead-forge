@@ -21,6 +21,7 @@ import { normalizeChannel, channelPrimaryAction, CHANNEL_LEAD_NOUN } from "@/lib
 import { buildFunnel, funnelViolations } from "@/lib/funnel-math";
 import { enrichmentProfile, isDataSource, isNonUsRun } from "@/lib/pipeline-options";
 import { exportShapeFor, shapeExportRows, cleanFileType } from "@/lib/export-columns";
+import { populatedFields, resultFieldsForTemplate, type LeadField } from "@/lib/lead-fields";
 import { launchEstimate, formatUsd } from "@/lib/launch-estimate";
 import { LOCAL_TZ } from "@/lib/local-tz";
 import { PhoneLink } from "@/components/app/phone-link";
@@ -226,6 +227,7 @@ function JobDetail() {
             )}
             <LeadsBrowser
               jobId={jobId}
+              templateId={runTemplateId}
               disabled={!isReady}
               open={browserOpen}
               onOpenChange={setBrowserOpen}
