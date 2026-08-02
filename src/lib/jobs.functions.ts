@@ -432,6 +432,14 @@ export const setListSchedule = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { scheduleFieldsFor } = await import("./recurring.server");
+    const { data: job } = await context.supabase
+      .from("jobs")
+      .select("source_type")
+      .eq("id", data.jobId)
+      .maybeSingle();
+    if (job?.source_type === "upload" && data.cadence !== "one_time") {
+      throw new Error("Uploaded Lists Are One-Time Only — There Is Nothing To Re-Scrape.");
+    }
     const fields = scheduleFieldsFor(data.cadence, data.customMinutes);
     const { error } = await context.supabase.from("jobs").update(fields).eq("id", data.jobId);
     if (error) throw error;
