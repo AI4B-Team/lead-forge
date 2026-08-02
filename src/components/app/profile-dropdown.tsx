@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Settings, LogOut, Users, CreditCard, KeyRound, Sun, Shield, ChevronRight } from "lucide-react";
+import { User, Settings, LogOut, Users, CreditCard, KeyRound, Sun, Shield, ChevronRight, Zap, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/app/theme-toggle";
-import { useWorkspaceId } from "@/hooks/use-workspace";
 import { meIsSuperAdmin } from "@/lib/admin.functions";
 
 // Deterministic accent so each operator gets a recognizable avatar color
@@ -33,29 +32,11 @@ export function ProfileDropdown({ className }: { className?: string }) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const { theme, toggle } = useTheme();
-  const { workspaceId } = useWorkspaceId();
-  const [credits, setCredits] = useState<number | null>(null);
   const fetchIsAdmin = useServerFn(meIsSuperAdmin);
   const { data: admin } = useQuery({
     queryKey: ["me-is-super-admin"],
     queryFn: () => fetchIsAdmin(),
   });
-
-  useEffect(() => {
-    if (!workspaceId || !open) return;
-    let active = true;
-    (async () => {
-      const { data } = await supabase
-        .from("credit_balances")
-        .select("balance")
-        .eq("workspace_id", workspaceId);
-      if (!active) return;
-      setCredits((data ?? []).reduce((sum, r) => sum + Number(r.balance ?? 0), 0));
-    })();
-    return () => {
-      active = false;
-    };
-  }, [workspaceId, open]);
 
   const userName =
     (user?.user_metadata?.full_name as string | undefined) ||
@@ -133,11 +114,19 @@ export function ProfileDropdown({ className }: { className?: string }) {
           </div>
         </div>
 
-        <div className="mx-4 mb-3 rounded-xl bg-muted/50 px-3 py-2.5 flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground">Credits</span>
-          <span className="text-sm font-semibold text-foreground tabular-nums">
-            {credits === null ? "—" : credits.toLocaleString()}
-          </span>
+        <div className="mx-4 mb-3 space-y-2.5">
+          <button
+            onClick={() => go("/app/billing")}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Zap className="h-4 w-4" /> Upgrade
+          </button>
+          <button
+            onClick={() => go("/app/team")}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+          >
+            <UserPlus className="h-4 w-4" /> Invite Members
+          </button>
         </div>
 
         <div className="h-px bg-border mx-4" />
@@ -146,7 +135,7 @@ export function ProfileDropdown({ className }: { className?: string }) {
           <MenuItem icon={<Settings className="h-4 w-4" />} label="Account" onClick={() => go("/app/account")} />
           <MenuItem icon={<Users className="h-4 w-4" />} label="Team" onClick={() => go("/app/team")} />
           <MenuItem icon={<CreditCard className="h-4 w-4" />} label="Billing" onClick={() => go("/app/billing")} />
-          <MenuItem icon={<KeyRound className="h-4 w-4" />} label="Developer & API" onClick={() => go("/app/api")} />
+          <MenuItem icon={<KeyRound className="h-4 w-4" />} label="API" onClick={() => go("/app/api")} />
           <MenuItem
             icon={<Sun className="h-4 w-4" />}
             label="Theme"
@@ -155,20 +144,29 @@ export function ProfileDropdown({ className }: { className?: string }) {
           />
         </div>
 
-        <div className="h-px bg-border mx-4" />
+        {admin?.isSuperAdmin && (
+          <>
+            <div className="h-px bg-border mx-4" />
+            <div className="py-2 px-2">
+              <MenuItem
+                icon={<Shield className="h-4 w-4" />}
+                label="Platform Admin"
+                onClick={() => go("/platform")}
+              />
+            </div>
+          </>
+        )}
 
-        <div className="py-2 px-2">
-          {admin?.isSuperAdmin && (
-            <MenuItem
-              icon={<Shield className="h-4 w-4" />}
-              label="Platform Admin"
-              onClick={() => go("/platform")}
-            />
-          )}
-          <MenuItem icon={<LogOut className="h-4 w-4" />} label="Log Out" onClick={handleSignOut} />
+        <div className="px-4 pb-4 pt-2">
+          <button
+            onClick={handleSignOut}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90"
+          >
+            <LogOut className="h-4 w-4" /> Log Out
+          </button>
         </div>
 
-        <div className="border-t border-border px-4 py-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="border-t border-border px-4 py-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <Link to="/compliance" onClick={() => setOpen(false)} className="hover:text-foreground">Terms</Link>
           <span aria-hidden>•</span>
           <Link to="/compliance" onClick={() => setOpen(false)} className="hover:text-foreground">Privacy</Link>
