@@ -1,20 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Tags } from "lucide-react";
+import { Trash2, Tags, Tag as TagIcon } from "lucide-react";
 import { toast } from "sonner";
 import { listTags, createTag, updateTag, deleteTag } from "@/lib/tags.functions";
-import { TAG_SWATCHES } from "@/components/app/tag-badge";
+import { TAG_COLORS, TagBadge, nextTagColor } from "@/components/app/tag-badge";
+
+/** Optional glyphs make tags scannable at a glance; stored as a name prefix. */
+const TAG_EMOJI = ["🔥", "⭐", "📞", "💰", "🏠", "🧊"];
 
 /** Workspace tag library — rename, recolor, delete, or add tags. */
 export function TagManagerDialog({ workspaceId }: { workspaceId: string }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newColor, setNewColor] = useState(TAG_SWATCHES[0]);
+  const [newColor, setNewColor] = useState<string | null>(null);
+  const [emoji, setEmoji] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const fetchTags = useServerFn(listTags);
@@ -28,6 +32,18 @@ export function TagManagerDialog({ workspaceId }: { workspaceId: string }) {
     enabled: open,
   });
   const tags = data?.tags ?? [];
+
+  // Auto-assign the next color in rotation so creating a tag is one decision.
+  const autoColor = nextTagColor(tags.map((t) => t.color));
+  const activeColor = newColor ?? autoColor;
+
+  useEffect(() => {
+    if (!open) {
+      setNewName("");
+      setNewColor(null);
+      setEmoji(null);
+    }
+  }, [open]);
 
   const refresh = () =>
     Promise.all([
@@ -56,9 +72,12 @@ export function TagManagerDialog({ workspaceId }: { workspaceId: string }) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle className="font-display">Manage Tags</DialogTitle></DialogHeader>
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="font-display">Manage Tags</DialogTitle>
+          <p className="text-sm text-muted-foreground">Organize Campaigns With Color-Coded Labels.</p>
+        </DialogHeader>
 
-        <div className="space-y-2 max-h-64 overflow-auto">
+        <div className="space-y-2 max-h-56 overflow-auto">
           {tags.map((t) => (
             <div key={t.id} className="flex items-center gap-2">
               <input
@@ -87,35 +106,101 @@ export function TagManagerDialog({ workspaceId }: { workspaceId: string }) {
               </Button>
             </div>
           ))}
-          {!tags.length && <p className="text-sm text-muted-foreground">No Tags Yet. Create Your First Below.</p>}
+          {!tags.length && (
+            <p className="text-sm text-muted-foreground">
+              Create Tags To Group Campaigns By Niche, Client, Or Strategy.
+            </p>
+          )}
         </div>
 
-        <div className="border-t border-border pt-3 space-y-2">
-          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="New Tag Name" className="h-9" />
-          <div className="flex items-center gap-2">
-            {TAG_SWATCHES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                aria-label={`Color ${c}`}
-                onClick={() => setNewColor(c)}
-                className={`h-6 w-6 rounded-full border ${newColor === c ? "ring-2 ring-offset-1 ring-primary" : ""}`}
-                style={{ backgroundColor: c }}
-              />
-            ))}
+        <div className="border-t border-border pt-4 space-y-4">
+          <div className="space-y-1.5">
+            <label htmlFor="tag-name" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Tag Name
+            </label>
+            <Input
+              id="tag-name"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="e.g. HVAC, VIP, Follow Up"
+              className="h-10"
+            />
           </div>
-          <Button
-            className="w-full rounded-full"
-            disabled={busy}
-            onClick={() => {
-              if (!newName.trim()) return toast.error("Name Your Tag");
-              run(() => add({ data: { workspaceId, name: newName.trim(), color: newColor } }), "Tag Created").then(() =>
-                setNewName(""),
-              );
-            }}
-          >
-            <Plus className="mr-1 h-4 w-4" /> Create Tag
-          </Button>
+
+          <div className="space-y-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Color</span>
+            <div className="flex items-center gap-3">
+              {TAG_COLORS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  title={c.label}
+                  aria-label={c.label}
+                  aria-pressed={activeColor === c.value}
+                  onClick={() => setNewColor(c.value)}
+                  className={`h-8 w-8 rounded-full transition-transform hover:scale-110 ${
+                    activeColor === c.value ? "ring-2 ring-offset-2 ring-offset-background ring-foreground/70" : ""
+                  }`}
+                  style={{ backgroundColor: c.value }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Icon (Optional)</span>
+            <div className="flex items-center gap-2">
+              {TAG_EMOJI.map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  aria-label={`Icon ${e}`}
+                  aria-pressed={emoji === e}
+                  onClick={() => setEmoji(emoji === e ? null : e)}
+                  className={`h-8 w-8 rounded-full border text-sm leading-none transition-colors ${
+                    emoji === e ? "border-foreground/60 bg-muted" : "border-border hover:bg-muted/60"
+                  }`}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preview</span>
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+              <TagIcon className="h-3.5 w-3.5 text-muted-foreground" />
+              <TagBadge
+                tag={{
+                  id: "preview",
+                  color: activeColor,
+                  name: [emoji, newName.trim() || "Your Tag"].filter(Boolean).join(" "),
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" className="rounded-full" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="rounded-full"
+              disabled={busy}
+              onClick={() => {
+                if (!newName.trim()) return toast.error("Name Your Tag");
+                const name = [emoji, newName.trim()].filter(Boolean).join(" ");
+                run(() => add({ data: { workspaceId, name, color: activeColor } }), "Tag Created").then(() => {
+                  setNewName("");
+                  setNewColor(null);
+                  setEmoji(null);
+                });
+              }}
+            >
+              Create Tag
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
