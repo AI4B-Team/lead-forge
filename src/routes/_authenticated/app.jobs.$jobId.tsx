@@ -149,10 +149,11 @@ function JobDetail() {
     }
   };
 
-  const onDownload = async (bucket: "clean" | "dnc" | "litigator") => {
+  const onDownload = async (bucket: "clean" | "dnc" | "litigator", format: ExportFormat) => {
     const res = await fetchBucket({ data: { jobId, bucket } });
     if (!res.rows.length) return toast.info("No Rows In This Bucket.");
-    downloadCsv(brandedFileName(jobName, BUCKET_FILE_TYPE[bucket]), toCsv(res.rows));
+    const type = BUCKET_FILE_TYPE[bucket];
+    await downloadRows(res.rows, format, (ext) => brandedFileName(jobName, type, ext), type);
   };
 
   // Scrub audit trail: provider, timestamp and per-bucket outcome, exportable.
