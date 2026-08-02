@@ -174,11 +174,6 @@ function TeamPage() {
                 {busy ? "Sending..." : "Send Invite"}
               </Button>
             </div>
-            <div className="grid md:grid-cols-[1fr_180px_auto] gap-3">
-              <div />
-              <p className="text-xs text-muted-foreground text-center">{ROLE_BLURB[role]}</p>
-              <div />
-            </div>
           </div>
           <p className="text-xs text-muted-foreground mt-4">
             An invite link will be generated and copied to your clipboard. Share it with your teammate.
