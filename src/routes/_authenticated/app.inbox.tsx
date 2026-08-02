@@ -336,7 +336,9 @@ function ConversationsPage() {
                 <Button
                   size="sm"
                   variant={
-                    showArchived || !PRIMARY_FILTERS.some((f) => f.key === filter) ? "default" : "ghost"
+                    showArchived || tagFilter || !PRIMARY_FILTERS.some((f) => f.key === filter)
+                      ? "default"
+                      : "ghost"
                   }
                   className="rounded-full text-xs h-7 px-2 shrink-0 ml-auto"
                 >
@@ -370,6 +372,32 @@ function ConversationsPage() {
                     </DropdownMenuItem>
                   );
                 })}
+                {(tagsQ.data?.tags ?? []).length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      Lead Tags
+                    </DropdownMenuLabel>
+                    {tagFilter && (
+                      <DropdownMenuItem className="text-xs" onClick={() => setTagFilter(null)}>
+                        Clear Tag Filter
+                      </DropdownMenuItem>
+                    )}
+                    {(tagsQ.data?.tags ?? []).map((t) => (
+                      <DropdownMenuItem
+                        key={t.id}
+                        onClick={() => {
+                          setTagFilter(tagFilter === t.id ? null : t.id);
+                          setShowArchived(false);
+                        }}
+                        className={cn("text-xs gap-2", tagFilter === t.id && "font-semibold")}
+                      >
+                        <span className="h-2 w-2 rounded-full shrink-0" style={{ background: t.color }} />
+                        <span className="truncate">{t.name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
