@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { HelpHint } from "@/components/app/help-hint";
 import { INDUSTRIES, COUNTIES } from "@/lib/mock-data";
 import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
