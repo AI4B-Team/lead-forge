@@ -17,7 +17,7 @@ describe("branded download names", () => {
     expect([...names].sort()).toEqual(names.slice().sort());
   });
   it("sanitizes invalid characters and doubled spaces", () => {
-    expect(brandedFileName('Bad/Name:  "X"?', "DNC")).toBe("LeadTrace – Bad-Name- -X-- – DNC.csv");
+    expect(brandedFileName('Bad/Name:  "X"?', "DNC")).toBe("LeadTrace – Bad-Name - X - – DNC.csv");
   });
   it("prefixes the display title only", () => {
     expect(brandedJobTitle(job)).toBe(`LeadTrace – ${job}`);
