@@ -243,6 +243,7 @@ export function JobSpecCard({
   onPickFile,
   onRemoveUpload,
   onEditMapping,
+  onClearTargets,
   onRequestRecordType,
   template = null,
   onChangeTemplate,
@@ -256,6 +257,8 @@ export function JobSpecCard({
   onPickFile?: (file: File) => void;
   onRemoveUpload?: () => void;
   onEditMapping?: () => void;
+  /** Drops an uploaded parameter file so the source runs on its own settings. */
+  onClearTargets?: () => void;
   /** Logs a record type the pipeline does not support yet. */
   onRequestRecordType?: (request: string) => Promise<void> | void;
   /** The selected source template — the panel's Source row and field schema. */
