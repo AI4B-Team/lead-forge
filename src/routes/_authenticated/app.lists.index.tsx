@@ -313,8 +313,31 @@ function Jobs() {
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
       const recurring = ordered.some((r) => normalizeCadence(r.schedule) !== "one_time");
-      if (recurring && ordered.length > 1)
-        out.push({ latest: ordered[0]!, prior: ordered.slice(1) });
+      if (recurring && ordered.length > 1) {
+        // A rescan that just started reports zeros for every stage. Rolling
+        // that up would make a productive scheduled list look like it found
+        // nothing, so the summary row borrows its pipeline counts from the
+        // most recent run that actually produced output. Status, schedule and
+        // timestamps still come from the newest run.
+        const newest = ordered[0]!;
+        const hasOutput = (r: (typeof rows)[number]) =>
+          (r.rows_in ?? 0) > 0 ||
+          r.counts.clean + r.counts.dnc + r.counts.litigator > 0;
+        const statsFrom = hasOutput(newest) ? newest : ordered.find(hasOutput);
+        out.push({
+          latest: statsFrom && statsFrom !== newest
+            ? {
+                ...newest,
+                rows_in: statsFrom.rows_in,
+                rows_deduped: statsFrom.rows_deduped,
+                rows_enriched: statsFrom.rows_enriched,
+                rows_skiptraced: statsFrom.rows_skiptraced,
+                counts: statsFrom.counts,
+              }
+            : newest,
+          prior: ordered.slice(1),
+        });
+      }
       else for (const r of ordered) out.push({ latest: r, prior: [] });
     }
     return out.sort(
