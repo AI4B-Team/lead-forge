@@ -11,7 +11,8 @@ import { toast } from "sonner";
 import { getCampaignDetail, tickCampaign, updateCampaignStatus, updateCampaignConfig } from "@/lib/campaigns.functions";
 import { BotConsole } from "@/components/app/bot-console";
 import { BotTrainer } from "@/components/app/bot-trainer";
-import { BrandPicker } from "@/components/app/brand-picker";
+import { useWorkspaceAgent } from "@/hooks/use-agent";
+import { Bot } from "lucide-react";
 import { DripEditor, type DripStep } from "@/components/app/drip-editor";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 
@@ -93,7 +94,7 @@ function CampaignDetail() {
 
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <BrandAssignment campaignId={campaignId} brandId={campaign.brand_id ?? null} />
+          <AgentAssignment campaignId={campaignId} brandId={campaign.brand_id ?? null} />
         </CardContent>
       </Card>
 
@@ -186,7 +187,7 @@ function CampaignDetail() {
       />
 
       {campaign.brand_id ? (
-        <BotTrainer key={campaign.brand_id} brandId={campaign.brand_id} heading="Brand Knowledge (Shared Across Campaigns)" />
+        <BotTrainer key={campaign.brand_id} brandId={campaign.brand_id} heading="Agent Knowledge (Shared Across Campaigns)" />
       ) : (
         <BotTrainer campaignId={campaignId} heading="Campaign-Only Bot Training" />
       )}
@@ -210,24 +211,38 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: "su
   );
 }
 
-/** Attach the campaign to a reusable brand so the bot inherits its knowledge. */
-function BrandAssignment({ campaignId, brandId }: { campaignId: string; brandId: string | null }) {
+/** Campaigns automatically speak as the workspace's AI agent — no picker. */
+function AgentAssignment({ campaignId, brandId }: { campaignId: string; brandId: string | null }) {
   const qc = useQueryClient();
   const { workspaceId } = useWorkspaceId();
+  const { agent } = useWorkspaceAgent(workspaceId);
   const saveConfig = useServerFn(updateCampaignConfig);
+  const [linking, setLinking] = useState(false);
 
-  const assign = async (id: string | null) => {
-    try {
-      await saveConfig({ data: { campaignId, brand_id: id } });
-      qc.invalidateQueries({ queryKey: ["campaign-detail", campaignId] });
-      toast.success(id ? "Brand Linked" : "Brand Cleared");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Update Failed");
-    }
-  };
+  useEffect(() => {
+    if (!agent || brandId === agent.id || linking) return;
+    setLinking(true);
+    saveConfig({ data: { campaignId, brand_id: agent.id } })
+      .then(() => qc.invalidateQueries({ queryKey: ["campaign-detail", campaignId] }))
+      .catch(() => undefined);
+  }, [agent, brandId, campaignId, linking, qc, saveConfig]);
 
-  if (!workspaceId) return null;
-  return <BrandPicker workspaceId={workspaceId} value={brandId} onChange={assign} />;
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Bot className="h-4 w-4" />
+      </span>
+      <div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Speaking As</div>
+        <div className="font-display font-bold text-foreground">
+          {agent?.name ?? "No Agent Set Up Yet"}
+        </div>
+      </div>
+      <Button asChild variant="outline" size="sm" className="rounded-full ml-auto">
+        <Link to="/app/agent">{agent ? "Train Agent" : "Set Up Agent"}</Link>
+      </Button>
+    </div>
+  );
 }
 
 /** Editable drip sequence with per-touch wait duration, saved back to the campaign. */
