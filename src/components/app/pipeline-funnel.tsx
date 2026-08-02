@@ -67,7 +67,9 @@ export function PipelineFunnel({
   return (
     <div className={cn("flex items-start", readyPill ? "pt-10" : "pt-1", className)}>
       {built.map((s, i) => {
-        const isClean = s.key === "clean";
+        // The terminal stage carries the celebratory treatment: "Clean" for
+        // lead runs, "Exported" for research datasets.
+        const isClean = s.key === "clean" || s.key === "exported";
         const pct = stageFillPercent(s.remaining, found, small ? 12 : 8);
         return (
           <div key={s.key} className="flex min-w-0 flex-1 items-stretch">
