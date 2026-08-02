@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getOnboarding, setOnboardingPref } from "@/lib/onboarding.functions";
 import { ProductTour } from "@/components/app/product-tour";
 import {
-  Check, ChevronDown, ChevronUp, X, Sparkles, Search, ListChecks, ShieldCheck, Phone, Send,
+  Check, ChevronDown, ChevronUp, X, Sparkles, Search, ListChecks, ShieldCheck, Phone, Send, Bot,
 } from "lucide-react";
 
 type Step = {
