@@ -536,11 +536,16 @@ export function KnowledgeSourceList({
 }) {
   return (
     <div className="divide-y divide-border rounded-2xl border border-border bg-card">
-      {KNOWLEDGE_CARDS.map((spec) => {
+      {(() => {
+        const depths = new Map(sourceDepths(sources).map((d) => [d.key, d]));
+        return KNOWLEDGE_CARDS.map((spec) => {
         const Icon = ICONS[spec.key] ?? FileText;
         const items = sources.filter((s) => s.category === spec.key);
-        const isAdded = items.length > 0;
-        const progress = isAdded ? 100 : 0;
+        const depth = depths.get(spec.key);
+        const isAdded = !!depth?.covered;
+        const isThin = !!depth?.thin;
+        // Depth bar is a rough fullness cue only — never a quota to fill.
+        const progress = depth ? Math.min(100, Math.round((depth.chars / 3000) * 100)) : 0;
         return (
           <div
             key={spec.key}
@@ -549,7 +554,11 @@ export function KnowledgeSourceList({
           >
             <span
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${
-                isAdded ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                isAdded
+                  ? "bg-success/10 text-success"
+                  : isThin
+                    ? "bg-warning/10 text-warning"
+                    : "bg-muted text-muted-foreground"
               }`}
             >
               <Icon className="h-4.5 w-4.5" />
@@ -559,10 +568,19 @@ export function KnowledgeSourceList({
                 <div className="truncate text-sm font-semibold text-foreground">{spec.title}</div>
                 {isAdded && <Check className="h-3.5 w-3.5 text-success" />}
               </div>
-              <div className="truncate text-[11px] text-muted-foreground">{spec.action}</div>
+              <div className="truncate text-[11px] text-muted-foreground">
+                {depth && depth.count > 0 ? (
+                  <>
+                    {depth.detail}
+                    {isThin && <span className="text-warning"> · Thin</span>}
+                  </>
+                ) : (
+                  <>None Yet · {spec.action}</>
+                )}
+              </div>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-success transition-all duration-500"
+                  className={`h-full rounded-full transition-all duration-500 ${isAdded ? "bg-success" : "bg-warning"}`}
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -578,7 +596,8 @@ export function KnowledgeSourceList({
             </div>
           </div>
         );
-      })}
+        });
+      })()}
     </div>
   );
 }
