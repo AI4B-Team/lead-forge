@@ -753,7 +753,7 @@ function Assistant() {
       <div>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">AI Lead Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Describe the leads you want. The assistant interprets it, assembles the job, and hands you the controls to review.
+          Describe the leads you want. The assistant interprets it, assembles your list, and hands you the controls to review.
         </p>
       </div>
 
