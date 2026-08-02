@@ -30,6 +30,7 @@ export function PipelineFunnel({
   size = "lg",
   animate = false,
   completedThrough,
+  readyPill,
   className,
 }: {
   stages: FunnelStages;
@@ -40,6 +41,8 @@ export function PipelineFunnel({
   animate?: boolean;
   /** Index of the last finished stage; arrows up to it render in brand red. */
   completedThrough?: number;
+  /** Pill centered above the Clean card (e.g. "✓ 8 Ready To Launch"). */
+  readyPill?: ReactNode;
   className?: string;
 }) {
   const small = size === "sm";
