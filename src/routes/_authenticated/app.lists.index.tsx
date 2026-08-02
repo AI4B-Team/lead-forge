@@ -51,6 +51,11 @@ const SOURCE_META: Record<string, { label: string; icon: typeof Landmark }> = {
 };
 
 /** "Jul 31" / "Yesterday" plus a 12-hour time — far easier to scan than 7/31/2026. */
+/** Parent row shows the list itself, so drop the "· Run #N" suffix. */
+function listBaseName(name: string) {
+  return name.split(" · Run #")[0]!;
+}
+
 function formatCreated(iso: string) {
   const d = new Date(iso);
   const now = new Date();
