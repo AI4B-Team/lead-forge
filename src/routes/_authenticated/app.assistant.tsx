@@ -1024,6 +1024,9 @@ function Assistant() {
     return ordered.slice(0, GRID_SLOTS);
   }, [recents]);
 
+  // Rotation rests when a template supplies its own hint or the user is typing.
+  const example = useRotatingExample(!selectedTemplate && !input.trim());
+
   const heroState = (
     <div className="w-full space-y-8 py-2">
       <div>
