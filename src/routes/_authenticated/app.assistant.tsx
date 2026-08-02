@@ -186,7 +186,7 @@ function Assistant() {
     geo: string;
   } | null>(null);
   const [notifyEmail, setNotifyEmail] = useState<string | null>(null);
-  const [requesting, setRequesting] = useState(false);
+  // Submission state now lives inside the source-request intake dialog.
   const [requestError, setRequestError] = useState<string | null>(null);
   const lastTemplateId = useRef<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
@@ -902,15 +902,10 @@ function Assistant() {
             <>
               <Button
                 variant="outline"
-                disabled={requesting}
                 className="h-9 w-full rounded-full border-2 border-primary bg-primary/5 text-sm font-semibold text-primary hover:bg-primary/10 hover:text-primary"
                 onClick={() => void requestTemplateAdapter()}
               >
-                {requesting ? (
-                  <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Requesting…</>
-                ) : (
-                  <><BellPlus className="mr-1 h-4 w-4" /> Launching Soon! Join The Waitlist To Be Notified</>
-                )}
+                <BellPlus className="mr-1 h-4 w-4" /> Launching Soon — Request This Source
               </Button>
               {requestError && (
                 <div className="text-center text-xs text-destructive">{requestError}</div>
