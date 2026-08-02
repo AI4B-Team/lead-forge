@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 
 function AppLayout() {
   const tour = useProductTour();
+  const navigate = useNavigate();
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-surface-muted">
@@ -31,8 +32,12 @@ function AppLayout() {
                 {/* Credits + Build List sit together: having credits nudges using them. */}
                 <div className="mr-2 flex items-center gap-2">
                   <CreditMenu />
-                  <Button asChild size="sm" className="rounded-full">
-                    <Link to="/app/new-list"><Plus className="mr-1 h-3.5 w-3.5" /> Build List</Link>
+                  <Button
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => navigate({ to: "/app/new-list" })}
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Build List
                   </Button>
                 </div>
                 <Tooltip>
