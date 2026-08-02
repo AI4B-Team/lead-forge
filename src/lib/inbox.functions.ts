@@ -237,7 +237,7 @@ export const getThread = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: messages, error } = await context.supabase
       .from("messages")
-      .select("id, direction, body, status, created_at, is_optout, is_bot, handoff_reason, provider_sid, sending_number_id, lead_id, campaign_id, error_code, read_at")
+      .select("id, direction, body, status, created_at, is_optout, is_bot, handoff_reason, provider_sid, sending_number_id, lead_id, campaign_id, error_code, read_at, channel, call_event, recording_url, recording_seconds, transcript")
       .eq("workspace_id", data.workspaceId)
       .eq("thread_key", data.threadKey)
       .order("created_at", { ascending: true });
