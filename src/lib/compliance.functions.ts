@@ -67,14 +67,8 @@ export const getComplianceState = createServerFn({ method: "GET" })
     ]);
 
     const suppression = sup.data ?? [];
-    const bucket = (reason: string | null) => {
-      const r = (reason ?? "").toLowerCase();
-      if (r.includes("stop") || r.includes("opt")) return "opt_out";
-      if (r.includes("dnc") || r.includes("litig")) return "dnc";
-      return "manual";
-    };
     const counts = { opt_out: 0, dnc: 0, manual: 0 };
-    for (const s of suppression) counts[bucket(s.reason) as keyof typeof counts]++;
+    for (const s of suppression) counts[reasonBucket(s.reason)]++;
 
     const runRows = (runs.data ?? []).map((r) => ({
       id: r.id,
@@ -132,9 +126,223 @@ export const importSuppression = createServerFn({ method: "POST" })
         workspace_id: data.workspaceId,
         phone,
         reason: data.reason || "manual",
+        source: data.source ?? "compliance",
+        note: data.note ?? null,
       })),
       { onConflict: "workspace_id,phone", ignoreDuplicates: true },
     );
     if (error) throw error;
     return { imported: normalized.length, skipped: data.phones.length - normalized.length };
+  });
+
+/**
+ * Searchable suppression list. Partial phone search matches on digits, so
+ * "5551234" finds "+15555551234" regardless of how it was stored.
+ */
+export const listSuppression = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        query: z.string().default(""),
+        reason: z.string().default("all"),
+        page: z.number().int().default(0),
+        pageSize: z.number().int().default(25),
+        all: z.boolean().default(false),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("suppression")
+      .select("phone, reason, note, source, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .order("created_at", { ascending: false })
+      .limit(20000);
+    if (error) throw error;
+
+    const q = digitsOnly(data.query);
+    const textQ = data.query.trim().toLowerCase();
+    const filtered = (rows ?? [])
+      .map((r) => ({
+        phone: r.phone,
+        reason: r.reason ?? "manual",
+        bucket: reasonBucket(r.reason),
+        note: (r as { note?: string | null }).note ?? null,
+        source: (r as { source?: string | null }).source ?? "unknown",
+        created_at: r.created_at,
+      }))
+      .filter((r) => (data.reason === "all" ? true : r.bucket === data.reason))
+      .filter((r) => {
+        if (!textQ) return true;
+        if (q) return digitsOnly(r.phone).includes(q);
+        return (r.note ?? "").toLowerCase().includes(textQ) || r.source.toLowerCase().includes(textQ);
+      });
+
+    const size = Math.min(Math.max(data.pageSize, 5), 200);
+    const start = data.all ? 0 : data.page * size;
+    return {
+      total: filtered.length,
+      page: data.page,
+      pageSize: size,
+      rows: data.all ? filtered : filtered.slice(start, start + size),
+    };
+  });
+
+/** Blocked-attempt log: every refused send, filterable by path and date range. */
+export const listBlockedAttempts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        path: z.string().default("all"),
+        days: z.number().int().default(0),
+        query: z.string().default(""),
+        limit: z.number().int().default(500),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    let q = context.supabase
+      .from("compliance_events")
+      .select("id, phone, lead_id, path, reason, detail, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .order("created_at", { ascending: false })
+      .limit(Math.min(Math.max(data.limit, 1), 5000));
+    if (data.path !== "all") q = q.eq("path", data.path);
+    if (data.days > 0) {
+      q = q.gte("created_at", new Date(Date.now() - data.days * 86_400_000).toISOString());
+    }
+    const { data: rows, error } = await q;
+    if (error) throw error;
+
+    const digits = digitsOnly(data.query);
+    return {
+      rows: (rows ?? [])
+        .filter((r) => !digits || digitsOnly(r.phone ?? "").includes(digits))
+        .map((r) => ({
+          id: r.id,
+          phone: r.phone,
+          lead_id: r.lead_id,
+          path: r.path,
+          reason: r.reason,
+          source:
+            r.detail && typeof r.detail === "object" && "source" in r.detail
+              ? String((r.detail as Record<string, unknown>)["source"])
+              : "unknown",
+          created_at: r.created_at,
+        })),
+    };
+  });
+
+/**
+ * Per-person evidentiary view: suppression status, every message to/from the
+ * number (with bot/human attribution), and every refused send attempt.
+ */
+export const lookupContact = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ workspaceId: z.string().uuid(), phone: z.string().min(4) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const canonical = normalizePhone(data.phone);
+    const variants = phoneVariants(data.phone);
+
+    const [supRes, leadRes, blockRes] = await Promise.all([
+      supabase
+        .from("suppression")
+        .select("phone, reason, note, source, created_at")
+        .eq("workspace_id", data.workspaceId)
+        .in("phone", variants)
+        .order("created_at", { ascending: true })
+        .limit(5),
+      supabase
+        .from("leads")
+        .select("id, full_name, business_name, phone, city, state")
+        .eq("workspace_id", data.workspaceId)
+        .in("phone", variants)
+        .limit(50),
+      supabase
+        .from("compliance_events")
+        .select("id, phone, path, reason, detail, created_at, lead_id")
+        .eq("workspace_id", data.workspaceId)
+        .in("phone", variants)
+        .order("created_at", { ascending: false })
+        .limit(500),
+    ]);
+
+    const leads = leadRes.data ?? [];
+    const leadIds = leads.map((l) => l.id);
+
+    let messages: Array<{
+      id: string;
+      direction: string;
+      body: string | null;
+      status: string | null;
+      is_bot: boolean;
+      is_optout: boolean;
+      error_code: string | null;
+      campaign_id: string | null;
+      created_at: string;
+    }> = [];
+    if (leadIds.length > 0) {
+      const { data: msgs } = await supabase
+        .from("messages")
+        .select("id, direction, body, status, is_bot, is_optout, error_code, campaign_id, created_at")
+        .eq("workspace_id", data.workspaceId)
+        .in("lead_id", leadIds)
+        .order("created_at", { ascending: false })
+        .limit(1000);
+      messages = (msgs ?? []).map((m) => ({
+        id: m.id,
+        direction: m.direction,
+        body: m.body,
+        status: m.status,
+        is_bot: !!m.is_bot,
+        is_optout: !!m.is_optout,
+        error_code: m.error_code,
+        campaign_id: m.campaign_id,
+        created_at: m.created_at,
+      }));
+    }
+
+    const sup = (supRes.data ?? [])[0] ?? null;
+    const lead = leads[0] ?? null;
+
+    return {
+      phone: canonical,
+      found: !!sup || leads.length > 0 || (blockRes.data ?? []).length > 0,
+      suppression: sup
+        ? {
+            phone: sup.phone,
+            reason: sup.reason ?? "manual",
+            bucket: reasonBucket(sup.reason),
+            note: (sup as { note?: string | null }).note ?? null,
+            source: (sup as { source?: string | null }).source ?? "unknown",
+            created_at: sup.created_at,
+          }
+        : null,
+      lead: lead
+        ? {
+            id: lead.id,
+            name: lead.full_name ?? lead.business_name ?? null,
+            city: lead.city,
+            state: lead.state,
+          }
+        : null,
+      messages,
+      blocks: (blockRes.data ?? []).map((b) => ({
+        id: b.id,
+        path: b.path,
+        reason: b.reason,
+        created_at: b.created_at,
+        source:
+          b.detail && typeof b.detail === "object" && "source" in b.detail
+            ? String((b.detail as Record<string, unknown>)["source"])
+            : "unknown",
+      })),
+    };
   });
