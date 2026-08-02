@@ -404,32 +404,31 @@ function Jobs() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sources</SelectItem>
-                {sourceOptions.grouped
-                  ? sourceOptions.groups.map((g) =>
-                      g.items.length > 1 ? (
-                        <SelectGroup key={g.group}>
-                          <SelectLabel>{g.group}</SelectLabel>
-                          {g.items.map((it) => (
-                            <SelectItem key={it.key} value={it.key}>
-                              {it.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      ) : (
-                        // Single-child group: the header would duplicate its
-                        // only child, so render the source on its own.
-                        g.items.map((it) => (
-                          <SelectItem key={it.key} value={it.key}>
-                            {it.label}
-                          </SelectItem>
-                        ))
-                      ),
-                    )
-                  : sourceOptions.flat.map((it) => (
+                {sourceOptions.map((g) =>
+                  g.items.length > 1 ? (
+                    <SelectGroup key={g.group}>
+                      <SelectLabel className="p-0">
+                        {/* The header itself filters to the whole category. */}
+                        <SelectItem value={`cat:${g.group}`} className="font-semibold">
+                          {g.label} · {g.count}
+                        </SelectItem>
+                      </SelectLabel>
+                      {g.items.map((it) => (
+                        <SelectItem key={it.key} value={it.key} className="pl-8">
+                          {it.label} · {it.count}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ) : (
+                    // Single-child group: the header would duplicate its only
+                    // child, so render the template as one flat row.
+                    g.items.map((it) => (
                       <SelectItem key={it.key} value={it.key}>
-                        {it.label}
+                        {it.label} · {it.count}
                       </SelectItem>
-                    ))}
+                    ))
+                  ),
+                )}
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
