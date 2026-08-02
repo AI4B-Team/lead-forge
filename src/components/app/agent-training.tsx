@@ -34,6 +34,12 @@ function getRecognition(): SpeechRecognitionLike | null {
   return Ctor ? new Ctor() : null;
 }
 
+// Collapses a doubled URL scheme (e.g. "https://https://site.com" or
+// "https://http://site.com") down to the pasted URL's own scheme.
+export function dedupeScheme(value: string): string {
+  return value.replace(/\bhttps?:\/\/(?=https?:\/\/)/gi, "");
+}
+
 const EXAMPLES = [
   "Explain Your Services",
   "Paste Your FAQs",
@@ -148,7 +154,7 @@ export function AgentComposer({ brandId }: { brandId: string }) {
         ref={textRef}
         rows={3}
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => setText(dedupeScheme(e.target.value))}
         placeholder="Paste anything — what you do, your FAQs, a sales script, a call transcript, or just your website link…"
         className="min-h-[84px] resize-none border-0 bg-transparent px-1 py-1 shadow-none focus-visible:ring-0"
       />
