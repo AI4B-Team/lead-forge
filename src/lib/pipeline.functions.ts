@@ -163,7 +163,10 @@ export const runJob = createServerFn({ method: "POST" })
 
     // 2) ENRICH + DEDUPE (drop franchises, dedupe in-batch + across lists) ----
     await supabase.from("jobs").update({ status: "enriching" }).eq("id", jobId);
-    const removeFranchises = params.remove_franchises !== false;
+    // Remove Franchises is opt-in (see PIPELINE_OPTIONS) — only run it when the
+    // user actually enabled it at Generate List time, and only say so in the log
+    // when it ran.
+    const removeFranchises = params.remove_franchises === true;
     const dedupe = params.dedupe !== false;
     const seen = new Set<string>();
 
@@ -197,9 +200,12 @@ export const runJob = createServerFn({ method: "POST" })
       deduped.push(r);
     }
     await supabase.from("jobs").update({ rows_deduped: deduped.length, rows_enriched: deduped.length }).eq("id", jobId);
+    const removedCount = raw.length - deduped.length;
     await say(
       "enriching",
-      `Removed ${(raw.length - deduped.length).toLocaleString()} duplicates and franchise locations — ${deduped.length.toLocaleString()} unique records remain.`,
+      `Removed ${removedCount.toLocaleString()} ${
+        removeFranchises ? "duplicates and franchise locations" : "duplicates"
+      } — ${deduped.length.toLocaleString()} unique records remain.`,
       deduped.length,
     );
 
