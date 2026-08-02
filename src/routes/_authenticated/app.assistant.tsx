@@ -151,6 +151,8 @@ function Assistant() {
   const specScroll = useOverflow<HTMLDivElement>();
 
   const started = thread.length > 0 || panelOpen;
+  /** True only once a message exists in the thread (panel-only mode has none). */
+  const hasChat = thread.length > 0;
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
   const uploadReady = attachmentReady(upload);
   const missing = useMemo(() => openSlots(spec, uploadReady), [spec, uploadReady]);
@@ -188,7 +190,7 @@ function Assistant() {
     if (selectedTemplate?.id === t.id) {
       setSelectedTemplate(null);
       lastTemplateId.current = null;
-      if (!started) {
+      if (!hasChat) {
         setSpec(EMPTY_SPEC);
         setInferred(new Set());
       }
@@ -197,7 +199,7 @@ function Assistant() {
     }
     setSelectedTemplate(t);
     lastTemplateId.current = t.id;
-    if (started) {
+    if (hasChat) {
       // Mid-conversation: the template only informs the source, never wipes context.
       setSpec((s) => ({ ...s, sourceType: templateSourceType(t), templateId: t.id }));
       setInferred((prev) => {
@@ -246,7 +248,7 @@ function Assistant() {
         toast.info(`${selectedTemplate.title} Deselected — Using Your Uploaded File Instead.`);
       }
       setConfirmed(false);
-      if (started) {
+      if (hasChat) {
         setThread((m) => [...m, { role: "system", content: `You Attached: ${next.name}` }]);
       } else {
         // Attaching from the hero opens the working view so the panel is visible.
