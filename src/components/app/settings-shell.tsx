@@ -11,6 +11,7 @@ import {
   BadgeCheck,
   ShieldCheck,
   Plug,
+  Code2,
   LayoutDashboard,
   type LucideIcon,
 } from "lucide-react";
@@ -26,6 +27,7 @@ export type AccountTabKey =
   | "numbers"
   | "registration"
   | "integrations"
+  | "developer"
   | "compliance"
   | "workspace-admin";
 
@@ -42,6 +44,7 @@ type NavDef = {
     | "/app/compliance"
     | "/app/numbers"
     | "/app/integrations"
+    | "/app/api"
     | "/app/workspace";
   search?: { tab: "profile" | "security" | "notifications" };
 };
@@ -69,6 +72,7 @@ const GROUPS: { label: string; items: NavDef[] }[] = [
     label: "Automation",
     items: [
       { key: "integrations", label: "Integrations", icon: Plug, to: "/app/integrations" },
+      { key: "developer", label: "Developer & API", icon: Code2, to: "/app/api" },
     ],
   },
   {
