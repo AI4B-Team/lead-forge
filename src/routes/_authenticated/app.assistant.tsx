@@ -1273,7 +1273,7 @@ function Assistant() {
         open={!!pendingUpload}
         fileName={pendingUpload?.name ?? ""}
         detection={pendingDetection}
-        allowSuppression={Boolean(spec.sourceType && spec.sourceType !== "upload")}
+        allowSuppression
         onCancel={clearPending}
         onConfirm={confirmIntent}
       />
