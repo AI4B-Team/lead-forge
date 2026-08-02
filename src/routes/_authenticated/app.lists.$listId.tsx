@@ -657,10 +657,13 @@ type LeadRow = {
   city: string | null;
   state: string | null;
   scrub_status: string | null;
+  zip?: string | null;
+  source_meta?: unknown;
 };
 
-function LeadsBrowser({ jobId, disabled, open, onOpenChange, bucket, onBucketChange }: {
+function LeadsBrowser({ jobId, templateId, disabled, open, onOpenChange, bucket, onBucketChange }: {
   jobId: string;
+  templateId: string | null;
   disabled: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -679,6 +682,14 @@ function LeadsBrowser({ jobId, disabled, open, onOpenChange, bucket, onBucketCha
     queryFn: () => fetchLeads({ data: { jobId, bucket, search: q || undefined, limit: 100 } }),
     enabled: open,
   });
+  const leads = (data?.leads ?? []) as LeadRow[];
+  // A single run has ONE output shape, so its results columns come straight
+  // from that template's output schema — never a phone column for a source
+  // that can't produce phones.
+  const fields = populatedFields(
+    resultFieldsForTemplate(templateId),
+    leads as Array<Record<string, unknown>>,
+  );
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
@@ -707,18 +718,20 @@ function LeadsBrowser({ jobId, disabled, open, onOpenChange, bucket, onBucketCha
         </div>
         <div className="mt-4 space-y-2">
           {isFetching && <div className="text-sm text-muted-foreground">Loading…</div>}
-          {!isFetching && (data?.leads.length ?? 0) === 0 && (
+          {!isFetching && leads.length === 0 && (
             <div className="text-sm text-muted-foreground text-center py-6">No Leads Match.</div>
           )}
-          {data?.leads.map((l) => (
+          {leads.map((l) => (
             <button
               key={l.id}
               type="button"
-              onClick={() => setActive(l as LeadRow)}
+              onClick={() => setActive(l)}
               className="w-full text-left rounded-xl border border-border p-3 transition-colors hover:border-primary/40 hover:bg-muted/50"
             >
               <div className="flex items-center justify-between">
-                <div className="font-semibold text-sm text-foreground">{l.full_name ?? l.business_name ?? "—"}</div>
+                <div className="font-semibold text-sm text-foreground">
+                  {fields[0]?.value(l as Record<string, unknown>) ?? l.full_name ?? l.business_name ?? "—"}
+                </div>
                 <Badge
                   variant="outline"
                   className={
@@ -730,21 +743,30 @@ function LeadsBrowser({ jobId, disabled, open, onOpenChange, bucket, onBucketCha
                   {l.scrub_status}
                 </Badge>
               </div>
-              <div className="mt-1 text-xs text-muted-foreground space-x-3">
-                {l.phone && (
-                  <span>
-                    <PhoneLink phone={l.phone} />
-                    {l.phone_type ? ` · ${l.phone_type}` : ""}
-                  </span>
-                )}
-                {l.email && <span>{l.email}</span>}
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                {formatLocation(l.city, l.state, l.address) || "—"}
-              </div>
+              {/* Remaining schema fields, in the run's own output order. */}
+              <dl className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+                {fields.slice(1).map((f) => {
+                  const v = f.value(l as Record<string, unknown>);
+                  return (
+                    <div key={f.key} className="flex min-w-0 items-center gap-1">
+                      <dt className="uppercase tracking-wide text-muted-foreground/70">{f.label}</dt>
+                      <dd className="min-w-0 truncate text-foreground/90">
+                        {f.key === "phone" && v ? (
+                          <>
+                            <PhoneLink phone={v} />
+                            {l.phone_type ? ` · ${l.phone_type}` : ""}
+                          </>
+                        ) : (
+                          v ?? "—"
+                        )}
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
             </button>
           ))}
-          {(data?.leads.length ?? 0) === 100 && (
+          {leads.length === 100 && (
             <div className="text-xs text-muted-foreground text-center pt-2">Showing First 100 · Refine Search To See More.</div>
           )}
         </div>
