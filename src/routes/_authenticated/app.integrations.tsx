@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
-  Webhook, Zap, Link2, Sheet, Mail, Plug, ChevronDown, KeyRound, BookOpen, Terminal,
+  Webhook, Zap, Link2, Sheet, Mail, Plug, ChevronDown, BookOpen, Terminal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
