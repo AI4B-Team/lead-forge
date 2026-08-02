@@ -254,12 +254,6 @@ function JobDetail() {
       <Card className="mt-6">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base font-display">Lead Processing</CardTitle>
-          {isReady && (
-            <Badge className="gap-2 rounded-full px-4 py-1.5 text-base font-black">
-              <Check className="h-4 w-4" strokeWidth={3} />
-              {counts.clean.toLocaleString()} Ready To Launch
-            </Badge>
-          )}
         </CardHeader>
         <CardContent className="space-y-5">
           <PipelineFunnel
@@ -273,6 +267,14 @@ function JobDetail() {
               scrubbed: counts.total,
               clean: counts.clean,
             }}
+            readyPill={
+              isReady ? (
+                <Badge className="gap-2 rounded-full px-4 py-1.5 text-base font-black">
+                  <Check className="h-4 w-4" strokeWidth={3} />
+                  {counts.clean.toLocaleString()} Ready To Launch
+                </Badge>
+              ) : undefined
+            }
           />
           <div className="rounded-xl border border-border bg-muted/40 p-4">
             <button

@@ -2,6 +2,7 @@ import { ChevronRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buildFunnel, stageFillPercent } from "@/lib/funnel-math";
 import { useCountUp } from "@/hooks/use-count-up";
+import type { ReactNode } from "react";
 
 export type FunnelStages = {
   found: number;
@@ -29,6 +30,7 @@ export function PipelineFunnel({
   size = "lg",
   animate = false,
   completedThrough,
+  readyPill,
   className,
 }: {
   stages: FunnelStages;
@@ -39,6 +41,8 @@ export function PipelineFunnel({
   animate?: boolean;
   /** Index of the last finished stage; arrows up to it render in brand red. */
   completedThrough?: number;
+  /** Pill centered above the Clean card (e.g. "✓ 8 Ready To Launch"). */
+  readyPill?: ReactNode;
   className?: string;
 }) {
   const small = size === "sm";
@@ -62,6 +66,9 @@ export function PipelineFunnel({
         return (
           <div key={s.key} className="flex min-w-0 flex-1 items-stretch">
             <div className="min-w-0 flex-1">
+              {isClean && readyPill && (
+                <div className="mb-2 flex justify-center">{readyPill}</div>
+              )}
               <div
                 className={cn(
                   "relative w-full overflow-hidden rounded-xl border",
