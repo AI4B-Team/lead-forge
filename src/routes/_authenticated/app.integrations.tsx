@@ -100,19 +100,6 @@ function IntegrationsPage() {
       ],
     },
     {
-      label: "API",
-      hint: "Build Directly Against LeadTrace.",
-      items: [
-        {
-          key: "api-keys",
-          title: "API Keys",
-          description: "Build Directly Against The LeadTrace API.",
-          icon: KeyRound,
-          status: "soon",
-        },
-      ],
-    },
-    {
       label: "Suite",
       hint: "Shared Account Across The Real Elite Products.",
       items: [
