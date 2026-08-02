@@ -17,7 +17,8 @@ import { formatLocation } from "@/lib/location";
 import { listLeadRecords, getLeadListMemberships } from "@/lib/monitoring.functions";
 import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
 import { LeadTagChips } from "@/components/app/lead-tag-picker";
-import { ChannelIcons } from "@/components/app/channel-icons";
+import { PhoneCell, EmailCell } from "@/components/app/channel-icons";
+import { mailingAddress } from "@/lib/contact-channels";
 
 export const Route = createFileRoute("/_authenticated/app/leads")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -289,18 +290,19 @@ function LeadsPageInner() {
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="p-4">Name / Business</th>
-                <th className="p-4">Channels</th>
+                <th className="p-4">Phone</th>
+                <th className="p-4">Email</th>
                 <th className="p-4">Disposition</th>
                 <th className="p-4">Lists</th>
-                <th className="p-4">First / Last Seen</th>
+                <th className="p-4">Last Seen</th>
               </tr>
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
+                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
               )}
               {!isLoading && rows.length === 0 && (
-                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">
                   No Records Match These Filters Yet.
                 </td></tr>
               )}
@@ -309,6 +311,18 @@ function LeadsPageInner() {
                 const secondary = r.business_name && r.full_name ? r.full_name : null;
                 const location = formatLocation(r.city, r.state);
                 const sources = (r.source_types ?? []).map((s) => SOURCE_LABEL[s] ?? s).join(", ");
+                const contact = {
+                  phone: r.phone,
+                  phone_type: r.phone_type,
+                  email: r.email,
+                  address: r.address,
+                  city: r.city,
+                  state: r.state,
+                  zip: r.zip,
+                  website: r.website,
+                  socials: (r.socials ?? null) as Record<string, string> | null,
+                  disposition: r.disposition,
+                };
                 return (
                 <tr key={r.id} className="border-b border-border last:border-0 hover:bg-surface-muted">
                   <td className="p-4">
@@ -327,6 +341,12 @@ function LeadsPageInner() {
                           {location || "Location Unknown"}
                           {sources ? <span className="text-muted-foreground/70"> · {sources}</span> : null}
                         </div>
+                        {/* Direct mail stays out of the scanned columns — it lives with the record detail. */}
+                        {r.address && (
+                          <div className="mt-0.5 truncate text-xs text-muted-foreground/70" title={mailingAddress(contact)}>
+                            {r.address}
+                          </div>
+                        )}
                         {!!r.tags?.length && (
                           <div className="mt-1">
                             <LeadTagChips tags={r.tags} max={4} />
@@ -336,20 +356,10 @@ function LeadsPageInner() {
                     </div>
                   </td>
                   <td className="p-4">
-                    <ChannelIcons
-                      contact={{
-                        phone: r.phone,
-                        phone_type: r.phone_type,
-                        email: r.email,
-                        address: r.address,
-                        city: r.city,
-                        state: r.state,
-                        zip: r.zip,
-                        website: r.website,
-                        socials: (r.socials ?? null) as Record<string, string> | null,
-                        disposition: r.disposition,
-                      }}
-                    />
+                    <PhoneCell contact={contact} />
+                  </td>
+                  <td className="p-4">
+                    <EmailCell contact={contact} />
                   </td>
                   <td className="p-4">
                     <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${DISPOSITION_TONE[r.disposition] ?? "border-border text-muted-foreground"}`}>
@@ -359,8 +369,11 @@ function LeadsPageInner() {
                   <td className="p-4">
                     <ListMembershipCell leadId={r.id} count={r.list_count} />
                   </td>
-                  <td className="p-4 text-muted-foreground whitespace-nowrap">
-                    {new Date(r.first_seen_at).toLocaleDateString()} → {new Date(r.last_seen_at).toLocaleDateString()}
+                  <td
+                    className="p-4 text-muted-foreground whitespace-nowrap"
+                    title={`First Seen ${new Date(r.first_seen_at).toLocaleDateString()}`}
+                  >
+                    {new Date(r.last_seen_at).toLocaleDateString()}
                   </td>
                 </tr>
                 );
