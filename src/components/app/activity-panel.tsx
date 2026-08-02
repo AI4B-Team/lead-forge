@@ -27,7 +27,7 @@ export function ActivityPanel() {
           <History className="h-4 w-4" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
         <SheetHeader className="px-4 pt-5 pb-3 text-left">
           <SheetTitle className="font-display">Activity</SheetTitle>
           <SheetDescription>
