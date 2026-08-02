@@ -146,6 +146,8 @@ function Assistant() {
   /** Inline upload state — survives a source switch so it can be restored. */
   const [upload, setUpload] = useState<UploadAttachment | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
+  /** File awaiting confirmation that it may replace a non-upload source. */
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   /** Beta waitlist: template ids already requested + the notify address. */
   const [requestedAdapters, setRequestedAdapters] = useState<Set<string>>(new Set());
   const [notifyEmail, setNotifyEmail] = useState<string | null>(null);
