@@ -3,17 +3,20 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
-import { StatusBadge } from "@/components/app/status-badge";
+import { ListStatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Plus,
   Search,
@@ -42,7 +45,7 @@ import { JobStageFlow } from "@/components/app/job-stage-flow";
 import { StatTile } from "@/components/app/stat-tile";
 import { buildPipelineStages, ROWS_PROCESSED_LABEL } from "@/lib/pipeline-stages";
 import { isStalled, isRunningStatus, stallReason, STALL_HOURS } from "@/lib/job-watchdog";
-import type { JobStatus } from "@/lib/mock-data";
+import { getTemplate, CATEGORY_LABELS, type TemplateCategory } from "@/lib/templates";
 
 export const Route = createFileRoute("/_authenticated/app/lists/")({
   head: () => ({ meta: [{ title: "Lists — LeadTrace" }] }),
@@ -55,6 +58,53 @@ const SOURCE_META: Record<string, { label: string; icon: typeof Landmark }> = {
   upload: { label: "Upload", icon: Upload },
   assistant: { label: "AI Assistant", icon: Sparkles },
 };
+
+/** Top-level buckets for the template-aware source filter. */
+const TEMPLATE_GROUP: Record<TemplateCategory, string> = {
+  business: "Business",
+  directories: "Business",
+  search: "Business",
+  records: "Public Records",
+  realestate: "Real Estate",
+  social: "Social",
+  upload: "Upload",
+  ecommerce: "Other",
+  jobs: "Other",
+  reviews: "Other",
+  travel: "Other",
+  finance: "Other",
+  education: "Other",
+  news: "Other",
+  sports: "Other",
+};
+const GROUP_ORDER = ["Business", "Public Records", "Real Estate", "Social", "Upload", "Other"];
+
+/** Label + filter key for a run: its template when known, else its source. */
+function sourceIdentity(job: { template_id?: string | null; source_type: string }) {
+  const tpl = job.template_id ? getTemplate(job.template_id) : undefined;
+  if (tpl)
+    return {
+      key: `tpl:${tpl.id}`,
+      label: tpl.title,
+      group: TEMPLATE_GROUP[tpl.category] ?? "Other",
+      categoryLabel: CATEGORY_LABELS[tpl.category],
+    };
+  const meta = SOURCE_META[job.source_type];
+  const group =
+    job.source_type === "records"
+      ? "Public Records"
+      : job.source_type === "upload"
+        ? "Upload"
+        : job.source_type === "business"
+          ? "Business"
+          : "Other";
+  return {
+    key: `src:${job.source_type}`,
+    label: meta?.label ?? job.source_type,
+    group,
+    categoryLabel: undefined,
+  };
+}
 
 /** "Jul 31" / "Yesterday" plus a 12-hour time — far easier to scan than 7/31/2026. */
 /** Parent row shows the list itself, so drop the "· Run #N" suffix. */
