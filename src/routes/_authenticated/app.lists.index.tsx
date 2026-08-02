@@ -3,17 +3,20 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
-import { StatusBadge } from "@/components/app/status-badge";
+import { ListStatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Plus,
   Search,
@@ -30,7 +33,6 @@ import {
   CalendarClock,
   SlidersHorizontal,
   AlertTriangle,
-  RotateCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { setJobSchedule } from "@/lib/monitoring.functions";
@@ -42,7 +44,7 @@ import { JobStageFlow } from "@/components/app/job-stage-flow";
 import { StatTile } from "@/components/app/stat-tile";
 import { buildPipelineStages, ROWS_PROCESSED_LABEL } from "@/lib/pipeline-stages";
 import { isStalled, isRunningStatus, stallReason, STALL_HOURS } from "@/lib/job-watchdog";
-import type { JobStatus } from "@/lib/mock-data";
+import { getTemplate, CATEGORY_LABELS, type TemplateCategory } from "@/lib/templates";
 
 export const Route = createFileRoute("/_authenticated/app/lists/")({
   head: () => ({ meta: [{ title: "Lists — LeadTrace" }] }),
@@ -55,6 +57,53 @@ const SOURCE_META: Record<string, { label: string; icon: typeof Landmark }> = {
   upload: { label: "Upload", icon: Upload },
   assistant: { label: "AI Assistant", icon: Sparkles },
 };
+
+/** Top-level buckets for the template-aware source filter. */
+const TEMPLATE_GROUP: Record<TemplateCategory, string> = {
+  business: "Business",
+  directories: "Business",
+  search: "Business",
+  records: "Public Records",
+  realestate: "Real Estate",
+  social: "Social",
+  upload: "Upload",
+  ecommerce: "Other",
+  jobs: "Other",
+  reviews: "Other",
+  travel: "Other",
+  finance: "Other",
+  education: "Other",
+  news: "Other",
+  sports: "Other",
+};
+const GROUP_ORDER = ["Business", "Public Records", "Real Estate", "Social", "Upload", "Other"];
+
+/** Label + filter key for a run: its template when known, else its source. */
+function sourceIdentity(job: { template_id?: string | null; source_type: string }) {
+  const tpl = job.template_id ? getTemplate(job.template_id) : undefined;
+  if (tpl)
+    return {
+      key: `tpl:${tpl.id}`,
+      label: tpl.title,
+      group: TEMPLATE_GROUP[tpl.category] ?? "Other",
+      categoryLabel: CATEGORY_LABELS[tpl.category],
+    };
+  const meta = SOURCE_META[job.source_type];
+  const group =
+    job.source_type === "records"
+      ? "Public Records"
+      : job.source_type === "upload"
+        ? "Upload"
+        : job.source_type === "business"
+          ? "Business"
+          : "Other";
+  return {
+    key: `src:${job.source_type}`,
+    label: meta?.label ?? job.source_type,
+    group,
+    categoryLabel: undefined,
+  };
+}
 
 /** "Jul 31" / "Yesterday" plus a 12-hour time — far easier to scan than 7/31/2026. */
 /** Parent row shows the list itself, so drop the "· Run #N" suffix. */
@@ -101,6 +150,7 @@ function Jobs() {
     // Stuck-job watchdog (§23): running with no progress events for 2h.
     return jobs.map((j) => ({
       ...j,
+      identity: sourceIdentity(j),
       stalled: isStalled({
         status: j.status,
         lastEventAt: j.last_event_at,
@@ -114,15 +164,40 @@ function Jobs() {
     const needle = q.trim().toLowerCase();
     const cutoff = range === "all" ? 0 : Date.now() - Number(range) * 86400000;
     return jobs.filter((j) => {
-      if (source !== "all" && j.source_type !== source) return false;
+      if (source !== "all" && j.identity.key !== source) return false;
       if (status === "attention") {
         if (!j.stalled) return false;
       } else if (status !== "all" && j.status !== status) return false;
-      if (needle && !j.name.toLowerCase().includes(needle)) return false;
+      if (needle) {
+        // Match every populated spec field: name, template, niche/keyword,
+        // record type, state, counties, city, country, and URL.
+        const haystack = [j.name, j.identity.label, j.identity.categoryLabel, ...j.spec_terms]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(needle)) return false;
+      }
       if (cutoff && new Date(j.created_at).getTime() < cutoff) return false;
       return true;
     });
   }, [allRows, q, source, status, range]);
+
+  /** Only templates/sources this workspace has actually used, grouped. */
+  const sourceOptions = useMemo(() => {
+    const byGroup = new Map<string, Map<string, string>>();
+    for (const j of allRows) {
+      const { group, key, label } = j.identity;
+      const bucket = byGroup.get(group) ?? new Map<string, string>();
+      bucket.set(key, label);
+      byGroup.set(group, bucket);
+    }
+    return GROUP_ORDER.filter((g) => byGroup.has(g)).map((g) => ({
+      group: g,
+      items: [...byGroup.get(g)!.entries()]
+        .map(([key, label]) => ({ key, label }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    }));
+  }, [allRows]);
 
   const summary = useMemo(() => {
     const jobs = allRows;
@@ -240,7 +315,7 @@ function Jobs() {
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search Lists By Name, County, Or Niche…"
+              placeholder="Search By Name, Source, Niche, Or Location…"
               className="h-11 pl-9 text-base"
             />
           </div>
@@ -251,9 +326,16 @@ function Jobs() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sources</SelectItem>
-                <SelectItem value="business">Business Search</SelectItem>
-                <SelectItem value="records">Public Records</SelectItem>
-                <SelectItem value="upload">Upload</SelectItem>
+                {sourceOptions.map((g) => (
+                  <SelectGroup key={g.group}>
+                    <SelectLabel>{g.group}</SelectLabel>
+                    {g.items.map((it) => (
+                      <SelectItem key={it.key} value={it.key}>
+                        {it.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
@@ -398,7 +480,7 @@ function Jobs() {
                       </td>
                       <td className="p-4">
                         <span className="inline-flex items-center gap-2 whitespace-nowrap text-muted-foreground">
-                          <src.icon className="h-4 w-4 shrink-0" /> {src.label}
+                          <src.icon className="h-4 w-4 shrink-0" /> {j.identity.label}
                         </span>
                       </td>
                       <td className="p-4">
@@ -428,17 +510,22 @@ function Jobs() {
                       <td className="p-4">
                         {j.stalled ? (
                           <div
-                            className="flex flex-col items-start gap-1.5"
+                            className="flex items-center gap-2 whitespace-nowrap"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <StatusBadge status="attention" />
-                            <span className="max-w-[220px] text-[11px] leading-snug text-muted-foreground">
-                              {stallReason(j.status)}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 rounded-full px-2 text-[11px]"
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-help">
+                                  <ListStatusBadge status={j.status} stalled />
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-[260px] text-xs leading-snug">
+                                {stallReason(j.status)}
+                              </TooltipContent>
+                            </Tooltip>
+                            <button
+                              type="button"
+                              className="cursor-pointer text-xs font-semibold text-primary underline-offset-2 hover:underline"
                               onClick={async () => {
                                 try {
                                   await retryJob({ data: { jobId: j.id } });
@@ -451,11 +538,11 @@ function Jobs() {
                                 }
                               }}
                             >
-                              <RotateCw className="mr-1 h-3 w-3" /> Retry
-                            </Button>
+                              Retry
+                            </button>
                           </div>
                         ) : (
-                          <StatusBadge status={(j.status ?? "queued") as JobStatus} />
+                          <ListStatusBadge status={j.status} />
                         )}
                       </td>
                       <td className="p-4">
@@ -509,7 +596,8 @@ function CadenceSelect({
       </Select>
       {value !== "one_time" && nextRunAt && (
         <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-          <Repeat className="h-3 w-3" /> Next {new Date(nextRunAt).toLocaleDateString()}
+          <Repeat className="h-3 w-3" /> {CADENCE_LABEL[value] ?? "Recurring"} · Next{" "}
+          {new Date(nextRunAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
         </span>
       )}
     </div>

@@ -73,9 +73,35 @@ export const listJobs = createServerFn({ method: "GET" })
     return {
       jobs: (jobs ?? []).map((j) => {
         const names = nameMap;
+        const p = (j.params ?? {}) as Record<string, unknown>;
+        const flat = (v: unknown): string[] =>
+          Array.isArray(v)
+            ? v.flatMap(flat)
+            : typeof v === "string" && v.trim()
+              ? [v.trim()]
+              : [];
+        // Every populated spec field the Lists search should match against.
+        const specTerms = [
+          p["niches"],
+          p["keyword"],
+          p["recordType"],
+          p["record_type"],
+          j.record_type,
+          p["state"],
+          p["states"],
+          p["counties"],
+          p["city"],
+          p["country"],
+          p["targetUrl"],
+          p["filters"],
+          p["contactTarget"],
+          p["industry"],
+        ].flatMap(flat);
         return {
           id: j.id,
           name: names.get(j.id)?.name ?? `${j.source_type} · ${j.id.slice(0, 8)}`,
+          template_id: typeof p["templateId"] === "string" ? (p["templateId"] as string) : null,
+          spec_terms: specTerms,
           run_index: names.get(j.id)?.runIndex ?? 1,
           run_total: names.get(j.id)?.runTotal ?? 1,
           group_key: jobSearchKey({
