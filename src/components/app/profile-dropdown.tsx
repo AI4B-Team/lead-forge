@@ -33,7 +33,7 @@ export function ProfileDropdown({ className }: { className?: string }) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const { theme, toggle } = useTheme();
-  const { workspaceId, workspaces, switchWorkspace } = useWorkspaceId();
+  const { workspaceId } = useWorkspaceId();
   const [credits, setCredits] = useState<number | null>(null);
   const fetchIsAdmin = useServerFn(meIsSuperAdmin);
   const { data: admin } = useQuery({
