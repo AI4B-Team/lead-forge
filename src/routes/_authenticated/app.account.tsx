@@ -99,12 +99,14 @@ function AccountPage() {
         return days <= 0 ? "Today" : `${days} Day${days === 1 ? "" : "s"} Ago`;
       })()
     : "Unknown";
-  const initials = displayName
-    .split(/[\s.@_-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
-    .join("");
+  // First + last name initials, matching the header avatar.
+  const initials = (() => {
+    const parts = displayName.split(/[\s.@_-]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase();
+    }
+    return (parts[0] ?? displayName).slice(0, 2).toUpperCase();
+  })();
 
   return (
     <div className="mx-auto max-w-[1400px]">
