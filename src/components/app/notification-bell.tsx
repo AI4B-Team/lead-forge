@@ -137,8 +137,8 @@ export function NotificationBell() {
                     <span className="block text-xs text-muted-foreground truncate">{t.last_body ?? ""}</span>
                   </span>
                 </button>
-              ))}
-            )}
+              </li>
+            ))}
           </ul>
         )}
 
