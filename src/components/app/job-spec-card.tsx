@@ -18,10 +18,13 @@ import { Button } from "@/components/ui/button";
 import {
   attachmentMappedCount, isSpreadsheet, type UploadAttachment,
 } from "@/lib/upload-attachment";
-import { optionsForSource } from "@/lib/pipeline-options";
+import { optionsForSource, specOptionContext, defaultCountryFor, isDataSource, isNonUsRun } from "@/lib/pipeline-options";
 import { TemplateLogo } from "@/components/marketing/template-logo";
 import type { Template } from "@/lib/templates";
-import { templateAdapterStatus, templateFieldSchema, fieldsForSourceType, type BuilderField } from "@/lib/template-schema";
+import {
+  templateAdapterStatus, templateFieldSchema, fieldsForSourceType, filterFieldLabel,
+  dedupesByCompany, type BuilderField,
+} from "@/lib/template-schema";
 
 /**
  * Inline dropzone + mapping summary. Uploads never leave the assistant page.
@@ -290,6 +293,9 @@ export function JobSpecCard({
   const isUpload = has("upload");
   const isRecords = has("recordType");
   const hasGeo = has("state") || has("counties");
+  const dataOnly = isDataSource(spec.templateId);
+  const nonUs = isNonUsRun({ templateId: spec.templateId, country: spec.country });
+  const filterLabel = filterFieldLabel(spec.templateId);
   const status = template ? templateAdapterStatus(template) : "live";
   const states = specStates(spec);
   const [requestOpen, setRequestOpen] = useState(false);
@@ -310,7 +316,7 @@ export function JobSpecCard({
   };
 
   // Labels and ordering come from the shared config the checklist also uses.
-  const toggles = optionsForSource(spec.sourceType, spec.templateId);
+  const toggles = optionsForSource(spec.sourceType, spec.templateId, specOptionContext(spec));
 
   return (
     <Card>
@@ -351,6 +357,16 @@ export function JobSpecCard({
               <Badge variant="outline" className="border-warning/40 text-[10px] uppercase text-warning">Beta</Badge>
               This Source Isn't Wired Yet — Join The Waitlist Below.
             </div>
+          )}
+          {dataOnly && (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              This Source Produces A Research Dataset, Not Contactable Leads. No Skip Trace, No Scrub, No Campaign.
+            </p>
+          )}
+          {!dataOnly && nonUs && (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              SMS Launch Is US-Only — This List Is Delivered Email-Ready.
+            </p>
           )}
         </div>
 
