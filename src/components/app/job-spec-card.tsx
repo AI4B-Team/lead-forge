@@ -319,7 +319,13 @@ export function JobSpecCard({
 
         {/* Source is a template picker row — the same selection as a template card. */}
         <div>
-          <FieldLabel confidence={99} show={Boolean(spec.sourceType) && inf("sourceType")}>Source</FieldLabel>
+          <FieldLabel
+            confidence={99}
+            show={Boolean(spec.sourceType) && inf("sourceType")}
+            hint="Where the leads come from — a business directory, a public records feed, a social platform, or your own uploaded file. Each source asks for slightly different details."
+          >
+            Source
+          </FieldLabel>
           <div className="mt-1 flex items-center gap-3 rounded-xl border border-border bg-surface p-3">
             {template ? (
               <TemplateLogo template={template} className="h-9 w-9 rounded-lg" imgClassName="h-5 w-5" iconClassName="h-4 w-4" />
@@ -350,7 +356,13 @@ export function JobSpecCard({
 
         {isRecords && (
           <div>
-            <FieldLabel confidence={96} show={Boolean(spec.recordType) && inf("recordType")}>Record Type</FieldLabel>
+            <FieldLabel
+              confidence={96}
+              show={Boolean(spec.recordType) && inf("recordType")}
+              hint="Which public filing to pull — probate, code violations, evictions, tax delinquency, and more. Don't see yours? Request it and we'll add it to the backlog."
+            >
+              Record Type
+            </FieldLabel>
             <Popover open={requestOpen} onOpenChange={setRequestOpen}>
               <Select
                 value={spec.recordType ?? ""}
@@ -408,7 +420,16 @@ export function JobSpecCard({
 
         {(has("niche") || has("keyword")) && (
           <div>
-            <FieldLabel confidence={97} show={spec.niches.length > 0 && inf("niches")}>
+            <FieldLabel
+              confidence={97}
+              show={spec.niches.length > 0 && inf("niches")}
+              hintTitle={has("niche") ? "Niches" : "Keywords"}
+              hint={
+                has("niche")
+                  ? "The business categories to search for. Add several, separated by commas — each one is searched across your selected geography."
+                  : "The search terms, hashtags, or handles to match on. Add several, separated by commas."
+              }
+            >
               {has("niche") ? "Niches" : "Keywords"}
             </FieldLabel>
             <CommitInput
@@ -424,7 +445,9 @@ export function JobSpecCard({
 
         {has("url") && (
           <div>
-            <Label>Website Or Page URL</Label>
+            <FieldLabel hint="The exact page we should pull contacts from — a company site, a listing page, or a profile URL.">
+              Website Or Page URL
+            </FieldLabel>
             <CommitInput
               className="mt-1"
               value={spec.targetUrl ?? ""}
@@ -436,7 +459,16 @@ export function JobSpecCard({
 
         {(has("audienceFilter") || has("listingFilter")) && (
           <div>
-            <Label>{has("listingFilter") ? "Listing Filters (Optional)" : "Audience Filters (Optional)"}</Label>
+            <FieldLabel
+              hintTitle={has("listingFilter") ? "Listing Filters" : "Audience Filters"}
+              hint={
+                has("listingFilter")
+                  ? "Narrow the results by listing traits — price band, days on market, for-sale-by-owner, and similar."
+                  : "Narrow the results by audience traits — follower range, location, bio keywords, and similar."
+              }
+            >
+              {has("listingFilter") ? "Listing Filters (Optional)" : "Audience Filters (Optional)"}
+            </FieldLabel>
             <CommitInput
               className="mt-1"
               value={spec.filters ?? ""}
@@ -448,7 +480,9 @@ export function JobSpecCard({
 
         {isUpload && (
           <div className="space-y-2">
-            <Label>Your Own File</Label>
+            <FieldLabel hint="Upload a CSV or XLSX you already have. You map the columns once, then it runs through the same clean, verify, and scrub pipeline.">
+              Your Own File
+            </FieldLabel>
             <UploadPanel
               upload={upload}
               onPickFile={(f) => onPickFile?.(f)}
@@ -472,7 +506,12 @@ export function JobSpecCard({
           <>
             <div className={isRecords ? "grid grid-cols-2 gap-3" : ""}>
               <div>
-                <FieldLabel confidence={95} show={states.length > 0 && inf("state")}>
+                <FieldLabel
+                  confidence={95}
+                  show={states.length > 0 && inf("state")}
+                  hintTitle="State"
+                  hint="The states to search. Pick more than one to run the same criteria across several states at once."
+                >
                   {states.length > 1 ? "States" : "State"}
                 </FieldLabel>
                 <StateMultiSelect
@@ -492,7 +531,9 @@ export function JobSpecCard({
               </div>
               {isRecords && (
                 <div>
-                  <Label>Recency (Days)</Label>
+                  <FieldLabel hint="How far back to look. 90 means only records filed in the last 90 days — fresher records usually respond better.">
+                    Recency (Days)
+                  </FieldLabel>
                   <CommitInput
                     className="mt-1"
                     value={spec.recencyDays ? String(spec.recencyDays) : ""}
@@ -507,7 +548,13 @@ export function JobSpecCard({
             </div>
 
             <div>
-              <FieldLabel confidence={98} show={spec.counties.length > 0 && inf("counties")}>Counties</FieldLabel>
+              <FieldLabel
+                confidence={98}
+                show={spec.counties.length > 0 && inf("counties")}
+                hint="Narrow to specific counties inside your selected states. Leave it empty to cover the whole state. Badges show whether we have coverage there yet."
+              >
+                Counties
+              </FieldLabel>
               <CountyMultiSelect
                 states={states}
                 value={spec.counties}
@@ -527,7 +574,9 @@ export function JobSpecCard({
         )}
 
         <div>
-          <Label>Industry Preset</Label>
+          <FieldLabel hint="Sets the tone and compliance defaults for messaging — real estate, home services, insurance, and so on. The assistant suggests one from your request.">
+            Industry Preset
+          </FieldLabel>
           <Select value={spec.industry ?? ""} onValueChange={(v) => set("industry", v)}>
             <SelectTrigger className="mt-1"><SelectValue placeholder="Suggested By The Assistant" /></SelectTrigger>
             <SelectContent>
@@ -537,7 +586,9 @@ export function JobSpecCard({
         </div>
 
         <div>
-          <Label>First-Touch Angle</Label>
+          <FieldLabel hint="How the first text should come across, in your words. It shapes the opening message your AI agent sends — nothing sends without your approval.">
+            First-Touch Angle
+          </FieldLabel>
           <CommitTextarea
             className="mt-1"
             rows={3}
@@ -550,7 +601,10 @@ export function JobSpecCard({
         <div className="space-y-3">
           {toggles.map((option) => (
             <div key={option.id} className="flex items-center justify-between">
-              <span className="text-sm text-foreground">{option.label}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-foreground">{option.label}</span>
+                <HelpHint title={option.label}>{option.hint}</HelpHint>
+              </div>
               <Switch checked={spec[option.id]} onCheckedChange={(v) => set(option.id, v)} />
             </div>
           ))}
