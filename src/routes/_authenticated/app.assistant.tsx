@@ -795,7 +795,7 @@ function Assistant() {
                 {requesting ? (
                   <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Requesting…</>
                 ) : (
-                  <><BellPlus className="mr-1 h-4 w-4" /> This Source Is Coming — Request Early Access</>
+                  <><BellPlus className="mr-1 h-4 w-4" /> Launching Soon — Join The Waitlist To Be Notified.</>
                 )}
               </Button>
               {requestError && (
