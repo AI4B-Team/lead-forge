@@ -301,7 +301,7 @@ export function BlacklistDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add To Blacklist</DialogTitle>
           <DialogDescription>
