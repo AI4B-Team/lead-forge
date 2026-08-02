@@ -23,6 +23,7 @@ import {
   Paperclip, Mic, Send, BellPlus, Loader2, Check,
 } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { FirstRunSetup } from "@/components/app/getting-started";
 import { supabase } from "@/integrations/supabase/client";
 import { queueJob } from "@/lib/job-submit";
 import { inferChannel } from "@/lib/channels";
