@@ -25,6 +25,10 @@ import {
   CircleCheck,
   Quote,
   ArrowRight,
+  TriangleAlert,
+  Lightbulb,
+  Check,
+  Copy,
 } from "lucide-react";
 import { INTENT_LABELS, formatMoney, type Intent } from "@/lib/performance-intel";
 
@@ -68,44 +72,48 @@ export function KpiCard({
   );
 }
 
-/** Revenue funnel: where leads drop off between send and close. */
+/** Revenue funnel — the hero answer to "is my outreach making money?". */
 export function RevenueFunnel({ steps }: { steps: Array<{ label: string; value: number }> }) {
   const top = Math.max(steps[0]?.value ?? 0, 1);
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-display flex items-center gap-2">
-          <Filter className="h-4 w-4 text-primary" /> Revenue Funnel
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {steps.map((s, i) => {
-          const prev = steps[i - 1]?.value;
-          const conv = prev ? Math.round((s.value / Math.max(prev, 1)) * 100) : 100;
-          return (
-            <div key={s.label}>
-              <div className="flex items-baseline justify-between text-sm">
-                <span className="text-muted-foreground">{s.label}</span>
-                <span className="font-display font-bold text-foreground">{s.value.toLocaleString()}</span>
-              </div>
-              <div className="mt-1 h-3 rounded-full bg-surface-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-primary/80 transition-all"
-                  style={{ width: `${Math.max((s.value / top) * 100, s.value ? 3 : 0)}%` }}
-                />
-              </div>
-              {i > 0 && (
-                <div className="mt-0.5 text-[11px] text-muted-foreground">{conv}% Of Previous Stage</div>
-              )}
+    <div className="mx-auto w-full max-w-3xl space-y-5">
+      {steps.map((s, i) => {
+        const prev = steps[i - 1]?.value;
+        const conv = prev ? Math.round((s.value / Math.max(prev, 1)) * 100) : null;
+        return (
+          <div key={s.label}>
+            <div className="flex items-baseline justify-between">
+              <span className="font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                {s.label}
+              </span>
+              <span className="font-display text-2xl font-black text-foreground">
+                {s.value.toLocaleString()}
+                {conv != null && (
+                  <span className="ml-2 align-middle text-xs font-semibold text-muted-foreground">{conv}%</span>
+                )}
+              </span>
             </div>
-          );
-        })}
-      </CardContent>
-    </Card>
+            <div className="mt-2 h-5 overflow-hidden rounded-full bg-surface-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${Math.max((s.value / top) * 100, s.value ? 3 : 0)}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
-/** AI insights derived from real sending history. */
+function coachTone(text: string): "good" | "warn" | "tip" {
+  const t = text.toLowerCase();
+  if (t.includes("opt-out") || t.includes("above") || t.includes("cool") || t.includes("low")) return "warn";
+  if (t.includes("reuse") || t.includes("try") || t.includes("consider")) return "tip";
+  return "good";
+}
+
+/** AI Coach — friendly, compact recommendations grounded in real sending history. */
 export function AiInsights({
   insights,
 }: {
@@ -113,29 +121,78 @@ export function AiInsights({
 }) {
   return (
     <Card className="border-primary/30">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-display flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" /> AI Insights
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-display">
+          <Sparkles className="h-4 w-4 text-primary" /> AI Coach
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {insights.map((i) => (
-          <div key={i.text} className="flex items-start gap-2">
-            <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" aria-hidden />
-            <div className="min-w-0">
-              <div className="text-sm text-foreground">{i.text}</div>
-              {i.action && i.campaignId && (
-                <Button asChild variant="link" size="sm" className="h-auto p-0 text-xs">
-                  <Link to="/app/campaigns/$campaignId" params={{ campaignId: i.campaignId }}>
-                    {i.action} <ArrowRight className="ml-1 h-3 w-3" />
-                  </Link>
-                </Button>
-              )}
-            </div>
-          </div>
-        ))}
+      <CardContent className="space-y-2 pb-4">
+        {insights.length === 0 ? (
+          <div className="text-sm text-muted-foreground">No Coaching Yet — Send Your First Campaign.</div>
+        ) : (
+          insights.slice(0, 4).map((i) => {
+            const tone = coachTone(i.text);
+            const Icon = tone === "warn" ? TriangleAlert : tone === "tip" ? Lightbulb : Check;
+            const color = tone === "warn" ? "text-warn" : tone === "tip" ? "text-primary" : "text-success";
+            return (
+              <div key={i.text} className="flex items-start gap-2 rounded-lg bg-surface-muted/60 px-3 py-2">
+                <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${color}`} />
+                <div className="min-w-0">
+                  <div className="text-[13px] leading-snug text-foreground">{i.text}</div>
+                  {i.action && i.campaignId && (
+                    <Button asChild variant="link" size="sm" className="h-auto p-0 text-xs">
+                      <Link to="/app/campaigns/$campaignId" params={{ campaignId: i.campaignId }}>
+                        {i.action} <ArrowRight className="ml-1 h-3 w-3" />
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
       </CardContent>
     </Card>
+  );
+}
+
+/** Week-over-week movement digest — the summary users scan first. */
+export function WeeklySummary({
+  rows,
+  bestCampaign,
+}: {
+  rows: Array<{ label: string; deltaPct: number | null; invert?: boolean }>;
+  bestCampaign?: { id: string; name: string } | null;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+      <span className="font-display text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+        This Week
+      </span>
+      {rows.map((r) => {
+        const good = r.deltaPct == null ? null : r.invert ? r.deltaPct <= 0 : r.deltaPct >= 0;
+        return (
+          <span key={r.label} className="flex items-baseline gap-1.5 text-sm">
+            <span className="text-muted-foreground">{r.label}</span>
+            <span className={`font-display font-bold ${good == null ? "text-muted-foreground" : good ? "text-success" : "text-danger"}`}>
+              {r.deltaPct == null ? "—" : `${r.deltaPct >= 0 ? "↑" : "↓"} ${Math.abs(r.deltaPct)}%`}
+            </span>
+          </span>
+        );
+      })}
+      {bestCampaign && (
+        <span className="flex items-baseline gap-1.5 text-sm">
+          <span className="text-muted-foreground">Best Campaign</span>
+          <Link
+            to="/app/campaigns/$campaignId"
+            params={{ campaignId: bestCampaign.id }}
+            className="font-display font-bold text-foreground hover:text-primary"
+          >
+            {bestCampaign.name}
+          </Link>
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -176,7 +233,7 @@ export function PerformanceChart({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-72">
+        <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={daily} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
@@ -233,57 +290,51 @@ function DayTooltip({ active, payload, label }: { active?: boolean; payload?: Ar
   );
 }
 
-/** Campaign leaderboard ranked by appointments booked. */
+/** Campaign performance — Stripe-style rows that never reserve empty space. */
 export function CampaignLeaderboard({
   campaigns,
 }: {
   campaigns: Array<{ id: string; name: string; status: string; sent: number; replies: number; appointments: number; qualified: number; replyRate: number; optOutRate: number }>;
 }) {
-  const top = Math.max(...campaigns.map((c) => c.appointments || c.replies), 1);
+  if (campaigns.length === 0) {
+    return <div className="text-sm text-muted-foreground">No Campaign Activity Yet.</div>;
+  }
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-display flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-primary" /> Campaign Leaderboard
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {campaigns.length === 0 ? (
-          <div className="text-sm text-muted-foreground py-6 text-center">No Campaign Activity Yet.</div>
-        ) : (
-          <div className="space-y-3">
-            {campaigns.map((c, i) => (
-              <Link
-                key={c.id}
-                to="/app/campaigns/$campaignId"
-                params={{ campaignId: c.id }}
-                className="block rounded-xl border border-border p-3 transition hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-sm"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-display font-black text-muted-foreground text-sm w-5">{i + 1}</span>
-                  <span className="font-display font-bold text-foreground text-sm truncate">{c.name}</span>
-                  <Badge variant="outline" className="ml-auto uppercase text-[10px] shrink-0">{c.status}</Badge>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-surface-muted overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${Math.max(((c.appointments || c.replies) / top) * 100, 3)}%` }}
-                  />
-                </div>
-                <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-xs">
-                  <span className="font-display font-bold text-foreground">{c.appointments} Appointments</span>
-                  <span className="text-muted-foreground">{(c.replyRate * 100).toFixed(1)}% Reply Rate</span>
-                  <span className="text-muted-foreground">{c.qualified} Qualified</span>
-                  <span className={c.optOutRate > 0.05 ? "text-danger" : "text-muted-foreground"}>
-                    {(c.optOutRate * 100).toFixed(1)}% Opt-Out
-                  </span>
-                </div>
-              </Link>
-            ))}
+    <div className="divide-y divide-border rounded-xl border border-border">
+      {campaigns.map((c) => (
+        <Link
+          key={c.id}
+          to="/app/campaigns/$campaignId"
+          params={{ campaignId: c.id }}
+          className="flex flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3 transition hover:bg-surface-muted/60"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-display text-sm font-bold text-foreground">{c.name}</div>
+            <Badge variant="outline" className="mt-0.5 text-[10px] uppercase">{c.status}</Badge>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <RowStat label="Reply Rate" value={`${(c.replyRate * 100).toFixed(0)}%`} />
+          <RowStat label="Appointments" value={String(c.appointments)} />
+          <RowStat label="Pipeline" value={formatMoney(c.appointments * 2000 * 0.22)} />
+          <RowStat
+            label="Opt-Out"
+            value={`${(c.optOutRate * 100).toFixed(1)}%`}
+            tone={c.optOutRate > 0.05 ? "danger" : undefined}
+          />
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function RowStat({ label, value, tone }: { label: string; value: string; tone?: "danger" }) {
+  return (
+    <div className="w-24 shrink-0">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={`font-display text-sm font-bold ${tone === "danger" ? "text-danger" : "text-foreground"}`}>
+        {value}
+      </div>
+    </div>
   );
 }
 
@@ -383,20 +434,30 @@ export function BestMessagePanel({
 }) {
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-display flex items-center gap-2">
-          <Quote className="h-4 w-4 text-primary" /> Best Performing Message
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-display">
+          <Quote className="h-4 w-4 text-primary" /> Top Performing Message
         </CardTitle>
+        {best && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 rounded-full text-xs"
+            onClick={() => void navigator.clipboard.writeText(best.body)}
+          >
+            <Copy className="mr-1 h-3 w-3" /> Copy
+          </Button>
+        )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="pb-4">
         {!best ? (
-          <div className="text-sm text-muted-foreground py-6 text-center">No Outbound Copy To Score Yet.</div>
+          <div className="text-sm text-muted-foreground">No Outbound Copy To Score Yet.</div>
         ) : (
           <>
-            <div className="rounded-2xl rounded-bl-sm bg-primary px-4 py-3 text-sm text-primary-foreground">
+            <div className="rounded-2xl rounded-bl-sm bg-primary px-4 py-2.5 text-[13px] leading-snug text-primary-foreground">
               {best.body}
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <div className="mt-3 flex flex-wrap gap-x-8 gap-y-2">
               <MiniStat label="Reply Rate" value={`${(best.replyRate * 100).toFixed(0)}%`} />
               <MiniStat label="Times Sent" value={best.sent.toLocaleString()} />
               <MiniStat label="Used In" value={`${best.campaigns} Campaign${best.campaigns === 1 ? "" : "s"}`} />
@@ -410,9 +471,9 @@ export function BestMessagePanel({
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border p-2">
+    <div>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="font-display font-bold text-sm text-foreground">{value}</div>
+      <div className="font-display text-sm font-bold text-foreground">{value}</div>
     </div>
   );
 }
