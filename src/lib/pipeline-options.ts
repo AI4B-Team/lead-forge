@@ -6,6 +6,8 @@ export type SourceKind = NonNullable<JobSpec["sourceType"]>;
 export type PipelineOption = {
   id: "skipTrace" | "removeFranchises" | "dedupe" | "mobileOnly";
   label: string;
+  /** Plain-language explanation surfaced by the "?" hint in the List Builder. */
+  hint: string;
   defaultOn: boolean;
   sourceKinds: readonly SourceKind[];
 };
@@ -22,24 +24,28 @@ export const PIPELINE_OPTIONS: readonly PipelineOption[] = [
   {
     id: "skipTrace",
     label: "Skip Trace Missing Numbers",
+    hint: "When a record has no phone number, we look one up from public and licensed data. Skip trace is metered separately from your plan allowance.",
     defaultOn: true,
     sourceKinds: ["business", "records", "upload"],
   },
   {
     id: "removeFranchises",
     label: "Remove Franchises",
+    hint: "Filters out national chains and franchise locations so you're left with independent, owner-operated businesses.",
     defaultOn: false,
     sourceKinds: ["business"],
   },
   {
     id: "dedupe",
     label: "Dedupe Against Past Lists",
+    hint: "Removes anyone already in your Leads library, so you never pay for or text the same person twice.",
     defaultOn: true,
     sourceKinds: ["business", "records", "upload"],
   },
   {
     id: "mobileOnly",
     label: "Mobile Numbers Only",
+    hint: "Runs a line-type check and keeps only mobile numbers — landlines and VoIP can't receive texts reliably.",
     defaultOn: true,
     sourceKinds: ["business", "records", "upload"],
   },
