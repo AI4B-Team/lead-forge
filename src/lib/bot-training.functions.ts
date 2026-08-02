@@ -118,3 +118,32 @@ export const deleteBotKnowledge = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+/** Tire-kick the agent: answer strictly from the brand's approved knowledge. */
+export const askAgentQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        brandId: z.string().uuid(),
+        question: z.string().min(3).max(400),
+        mode: z.enum(["buyer", "coaching"]).default("buyer"),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("bot_knowledge")
+      .select("title, content, source_type, source_url")
+      .eq("brand_id", data.brandId)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (error) throw error;
+    const { buildKnowledgeBrief, answerFromKnowledge } = await import("@/lib/bot-training.server");
+    const outcome = await answerFromKnowledge({
+      question: data.question,
+      mode: data.mode,
+      knowledge: buildKnowledgeBrief(rows ?? []),
+    });
+    return { ...outcome, sourceCount: rows?.length ?? 0 };
+  });

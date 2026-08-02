@@ -450,7 +450,11 @@ export function KnowledgeSourceCards({
         const items = sources.filter((s) => s.category === spec.key);
         const chars = items.reduce((a, s) => a + s.chars, 0);
         return (
-          <Card key={spec.key} className="group flex flex-col transition hover:border-primary/60 hover:shadow-sm">
+          <Card
+            key={spec.key}
+            id={`knowledge-card-${spec.key}`}
+            className="group flex flex-col scroll-mt-24 transition hover:border-primary/60 hover:shadow-sm"
+          >
             <CardContent className="flex flex-1 flex-col pt-6">
               <div className="flex items-start justify-between">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
