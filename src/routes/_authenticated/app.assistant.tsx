@@ -13,7 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "sonner";
 import {
   Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal,
-  Paperclip, Mic, Send,
+  Paperclip, Mic, Send, BellPlus, Loader2, Check,
 } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +23,7 @@ import {
   attachmentReady, attachmentRows, isSpreadsheet, readAttachment, type UploadAttachment,
 } from "@/lib/upload-attachment";
 import type { ColumnMap } from "@/lib/csv";
-import { assistantChat, createJobFromSpec, requestCoverage } from "@/lib/assistant.functions";
+import { assistantChat, createJobFromSpec, requestCoverage, listAdapterRequests } from "@/lib/assistant.functions";
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, specStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { PIPELINE_OPTION_LABELS } from "@/lib/pipeline-options";
@@ -116,6 +116,7 @@ function Assistant() {
   const chat = useServerFn(assistantChat);
   const createJob = useServerFn(createJobFromSpec);
   const logRequest = useServerFn(requestCoverage);
+  const fetchAdapterRequests = useServerFn(listAdapterRequests);
   const runJobFn = useServerFn(runJob);
 
   const [thread, setThread] = useState<ThreadItem[]>([]);
@@ -142,6 +143,11 @@ function Assistant() {
   /** Inline upload state — survives a source switch so it can be restored. */
   const [upload, setUpload] = useState<UploadAttachment | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
+  /** Beta waitlist: template ids already requested + the notify address. */
+  const [requestedAdapters, setRequestedAdapters] = useState<Set<string>>(new Set());
+  const [notifyEmail, setNotifyEmail] = useState<string | null>(null);
+  const [requesting, setRequesting] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
   const lastTemplateId = useRef<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const sentPrompt = useRef(false);
