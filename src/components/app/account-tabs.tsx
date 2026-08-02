@@ -1,6 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
 import {
   User,
   Lock,
@@ -11,12 +9,10 @@ import {
   Smartphone,
   BadgeCheck,
   ShieldCheck,
-  Settings2,
   Plug,
   KeyRound,
   type LucideIcon,
 } from "lucide-react";
-import { meIsSuperAdmin } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 
 export type AccountTabKey =
@@ -30,17 +26,13 @@ export type AccountTabKey =
   | "registration"
   | "integrations"
   | "api"
-  | "compliance"
-  | "admin"
-  | "admin-workspaces"
-  | "admin-sources"
-  | "admin-access";
+  | "compliance";
 
 type TabDef = {
   key: AccountTabKey;
   label: string;
   icon: LucideIcon;
-  to: "/app/account" | "/app/billing" | "/app/team" | "/app/settings" | "/app/registration" | "/app/compliance" | "/app/numbers" | "/app/integrations" | "/app/api" | "/app/admin";
+  to: "/app/account" | "/app/billing" | "/app/team" | "/app/settings" | "/app/registration" | "/app/compliance" | "/app/numbers" | "/app/integrations" | "/app/api";
   search?: { tab: "profile" | "security" | "notifications" };
 };
 
@@ -59,18 +51,7 @@ const TABS: TabDef[] = [
 ];
 
 export function AccountTabs({ current }: { current: AccountTabKey }) {
-  const fetchIsAdmin = useServerFn(meIsSuperAdmin);
-  const { data: admin } = useQuery({
-    queryKey: ["me-is-super-admin"],
-    queryFn: () => fetchIsAdmin(),
-  });
-
-  const items: TabDef[] = [
-    ...TABS,
-    ...(admin?.isSuperAdmin
-      ? [{ key: "admin" as const, label: "Admin", icon: Settings2, to: "/app/admin" as const }]
-      : []),
-  ];
+  const items: TabDef[] = TABS;
 
   return (
     <div

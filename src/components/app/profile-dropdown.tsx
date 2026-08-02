@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Settings, LogOut, Users, CreditCard, KeyRound, Palette } from "lucide-react";
+import { User, Settings, LogOut, Users, CreditCard, KeyRound, Palette, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/app/theme-toggle";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { meIsSuperAdmin } from "@/lib/admin.functions";
 
 // Deterministic accent so each operator gets a recognizable avatar color
 // without storing anything extra on the profile.
@@ -32,6 +35,11 @@ export function ProfileDropdown({ className }: { className?: string }) {
   const { theme, toggle } = useTheme();
   const { workspaceId } = useWorkspaceId();
   const [credits, setCredits] = useState<number | null>(null);
+  const fetchIsAdmin = useServerFn(meIsSuperAdmin);
+  const { data: admin } = useQuery({
+    queryKey: ["me-is-super-admin"],
+    queryFn: () => fetchIsAdmin(),
+  });
 
   useEffect(() => {
     if (!workspaceId || !open) return;
@@ -146,6 +154,13 @@ export function ProfileDropdown({ className }: { className?: string }) {
         </div>
 
         <div className="border-t border-border py-1.5">
+          {admin?.isSuperAdmin && (
+            <MenuItem
+              icon={<Shield className="h-4 w-4" />}
+              label="Platform Admin"
+              onClick={() => go("/platform")}
+            />
+          )}
           <MenuItem icon={<LogOut className="h-4 w-4" />} label="Log Out" onClick={handleSignOut} />
         </div>
 

@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
 import {
   User,
   Lock,
@@ -12,14 +10,10 @@ import {
   Smartphone,
   BadgeCheck,
   ShieldCheck,
-  Settings2,
   Plug,
   KeyRound,
-  LayoutDashboard,
-  Layers,
   type LucideIcon,
 } from "lucide-react";
-import { meIsSuperAdmin } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 import type { AccountTabKey } from "@/components/app/account-tabs";
 
@@ -36,11 +30,7 @@ type NavDef = {
     | "/app/compliance"
     | "/app/numbers"
     | "/app/integrations"
-    | "/app/api"
-    | "/app/admin"
-    | "/app/admin/workspaces"
-    | "/app/admin/sources"
-    | "/app/admin/access";
+    | "/app/api";
   search?: { tab: "profile" | "security" | "notifications" };
 };
 
@@ -85,26 +75,8 @@ export function SettingsShell({
   current: AccountTabKey;
   children: ReactNode;
 }) {
-  const fetchIsAdmin = useServerFn(meIsSuperAdmin);
-  const { data: admin } = useQuery({
-    queryKey: ["me-is-super-admin"],
-    queryFn: () => fetchIsAdmin(),
-  });
-
-  const groups = admin?.isSuperAdmin
-    ? [
-        ...GROUPS,
-        {
-          label: "Platform",
-          items: [
-            { key: "admin" as const, label: "Dashboard", icon: LayoutDashboard, to: "/app/admin" as const },
-            { key: "admin-workspaces" as const, label: "Workspaces", icon: Building2, to: "/app/admin/workspaces" as const },
-            { key: "admin-sources" as const, label: "Source Requests", icon: Layers, to: "/app/admin/sources" as const },
-            { key: "admin-access" as const, label: "Admin Access", icon: Settings2, to: "/app/admin/access" as const },
-          ],
-        },
-      ]
-    : GROUPS;
+  // Settings is customer-scoped only. Platform tooling lives in its own app at /platform.
+  const groups = GROUPS;
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
