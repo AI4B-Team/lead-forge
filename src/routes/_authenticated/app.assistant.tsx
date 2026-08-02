@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { UploadIntentDialog } from "@/components/app/upload-intent-dialog";
+import { COMPOSER_EXAMPLES, COMPOSER_EXAMPLE_MS } from "@/lib/composer-examples";
 import {
   TARGET_KIND_LABEL, detectUploadIntent, suppressionKeysFrom, targetValuesFrom,
   type IntentDetection, type TargetKind, type UploadIntent,
