@@ -201,16 +201,15 @@ function Jobs() {
 
   const summary = useMemo(() => {
     const jobs = allRows;
-    let rowsProcessed = 0;
     let clean = 0;
-    let scrubbed = 0;
+    let smsReady = 0;
     let running = 0;
     let scheduled = 0;
     let attention = 0;
     for (const j of jobs) {
-      rowsProcessed += j.rows_in ?? 0;
       clean += j.counts.clean;
-      scrubbed += j.counts.clean + j.counts.dnc + j.counts.litigator;
+      // SMS Ready: clean leads sitting on runs that have finished scrubbing.
+      if (j.status === "ready") smsReady += j.counts.clean;
       // Running counts only genuinely active jobs — stalled ones move to Needs Attention.
       if (isRunningStatus(j.status) && !j.stalled) running += 1;
       if (j.stalled) attention += 1;
@@ -218,8 +217,8 @@ function Jobs() {
     }
     return {
       total: jobs.length,
-      rowsProcessed,
-      cleanRate: scrubbed ? Math.round((clean / scrubbed) * 100) : 0,
+      clean,
+      smsReady,
       running,
       scheduled,
       attention,
@@ -278,24 +277,19 @@ function Jobs() {
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-6">
         <StatTile label="Total Lists" value={summary.total.toLocaleString()} icon={Layers} />
         <StatTile
-          label={ROWS_PROCESSED_LABEL}
-          value={summary.rowsProcessed.toLocaleString()}
+          label="Clean Leads"
+          value={summary.clean.toLocaleString()}
           icon={Users}
+          hint="Passed Every Scrub"
         />
         <StatTile
-          label="Clean Rate"
-          value={`${summary.cleanRate}%`}
+          label="SMS Ready"
+          value={summary.smsReady.toLocaleString()}
           icon={ShieldCheck}
-          hint="Clean Of All Scrubbed"
+          hint="Clean On Ready Lists"
         />
         <StatTile
-          label="Running"
-          value={summary.running.toLocaleString()}
-          icon={Activity}
-          hint="Actively Progressing"
-        />
-        <StatTile
-          label="Needs Attention"
+          label="Attention"
           value={summary.attention.toLocaleString()}
           icon={AlertTriangle}
           hint={`No Progress For ${STALL_HOURS}h+`}
