@@ -300,6 +300,12 @@ function Jobs() {
           icon={CalendarClock}
           hint="Recurring Rescans"
         />
+        <StatTile
+          label="Running"
+          value={summary.running.toLocaleString()}
+          icon={Activity}
+          hint="Actively Progressing"
+        />
       </div>
 
       <Card className="mb-4">
