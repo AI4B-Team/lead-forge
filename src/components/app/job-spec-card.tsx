@@ -14,7 +14,7 @@ import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assis
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
 import { StateMultiSelect } from "@/components/app/state-multi-select";
 import { countiesForState, parseCounty } from "@/lib/us-geo";
-import { UploadCloud, X, FileSpreadsheet, HelpCircle } from "lucide-react";
+import { UploadCloud, X, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   attachmentMappedCount, isSpreadsheet, type UploadAttachment,
