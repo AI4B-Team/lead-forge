@@ -98,41 +98,11 @@ export function TagPicker({
               </div>
               <div>
                 <Label>Color</Label>
-                <div className="mt-1.5 grid grid-cols-9 gap-2">
-                  {[...SWATCHES, ...custom].map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      aria-label={`Color ${c}`}
-                      onClick={() => setColor(c)}
-                      className={`h-7 w-7 rounded-full border transition-transform hover:scale-110 ${color === c ? "ring-2 ring-offset-1 ring-primary" : ""}`}
-                      style={{ backgroundColor: c }}
-                    />
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center gap-2">
-                  <label className="relative h-8 w-8 shrink-0 cursor-pointer rounded-full border grid place-items-center" aria-label="Pick A Custom Color">
-                    <Pipette className="h-3.5 w-3.5 text-muted-foreground" />
-                    <input
-                      type="color"
-                      value={isHex(color) ? color : "#2563eb"}
-                      onChange={(e) => addCustom(e.target.value)}
-                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                    />
-                  </label>
-                  <Input
-                    value={customDraft}
-                    onChange={(e) => setCustomDraft(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(customDraft); } }}
-                    placeholder="#1F2937"
-                    className="h-8 flex-1 font-mono text-xs"
-                  />
-                  <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => addCustom(customDraft)}>
-                    Add Color
-                  </Button>
+                <div className="mt-1.5">
+                  <TagColorPicker value={color} onChange={setColor} size="sm" />
                 </div>
                 <p className="mt-1.5 text-[11px] text-muted-foreground">
-                  Selected <span className="font-mono">{color}</span> — Custom Colors Are Saved For Reuse.
+                  Selected <span className="font-mono">{color}</span> — You Can Change This Later.
                 </p>
               </div>
             </div>
