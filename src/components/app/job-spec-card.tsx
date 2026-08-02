@@ -113,6 +113,13 @@ const COVERAGE_LABEL: Record<Coverage, string> = {
   unknown: "Not Covered",
 };
 
+/** Panel opened via ?source= with no template selected yet. */
+const SOURCE_FALLBACK_LABEL: Record<string, string> = {
+  business: "Business Search",
+  records: "Public Records",
+  upload: "Upload My List",
+};
+
 /** Small inline confidence badge shown next to fields the assistant filled in. */
 function Confidence({ value, show }: { value: number; show: boolean }) {
   if (!show) return null;

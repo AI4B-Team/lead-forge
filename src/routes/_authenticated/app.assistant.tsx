@@ -31,6 +31,7 @@ import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assista
 import { TEMPLATES, templateSourceType, type Template } from "@/lib/templates";
 import { TemplateCard } from "@/components/marketing/template-card";
 import { TemplatePickerDialog } from "@/components/app/template-picker-dialog";
+import { templateAdapterStatus } from "@/lib/template-schema";
 import { useOverflow } from "@/hooks/use-overflow";
 import { US_STATES } from "@/lib/us-geo";
 import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@/lib/recent-templates";
@@ -156,7 +157,10 @@ function Assistant() {
   const hasChat = thread.length > 0;
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
   const uploadReady = attachmentReady(upload);
-  const missing = useMemo(() => openSlots(spec, uploadReady), [spec, uploadReady]);
+  const missing = useMemo(() => openSlots(spec, uploadReady, selectedTemplate), [spec, uploadReady, selectedTemplate]);
+  /** Honest availability: a non-live adapter can never reach the pipeline. */
+  const adapterStatus = selectedTemplate ? templateAdapterStatus(selectedTemplate) : "live";
+  const adapterLive = adapterStatus === "live";
   const traceComplete =
     revealed >= traceSteps.length && !busy && traceSteps.length > 0 && missing.length === 0;
   const lastAssistantIndex = useMemo(() => {
@@ -713,6 +717,8 @@ function Assistant() {
             coverage={coverage}
             inferred={inferred}
             upload={upload}
+            template={selectedTemplate}
+            onChangeTemplate={() => setAllOpen(true)}
             onPickFile={(f) => void attachFile(f)}
             onRemoveUpload={() => { setUpload(null); setConfirmed(false); }}
             onEditMapping={() => setMapOpen(true)}
