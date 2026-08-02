@@ -8,11 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, BellPlus, Check, Loader2, ShieldCheck } from "lucide-react";
+import { AlertTriangle, BellPlus, Check, Loader2, ShieldCheck, ScanSearch, Megaphone } from "lucide-react";
 import { requestCoverage } from "@/lib/assistant.functions";
 import {
-  DESIRED_FIELD_OPTIONS, FREQUENCY_OPTIONS, screenSourceRequest,
-  type SourceRequestFrequency,
+  DESIRED_FIELD_OPTIONS, FREQUENCY_OPTIONS, LOGIN_OPTIONS, screenSourceRequest,
+  type LoginRequirement, type SourceRequestFrequency,
 } from "@/lib/source-request.shared";
 
 export type SourceRequestType = "county" | "record_type" | "template_adapter";
@@ -49,9 +49,10 @@ export function SourceRequestDialog({
   const [geo, setGeo] = useState(presetGeo);
   const [fields, setFields] = useState<string[]>(["Name", "Phone"]);
   const [frequency, setFrequency] = useState<SourceRequestFrequency>("one_time");
+  const [login, setLogin] = useState<LoginRequirement>("none");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState<{ email: string | null } | null>(null);
+  const [done, setDone] = useState<{ email: string | null; tier: string; reason: string | null; outreach: string } | null>(null);
   const [blocked, setBlocked] = useState<string | null>(null);
 
   // Re-seed whenever the dialog is reopened for a different source.
@@ -62,6 +63,7 @@ export function SourceRequestDialog({
     setGeo(presetGeo);
     setFields(["Name", "Phone"]);
     setFrequency("one_time");
+    setLogin("none");
     setNotes("");
     setDone(null);
     setBlocked(null);
@@ -77,13 +79,16 @@ export function SourceRequestDialog({
       geo: geo.trim() || null,
       frequency,
       notes: notes.trim() || null,
+      loginRequired: login,
     }),
-    [label, url, fields, geo, frequency, notes],
+    [label, url, fields, geo, frequency, notes, login],
   );
 
-  // Live preview of the same screen the server enforces.
+  // Live preview of the same tiering the server enforces.
   const preview = useMemo(() => screenSourceRequest(payload), [payload]);
-  const previewReason = label.trim().length > 2 && !preview.ok ? preview.reason : null;
+  const named = label.trim().length > 2;
+  const previewTier = named ? preview.tier : "standard";
+  const previewReason = named ? preview.reason : null;
 
   const toggleField = (f: string) =>
     setFields((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]));
@@ -107,7 +112,12 @@ export function SourceRequestDialog({
         setBlocked(res.reason ?? "We Can't Build This Source Compliantly.");
         return;
       }
-      setDone({ email: res?.email ?? null });
+      setDone({
+        email: res?.email ?? null,
+        tier: res?.tier ?? "standard",
+        reason: res?.reason ?? null,
+        outreach: res?.outreach?.text ?? preview.outreach.text,
+      });
       onQueued?.({ email: res?.email ?? null });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could Not Submit Request");
