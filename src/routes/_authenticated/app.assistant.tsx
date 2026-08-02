@@ -925,7 +925,7 @@ function Assistant() {
             upload={upload}
             template={selectedTemplate}
             onChangeTemplate={() => setAllOpen(true)}
-            onPickFile={(f) => requestAttach(f)}
+            onPickFile={(f) => void requestAttach(f)}
             onRemoveUpload={() => { setUpload(null); setConfirmed(false); }}
             onEditMapping={() => setMapOpen(true)}
             onRequestRecordType={requestRecordType}
@@ -964,7 +964,7 @@ function Assistant() {
                 type="file"
                 className="hidden"
                 accept=".csv,.xlsx"
-                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) requestAttach(f); }}
+                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void requestAttach(f); }}
               />
             </label>
           </TooltipTrigger>
@@ -1042,7 +1042,7 @@ function Assistant() {
                     type="file"
                     className="hidden"
                     accept=".csv,.xlsx"
-                    onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) requestAttach(f); }}
+                    onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void requestAttach(f); }}
                   />
                 </label>
               </TooltipTrigger>
