@@ -90,6 +90,16 @@ function AddSourceDialog({
   const [videoUrl, setVideoUrl] = useState("");
   const [pairs, setPairs] = useState<{ q: string; a: string }[]>([{ q: "", a: "" }]);
 
+  // Lets the readiness suggestion open this exact source's Add flow.
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const key = (e as CustomEvent<{ key?: string }>).detail?.key;
+      if (key === spec.key) setOpen(true);
+    };
+    window.addEventListener(OPEN_KNOWLEDGE_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_KNOWLEDGE_EVENT, onOpen);
+  }, [spec.key]);
+
   const refresh = () => qc.invalidateQueries({ queryKey: ["bot-knowledge", `brand:${brandId}`] });
 
   const reset = () => {
