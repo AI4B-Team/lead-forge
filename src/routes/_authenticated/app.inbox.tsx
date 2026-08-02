@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -20,6 +20,7 @@ import {
   blacklistThread,
 } from "@/lib/inbox.functions";
 import { listQuickReplies, createQuickReply } from "@/lib/tags.functions";
+import { listNumbers } from "@/lib/numbers.functions";
 import {
   AiActivityPill,
   AiSummary,
