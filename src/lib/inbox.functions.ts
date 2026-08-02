@@ -103,7 +103,7 @@ export const listThreads = createServerFn({ method: "GET" })
       campaignIds.length
         ? context.supabase
             .from("campaigns")
-            .select("id, name, status")
+            .select("id, name, status, bot_enabled")
             .in("id", campaignIds)
             .then((r) => r.data ?? [])
         : Promise.resolve([]),
