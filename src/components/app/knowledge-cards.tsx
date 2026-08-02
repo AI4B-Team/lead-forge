@@ -54,6 +54,7 @@ import {
   type KnowledgeCardSpec,
   type KnowledgeItem,
 } from "@/lib/knowledge-cards.shared";
+import { OPEN_KNOWLEDGE_EVENT, sourceDepths } from "@/lib/agent-readiness";
 
 const ICONS: Record<string, LucideIcon> = {
   website: Globe,
