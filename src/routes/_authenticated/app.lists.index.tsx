@@ -28,7 +28,6 @@ import {
   Sparkles,
   Layers,
   Users,
-  ShieldCheck,
   Activity,
   CalendarClock,
   SlidersHorizontal,
