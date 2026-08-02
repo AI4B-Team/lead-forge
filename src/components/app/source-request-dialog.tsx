@@ -211,7 +211,24 @@ export function SourceRequestDialog({
                   onChange={(e) => setUrl(e.target.value)}
                 />
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  Must Be Publicly Reachable — No Logins, Paywalls, Or Member Portals.
+                  Public Records Portals Are Fine Even If They Require A Free Account.
+                </p>
+              </div>
+
+              <div>
+                <Label>Does It Require A Login?</Label>
+                <Select value={login} onValueChange={(v) => setLogin(v as LoginRequirement)}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {LOGIN_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label} — {o.hint}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  A Free County Or Court Account Is Standard. Paid Or Terms-Restricted Platforms Go To Human Review.
                 </p>
               </div>
 
@@ -276,28 +293,52 @@ export function SourceRequestDialog({
                 />
               </div>
 
-              {previewReason ? (
-                <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/5 p-3 text-xs text-warning">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{previewReason}</span>
-                </div>
-              ) : (
-                <div className="flex items-start gap-2 rounded-xl border border-border bg-surface p-3 text-xs text-muted-foreground">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+              <div className="space-y-2">
+                {previewTier === "rejected" ? (
+                  <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{previewReason}</span>
+                  </div>
+                ) : previewTier === "review" ? (
+                  <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/5 p-3 text-xs text-warning">
+                    <ScanSearch className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>
+                      <span className="font-semibold">Needs Review — </span>
+                      {previewReason ?? "We'll Read The Terms Before Building This One."}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2 rounded-xl border border-border bg-surface p-3 text-xs text-muted-foreground">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>
+                      <span className="font-semibold text-foreground">Standard — </span>
+                      Public Data And Public Records Queue Normally, Including Portals That Ask For A Free Account.
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-start gap-2 rounded-xl border border-border bg-background p-3 text-xs text-muted-foreground">
+                  <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   <span>
-                    We Only Build Sources We Can Collect Publicly And Within The Site's Terms. Data Behind Logins Or
-                    Paywalls, And Credit, Medical, Or Screening Data, Can't Be Accepted.
+                    <span className="font-semibold text-foreground">Outreach Use (Judged Separately): </span>
+                    {preview.outreach.text}
                   </span>
                 </div>
-              )}
+              </div>
             </div>
 
             <div className="flex items-center justify-between gap-3">
               <Badge variant="outline" className="text-[10px] uppercase">No Credits Spent</Badge>
               <div className="flex gap-2">
                 <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-                <Button disabled={busy || label.trim().length < 3 || Boolean(previewReason)} onClick={() => void send()}>
-                  {busy ? (<><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Submitting…</>) : "Submit Request"}
+                <Button disabled={busy || label.trim().length < 3 || previewTier === "rejected"} onClick={() => void send()}>
+                  {busy ? (
+                    <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Submitting…</>
+                  ) : previewTier === "review" ? (
+                    "Submit For Review"
+                  ) : (
+                    "Submit Request"
+                  )}
                 </Button>
               </div>
             </div>
