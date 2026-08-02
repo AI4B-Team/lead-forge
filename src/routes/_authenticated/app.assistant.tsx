@@ -424,6 +424,14 @@ function Assistant() {
         return next;
       });
       setSpec(res.spec);
+      // The interpreter may match a named source ("Zillow listings") to a template.
+      if (res.spec.templateId && res.spec.templateId !== selectedTemplate?.id) {
+        const matched = TEMPLATES.find((t) => t.id === res.spec.templateId);
+        if (matched) {
+          setSelectedTemplate(matched);
+          lastTemplateId.current = matched.id;
+        }
+      }
       setCoverage(res.coverage);
       setEstimate(res.estimate);
       setSuggested(res.suggestedTemplates);
