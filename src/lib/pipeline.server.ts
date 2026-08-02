@@ -236,6 +236,20 @@ export async function executePipeline(
   const seen = new Set<string>();
   const priorRunKeys = new Set<string>();
 
+  // Workspace suppression: opt-outs and uploaded exclusion files never come back.
+  const suppressed = new Set<string>();
+  {
+    const { data: sup } = await supabase
+      .from("suppression")
+      .select("phone")
+      .eq("workspace_id", workspaceId)
+      .limit(50000);
+    for (const row of sup ?? []) {
+      const d = digits((row as { phone: string }).phone);
+      if (d) suppressed.add(d);
+    }
+  }
+
   const priorIds = opts.priorRunJobIds ?? [];
   if (priorIds.length) {
     // Net-new engine: everything an earlier run of this list already delivered.
@@ -262,9 +276,14 @@ export async function executePipeline(
 
   const deduped: RawLead[] = [];
   let repeatFromPriorRuns = 0;
+  let suppressedCount = 0;
   for (const r of raw) {
     const meta = (r.source_meta ?? {}) as { franchise?: boolean };
     if (removeFranchises && meta.franchise) continue;
+    if (suppressed.size) {
+      const d = digits(r.phone ?? "");
+      if (d && suppressed.has(d)) { suppressedCount++; continue; }
+    }
     const keys = leadKeys(r);
     if (priorRunKeys.size && keys.some((k) => priorRunKeys.has(k))) {
       repeatFromPriorRuns++;
@@ -275,6 +294,13 @@ export async function executePipeline(
       for (const k of keys) seen.add(k);
     }
     deduped.push(r);
+  }
+  if (suppressedCount > 0) {
+    await say(
+      "enriching",
+      `Excluded ${suppressedCount.toLocaleString()} records on your workspace suppression list.`,
+      suppressedCount,
+    );
   }
   await supabase
     .from("jobs")
