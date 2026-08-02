@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { setJobSchedule } from "@/lib/monitoring.functions";
 import { CADENCE_LABEL } from "@/lib/monitoring.shared";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { LOCAL_TZ } from "@/lib/local-tz";
 import { listJobs, resumeJob } from "@/lib/jobs.functions";
 import { JobStageFlow } from "@/components/app/job-stage-flow";
 import { StatTile } from "@/components/app/stat-tile";
@@ -70,7 +71,7 @@ function Jobs() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["jobs-list", workspaceId],
-    queryFn: () => fetchJobs({ data: { workspaceId: workspaceId! } }),
+    queryFn: () => fetchJobs({ data: { workspaceId: workspaceId!, timeZone: LOCAL_TZ } }),
     enabled: !!workspaceId,
     refetchInterval: 5000,
   });

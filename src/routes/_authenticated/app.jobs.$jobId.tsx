@@ -11,11 +11,14 @@ import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search, Eye, Pause, Play, Clock } from "lucide-react";
+import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search, Eye, Pause, Play, Clock, Check, Copy, Smartphone, Scale, Rocket, Hourglass, Send, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs, pauseJob, resumeJob } from "@/lib/jobs.functions";
 import { RESCRUB_DAYS } from "@/lib/compliance-rules";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
+import { buildFunnel, funnelViolations } from "@/lib/funnel-math";
+import { launchEstimate, formatUsd, DEFAULT_SEQUENCE_STEPS } from "@/lib/launch-estimate";
+import { LOCAL_TZ } from "@/lib/local-tz";
 import { PhoneLink } from "@/components/app/phone-link";
 import { setOnboardingPref } from "@/lib/onboarding.functions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
@@ -71,7 +74,7 @@ function JobDetail() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["job-review", jobId],
-    queryFn: () => fetchReview({ data: { jobId } }),
+    queryFn: () => fetchReview({ data: { jobId, timeZone: LOCAL_TZ } }),
     refetchInterval: (q) => {
       const s = q.state.data?.job?.status;
       return s && s !== "ready" && s !== "failed" && s !== "paused" ? 2000 : false;
@@ -110,6 +113,24 @@ function JobDetail() {
   const perMin = Math.round(processed / (elapsedMs / 60000));
   const target = Math.max(processed, job.rows_in ?? 0);
   const etaMs = perMin > 0 && target > processed ? ((target - processed) / perMin) * 60000 : 0;
+
+  // Canonical funnel math — one computation feeds the bars, the KPI strip, and
+  // the arithmetic guard below.
+  const funnel = buildFunnel({
+    found: job.rows_in ?? 0,
+    deduped: job.rows_deduped ?? 0,
+    verified: job.rows_enriched ?? counts.total,
+    traced: job.rows_skiptraced ?? 0,
+    scrubbed: counts.total,
+    clean: counts.clean,
+  });
+  const traced = job.rows_skiptraced ?? 0;
+  const estimate = launchEstimate(counts.clean);
+  // Never ship a funnel whose arithmetic disagrees with the Ready To Send card.
+  if (import.meta.env.DEV) {
+    const bad = funnelViolations(funnel, { readyToSend: counts.clean });
+    if (bad.length) console.warn("[funnel] arithmetic mismatch:", bad);
+  }
 
   const toggleRun = async () => {
     try {
@@ -180,10 +201,14 @@ function JobDetail() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Stat label="Rows Processed" value={job.rows_in ?? 0} />
-        <Stat label="Deduped" value={job.rows_deduped ?? 0} />
-        <Stat label="Verified" value={job.rows_enriched ?? 0} />
-        <Stat label="Skip Traced" value={job.rows_skiptraced ?? 0} />
+        <Stat label="Records Found" value={funnel[0]!.remaining.toLocaleString()} />
+        <Stat label="Unique Records" value={funnel[1]!.remaining.toLocaleString()} />
+        <Stat label="Mobile Verified" value={funnel[2]!.remaining.toLocaleString()} />
+        <Stat
+          label="Skip Traced"
+          value={traced > 0 ? traced.toLocaleString() : "None Needed"}
+          muted={traced === 0}
+        />
       </div>
 
       {stalled && (
@@ -212,18 +237,20 @@ function JobDetail() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base font-display">Pipeline</CardTitle>
           {isReady && (
-            <div className="font-display text-2xl font-black text-primary">
-              {counts.clean.toLocaleString()} Clean, Textable Leads
-            </div>
+            <Badge className="gap-1.5 rounded-full px-3 py-1 text-sm font-semibold">
+              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+              {counts.clean.toLocaleString()} Ready To Launch
+            </Badge>
           )}
         </CardHeader>
         <CardContent className="space-y-5">
           <PipelineFunnel
+            traced={traced}
             stages={{
               found: job.rows_in ?? 0,
               deduped: job.rows_deduped ?? 0,
               verified: job.rows_enriched ?? counts.total,
-              skipTraced: job.rows_skiptraced ?? counts.mobile,
+              skipTraced: traced,
               scrubbed: counts.total,
               clean: counts.clean,
             }}
@@ -234,9 +261,12 @@ function JobDetail() {
             </div>
             <ul className="mt-3 space-y-2">
               {(eventData?.events ?? []).map((e) => (
-                <li key={e.id} className="flex gap-3 text-sm text-foreground">
+                <li key={e.id} className="flex items-start gap-3 text-sm text-foreground">
                   <span className="text-xs text-muted-foreground tabular-nums pt-0.5 shrink-0">
                     {new Date(e.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                  </span>
+                  <span className="mt-0.5 shrink-0">
+                    <EventIcon stage={e.stage} message={e.message} />
                   </span>
                   <span>{e.message}</span>
                 </li>
@@ -322,15 +352,91 @@ function JobDetail() {
         </CardContent>
       </Card>
 
-      <div className="mt-8 flex justify-end gap-2">
-        <Button variant="outline" className="rounded-full" onClick={onExportAudit}>
-          <Download className="mr-1 h-4 w-4" /> Export Scrub Audit
-        </Button>
-        <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/lists" })}>
-          Back To Lists
-        </Button>
-        <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />
+      {/* The money moment: what launching this list reaches and costs. */}
+      {isReady && counts.clean > 0 && (
+        <Card className="mt-6 border-primary/40 bg-primary/5">
+          <CardHeader className="flex flex-row items-center gap-2">
+            <Rocket className="h-4 w-4 text-primary" />
+            <CardTitle className="text-base font-display">
+              {counts.clean.toLocaleString()} Launch-Ready Leads
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <MoneyStat
+              icon={<Smartphone className="h-3.5 w-3.5" />}
+              label="Estimated Reach"
+              value={`${estimate.reach.toLocaleString()} Mobile Phones`}
+            />
+            <MoneyStat
+              icon={<Send className="h-3.5 w-3.5" />}
+              label="Expected Campaign Size"
+              value={`${estimate.messages.toLocaleString()} Messages`}
+              note={`${DEFAULT_SEQUENCE_STEPS}-Step Drip`}
+            />
+            <MoneyStat
+              icon={<DollarSign className="h-3.5 w-3.5" />}
+              label="Estimated SMS Cost"
+              value={`≈ ${formatUsd(estimate.cost)}`}
+              note="Flat Rate Per Segment"
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Celebratory sticky finish line. */}
+      <div className="sticky bottom-4 z-10 mt-8">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/40 bg-background/95 p-4 shadow-lg backdrop-blur">
+          <div className="flex items-center gap-3">
+            {isReady && counts.clean > 0 && (
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <Check className="h-4 w-4" strokeWidth={3} />
+              </span>
+            )}
+            <div>
+              <div className="font-display text-base font-black text-foreground">
+                {isReady
+                  ? counts.clean > 0
+                    ? "Your List Is Ready"
+                    : "No Clean Leads In This Run"
+                  : "Building Your List…"}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {isReady && counts.clean > 0
+                  ? `${counts.clean.toLocaleString()} Mobile Verified Leads`
+                  : isReady
+                    ? "Try A Wider Area Or Another Niche."
+                    : "You Can Close This Tab — We Keep Working."}
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" className="rounded-full" onClick={onExportAudit}>
+              <Download className="mr-1 h-4 w-4" /> Scrub Audit
+            </Button>
+            <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/lists" })}>
+              Back To Jobs
+            </Button>
+            <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function MoneyStat({ icon, label, value, note }: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  note?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-4">
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {icon} {label}
+      </div>
+      <div className="mt-1.5 font-display text-xl font-black tabular-nums text-foreground">{value}</div>
+      {note && <div className="mt-0.5 text-xs text-muted-foreground">{note}</div>}
     </div>
   );
 }
@@ -348,7 +454,7 @@ function LaunchCampaignDialog({ defaultJobId, defaultJobName }: { defaultJobId: 
 
   const { data } = useQuery({
     queryKey: ["launchable-jobs", workspaceId],
-    queryFn: () => fetchJobs({ data: { workspaceId: workspaceId! } }),
+    queryFn: () => fetchJobs({ data: { workspaceId: workspaceId!, timeZone: LOCAL_TZ } }),
     enabled: open && !!workspaceId,
   });
 
@@ -380,7 +486,7 @@ function LaunchCampaignDialog({ defaultJobId, defaultJobName }: { defaultJobId: 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="rounded-full">
-          <MessageSquare className="mr-1 h-4 w-4" /> Launch Campaign With Clean File
+          <MessageSquare className="mr-1 h-4 w-4" /> Launch Campaign
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -575,15 +681,49 @@ function DetailRow({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value, muted = false }: { label: string; value: string; muted?: boolean }) {
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">{label}</div>
-        <div className="mt-2 font-display text-3xl font-black text-foreground">{value.toLocaleString()}</div>
+        <div
+          className={`mt-2 font-display font-black tabular-nums ${
+            muted ? "text-xl text-muted-foreground" : "text-3xl text-foreground"
+          }`}
+        >
+          {value}
+        </div>
       </CardContent>
     </Card>
   );
+}
+
+/**
+ * Skimmable icon per progress line so users can scan the run at a glance.
+ * Chosen from the stage first, then narrowed by what the message reports.
+ */
+function EventIcon({ stage, message }: { stage: string | null; message: string }) {
+  const m = message.toLowerCase();
+  const cls = "h-3.5 w-3.5";
+  if (/litigator/.test(m)) return <Scale className={`${cls} text-danger`} />;
+  if (/dnc/.test(m) && /flagged|removed/.test(m)) return <Ban className={`${cls} text-warn`} />;
+  if (/duplicate/.test(m)) return <Copy className={`${cls} text-muted-foreground`} />;
+  switch (stage) {
+    case "queued":
+      return <Hourglass className={`${cls} text-muted-foreground`} />;
+    case "scraping":
+      return <Search className={`${cls} text-muted-foreground`} />;
+    case "enriching":
+      return <Copy className={`${cls} text-muted-foreground`} />;
+    case "skiptracing":
+      return <Smartphone className={`${cls} text-muted-foreground`} />;
+    case "scrubbing":
+      return <ShieldCheck className={`${cls} text-warn`} />;
+    case "ready":
+      return <Check className={`${cls} text-success`} strokeWidth={3} />;
+    default:
+      return <Activity className={`${cls} text-muted-foreground`} />;
+  }
 }
 
 // Compact run telemetry used under the funnel: elapsed, rate, ETA, scrub stamp.

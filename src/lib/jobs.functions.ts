@@ -7,7 +7,11 @@ import { assignJobNames, cadenceBadge } from "@/lib/job-naming";
 // List every job for a workspace with lead-bucket counts for the Lists page.
 export const listJobs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .inputValidator((input) =>
+    z
+      .object({ workspaceId: z.string().uuid(), timeZone: z.string().max(60).optional() })
+      .parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: jobs, error } = await supabase
@@ -63,6 +67,7 @@ export const listJobs = createServerFn({ method: "GET" })
         params: (j.params ?? {}) as Record<string, unknown>,
         created_at: j.created_at,
       })),
+      data.timeZone,
     );
 
     return {
@@ -138,7 +143,9 @@ export const listJobLeads = createServerFn({ method: "GET" })
 // Load a job with its leads counts, scrub run, and computed quality score.
 export const getJobReview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ jobId: z.string().uuid() }).parse(input))
+  .inputValidator((input) =>
+    z.object({ jobId: z.string().uuid(), timeZone: z.string().max(60).optional() }).parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: job, error } = await supabase
@@ -189,6 +196,7 @@ export const getJobReview = createServerFn({ method: "GET" })
               params: (s.params ?? {}) as Record<string, unknown>,
               created_at: s.created_at,
             })),
+            data.timeZone,
           );
           return map.get(job.id)?.name ?? null;
         })()) ?? null,
