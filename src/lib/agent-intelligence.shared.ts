@@ -124,7 +124,9 @@ export type Categorized = {
   sourceType: "text" | "voice" | "file";
 };
 
-const URL_RE = /https?:\/\/[^\s]+|(?:^|\s)(?:www\.)[^\s]+\.[a-z]{2,}[^\s]*/gi;
+// Full URLs, or bare domains on a common TLD so "summitroofing.com" still counts.
+const URL_RE =
+  /https?:\/\/[^\s]+|(?:^|\s)(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|io|co|us|biz|info|dev|app|ai|shop|store|services|agency|team|pro|site|online)(?:\/[^\s]*)?/gi;
 
 /** Bare URLs in pasted text — these get crawled instead of stored verbatim. */
 export function extractUrls(text: string): string[] {
