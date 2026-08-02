@@ -25,6 +25,7 @@ import {
   Check,
   Loader2,
   Lock,
+  ChevronRight,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
