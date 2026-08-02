@@ -134,6 +134,8 @@ function Assistant() {
   /** Keys the assistant inferred this conversation (drives the % badges). */
   const [inferred, setInferred] = useState<Set<keyof JobSpec>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
+  /** Panel-only mode: List Settings is open with no chat message yet. */
+  const [panelOpen, setPanelOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
   /** Inline upload state — survives a source switch so it can be restored. */
@@ -148,7 +150,7 @@ function Assistant() {
   const composer = useRef<HTMLTextAreaElement>(null);
   const specScroll = useOverflow<HTMLDivElement>();
 
-  const started = thread.length > 0;
+  const started = thread.length > 0 || panelOpen;
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
   const uploadReady = attachmentReady(upload);
   const missing = useMemo(() => openSlots(spec, uploadReady), [spec, uploadReady]);
