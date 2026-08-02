@@ -86,6 +86,8 @@ import { Route as AuthenticatedAppJobsSplatRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppCampaignsNewRouteImport } from './routes/_authenticated/app.campaigns.new'
 import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
 import { Route as AuthenticatedAppAdminWorkspacesRouteImport } from './routes/_authenticated/app.admin.workspaces'
+import { Route as AuthenticatedAppAdminSourcesRouteImport } from './routes/_authenticated/app.admin.sources'
+import { Route as AuthenticatedAppAdminAccessRouteImport } from './routes/_authenticated/app.admin.access'
 import { Route as ApiPublicV1JobsJobIdRouteImport } from './routes/api/public/v1/jobs.$jobId'
 
 const TutorialsRoute = TutorialsRouteImport.update({
@@ -496,6 +498,18 @@ const AuthenticatedAppAdminWorkspacesRoute =
     path: '/admin/workspaces',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppAdminSourcesRoute =
+  AuthenticatedAppAdminSourcesRouteImport.update({
+    id: '/admin/sources',
+    path: '/admin/sources',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppAdminAccessRoute =
+  AuthenticatedAppAdminAccessRouteImport.update({
+    id: '/admin/access',
+    path: '/admin/access',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const ApiPublicV1JobsJobIdRoute = ApiPublicV1JobsJobIdRouteImport.update({
   id: '/$jobId',
   path: '/$jobId',
@@ -556,6 +570,8 @@ export interface FileRoutesByFullPath {
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/app/': typeof AuthenticatedAppIndexRoute
+  '/app/admin/access': typeof AuthenticatedAppAdminAccessRoute
+  '/app/admin/sources': typeof AuthenticatedAppAdminSourcesRoute
   '/app/admin/workspaces': typeof AuthenticatedAppAdminWorkspacesRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
@@ -634,6 +650,8 @@ export interface FileRoutesByTo {
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/app': typeof AuthenticatedAppIndexRoute
+  '/app/admin/access': typeof AuthenticatedAppAdminAccessRoute
+  '/app/admin/sources': typeof AuthenticatedAppAdminSourcesRoute
   '/app/admin/workspaces': typeof AuthenticatedAppAdminWorkspacesRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
@@ -715,6 +733,8 @@ export interface FileRoutesById {
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
   '/_authenticated/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/app/admin/access': typeof AuthenticatedAppAdminAccessRoute
+  '/_authenticated/app/admin/sources': typeof AuthenticatedAppAdminSourcesRoute
   '/_authenticated/app/admin/workspaces': typeof AuthenticatedAppAdminWorkspacesRoute
   '/_authenticated/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/_authenticated/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
@@ -796,6 +816,8 @@ export interface FileRouteTypes {
     | '/app/team'
     | '/app/templates'
     | '/app/'
+    | '/app/admin/access'
+    | '/app/admin/sources'
     | '/app/admin/workspaces'
     | '/app/campaigns/$campaignId'
     | '/app/campaigns/new'
@@ -874,6 +896,8 @@ export interface FileRouteTypes {
     | '/app/team'
     | '/app/templates'
     | '/app'
+    | '/app/admin/access'
+    | '/app/admin/sources'
     | '/app/admin/workspaces'
     | '/app/campaigns/$campaignId'
     | '/app/campaigns/new'
@@ -954,6 +978,8 @@ export interface FileRouteTypes {
     | '/_authenticated/app/team'
     | '/_authenticated/app/templates'
     | '/_authenticated/app/'
+    | '/_authenticated/app/admin/access'
+    | '/_authenticated/app/admin/sources'
     | '/_authenticated/app/admin/workspaces'
     | '/_authenticated/app/campaigns/$campaignId'
     | '/_authenticated/app/campaigns/new'
@@ -1568,6 +1594,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAdminWorkspacesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/admin/sources': {
+      id: '/_authenticated/app/admin/sources'
+      path: '/admin/sources'
+      fullPath: '/app/admin/sources'
+      preLoaderRoute: typeof AuthenticatedAppAdminSourcesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/admin/access': {
+      id: '/_authenticated/app/admin/access'
+      path: '/admin/access'
+      fullPath: '/app/admin/access'
+      preLoaderRoute: typeof AuthenticatedAppAdminAccessRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/api/public/v1/jobs/$jobId': {
       id: '/api/public/v1/jobs/$jobId'
       path: '/$jobId'
@@ -1597,6 +1637,8 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
   AuthenticatedAppTemplatesRoute: typeof AuthenticatedAppTemplatesRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppAdminAccessRoute: typeof AuthenticatedAppAdminAccessRoute
+  AuthenticatedAppAdminSourcesRoute: typeof AuthenticatedAppAdminSourcesRoute
   AuthenticatedAppAdminWorkspacesRoute: typeof AuthenticatedAppAdminWorkspacesRoute
   AuthenticatedAppCampaignsCampaignIdRoute: typeof AuthenticatedAppCampaignsCampaignIdRoute
   AuthenticatedAppCampaignsNewRoute: typeof AuthenticatedAppCampaignsNewRoute
@@ -1631,6 +1673,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
   AuthenticatedAppTemplatesRoute: AuthenticatedAppTemplatesRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppAdminAccessRoute: AuthenticatedAppAdminAccessRoute,
+  AuthenticatedAppAdminSourcesRoute: AuthenticatedAppAdminSourcesRoute,
   AuthenticatedAppAdminWorkspacesRoute: AuthenticatedAppAdminWorkspacesRoute,
   AuthenticatedAppCampaignsCampaignIdRoute:
     AuthenticatedAppCampaignsCampaignIdRoute,
