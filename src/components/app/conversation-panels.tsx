@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { LeadTagChips } from "@/components/app/lead-tag-picker";
 import { PhoneLink } from "@/components/app/phone-link";
 import {
   BADGE_TONE,
