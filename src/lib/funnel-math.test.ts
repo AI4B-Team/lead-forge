@@ -1,0 +1,45 @@
+import { describe, expect, it } from "vitest";
+import { buildFunnel, funnelViolations, stageFillPercent } from "./funnel-math";
+
+const ROOFER_RUN = { found: 168, deduped: 12, verified: 12, traced: 0, scrubbed: 12, clean: 8 };
+
+describe("funnel arithmetic", () => {
+  it("keeps every stage equal to the previous stage minus its delta", () => {
+    const stages = buildFunnel(ROOFER_RUN);
+    expect(funnelViolations(stages, { readyToSend: 8, exportedRows: 8 })).toEqual([]);
+  });
+
+  it("shows remaining counts, not removals", () => {
+    const stages = buildFunnel(ROOFER_RUN);
+    expect(stages.map((s) => s.remaining)).toEqual([168, 12, 12, 12, 12, 8]);
+    expect(stages[1]!.delta).toBe("−156");
+    expect(stages[5]!.remaining).toBe(8);
+    expect(stages[5]!.delta).toBe("−4 Scrubbed");
+  });
+
+  it("never renders a negative number for skip trace", () => {
+    const none = buildFunnel(ROOFER_RUN)[3]!;
+    expect(none.delta).toBeNull();
+    expect(none.annotation).toBe("0 Traced — All Had Phones");
+    const traced = buildFunnel({ ...ROOFER_RUN, traced: 5 })[3]!;
+    expect(traced.remaining).toBe(12);
+    expect(traced.annotation).toBe("5 Traced");
+  });
+
+  it("clamps so the funnel can never widen", () => {
+    const stages = buildFunnel({ found: 10, deduped: 99, verified: 99, traced: 99, scrubbed: 99, clean: 99 });
+    expect(stages.every((s) => s.remaining <= 10)).toBe(true);
+    expect(funnelViolations(stages)).toEqual([]);
+  });
+
+  it("flags a mismatch between Clean and the Ready To Send card", () => {
+    const stages = buildFunnel(ROOFER_RUN);
+    expect(funnelViolations(stages, { readyToSend: 9 })).toHaveLength(1);
+  });
+
+  it("scales bars proportionally with a visible floor", () => {
+    expect(stageFillPercent(168, 168)).toBe(100);
+    expect(stageFillPercent(12, 168)).toBe(8);
+    expect(stageFillPercent(0, 168)).toBe(0);
+  });
+});
