@@ -6,6 +6,7 @@ import { planDrops, estimateCost } from "@/lib/drops";
 import { canStartNewDrop } from "@/lib/tcpa";
 import { SCRUB_STALE_MESSAGE, isScrubStale, withStopFooter } from "@/lib/compliance-rules";
 import { emptyStats, type CampaignStats } from "@/lib/campaign-stats";
+import { channelEligibility } from "@/lib/contact-channels";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
 
