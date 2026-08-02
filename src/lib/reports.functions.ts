@@ -110,6 +110,7 @@ export const getWorkspacePerformance = createServerFn({ method: "GET" })
       pipelineValue,
       projectedClosed,
       delta,
+      MIN_HISTORY_EVENTS,
       HOUR_BANDS,
       WEEKDAYS,
     } = await import("@/lib/performance-intel");
