@@ -8,7 +8,6 @@ import {
   Smartphone,
   MonitorSmartphone,
   History,
-  Terminal,
   Mail,
 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
