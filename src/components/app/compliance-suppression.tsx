@@ -122,7 +122,9 @@ export function SuppressionTable({ workspaceId }: { workspaceId: string | null |
         <div>
           <CardTitle className="text-base font-display">Suppression List</CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">
-            Search Any Number To Confirm Whether It Is Suppressed, Since When, And Why.
+            Search Any Number To Confirm Whether It Is Suppressed,
+            <br />
+            Since When & Why.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
