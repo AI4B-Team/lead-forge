@@ -931,8 +931,8 @@ function Assistant() {
   );
 
   const specPanel = (
-    <div className="flex flex-col gap-4">
-      <div className="relative">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="relative min-h-0 flex-1">
         <div
           ref={specScroll.ref}
           className={`h-full min-h-0 lg:overflow-y-auto ${specScroll.overflowing ? "thin-scroll lg:pr-1" : ""}`}
@@ -959,7 +959,7 @@ function Assistant() {
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background to-transparent" />
         )}
       </div>
-      {runFooter}
+      <div className="shrink-0">{runFooter}</div>
     </div>
   );
 
@@ -1165,11 +1165,11 @@ function Assistant() {
         {!started && heroState}
 
         {started && (
-          <div className="grid items-start gap-6 lg:grid-cols-[1fr_400px]">
+          <div className="assistant-shell grid min-h-0 items-stretch gap-6 lg:grid-cols-[1fr_400px]">
             {/* Chat column: thread scrolls, composer stays pinned to the bottom. */}
-            <Card className="flex flex-col">
-              <CardContent className="flex flex-1 flex-col p-4 md:p-5">
-                <div ref={scroller} className="space-y-5 pr-1">
+            <Card className="flex min-h-0 flex-col">
+              <CardContent className="flex min-h-0 flex-1 flex-col p-4 md:p-5">
+                <div ref={scroller} className="thin-scroll min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
                   {!hasChat && (
                     // Panel-only mode: the assembly checklist still leads, with no chat turn.
                     <div>
