@@ -16,7 +16,6 @@ import { updateCampaignConfig, previewCampaign, scheduleCampaignDrops } from "@/
 import { getRegistration } from "@/lib/numbers.functions";
 import { TagPicker } from "@/components/app/tag-picker";
 import { useWorkspaceAgent } from "@/hooks/use-agent";
-import { Bot } from "lucide-react";
 import { BotTrainer } from "@/components/app/bot-trainer";
 import { BrainCircuit, Zap, CalendarClock, BadgeCheck, ArrowRight, Users, Database, Upload, Bot, Landmark, Search, Check } from "lucide-react";
 import {
