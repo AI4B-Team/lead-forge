@@ -199,7 +199,7 @@ export const runJob = createServerFn({ method: "POST" })
       }
       deduped.push(r);
     }
-    await supabase.from("jobs").update({ rows_deduped: deduped.length, rows_enriched: deduped.length }).eq("id", jobId);
+    await supabase.from("jobs").update({ rows_deduped: deduped.length }).eq("id", jobId);
     const removedCount = raw.length - deduped.length;
     await say(
       "enriching",
@@ -209,15 +209,34 @@ export const runJob = createServerFn({ method: "POST" })
       deduped.length,
     );
 
+    // 2b) CARRIER CHECK — classify every number and, when Mobile Numbers Only
+    // is enabled, drop landline/VoIP so the Mobile Verified stage reports a
+    // real removal instead of passing everything through.
+    const { verifyLineTypes } = await import("./line-type");
+    const mobileOnly = params.mobile_only === true;
+    const verify = verifyLineTypes(deduped, mobileOnly);
+    const verified = verify.kept;
+    await supabase.from("jobs").update({ rows_enriched: verified.length }).eq("id", jobId);
+    await say(
+      "enriching",
+      mobileOnly
+        ? verify.removed > 0
+          ? `Carrier check removed ${verify.removed.toLocaleString()} landline, VoIP, and unverified numbers — ${verified.length.toLocaleString()} mobile numbers remain.`
+          : `Carrier check confirmed all ${verified.length.toLocaleString()} numbers are mobile.`
+        : `Carrier check complete — ${verify.counts.mobile.toLocaleString()} mobile, ${(verify.counts.landline + verify.counts.voip).toLocaleString()} landline or VoIP.`,
+      verified.length,
+    );
+
     // 3) SKIPTRACE (fill missing phones for records + upload w/ opt-in) --------
     await supabase.from("jobs").update({ status: "skiptracing" }).eq("id", jobId);
     const shouldSkiptrace =
       job.source_type === "records" || (job.source_type === "upload" && params.skip_trace !== false);
     let skiptraced = 0;
     if (shouldSkiptrace) {
-      for (let i = 0; i < deduped.length; i++) {
-        if (!deduped[i]!.phone) {
-          deduped[i]!.phone = fakePhone(1_000_000 + i);
+      for (let i = 0; i < verified.length; i++) {
+        if (!verified[i]!.phone) {
+          verified[i]!.phone = fakePhone(1_000_000 + i);
+          verified[i]!.line_type = "mobile";
           skiptraced++;
         }
       }
@@ -254,13 +273,13 @@ export const runJob = createServerFn({ method: "POST" })
     );
 
     // 4) INSERT LEADS ----------------------------------------------------------
-    const leadRows = deduped.map((r) => ({
+    const leadRows = verified.map((r) => ({
       workspace_id: workspaceId,
       job_id: jobId,
       full_name: r.full_name ?? null,
       business_name: r.business_name ?? null,
       phone: r.phone ?? null,
-      phone_type: r.phone ? "mobile" : "unknown",
+      phone_type: r.phone ? r.line_type : "unknown",
       email: r.email ?? null,
       address: r.address ?? null,
       city: r.city ?? null,
@@ -274,11 +293,11 @@ export const runJob = createServerFn({ method: "POST" })
       await supabase.from("leads").insert(leadRows.slice(i, i + 500));
     }
 
-    // Charge scrape credits for the deduped rows we kept.
+    // Charge scrape credits for the verified rows we kept.
     await supabase.from("credit_ledger").insert({
       workspace_id: workspaceId,
       kind: "scrape",
-      delta: -deduped.length,
+      delta: -verified.length,
       reason: "scrape",
       job_id: jobId,
     });
@@ -291,7 +310,7 @@ export const runJob = createServerFn({ method: "POST" })
     await supabase.from("credit_balances").upsert({
       workspace_id: workspaceId,
       kind: "scrape",
-      balance: Math.max(0, (scrapeBal?.balance ?? 0) - deduped.length),
+      balance: Math.max(0, (scrapeBal?.balance ?? 0) - verified.length),
     });
 
     // 5) SCRUB (DNC + Litigator) via configurable provider ---------------------
