@@ -156,9 +156,19 @@ export function SuppressionTable({ workspaceId }: { workspaceId: string | null |
             </SelectContent>
           </Select>
           <BlacklistDialog workspaceId={workspaceId} />
-          <Button variant="outline" size="sm" className="h-9 rounded-full" onClick={() => void exportAll()}>
-            <Download className="mr-1 h-3.5 w-3.5" /> Export
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-full"
+                onClick={() => void exportAll()}
+              >
+                <Download className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export</TooltipContent>
+          </Tooltip>
         </div>
       </CardHeader>
       <CardContent className="p-0">
