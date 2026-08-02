@@ -243,6 +243,7 @@ export function JobSpecCard({
   onPickFile,
   onRemoveUpload,
   onEditMapping,
+  onClearTargets,
   onRequestRecordType,
   template = null,
   onChangeTemplate,
@@ -256,6 +257,8 @@ export function JobSpecCard({
   onPickFile?: (file: File) => void;
   onRemoveUpload?: () => void;
   onEditMapping?: () => void;
+  /** Drops an uploaded parameter file so the source runs on its own settings. */
+  onClearTargets?: () => void;
   /** Logs a record type the pipeline does not support yet. */
   onRequestRecordType?: (request: string) => Promise<void> | void;
   /** The selected source template — the panel's Source row and field schema. */
@@ -349,6 +352,37 @@ export function JobSpecCard({
             </p>
           )}
         </div>
+
+        {/* Parameter and exclusion files aren't leads — they're shown separately. */}
+        {spec.scrapeTargets?.length ? (
+          <div className="flex items-start gap-3 rounded-xl border border-border bg-surface p-3">
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium text-foreground">
+                {spec.scrapeTargets.length.toLocaleString()} Scrape Targets
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                Runs This Source Once Per Value · {spec.scrapeTargets.slice(0, 3).join(", ")}
+                {spec.scrapeTargets.length > 3 ? "…" : ""}
+              </div>
+            </div>
+            {onClearTargets && (
+              <Button type="button" size="sm" variant="ghost" className="rounded-full" onClick={onClearTargets}>
+                Remove
+              </Button>
+            )}
+          </div>
+        ) : null}
+
+        {spec.suppressionFile ? (
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3">
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-foreground">Suppression: {spec.suppressionFile}</div>
+              <div className="text-[11px] text-muted-foreground">
+                Saved To Your Workspace — Excluded From Every Run
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {isRecords && (
           <div>

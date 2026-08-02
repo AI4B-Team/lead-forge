@@ -11,10 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { UploadIntentDialog } from "@/components/app/upload-intent-dialog";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  TARGET_KIND_LABEL, detectUploadIntent, suppressionKeysFrom, targetValuesFrom,
+  type IntentDetection, type TargetKind, type UploadIntent,
+} from "@/lib/upload-intent";
 import { toast } from "sonner";
 import {
   Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal,
@@ -150,8 +151,9 @@ function Assistant() {
   /** Inline upload state — survives a source switch so it can be restored. */
   const [upload, setUpload] = useState<UploadAttachment | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
-  /** File awaiting confirmation that it may replace a non-upload source. */
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  /** File read but awaiting an intent choice before it changes anything. */
+  const [pendingUpload, setPendingUpload] = useState<UploadAttachment | null>(null);
+  const [pendingDetection, setPendingDetection] = useState<IntentDetection | null>(null);
   /** Beta waitlist: template ids already requested + the notify address. */
   const [requestedAdapters, setRequestedAdapters] = useState<Set<string>>(new Set());
   const [notifyEmail, setNotifyEmail] = useState<string | null>(null);
@@ -250,77 +252,127 @@ function Assistant() {
     requestAnimationFrame(() => composer.current?.focus());
   };
 
+  /** Note a file in the thread, opening the working view when chat is empty. */
+  const noteAttachment = (system: string, assistant: string, nextSpec: JobSpec) => {
+    if (hasChat) {
+      setThread((m) => [...m, { role: "system", content: system }, { role: "assistant", content: assistant, spec: nextSpec }]);
+    } else {
+      setThread([
+        { role: "system", content: system },
+        { role: "assistant", content: assistant, spec: nextSpec },
+      ]);
+    }
+  };
+
   /**
-   * A file added from either entry point (panel dropzone or composer attach)
-   * flips the source to Upload My List and runs the shared mapping step.
+   * Intent 1 & 2 — the file becomes rows in the pipeline. "Enrich" is the same
+   * mechanism as "import", framed as gap-filling on a list the user owns.
    */
-  const attachFile = async (file: File, clearSetup = false) => {
+  const applyUploadAsLeads = (next: UploadAttachment, intent: "import" | "enrich") => {
+    setUpload(next);
+    const wasScrape = spec.sourceType && spec.sourceType !== "upload";
+    const nextSpec = wasScrape
+      ? withEnrichmentDefaults({ ...EMPTY_SPEC, sourceType: "upload", uploadIntent: intent }, undefined)
+      : { ...spec, sourceType: "upload" as const, uploadIntent: intent };
+    setSpec(nextSpec);
+    if (wasScrape) {
+      setCoverage([]);
+      setEstimate(null);
+      setInferred(new Set());
+    }
+    setInferred((prev) => { const out = new Set(prev); out.delete("sourceType"); return out; });
+    if (selectedTemplate && templateSourceType(selectedTemplate) !== "upload") {
+      setSelectedTemplate(null);
+      lastTemplateId.current = null;
+    }
+    setConfirmed(false);
+    noteAttachment(
+      `You Attached: ${next.name} (${intent === "enrich" ? "Enrich" : "Import"})`,
+      next.parseable && next.mapped
+        ? `Got ${next.name} — ${next.rowCount.toLocaleString()} rows. ${
+            intent === "enrich"
+              ? "I'll fill the missing phones and emails, then re-scrub against DNC and litigator lists."
+              : "Review the mapping and settings in the List Builder, then generate the list."
+          }`
+        : `Got ${next.name}. Map your columns in the List Builder and I'll clean, verify, and scrub it.`,
+      nextSpec,
+    );
+    if (next.parseable && !next.mapped) setMapOpen(true);
+    else if (next.parseable) toast.success(`${next.name} · ${next.rowCount.toLocaleString()} Rows Detected`);
+  };
+
+  /** Intent 3 — the file configures the scrape; the current source stays. */
+  const applyUploadAsTargets = (next: UploadAttachment, kind: TargetKind) => {
+    const values = targetValuesFrom(next);
+    if (!values.length) {
+      toast.error("No Values Found In That File.");
+      return;
+    }
+    const nextSpec: JobSpec = { ...spec, scrapeTargets: values, scrapeTargetKind: kind };
+    setSpec(nextSpec);
+    setConfirmed(false);
+    noteAttachment(
+      `You Attached: ${next.name} (Scrape Targets)`,
+      `Using ${values.length.toLocaleString()} ${TARGET_KIND_LABEL[kind].toLowerCase()} from ${next.name} as scrape targets — I'll run the selected source once per value. Your file stays a parameter list; it won't become leads.`,
+      nextSpec,
+    );
+    toast.success(`${values.length.toLocaleString()} Scrape Targets Loaded`);
+  };
+
+  /** Intent 4 — persist an exclusion set for this and every future run. */
+  const applyUploadAsSuppression = async (next: UploadAttachment) => {
+    if (!workspaceId) return;
+    const { phones, emails } = suppressionKeysFrom(next);
+    if (!phones.length) {
+      toast.error("No Phone Numbers Found To Suppress.");
+      return;
+    }
+    const { error } = await supabase.from("suppression").upsert(
+      phones.map((phone) => ({ workspace_id: workspaceId, phone, reason: `upload:${next.name}` })),
+      { onConflict: "workspace_id,phone" },
+    );
+    if (error) {
+      toast.error("Could Not Save The Suppression List.");
+      return;
+    }
+    const nextSpec: JobSpec = { ...spec, suppressionFile: next.name };
+    setSpec(nextSpec);
+    noteAttachment(
+      `You Attached: ${next.name} (Suppression List)`,
+      `Added ${phones.length.toLocaleString()} numbers${emails.length ? ` (and skipped ${emails.length.toLocaleString()} email-only rows)` : ""} to your workspace suppression list. Nobody on that file will be contacted — on this run or any future one.`,
+      nextSpec,
+    );
+    toast.success(`${phones.length.toLocaleString()} Numbers Suppressed Workspace-Wide`);
+  };
+
+  /**
+   * Single entry point for every attach control. We read the file, infer what
+   * it is, and let the user confirm before anything in the builder changes.
+   */
+  const requestAttach = async (file: File) => {
     if (!isSpreadsheet(file)) {
       toast.error("Attach A .csv Or .xlsx File.");
       return;
     }
     try {
       const next = await readAttachment(file);
-      setUpload(next);
-      if (clearSetup) {
-        setSpec(withEnrichmentDefaults({ ...EMPTY_SPEC, sourceType: "upload" }, undefined));
-        setCoverage([]);
-        setEstimate(null);
-        setInferred(new Set());
-      }
-      if (spec.sourceType !== "upload") {
-        setSpec((s) => ({ ...s, sourceType: "upload" }));
-        setInferred((prev) => { const out = new Set(prev); out.delete("sourceType"); return out; });
-      }
-      if (selectedTemplate && templateSourceType(selectedTemplate) !== "upload") {
-        setSelectedTemplate(null);
-        lastTemplateId.current = null;
-        toast.info(`${selectedTemplate.title} Deselected — Using Your Uploaded File Instead.`);
-      }
-      setConfirmed(false);
-      if (hasChat) {
-        setThread((m) => [...m, { role: "system", content: `You Attached: ${next.name}` }]);
-      } else {
-        // Attaching from the hero opens the working view so the panel is visible.
-        setThread([
-          { role: "system", content: `You Attached: ${next.name}` },
-          {
-            role: "assistant",
-            content: next.parseable && next.mapped
-              ? `Got ${next.name} — ${next.rowCount.toLocaleString()} rows. Review the mapping and settings in the List Builder, then generate the list.`
-              : `Got ${next.name}. Map your columns in the List Builder and I'll clean, verify, and scrub it.`,
-            spec: { ...spec, sourceType: "upload" },
-          },
-        ]);
-      }
-      if (next.parseable && !next.mapped) setMapOpen(true);
-      else if (next.parseable) {
-        toast.success(`${next.name} · ${next.rowCount.toLocaleString()} Rows Detected`);
-      }
+      setPendingUpload(next);
+      setPendingDetection(detectUploadIntent(next));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could Not Read That File");
     }
   };
 
-  /** Current non-upload setup, named for the swap confirmation. */
-  const currentSourceLabel =
-    selectedTemplate?.title ??
-    (spec.sourceType === "records" ? "Public Records" : "Business Search");
+  const clearPending = () => { setPendingUpload(null); setPendingDetection(null); };
 
-  /**
-   * Composer/panel entry point. Attaching a file means "run this list through
-   * the pipeline", so a non-upload source must be confirmed before it's wiped.
-   */
-  const requestAttach = (file: File) => {
-    if (!isSpreadsheet(file)) {
-      toast.error("Attach A .csv Or .xlsx File.");
-      return;
-    }
-    if (spec.sourceType === "upload") {
-      void attachFile(file);
-      return;
-    }
-    setPendingFile(file);
+  const confirmIntent = (intent: UploadIntent) => {
+    const next = pendingUpload;
+    const kind = pendingDetection?.targetKind ?? "keywords";
+    clearPending();
+    if (!next) return;
+    if (intent === "targets") applyUploadAsTargets(next, kind);
+    else if (intent === "suppression") void applyUploadAsSuppression(next);
+    else applyUploadAsLeads(next, intent);
   };
 
   const saveMapping = (map: ColumnMap) => {
@@ -873,8 +925,12 @@ function Assistant() {
             upload={upload}
             template={selectedTemplate}
             onChangeTemplate={() => setAllOpen(true)}
-            onPickFile={(f) => requestAttach(f)}
+            onPickFile={(f) => void requestAttach(f)}
             onRemoveUpload={() => { setUpload(null); setConfirmed(false); }}
+            onClearTargets={() => {
+              setSpec((s) => ({ ...s, scrapeTargets: [], scrapeTargetKind: null }));
+              setConfirmed(false);
+            }}
             onEditMapping={() => setMapOpen(true)}
             onRequestRecordType={requestRecordType}
           />
@@ -912,7 +968,7 @@ function Assistant() {
                 type="file"
                 className="hidden"
                 accept=".csv,.xlsx"
-                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) requestAttach(f); }}
+                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void requestAttach(f); }}
               />
             </label>
           </TooltipTrigger>
@@ -990,7 +1046,7 @@ function Assistant() {
                     type="file"
                     className="hidden"
                     accept=".csv,.xlsx"
-                    onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) requestAttach(f); }}
+                    onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void requestAttach(f); }}
                   />
                 </label>
               </TooltipTrigger>
@@ -1212,29 +1268,15 @@ function Assistant() {
         onSelect={selectTemplate}
       />
 
-      {/* Attaching a file replaces a scrape setup — always confirmed first. */}
-      <AlertDialog open={!!pendingFile} onOpenChange={(o) => { if (!o) setPendingFile(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Switch To Upload My List And Use This File?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your Current {currentSourceLabel} Setup Will Be Cleared.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingFile(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                const f = pendingFile;
-                setPendingFile(null);
-                if (f) void attachFile(f, true);
-              }}
-            >
-              Switch And Map Columns
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Every attached file passes through the intent chooser first. */}
+      <UploadIntentDialog
+        open={!!pendingUpload}
+        fileName={pendingUpload?.name ?? ""}
+        detection={pendingDetection}
+        allowSuppression
+        onCancel={clearPending}
+        onConfirm={confirmIntent}
+      />
     </div>
   );
 }

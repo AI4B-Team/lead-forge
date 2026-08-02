@@ -186,6 +186,11 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
         county: spec.counties[0] ?? null,
         recency_days: spec.recencyDays,
         remove_franchises: spec.removeFranchises,
+        // Parameter file: fan the scrape out across each uploaded value.
+        scrape_targets: spec.scrapeTargets,
+        scrape_target_kind: spec.scrapeTargetKind,
+        upload_intent: spec.uploadIntent,
+        suppression_file: spec.suppressionFile,
         dedupe: spec.dedupe,
         mobile_only: spec.mobileOnly,
         skip_trace: spec.skipTrace,
