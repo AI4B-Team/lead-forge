@@ -18,25 +18,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { SettingsShell } from "@/components/app/settings-shell";
 import { SettingsSummary } from "@/components/app/settings-summary";
+import {
+  NotificationPrefs,
+  normalizePrefs,
+  type NotifyPrefs,
+} from "@/components/app/notification-prefs";
 
-const searchSchema = z.object({ tab: z.enum(["profile", "security"]).optional() });
+const searchSchema = z.object({ tab: z.enum(["profile", "security", "notifications"]).optional() });
 
 export const Route = createFileRoute("/_authenticated/app/account")({
   head: () => ({ meta: [{ title: "Settings — LeadTrace" }] }),
   validateSearch: searchSchema,
   component: AccountPage,
 });
-
-type NotifyPrefs = { jobComplete: boolean; campaignAlerts: boolean; billingEmails: boolean };
-
-const DEFAULT_PREFS: NotifyPrefs = { jobComplete: true, campaignAlerts: true, billingEmails: true };
 
 function AccountPage() {
   const { tab } = Route.useSearch();
@@ -45,8 +45,9 @@ function AccountPage() {
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [prefs, setPrefs] = useState<NotifyPrefs>(DEFAULT_PREFS);
+  const [prefs, setPrefs] = useState<NotifyPrefs>(() => normalizePrefs(undefined));
   const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPrefs, setSavingPrefs] = useState(false);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -56,18 +57,25 @@ function AccountPage() {
     if (!user) return;
     setFullName((user.user_metadata?.full_name as string) ?? "");
     setPhone((user.user_metadata?.phone as string) ?? "");
-    const stored = user.user_metadata?.notify as Partial<NotifyPrefs> | undefined;
-    setPrefs({ ...DEFAULT_PREFS, ...(stored ?? {}) });
+    setPrefs(normalizePrefs(user.user_metadata?.notify));
   }, [user]);
 
   const saveProfile = async () => {
     setSavingProfile(true);
     const { error } = await supabase.auth.updateUser({
-      data: { full_name: fullName, phone, notify: prefs },
+      data: { full_name: fullName, phone },
     });
     setSavingProfile(false);
     if (error) return toast.error(error.message);
-    toast.success("Settings Saved");
+    toast.success("Profile Saved");
+  };
+
+  const savePrefs = async () => {
+    setSavingPrefs(true);
+    const { error } = await supabase.auth.updateUser({ data: { notify: prefs } });
+    setSavingPrefs(false);
+    if (error) return toast.error(error.message);
+    toast.success("Notification Settings Saved");
   };
 
   const savePassword = async () => {
