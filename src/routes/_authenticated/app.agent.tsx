@@ -202,101 +202,114 @@ function AgentPage() {
         <AgentSetup workspaceId={workspaceId} />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-            <StatTile label="Knowledge Sources" value={sources.length} icon={FileStack} hint="Approved Material" />
-            <StatTile
-              label="Knowledge Volume"
-              value={totalChars >= 1000 ? `${Math.round(totalChars / 1000)}k Chars` : `${totalChars} Chars`}
-              icon={Brain}
-              hint="Indexed For Replies"
-            />
-            <StatTile label="Documents Indexed" value={buckets.find((b) => b.key === "file")?.count ?? 0} icon={FileText} hint="Files Uploaded" />
-            <StatTile
-              label="Readiness"
-              value={`${score}%`}
-              icon={Sparkles}
-              hint={score >= 80 ? "Your Agent Is Ready" : "Keep Training"}
-            />
-          </div>
-
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          {/* 1 — Agent Health: readiness is the hero metric */}
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+            <Card>
+              <CardContent className="pt-6">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Bot className="h-5 w-5" />
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Bot className="h-4.5 w-4.5" />
                   </span>
-                  <div>
-                    <div className="font-display text-xl font-bold text-foreground">{agent.name}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
+                  <div className="min-w-0">
+                    <div className="font-display text-xl font-bold leading-tight text-foreground">{agent.name}</div>
+                    <div className="truncate text-xs text-muted-foreground">
                       Last Trained {formatWhen(lastTrained)} · {sources.length} Source{sources.length === 1 ? "" : "s"}
-                      {agent.website ? " · " : ""}
                       {agent.website && (
-                        <span className="inline-flex items-center gap-1 align-middle">
-                          <Globe className="h-3 w-3" /> {agent.website}
-                        </span>
+                        <>
+                          {" · "}
+                          <span className="inline-flex items-center gap-1 align-middle">
+                            <Globe className="h-3 w-3" /> {agent.website}
+                          </span>
+                        </>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="lg:w-[420px]">
-                  <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    <span>Readiness</span>
-                    <span className="tabular-nums text-foreground">{score}%</span>
+
+                <div className="mt-6 flex items-end justify-between gap-4">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      Readiness
+                    </div>
+                    <div className="font-display text-5xl font-black leading-none tabular-nums text-foreground">
+                      {score}%
+                    </div>
                   </div>
-                  <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${score}%` }} />
-                  </div>
-                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <div className="pb-1 text-right text-sm font-semibold text-foreground">
                     {score >= 80 ? (
-                      <>
-                        <CheckCircle2 className="h-3.5 w-3.5 text-success" /> Your Agent Is Ready To Reply
-                      </>
+                      <span className="inline-flex items-center gap-1.5 text-success">
+                        <CheckCircle2 className="h-4 w-4" /> Agent Ready
+                      </span>
                     ) : (
-                      "Add More Material To Raise Reply Quality"
+                      "Needs More Training"
                     )}
                   </div>
                 </div>
-              </div>
+                <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${score}%` }} />
+                </div>
+                <div className="mt-2.5 flex items-start gap-1.5 text-xs text-muted-foreground">
+                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                  Your Agent Only Answers From Knowledge You Approve — Nothing Invented.
+                </div>
+              </CardContent>
+            </Card>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {buckets.map((b) => (
-                  <div key={b.key} className="rounded-xl border border-border bg-surface px-4 py-3">
-                    <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                      <b.icon className="h-3.5 w-3.5" /> {b.label}
-                    </div>
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <span className="font-display text-2xl font-black leading-none tabular-nums text-foreground">{b.count}</span>
-                      <span className="text-xs text-muted-foreground">{b.unit}</span>
-                      {b.count > 0 && <CheckCircle2 className="h-3.5 w-3.5 text-success ml-auto" />}
-                    </div>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Knowledge
                   </div>
-                ))}
-              </div>
-
-              <div className="mt-6 border-t border-border pt-5">
-                <KnowledgeHealth sources={sources} score={score} />
-              </div>
-
-              <div className="mt-6 border-t border-border pt-5">
-                <KnowledgeFlow />
-              </div>
-
-              <div className="mt-5">
-                <NothingInvented />
-              </div>
-            </CardContent>
-          </Card>
-
-          <BotTrainer key={agent.id} brandId={agent.id} heading={`Train ${agent.name}`} />
-
-          <div className="mt-8 mb-4">
-            <h2 className="font-display text-xl font-bold text-foreground">Knowledge Sources</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Feed Your Agent Any Of These — It Only Speaks From What You Approve.
-            </p>
+                  <div className="text-xs text-muted-foreground">
+                    {totalChars >= 1000 ? `${Math.round(totalChars / 1000)}k` : totalChars} Chars Indexed
+                  </div>
+                </div>
+                <div className="mt-3 divide-y divide-border">
+                  {catCounts.map((c) => (
+                    <div key={c.key} className="flex items-center justify-between py-1.5 text-sm">
+                      <span className="text-foreground">{c.label}</span>
+                      {c.count === 0 ? (
+                        <span className="text-xs text-muted-foreground/70">Missing</span>
+                      ) : (
+                        <span className="text-xs font-medium tabular-nums text-foreground">
+                          {c.count} {c.count === 1 ? c.unit : `${c.unit}s`}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <KnowledgeSourceCards brandId={agent.id} sources={sources} />
+
+          {/* 2 — Train Your Agent */}
+          <div className="mt-8">
+            <h2 className="font-display text-xl font-bold text-foreground">Train Your Agent</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Type Or Dictate What It Should Know — Or Attach Files.
+            </p>
+            <div className="mt-3">
+              <AgentComposer key={agent.id} brandId={agent.id} />
+            </div>
+          </div>
+
+          {/* 3 — Improve Your Agent */}
+          <div className="mt-8">
+            <h2 className="font-display text-xl font-bold text-foreground">Improve Your Agent</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Add Training From Any Of These Sources.</p>
+            <div className="mt-3">
+              <KnowledgeSourceList brandId={agent.id} sources={sources} />
+            </div>
+          </div>
+
+          {/* 4 — Recent Training */}
+          <div className="mt-8">
+            <h2 className="font-display text-xl font-bold text-foreground">Recent Training</h2>
+            <div className="mt-2">
+              <RecentTraining brandId={agent.id} sources={sources} />
+            </div>
+          </div>
 
           <Card className="mt-8">
             <CardContent className="pt-6">
