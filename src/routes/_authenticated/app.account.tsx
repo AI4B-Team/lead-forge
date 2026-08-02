@@ -333,10 +333,10 @@ function AccountPage() {
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center justify-between gap-4">
                   <p className="max-w-xl text-sm text-muted-foreground">
-                    Workspace API Keys And Event Webhooks Are Managed On The Integrations Page.
+                    Workspace API Keys Are Managed On The Developer & API Page.
                   </p>
                   <Button variant="outline" className="rounded-full" asChild>
-                    <Link to="/app/integrations" hash="developer">Open Integrations</Link>
+                    <Link to="/app/api">Open Developer & API</Link>
                   </Button>
                 </CardContent>
               </Card>
