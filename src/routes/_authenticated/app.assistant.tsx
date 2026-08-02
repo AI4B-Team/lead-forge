@@ -769,17 +769,17 @@ function Assistant() {
           </div>
         </>
       ) : (
-        <>
+        <div className="space-y-2 px-1">
           {adapterRequested ? (
             <>
               <Button
                 disabled
                 variant="outline"
-                className="w-full rounded-full border-2 border-emerald-500 bg-emerald-500/10 font-semibold text-emerald-600 disabled:opacity-100 dark:text-emerald-400"
+                className="h-9 w-full rounded-full border-2 border-emerald-500 bg-emerald-500/10 text-sm font-semibold text-emerald-600 disabled:opacity-100 dark:text-emerald-400"
               >
                 <Check className="mr-1 h-4 w-4" /> You're On The List
               </Button>
-              <div className="text-center text-sm text-foreground/70">
+              <div className="text-center text-xs text-foreground/70">
                 We'll Email You As Soon As It's Available.
               </div>
             </>
@@ -788,24 +788,24 @@ function Assistant() {
               <Button
                 variant="outline"
                 disabled={requesting}
-                className="h-9 w-full rounded-full border-2 border-primary bg-primary/5 font-semibold text-primary hover:bg-primary/10 hover:text-primary"
+                className="h-9 w-full rounded-full border-2 border-primary bg-primary/5 text-sm font-semibold text-primary hover:bg-primary/10 hover:text-primary"
                 onClick={() => void requestTemplateAdapter()}
               >
                 {requesting ? (
                   <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Requesting…</>
                 ) : (
-                  <><BellPlus className="mr-1 h-4 w-4" /> Launching Soon — Join The Waitlist To Be Notified.</>
+                  <><BellPlus className="mr-1 h-4 w-4" /> Launching Soon! Join The Waitlist To Be Notified</>
                 )}
               </Button>
               {requestError && (
-                <div className="text-center text-sm text-destructive">{requestError}</div>
+                <div className="text-center text-xs text-destructive">{requestError}</div>
               )}
-              <div className="text-center text-sm text-foreground/70">
-                {selectedTemplate?.title} is in beta — we'll email you the day it goes live.
+              <div className="text-center text-xs text-foreground/70">
+                Launching Soon! Join The Waitlist To Be Notified.
               </div>
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   );
