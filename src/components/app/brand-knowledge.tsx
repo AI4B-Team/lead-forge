@@ -192,7 +192,7 @@ export function KnowledgeHealth({ sources, score }: { sources: KnowledgeSource[]
 }
 
 const FLOW: { label: string; icon: LucideIcon }[] = [
-  { label: "Brand", icon: Sparkles },
+  { label: "Agent", icon: Sparkles },
   { label: "Website", icon: Globe },
   { label: "Training", icon: FileText },
   { label: "Knowledge", icon: Brain },

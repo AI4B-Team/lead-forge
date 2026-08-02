@@ -17,7 +17,7 @@ import { getRegistration } from "@/lib/numbers.functions";
 import { TagPicker } from "@/components/app/tag-picker";
 import { useWorkspaceAgent } from "@/hooks/use-agent";
 import { BotTrainer } from "@/components/app/bot-trainer";
-import { BrainCircuit, Zap, CalendarClock, BadgeCheck, ArrowRight, Users, Database, Upload, Bot, Landmark, Search, Check } from "lucide-react";
+import { Zap, CalendarClock, BadgeCheck, ArrowRight, Users, Database, Upload, Bot, Landmark, Search, Check } from "lucide-react";
 import {
   WizardProgress,
   CampaignHealthPanel,
