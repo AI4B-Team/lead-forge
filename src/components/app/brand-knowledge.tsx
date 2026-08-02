@@ -123,37 +123,19 @@ export function KnowledgeOutcome() {
 
 const SAMPLE_QUESTIONS = [
   "What Financing Do We Offer?",
-  "How Do We Compare To Competitors?",
-  "What Do I Say When Someone Says We're Too Expensive?",
   "Summarize Our Warranty.",
-  "How Should I Respond To This Objection?",
   "What's Our Turnaround Time?",
-  "Do We Offer Free Estimates?",
-  "What Areas Do We Service?",
-  "What Are Our Business Hours?",
   "Are We Licensed And Insured?",
-  "What Makes Us Different?",
-  "Do We Offer Same-Day Service?",
-  "What Payment Methods Do We Accept?",
-  "How Long Has The Company Been In Business?",
-  "What's Our Cancellation Or Refund Policy?",
-  "Do We Have Financing For Larger Jobs?",
-  "How Soon Can We Get Someone Out?",
-  "What Should I Say If They Want To Think About It?",
-  "How Do I Handle A Price-Shopping Lead?",
-  "What Do I Say If They Already Have Another Quote?",
-  "Can We Match A Competitor's Price?",
-  "What Warranty Comes With The Work?",
 ];
 
-/** Concrete questions the trained AI can answer — sells the feature instantly. */
+/** De-emphasized preview for the pre-agent state — nothing to answer from yet. */
 export function SampleQuestions() {
   return (
     <div className="flex flex-wrap gap-2">
       {SAMPLE_QUESTIONS.map((q) => (
         <span
           key={q}
-          className="rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-medium text-foreground"
+          className="rounded-full border border-dashed border-border bg-background px-3.5 py-1.5 text-xs font-medium text-muted-foreground"
         >
           “{q}”
         </span>
