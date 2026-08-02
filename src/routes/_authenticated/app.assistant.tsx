@@ -939,12 +939,6 @@ function Assistant() {
         </div>
       </div>
 
-      <TemplatePickerDialog
-        open={allOpen}
-        onOpenChange={setAllOpen}
-        selectedId={selectedTemplate?.id ?? null}
-        onSelect={selectTemplate}
-      />
     </div>
   );
 
@@ -1081,6 +1075,14 @@ function Assistant() {
           onConfirm={saveMapping}
         />
       )}
+
+      {/* One source browser, mounted once: hero grid, panel row, and View All all use it. */}
+      <TemplatePickerDialog
+        open={allOpen}
+        onOpenChange={setAllOpen}
+        selectedId={selectedTemplate?.id ?? null}
+        onSelect={selectTemplate}
+      />
     </div>
   );
 }
