@@ -115,7 +115,9 @@ export const getLeadListMemberships = createServerFn({ method: "GET" })
       .eq("workspace_id", data.workspaceId)
       .eq("id", data.leadRecordId)
       .maybeSingle();
-    if (!record) return { lists: [] as Array<{ id: string; name: string; created_at: string }> };
+    type ListRef = { id: string; listId: string; name: string; created_at: string };
+    const empty = { lists: [] as ListRef[] };
+    if (!record) return empty;
 
     let rawQ = supabase
       .from("leads")
@@ -131,7 +133,7 @@ export const getLeadListMemberships = createServerFn({ method: "GET" })
     for (const r of raw ?? []) if (r.job_id) jobIds.add(r.job_id);
     if (record.first_seen_job_id) jobIds.add(record.first_seen_job_id);
     if (record.last_seen_job_id) jobIds.add(record.last_seen_job_id);
-    if (jobIds.size === 0) return { lists: [] };
+    if (jobIds.size === 0) return empty;
 
     const { data: jobs } = await supabase
       .from("jobs")
