@@ -179,7 +179,7 @@ export function KnowledgeHealth({ sources, score }: { sources: KnowledgeSource[]
           <div key={r.label} className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               {r.status === "ok" && <Check className="h-4 w-4 text-success" />}
-              {r.status === "warn" && <AlertTriangle className="h-4 w-4 text-warning" />}
+              {r.status === "warn" && <AlertTriangle className="h-4 w-4 text-warn" />}
               {r.status === "missing" && <Minus className="h-4 w-4 text-muted-foreground" />}
               {r.label}
             </div>
