@@ -456,7 +456,7 @@ function JobDetail() {
               icon={<Smartphone className="h-3.5 w-3.5" />}
               value={estimate.reach.toLocaleString()}
               label="Launch-Ready Leads"
-              note={isCreatorRun ? "Contact Emails" : "Mobile Phones"}
+              note={isCreatorRun || channel === "email" ? "Contact Emails" : "Mobile Phones"}
             />
             <MoneyStat
               icon={<Send className="h-3.5 w-3.5" />}
@@ -519,7 +519,18 @@ function JobDetail() {
             <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/lists" })}>
               Back To Lists
             </Button>
-            {campaignable && <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />}
+            {campaignable ? (
+              <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />
+            ) : (
+              isReady &&
+              counts.clean > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    {channelPrimaryAction(channel).note}
+                  </span>
+                </div>
+              )
+            )}
           </div>
         </div>
       </div>
