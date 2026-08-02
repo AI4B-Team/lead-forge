@@ -398,6 +398,7 @@ function JobDetail() {
             <span className="font-display text-2xl font-black tabular-nums text-foreground">
               {isReady ? quality : "—"}<span className="text-sm text-muted-foreground">/100</span>
             </span>
+            <div className="h-8 w-px bg-border" aria-hidden="true" />
             {isReady && <span className="text-sm font-semibold text-muted-foreground">{grade.label}</span>}
           </div>
         </CardHeader>
