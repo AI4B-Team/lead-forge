@@ -12,6 +12,8 @@ export const listThreads = createServerFn({ method: "GET" })
       filter: z
         .enum(["all", "needs_reply", "interested", "appointments", "ai", "unread", "optouts"])
         .default("all"),
+      // Optional per-contact label filter (inbox-native lead tags).
+      tagId: z.string().uuid().optional(),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -109,6 +111,26 @@ export const listThreads = createServerFn({ method: "GET" })
     const leadMap = new Map(leads.map((l) => [l.id, l]));
     const campaignMap = new Map(campaigns.map((c) => [c.id, c]));
 
+    // Lead-level tags (inbox-managed labels), keyed by lead.
+    const leadTagRows = leadIds.length
+      ? await context.supabase
+          .from("lead_tags")
+          .select("lead_id, tags(id, name, color)")
+          .eq("workspace_id", data.workspaceId)
+          .in("lead_id", leadIds)
+          .then((r) => r.data ?? [])
+      : [];
+    const tagsByLead = new Map<string, Array<{ id: string; name: string; color: string }>>();
+    for (const row of leadTagRows as unknown as Array<{
+      lead_id: string;
+      tags: { id: string; name: string; color: string } | null;
+    }>) {
+      if (!row.tags) continue;
+      const list = tagsByLead.get(row.lead_id) ?? [];
+      list.push(row.tags);
+      tagsByLead.set(row.lead_id, list);
+    }
+
     const enriched = threads.map((t) => {
       const lead = t.lead_id ? leadMap.get(t.lead_id) ?? null : null;
       const intent = classifyIntent(t.inbound_bodies.join(" "), t.is_optout);
@@ -124,6 +146,7 @@ export const listThreads = createServerFn({ method: "GET" })
       return {
         ...t,
         lead,
+        lead_tags: t.lead_id ? tagsByLead.get(t.lead_id) ?? [] : [],
         campaign: t.campaign_id ? campaignMap.get(t.campaign_id) ?? null : null,
         intent,
         badges,
@@ -133,7 +156,11 @@ export const listThreads = createServerFn({ method: "GET" })
       };
     });
 
-    const filtered = enriched.filter((t) => {
+    const tagScoped = data.tagId
+      ? enriched.filter((t) => t.lead_tags.some((tg) => tg.id === data.tagId))
+      : enriched;
+
+    const filtered = tagScoped.filter((t) => {
       switch (data.filter) {
         case "unread":
           return t.unread > 0;

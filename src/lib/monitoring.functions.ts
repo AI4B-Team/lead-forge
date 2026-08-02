@@ -53,6 +53,32 @@ export const listLeadRecords = createServerFn({ method: "GET" })
     const { data: rows, error } = await q;
     if (error) throw error;
 
+    // Lead tags are per-contact labels applied anywhere (inbox, leads page).
+    // lead_records roll up by phone, so we map tags through the raw leads rows.
+    const phones = (rows ?? []).map((r) => r.phone).filter((p): p is string => !!p);
+    const tagsByPhone = new Map<string, Array<{ id: string; name: string; color: string }>>();
+    if (phones.length) {
+      const { data: tagRows } = await supabase
+        .from("lead_tags")
+        .select("tags(id, name, color), leads!inner(phone)")
+        .eq("workspace_id", data.workspaceId)
+        .in("leads.phone", phones);
+      for (const row of (tagRows ?? []) as unknown as Array<{
+        tags: { id: string; name: string; color: string } | null;
+        leads: { phone: string | null } | null;
+      }>) {
+        const phone = row.leads?.phone;
+        if (!phone || !row.tags) continue;
+        const list = tagsByPhone.get(phone) ?? [];
+        if (!list.some((t) => t.id === row.tags!.id)) list.push(row.tags);
+        tagsByPhone.set(phone, list);
+      }
+    }
+    const rowsWithTags = (rows ?? []).map((r) => ({
+      ...r,
+      tags: r.phone ? tagsByPhone.get(r.phone) ?? [] : [],
+    }));
+
     // Header stat cards — counts, not charts.
     function baseCount() {
       return supabase
@@ -85,7 +111,7 @@ export const listLeadRecords = createServerFn({ method: "GET" })
     }
 
     return {
-      rows: rows ?? [],
+      rows: rowsWithTags,
       stats: {
         total: total.count ?? 0,
         clean: clean.count ?? 0,
