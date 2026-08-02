@@ -12,7 +12,6 @@ import { getCampaignDetail, tickCampaign, updateCampaignStatus, updateCampaignCo
 import { BotConsole } from "@/components/app/bot-console";
 import { BotTrainer } from "@/components/app/bot-trainer";
 import { useWorkspaceAgent } from "@/hooks/use-agent";
-import { Bot } from "lucide-react";
 import { DripEditor, type DripStep } from "@/components/app/drip-editor";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 
