@@ -71,7 +71,8 @@ export const requestCoverage = createServerFn({ method: "POST" })
         workspaceId: z.string().uuid(),
         county: z.string().max(80).nullable().default(null),
         recordType: z.string().max(80).nullable().default(null),
-        type: z.enum(["county", "record_type"]).default("county"),
+        templateId: z.string().max(60).nullable().default(null),
+        type: z.enum(["county", "record_type", "template_adapter"]).default("county"),
       })
       .parse(input),
   )
@@ -80,6 +81,7 @@ export const requestCoverage = createServerFn({ method: "POST" })
       workspace_id: data.workspaceId,
       county: data.county,
       record_type: data.recordType,
+      template_id: data.templateId,
       type: data.type,
     });
     if (error) throw new Error(error.message);
