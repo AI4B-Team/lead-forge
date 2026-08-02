@@ -231,7 +231,7 @@ function Compliance() {
             <div className="mt-2 text-sm text-muted-foreground">Across Every Campaign</div>
             <div className="my-5 h-px bg-border" />
             <div className="grid grid-cols-3 gap-3">
-              <SupChip label="Opt-Out" value={data?.suppression.opt_out ?? 0} tone="success" />
+              <SupChip label="Opt-Out" value={data?.suppression.opt_out ?? 0} tone="danger" />
               <SupChip label="DNC" value={data?.suppression.dnc ?? 0} tone="warn" />
               <SupChip label="Manual" value={data?.suppression.manual ?? 0} tone="muted" />
             </div>
