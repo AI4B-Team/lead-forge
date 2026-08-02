@@ -162,13 +162,8 @@ function AgentPage() {
     enabled: !!agent,
   });
   const sources = knowledge ?? [];
-  const catCounts = KNOWLEDGE_CARDS.map((c) => ({
-    key: c.key,
-    label: c.title,
-    unit: c.unit,
-    count: sources.filter((x) => x.category === c.key).length,
-  }));
-  const score = knowledgeScore(sources);
+  const readiness = agentReadiness(sources);
+  const score = readiness.score;
   const totalChars = sources.reduce((a, s) => a + s.chars, 0);
   const lastTrained = sources[0]?.created_at;
 
@@ -236,18 +231,45 @@ function AgentPage() {
                     </div>
                   </div>
                   <div className="pb-1 text-right text-sm font-semibold text-foreground">
-                    {score >= 80 ? (
+                    {readiness.state === "Well-Trained" ? (
                       <span className="inline-flex items-center gap-1.5 text-success">
-                        <CheckCircle2 className="h-4 w-4" /> Agent Ready
+                        <CheckCircle2 className="h-4 w-4" /> Well-Trained
                       </span>
                     ) : (
-                      "Needs More Training"
+                      readiness.state
                     )}
+                    <div className="mt-0.5 text-[11px] font-normal text-muted-foreground">
+                      {readiness.coveredCount} Of 8 Source Types Covered
+                    </div>
                   </div>
                 </div>
                 <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-muted">
                   <div className="h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${score}%` }} />
                 </div>
+
+                {/* Next step by coverage, never by character quota. */}
+                {readiness.nextGap ? (
+                  <button
+                    type="button"
+                    onClick={() => openKnowledgeSource(readiness.nextGap!.key)}
+                    className="mt-4 flex w-full items-start gap-2.5 rounded-xl border border-border bg-muted/40 px-3.5 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5"
+                  >
+                    <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span className="min-w-0">
+                      <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                        Biggest Gap — {readiness.nextGap.label}
+                      </span>
+                      <span className="mt-0.5 block text-sm font-medium text-foreground">
+                        {readiness.nextGap.capability}.
+                      </span>
+                    </span>
+                  </button>
+                ) : (
+                  <div className="mt-4 rounded-xl border border-border bg-muted/40 px-3.5 py-3 text-sm text-muted-foreground">
+                    Every Source Type Has Real Content. Keep Adding Real Conversations And Answers — An Agent Is Never Finished.
+                  </div>
+                )}
+
                 <div className="mt-2.5 flex items-start gap-1.5 text-xs text-muted-foreground">
                   <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
                   Your Agent Only Answers From Knowledge You Approve — Nothing Invented.
@@ -262,21 +284,31 @@ function AgentPage() {
                     Knowledge
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {totalChars >= 1000 ? `${Math.round(totalChars / 1000)}k` : totalChars} Chars Indexed
+                    {formatChars(totalChars)} Indexed
                   </div>
                 </div>
                 <div className="mt-3 divide-y divide-border">
-                  {catCounts.map((c) => (
-                    <div key={c.key} className="flex items-center justify-between py-1.5 text-sm">
-                      <span className="text-foreground">{c.label}</span>
-                      {c.count === 0 ? (
-                        <span className="text-xs text-muted-foreground/70">Missing</span>
-                      ) : (
-                        <span className="text-xs font-medium tabular-nums text-foreground">
-                          {c.count} {c.count === 1 ? c.unit : `${c.unit}s`}
-                        </span>
-                      )}
-                    </div>
+                  {readiness.depths.map((d) => (
+                    <button
+                      key={d.key}
+                      type="button"
+                      onClick={() => openKnowledgeSource(d.key)}
+                      className="flex w-full items-center justify-between gap-3 py-1.5 text-left text-sm transition hover:text-primary"
+                    >
+                      <span className="truncate text-foreground">{d.label}</span>
+                      <span
+                        className={`shrink-0 text-xs tabular-nums ${
+                          d.covered
+                            ? "font-medium text-foreground"
+                            : d.thin
+                              ? "font-medium text-warn"
+                              : "text-muted-foreground/70"
+                        }`}
+                      >
+                        {d.detail}
+                        {d.thin ? " · Thin" : ""}
+                      </span>
+                    </button>
                   ))}
                 </div>
               </CardContent>
