@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  Building2, Home, Sun, Shield, Wrench, Briefcase, MoreHorizontal, Check, Plug,
+  Building2, Home, Sun, Shield, Wrench, Briefcase, MoreHorizontal, Check,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
@@ -118,21 +118,6 @@ function Settings() {
             </CardContent>
           </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base font-display">
-              <Plug className="h-4 w-4 text-primary" /> Integrations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Webhooks, API Access, And Suite Connections Now Live On Their Own Page.
-            </p>
-            <Button variant="outline" className="mt-3 rounded-full" asChild>
-              <Link to="/app/integrations">Open Integrations</Link>
-            </Button>
-          </CardContent>
-        </Card>
       </div>
       </SettingsShell>
     </div>
