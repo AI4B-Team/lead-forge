@@ -912,7 +912,7 @@ function Assistant() {
         <div className="shrink-0">
           <PageHeader
             title="AI Lead Assistant"
-            description="Describe The Leads You Want. The Assistant Interprets It, Assembles The List, And Hands You The Controls To Review."
+            description="Describe The Leads You Want — Or Set It Up Yourself In List Settings. Nothing Runs Until You Approve."
             descriptionClassName="whitespace-nowrap !max-w-none"
             actions={
               <Button variant="outline" className="rounded-full" onClick={startOver}>
@@ -931,6 +931,20 @@ function Assistant() {
         <Card className="flex min-h-0 flex-col lg:h-full">
           <CardContent className="flex min-h-0 flex-1 flex-col p-4 md:p-5">
             <div ref={scroller} className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
+              {!hasChat && (
+                // Panel-only mode: the assembly checklist still leads, with no chat turn.
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    LeadTrace
+                  </div>
+                  <div className="mt-1.5 text-sm text-foreground">
+                    Set it up in List Settings on the right, or type below and I'll fill it in for you.
+                  </div>
+                  <div className="mt-3">
+                    <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
+                  </div>
+                </div>
+              )}
               {thread.map((m, i) => (
                   <div key={i}>
                     {m.role === "system" ? (
