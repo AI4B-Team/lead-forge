@@ -285,7 +285,7 @@ export function SequenceAnalytics({
             <span className="w-24 text-right text-xs font-semibold text-foreground">
               {i === 0 ? `${t.lift}% Reply` : `+${t.lift}%`}
             </span>
-            <span className="w-20 text-right text-[11px] text-muted-foreground">{t.chars} Characters</span>
+            <span className="w-24 text-right text-[11px] text-muted-foreground">{t.chars} Characters</span>
           </div>
         ))}
       </CardContent>
