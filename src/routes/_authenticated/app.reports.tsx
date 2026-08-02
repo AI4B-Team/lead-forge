@@ -49,7 +49,7 @@ function Performance() {
     );
   }
 
-  const { kpis, deltas, daily, funnel, campaigns, bestMessage, insights, timing } = data;
+  const { kpis, deltas, daily, funnel, campaigns, bestMessage, insights, timing, historyReady } = data;
 
   const week = weekOverWeek(daily);
   const bestCampaign = campaigns[0] ? { id: campaigns[0].id, name: campaigns[0].name } : null;
@@ -76,12 +76,16 @@ function Performance() {
               value={kpis.appointments.toLocaleString()}
               deltaPct={deltas.appointments}
               icon={CalendarCheck}
+              isEmpty={kpis.appointments === 0}
+              emptyHint="No Appointments Booked Yet — They Appear Here Once Leads Schedule."
             />
             <KpiCard
               label="Reply Rate"
               value={pct(kpis.replyRate)}
               deltaPct={deltas.replyRate}
               icon={Reply}
+              isEmpty={kpis.sent === 0}
+              emptyHint="Reply Rate Starts Once Your First Messages Go Out."
             />
             <KpiCard
               label="Pipeline Value"
@@ -89,19 +93,32 @@ function Performance() {
               deltaPct={deltas.pipeline}
               icon={DollarSign}
               emphasis
+              isEmpty={kpis.pipeline === 0}
+              emptyHint="Pipeline Value Builds As Qualified Leads Convert To Appointments."
             />
           </div>
 
           <div className="border-t border-border pt-4">
-            <WeeklySummary
-              rows={[
-                { label: "Replies", deltaPct: week.replies },
-                { label: "Qualified", deltaPct: week.qualified },
-                { label: "Appointments", deltaPct: week.appointments },
-                { label: "Opt-Outs", deltaPct: week.optOuts, invert: true },
-              ]}
-              bestCampaign={bestCampaign}
-            />
+            {week.ready ? (
+              <WeeklySummary
+                rows={[
+                  { label: "Replies", deltaPct: week.replies },
+                  { label: "Qualified", deltaPct: week.qualified },
+                  { label: "Appointments", deltaPct: week.appointments },
+                  { label: "Opt-Outs", deltaPct: week.optOuts, invert: true },
+                ]}
+                bestCampaign={bestCampaign}
+              />
+            ) : (
+              <div className="flex flex-wrap items-center gap-x-3 text-sm">
+                <span className="font-display text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                  This Week
+                </span>
+                <span className="text-muted-foreground">
+                  Not Enough History Yet — Week-Over-Week Movement Appears After Two Weeks Of Sending.
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="border-t border-border pt-6">
@@ -128,9 +145,14 @@ function Performance() {
               invert
               tone={kpis.optOutRate > 0.05 ? "danger" : undefined}
             />
-            <Secondary label="Most Responsive Time" value={timing.bestBand ?? "—"} />
-            <Secondary label="Best Send Day" value={timing.bestDay ?? "—"} />
+            <Secondary label="Most Responsive Time" value={kpis.replies ? timing.bestBand ?? "—" : "—"} />
+            <Secondary label="Best Send Day" value={kpis.replies ? timing.bestDay ?? "—" : "—"} />
           </div>
+          {!historyReady && (
+            <p className="text-xs text-muted-foreground">
+              Comparisons Are Hidden Until The Prior Period Has Enough Sending History To Measure Against.
+            </p>
+          )}
           <div className="border-t border-border pt-2">
             <PerformanceChart daily={daily} />
           </div>
@@ -161,10 +183,12 @@ function weekOverWeek(
   const move = (key: "replies" | "qualified" | "appointments" | "optOuts") => {
     const a = sum(last, key);
     const b = sum(prior, key);
-    if (!b) return a ? 100 : null;
+    if (!b) return null;
     return Math.round(((a - b) / b) * 100);
   };
   return {
+    // Movement only means something when the prior week actually had activity.
+    ready: sum(prior, "replies") + sum(prior, "qualified") + sum(prior, "appointments") >= 3,
     replies: move("replies"),
     qualified: move("qualified"),
     appointments: move("appointments"),
