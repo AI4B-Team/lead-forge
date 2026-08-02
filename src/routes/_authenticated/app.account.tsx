@@ -125,7 +125,9 @@ function AccountPage() {
       />
       <Tabs
         value={tab ?? "profile"}
-        onValueChange={(v) => navigate({ search: { tab: v as "profile" | "security" }, replace: true })}
+        onValueChange={(v) =>
+          navigate({ search: { tab: v as "profile" | "security" | "notifications" }, replace: true })
+        }
       >
         <TabsContent value="profile" className="mt-0">
           <div className="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
