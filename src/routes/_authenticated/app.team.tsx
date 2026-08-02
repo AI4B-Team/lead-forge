@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Trash2, UserPlus, Mail, Users, Clock, Armchair, Coins } from "lucide-react";
+import { Copy, Trash2, UserPlus, Mail, Users, Clock, Armchair, Coins, Info } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsShell } from "@/components/app/settings-shell";
 import { StatTile } from "@/components/app/stat-tile";
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { listTeam, inviteTeamMember, revokeInvite } from "@/lib/team.functions";
 import { revokeSeat, setMemberRole } from "@/lib/accountability.functions";
 import { ROLE_BLURB, ROLE_LABEL, WORKSPACE_ROLES, type WorkspaceRole } from "@/lib/team-roles.shared";
@@ -147,7 +148,19 @@ function TeamPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="invite-role">Role</Label>
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor="invite-role">Role</Label>
+                  <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[220px] text-center">
+                        <p>{ROLE_BLURB[role]}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Select value={role} onValueChange={(v) => setRole(v as WorkspaceRole)}>
                   <SelectTrigger id="invite-role" className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -163,7 +176,7 @@ function TeamPage() {
             </div>
             <div className="grid md:grid-cols-[1fr_180px_auto] gap-3">
               <div />
-              <p className="text-xs text-muted-foreground">{ROLE_BLURB[role]}</p>
+              <p className="text-xs text-muted-foreground text-center">{ROLE_BLURB[role]}</p>
               <div />
             </div>
           </div>
