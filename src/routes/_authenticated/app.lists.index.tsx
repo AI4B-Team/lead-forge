@@ -44,7 +44,8 @@ import { JobStageFlow } from "@/components/app/job-stage-flow";
 import { StatTile } from "@/components/app/stat-tile";
 import { buildPipelineStages } from "@/lib/pipeline-stages";
 import { isStalled, isRunningStatus, stallReason, STALL_HOURS } from "@/lib/job-watchdog";
-import { getTemplate, CATEGORY_LABELS, type TemplateCategory } from "@/lib/templates";
+import { getTemplate, CATEGORY_LABELS, type Template, type TemplateCategory } from "@/lib/templates";
+import { TemplateLogo } from "@/components/marketing/template-logo";
 
 export const Route = createFileRoute("/_authenticated/app/lists/")({
   head: () => ({ meta: [{ title: "Lists — LeadTrace" }] }),
@@ -58,25 +59,39 @@ const SOURCE_META: Record<string, { label: string; icon: typeof Landmark }> = {
   assistant: { label: "AI Assistant", icon: Sparkles },
 };
 
-/** Top-level buckets for the template-aware source filter. */
-const TEMPLATE_GROUP: Record<TemplateCategory, string> = {
-  business: "Business",
-  directories: "Business",
-  search: "Business",
-  records: "Public Records",
-  realestate: "Real Estate",
-  social: "Social",
-  upload: "Upload",
-  ecommerce: "Other",
-  jobs: "Other",
-  reviews: "Other",
-  travel: "Other",
-  finance: "Other",
-  education: "Other",
-  news: "Other",
-  sports: "Other",
+/**
+ * Filter groups mirror the template catalog's own categories, so the menu
+ * grows automatically as the workspace branches into new sources. "other"
+ * catches legacy runs with no template mapping.
+ */
+type SourceGroup = TemplateCategory | "other";
+const GROUP_ORDER: SourceGroup[] = [
+  "business",
+  "directories",
+  "records",
+  "realestate",
+  "social",
+  "ecommerce",
+  "jobs",
+  "reviews",
+  "search",
+  "travel",
+  "finance",
+  "education",
+  "news",
+  "sports",
+  "upload",
+  "other",
+];
+const GROUP_LABEL = (g: SourceGroup) => (g === "other" ? "Other" : CATEGORY_LABELS[g]);
+
+/** Legacy source_type → catalog category, for runs predating template ids. */
+const LEGACY_GROUP: Record<string, SourceGroup> = {
+  business: "business",
+  records: "records",
+  upload: "upload",
+  assistant: "other",
 };
-const GROUP_ORDER = ["Business", "Public Records", "Real Estate", "Social", "Upload", "Other"];
 
 /** Label + filter key for a run: its template when known, else its source. */
 function sourceIdentity(job: { template_id?: string | null; source_type: string }) {
@@ -85,23 +100,18 @@ function sourceIdentity(job: { template_id?: string | null; source_type: string 
     return {
       key: `tpl:${tpl.id}`,
       label: tpl.title,
-      group: TEMPLATE_GROUP[tpl.category] ?? "Other",
+      group: tpl.category as SourceGroup,
       categoryLabel: CATEGORY_LABELS[tpl.category],
+      template: tpl as Template | undefined,
     };
   const meta = SOURCE_META[job.source_type];
-  const group =
-    job.source_type === "records"
-      ? "Public Records"
-      : job.source_type === "upload"
-        ? "Upload"
-        : job.source_type === "business"
-          ? "Business"
-          : "Other";
+  const group = LEGACY_GROUP[job.source_type] ?? "other";
   return {
     key: `src:${job.source_type}`,
     label: meta?.label ?? job.source_type,
     group,
-    categoryLabel: undefined,
+    categoryLabel: GROUP_LABEL(group),
+    template: undefined as Template | undefined,
   };
 }
 
