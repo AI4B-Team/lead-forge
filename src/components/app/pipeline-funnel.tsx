@@ -28,6 +28,7 @@ export function PipelineFunnel({
   traced,
   size = "lg",
   animate = false,
+  completedThrough,
   className,
 }: {
   stages: FunnelStages;
@@ -36,6 +37,8 @@ export function PipelineFunnel({
   size?: "lg" | "sm";
   /** Cascade the counts up one card at a time (results view only). */
   animate?: boolean;
+  /** Index of the last finished stage; arrows up to it render in brand red. */
+  completedThrough?: number;
   className?: string;
 }) {
   const small = size === "sm";
@@ -49,6 +52,7 @@ export function PipelineFunnel({
     clean: stages.clean,
   });
   const found = built[0]!.remaining;
+  const done = completedThrough ?? built.length - 1;
 
   return (
     <div className={cn("flex items-stretch", className)}>
@@ -114,7 +118,7 @@ export function PipelineFunnel({
                 <ChevronRight
                   className={cn(
                     // Completed hops glow brand-red: "we processed this successfully".
-                    complete ? "text-primary" : "text-muted-foreground/40",
+                    i < done ? "text-primary" : "text-muted-foreground/40",
                     small ? "h-3 w-3" : "h-4 w-4",
                   )}
                   strokeWidth={2.5}

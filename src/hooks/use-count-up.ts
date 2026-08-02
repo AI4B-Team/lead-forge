@@ -10,7 +10,7 @@ export function useCountUp(target: number, opts?: { duration?: number; delay?: n
   const delay = opts?.delay ?? 0;
   const enabled = opts?.enabled ?? true;
   const [value, setValue] = useState(enabled ? 0 : target);
-  const frame = useRef<number>();
+  const frame = useRef<number | null>(null);
 
   useEffect(() => {
     const reduce =
@@ -21,7 +21,7 @@ export function useCountUp(target: number, opts?: { duration?: number; delay?: n
       return;
     }
     let start: number | null = null;
-    let timer: ReturnType<typeof setTimeout>;
+
     const step = (t: number) => {
       if (start == null) start = t;
       const p = Math.min(1, (t - start) / duration);
@@ -30,7 +30,7 @@ export function useCountUp(target: number, opts?: { duration?: number; delay?: n
       if (p < 1) frame.current = requestAnimationFrame(step);
     };
     setValue(0);
-    timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       frame.current = requestAnimationFrame(step);
     }, delay);
     return () => {
