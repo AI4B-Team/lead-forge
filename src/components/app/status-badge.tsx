@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { statusLabel, type JobStatus } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { resolveListStatus } from "@/lib/list-status";
 
 type Tone = "green" | "blue" | "yellow" | "gray" | "red" | "purple";
 
@@ -51,6 +52,31 @@ export function StatusBadge({ status }: { status: JobStatus | "scheduled" | "pau
   return (
     <Badge variant="outline" className={cn(TONE_CLASS[tone], "gap-1.5 font-medium")}>
       <span className={cn("h-1.5 w-1.5 rounded-full", DOT_CLASS[tone], RUNNING.has(status) && "animate-pulse")} />
+      {label}
+    </Badge>
+  );
+}
+
+/**
+ * Lifecycle pill for a list/run — single line, row-height safe. Uses the shared
+ * status config so the table and the run detail page always agree.
+ */
+export function ListStatusBadge({
+  status,
+  stalled,
+  className,
+}: {
+  status?: string | null;
+  stalled?: boolean;
+  className?: string;
+}) {
+  const { tone, label, running } = resolveListStatus(status, stalled);
+  return (
+    <Badge
+      variant="outline"
+      className={cn(TONE_CLASS[tone], "gap-1.5 whitespace-nowrap font-medium", className)}
+    >
+      <span className={cn("h-1.5 w-1.5 rounded-full", DOT_CLASS[tone], running && "animate-pulse")} />
       {label}
     </Badge>
   );
