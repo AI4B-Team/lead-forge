@@ -51,9 +51,9 @@ function AppLayout() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex"><HelpMenu onStartTour={tour.start} /></span>
+                    <span className="inline-flex"><ActivityPanel /></span>
                   </TooltipTrigger>
-                  <TooltipContent>Help</TooltipContent>
+                  <TooltipContent>Activity</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -63,9 +63,9 @@ function AppLayout() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex"><ActivityPanel /></span>
+                    <span className="inline-flex"><HelpMenu onStartTour={tour.start} /></span>
                   </TooltipTrigger>
-                  <TooltipContent>Activity</TooltipContent>
+                  <TooltipContent>Help</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
