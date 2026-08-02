@@ -305,7 +305,7 @@ function Dashboard() {
             <HeroStat
               label="Deliverability"
               value={metrics.deliverability ? `${metrics.deliverability}%` : "—"}
-              info={metrics.deliverability ? undefined : "Starts tracking with your first campaign"}
+              info={metrics.deliverability ? undefined : "Starts Tracking With Your First Campaign"}
             />
             <HeroStat label="Credits" value={totalCredits.toLocaleString()} />
           </TooltipProvider>
@@ -319,7 +319,7 @@ function Dashboard() {
           icon={<ListChecks className="h-4 w-4" />}
           label="Lists"
           value={metrics.lists.toString()}
-          note={metrics.processing ? `${metrics.processing} running` : "All processed"}
+          note={metrics.processing ? `${metrics.processing} Running` : "All Processed"}
           noteTone={metrics.processing ? "success" : undefined}
         />
         <Metric
@@ -328,15 +328,15 @@ function Dashboard() {
           value={(metrics.sending + metrics.scheduled).toString()}
           note={
             metrics.sending + metrics.scheduled
-              ? `${metrics.sending} sending · ${metrics.scheduled} scheduled`
+              ? `${metrics.sending} Sending · ${metrics.scheduled} Scheduled`
               : undefined
           }
           noteNode={
             metrics.sending + metrics.scheduled ? undefined : (
               <>
-                None running yet —{" "}
+                None Running Yet —{" "}
                 <Link to="/app/campaigns/new" className="font-semibold text-primary underline-offset-2 hover:underline">
-                  launch your first
+                  Launch Your First
                 </Link>
               </>
             )
