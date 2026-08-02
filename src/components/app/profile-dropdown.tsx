@@ -123,8 +123,8 @@ export function ProfileDropdown({ className }: { className?: string }) {
             >
               {initials || <User className="h-5 w-5" />}
             </div>
-            <div className="absolute -right-0.5 -bottom-0.5 h-5 w-5 rounded-full bg-background border border-border flex items-center justify-center">
-              <User className="h-3 w-3 text-muted-foreground" />
+            <div className="absolute -right-0.5 -bottom-0.5 h-5 w-5 rounded-full bg-highlight border border-background flex items-center justify-center">
+              <User className="h-3 w-3 text-foreground" />
             </div>
           </div>
           <div className="flex-1 min-w-0">
