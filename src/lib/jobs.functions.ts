@@ -485,10 +485,11 @@ export const setListChannel = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = { channel: data.channel };
     // Only SMS lists can auto-send, so switching away turns auto-launch off.
-    if (data.channel !== "sms") patch.auto_launch = false;
-    const { error } = await context.supabase.from("jobs").update(patch).eq("id", data.jobId);
+    const { error } = await context.supabase
+      .from("jobs")
+      .update({ channel: data.channel, ...(data.channel === "sms" ? {} : { auto_launch: false }) })
+      .eq("id", data.jobId);
     if (error) throw error;
     return { ok: true, channel: data.channel };
   });
