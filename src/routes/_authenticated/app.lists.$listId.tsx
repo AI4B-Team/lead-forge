@@ -504,7 +504,7 @@ function JobDetail() {
                           ? "Records — Email-Ready (SMS Is US-Only)"
                           : isCreatorRun
                             ? "Creators With Contact Emails"
-                            : "Verified Leads"
+                            : CHANNEL_LEAD_NOUN[channel]
                     }`
                   : isReady
                     ? "Try A Wider Area Or Another Niche."
