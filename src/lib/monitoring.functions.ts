@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { formatJobName } from "@/lib/job-naming";
 
 // Recurring-scan monitoring layer (spec §15.1) + the cumulative Leads asset
 // (spec §14). Everything here reports what the system actually did — no
