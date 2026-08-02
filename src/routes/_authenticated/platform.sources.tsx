@@ -9,9 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  ,
-} from "@/components/app/admin-shared";
 import { listSourceDemand, listSourceRequesters } from "@/lib/admin.functions";
 import { FREQUENCY_LABEL, LOGIN_LABEL } from "@/lib/source-request.shared";
 
@@ -37,6 +34,7 @@ function SourceRequestsPage() {
   const requestersQ = useQuery({
     queryKey: ["admin-source-requesters", openKey],
     queryFn: () => fetchRequesters({ data: { sourceKey: openKey as string } }),
+    enabled: Boolean(openKey),
   });
 
   const rows = demandQ.data?.demand ?? [];
