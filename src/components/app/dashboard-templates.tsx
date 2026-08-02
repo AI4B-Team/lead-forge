@@ -56,7 +56,7 @@ export function DashboardTemplates() {
         </Button>
       </CardHeader>
       <CardContent>
-        <div role="tablist" className="mb-4 inline-flex flex-wrap items-center gap-1 rounded-lg bg-muted p-1 text-muted-foreground">
+        <div role="tablist" className="mb-4 flex flex-wrap items-center gap-2">
           {TABS.map((t) => (
             <button
               key={t.key}
@@ -65,8 +65,10 @@ export function DashboardTemplates() {
               aria-selected={t.key === tab}
               onClick={() => setTab(t.key)}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                t.key === tab ? "bg-background text-foreground shadow-sm" : "hover:text-foreground",
+                "rounded-full border px-4 py-1.5 text-sm font-medium transition",
+                t.key === tab
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-surface text-foreground hover:bg-surface-muted",
               )}
             >
               {t.label}
