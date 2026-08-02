@@ -19,6 +19,7 @@ import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
 import { LeadTagChips } from "@/components/app/lead-tag-picker";
 import { PhoneCell, EmailCell } from "@/components/app/channel-icons";
 import { mailingAddress } from "@/lib/contact-channels";
+import { presentFieldKeys, LEAD_FIELDS, type LeadFieldKey } from "@/lib/lead-fields";
 
 export const Route = createFileRoute("/_authenticated/app/leads")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -169,6 +170,15 @@ function LeadsPageInner() {
 
   const stats = data?.stats;
   const rows = data?.rows ?? [];
+  // Data-driven columns: the Leads master merges many list shapes, so its
+  // columns follow what's present in the CURRENT filtered view — never one
+  // list's criteria. Website is a display field, never a contact channel.
+  const candidates: LeadFieldKey[] = ["phone", "email", "address", "website"];
+  const present = presentFieldKeys(rows as Array<Record<string, unknown>>, candidates);
+  const dynamicCols: LeadFieldKey[] = rows.length === 0
+    ? ["phone", "email"]
+    : candidates.filter((k) => present.has(k));
+  const colCount = dynamicCols.length + 4;
   const byRecordType = Object.entries(data?.byRecordType ?? {});
   const bySource = Object.entries(data?.bySource ?? {});
 
@@ -290,8 +300,9 @@ function LeadsPageInner() {
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="p-4">Name / Business</th>
-                <th className="p-4">Phone</th>
-                <th className="p-4">Email</th>
+                {dynamicCols.map((k) => (
+                  <th key={k} className="p-4">{LEAD_FIELDS[k].label}</th>
+                ))}
                 <th className="p-4">Disposition</th>
                 <th className="p-4">Lists</th>
                 <th className="p-4">Last Seen</th>
@@ -299,10 +310,10 @@ function LeadsPageInner() {
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
+                <tr><td colSpan={colCount} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
               )}
               {!isLoading && rows.length === 0 && (
-                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">
+                <tr><td colSpan={colCount} className="p-8 text-center text-muted-foreground">
                   No Records Match These Filters Yet.
                 </td></tr>
               )}
@@ -341,12 +352,6 @@ function LeadsPageInner() {
                           {location || "Location Unknown"}
                           {sources ? <span className="text-muted-foreground/70"> · {sources}</span> : null}
                         </div>
-                        {/* Direct mail stays out of the scanned columns — it lives with the record detail. */}
-                        {r.address && (
-                          <div className="mt-0.5 truncate text-xs text-muted-foreground/70" title={mailingAddress(contact)}>
-                            {r.address}
-                          </div>
-                        )}
                         {!!r.tags?.length && (
                           <div className="mt-1">
                             <LeadTagChips tags={r.tags} max={4} />
@@ -355,12 +360,36 @@ function LeadsPageInner() {
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <PhoneCell contact={contact} />
-                  </td>
-                  <td className="p-4">
-                    <EmailCell contact={contact} />
-                  </td>
+                  {dynamicCols.map((k) => (
+                    <td key={k} className="p-4">
+                      {k === "phone" ? (
+                        <PhoneCell contact={contact} />
+                      ) : k === "email" ? (
+                        <EmailCell contact={contact} />
+                      ) : k === "address" ? (
+                        r.address ? (
+                          <div className="max-w-[200px]">
+                            <div className="truncate text-foreground" title={mailingAddress(contact)}>{r.address}</div>
+                            <div className="text-xs text-muted-foreground">Mailable</div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground/40">—</span>
+                        )
+                      ) : r.website ? (
+                        <a
+                          href={/^https?:/.test(r.website) ? r.website : `https://${r.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block max-w-[180px] truncate text-foreground underline-offset-2 hover:underline"
+                          title={r.website}
+                        >
+                          {r.website.replace(/^https?:\/\//, "")}
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground/40">—</span>
+                      )}
+                    </td>
+                  ))}
                   <td className="p-4">
                     <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${DISPOSITION_TONE[r.disposition] ?? "border-border text-muted-foreground"}`}>
                       {r.disposition}
