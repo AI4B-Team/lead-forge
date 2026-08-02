@@ -14,12 +14,12 @@ export type TourStep = { anchor: string; title: string; body: string };
 
 export const TOUR_STEPS: TourStep[] = [
   {
-    anchor: "nav-new-job",
+    anchor: "nav-new-list",
     title: "Generate Leads",
     body: "Describe what you're after and where. We pull matching records from multiple sources — no downloads, no setup.",
   },
   {
-    anchor: "nav-new-job",
+    anchor: "nav-new-list",
     title: "Upload Your List",
     body: "Already have a list? Import your CSV and it runs the same pipeline minus the sourcing.",
   },
