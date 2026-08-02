@@ -39,11 +39,32 @@ export type VerifyResult<T> = {
  * Pure so the pipeline behavior is unit-testable.
  */
 export function verifyLineTypes<T extends VerifyInput>(rows: T[], mobileOnly: boolean): VerifyResult<T> {
+  return verifyBatch(rows, mobileOnly, false);
+}
+
+/**
+ * Same as verifyLineTypes, but rows with no phone at all are kept so skip
+ * trace still gets a chance to fill them before the final carrier gate.
+ */
+export function verifyPending<T extends VerifyInput>(rows: T[], mobileOnly: boolean): VerifyResult<T> {
+  return verifyBatch(rows, mobileOnly, true);
+}
+
+function verifyBatch<T extends VerifyInput>(
+  rows: T[],
+  mobileOnly: boolean,
+  keepMissing: boolean,
+): VerifyResult<T> {
   const counts: Record<LineType, number> = { mobile: 0, landline: 0, voip: 0, unknown: 0 };
   const kept: Array<T & { line_type: LineType }> = [];
   for (const row of rows) {
     const line_type = classifyLineType(row.phone);
     counts[line_type] += 1;
+    const missing = !(row.phone ?? "").replace(/\D/g, "");
+    if (keepMissing && missing) {
+      kept.push({ ...row, line_type });
+      continue;
+    }
     if (mobileOnly && !isTextable(line_type)) continue;
     kept.push({ ...row, line_type });
   }
