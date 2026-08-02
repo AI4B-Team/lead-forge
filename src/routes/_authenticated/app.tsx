@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-rout
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { Button } from "@/components/ui/button";
-import { Inbox, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { WorkspaceSwitcher } from "@/components/app/workspace-switcher";
 import { ProfileDropdown } from "@/components/app/profile-dropdown";
@@ -12,6 +12,7 @@ import { HelpMenu } from "@/components/app/help-menu";
 import { ProductTour, useProductTour } from "@/components/app/product-tour";
 import { CreditMenu } from "@/components/app/credit-menu";
 import { SeatGuard } from "@/components/app/seat-guard";
+import { InboxNavButton } from "@/components/app/needs-reply";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -43,14 +44,7 @@ function AppLayout() {
                     <Plus className="mr-1 h-3.5 w-3.5" /> Build List
                   </Button>
                 </div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button asChild size="icon" variant="ghost" className="rounded-full" data-tour="inbox" aria-label="Conversations">
-                      <Link to="/app/inbox"><Inbox className="h-4 w-4" /></Link>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Conversations</TooltipContent>
-                </Tooltip>
+                <InboxNavButton />
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="inline-flex"><ActivityPanel /></span>

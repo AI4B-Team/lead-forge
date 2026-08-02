@@ -43,6 +43,10 @@ import {
 import { SLASH_COMMANDS, classifyIntent, dayLabel } from "@/lib/conversation-intel";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    filter: typeof search.filter === "string" ? (search.filter as string) : undefined,
+    thread: typeof search.thread === "string" ? (search.thread as string) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Conversations — LeadTrace" },
@@ -85,9 +89,12 @@ function readArchive(): string[] {
 
 function ConversationsPage() {
   const { workspaceId } = useWorkspaceId();
-  const [filter, setFilter] = useState<Filter>("all");
+  const search = Route.useSearch();
+  const [filter, setFilter] = useState<Filter>(
+    (search.filter as Filter | undefined) ?? "all",
+  );
   const [showArchived, setShowArchived] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(search.thread ?? null);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [reply, setReply] = useState("");

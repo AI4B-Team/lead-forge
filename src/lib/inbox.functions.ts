@@ -103,7 +103,7 @@ export const listThreads = createServerFn({ method: "GET" })
       campaignIds.length
         ? context.supabase
             .from("campaigns")
-            .select("id, name, status")
+            .select("id, name, status, bot_enabled")
             .in("id", campaignIds)
             .then((r) => r.data ?? [])
         : Promise.resolve([]),
@@ -131,8 +131,11 @@ export const listThreads = createServerFn({ method: "GET" })
       tagsByLead.set(row.lead_id, list);
     }
 
+    const { computeNeedsReply, urgencyScore } = await import("@/lib/conversation-intel");
+
     const enriched = threads.map((t) => {
       const lead = t.lead_id ? leadMap.get(t.lead_id) ?? null : null;
+      const campaign = t.campaign_id ? campaignMap.get(t.campaign_id) ?? null : null;
       const intent = classifyIntent(t.inbound_bodies.join(" "), t.is_optout);
       const badges = detectBadges(t.inbound_bodies, t.is_optout);
       const score = leadScore({
@@ -143,16 +146,25 @@ export const listThreads = createServerFn({ method: "GET" })
         isOptout: t.is_optout,
         hasPhoneType: lead?.phone_type ?? null,
       });
+      const needs_reply = computeNeedsReply({
+        lastDirection: t.last_direction,
+        isOptout: t.is_optout,
+        botEnabled: !!(campaign as { bot_enabled?: boolean } | null)?.bot_enabled,
+        handoff: t.handoff,
+        intent,
+      });
       return {
         ...t,
         lead,
         lead_tags: t.lead_id ? tagsByLead.get(t.lead_id) ?? [] : [],
-        campaign: t.campaign_id ? campaignMap.get(t.campaign_id) ?? null : null,
+        campaign,
         intent,
         badges,
         score,
         sentiment: sentimentOf(t.inbound_bodies.join(" ")),
-        needs_reply: t.last_direction === "inbound" && !t.is_optout,
+        needs_reply,
+        bot_handling: !!(campaign as { bot_enabled?: boolean } | null)?.bot_enabled,
+        urgency: urgencyScore({ score, waitingSince: t.last_inbound_at ?? t.last_at }),
       };
     });
 
@@ -160,7 +172,7 @@ export const listThreads = createServerFn({ method: "GET" })
       ? enriched.filter((t) => t.lead_tags.some((tg) => tg.id === data.tagId))
       : enriched;
 
-    const filtered = tagScoped.filter((t) => {
+    let filtered = tagScoped.filter((t) => {
       switch (data.filter) {
         case "unread":
           return t.unread > 0;
@@ -178,6 +190,11 @@ export const listThreads = createServerFn({ method: "GET" })
           return true;
       }
     });
+
+    // The needs-reply surface is ordered by urgency, not raw recency.
+    if (data.filter === "needs_reply") {
+      filtered = [...filtered].sort((a, b) => b.urgency - a.urgency);
+    }
 
     // Counts drive the filter chips so operators see where attention is needed.
     const counts = {
