@@ -163,29 +163,11 @@ function IntegrationsPage() {
             </CardContent>
           </Card>
 
-          <section id="developer" className="scroll-mt-24">
+          <section id="webhooks" className="scroll-mt-24">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="font-display text-base font-bold text-foreground">Developer</h2>
-              <p className="text-xs text-muted-foreground">API Keys, Event Webhooks, And Payload Reference.</p>
+              <h2 className="font-display text-base font-bold text-foreground">Event Webhooks</h2>
+              <p className="text-xs text-muted-foreground">Endpoints, Delivery Status, And Payload Reference.</p>
             </div>
-
-            <Card className="mt-3">
-              <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
-                <CardTitle className="flex items-center gap-2 text-base font-display">
-                  <KeyRound className="h-4 w-4 text-primary" /> API Keys
-                </CardTitle>
-                <Badge variant="outline" className="text-muted-foreground">Coming Soon</Badge>
-              </CardHeader>
-              <CardContent className="flex flex-wrap items-center justify-between gap-4">
-                <p className="max-w-xl text-sm text-muted-foreground">
-                  Scoped, Revocable Keys For Reading Leads And Triggering Runs. Until Keys Ship,
-                  Webhooks Below Cover Most Custom Handoffs.
-                </p>
-                <Button variant="outline" size="sm" className="rounded-full" disabled>
-                  Create Key
-                </Button>
-              </CardContent>
-            </Card>
 
             <div className="mt-3">
               <WebhookEndpoints />
@@ -211,8 +193,11 @@ function IntegrationsPage() {
                 </CardHeader>
                 <CardContent className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-2">
-                    <Terminal className="h-3.5 w-3.5" /> Full API Docs Land With Public Keys.
+                    <Terminal className="h-3.5 w-3.5" /> API Keys And Docs Live On Developer & API.
                   </span>
+                  <Button variant="outline" size="sm" className="rounded-full" asChild>
+                    <Link to="/app/api">Open</Link>
+                  </Button>
                 </CardContent>
               </Card>
             </div>
