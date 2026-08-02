@@ -310,7 +310,7 @@ export function JobSpecCard({
   };
 
   // Labels and ordering come from the shared config the checklist also uses.
-  const toggles = optionsForSource(spec.sourceType);
+  const toggles = optionsForSource(spec.sourceType, spec.templateId);
 
   return (
     <Card>
