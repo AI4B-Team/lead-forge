@@ -188,6 +188,36 @@ function AccountPage() {
         </TabsContent>
 
         <TabsContent value="security" className="mt-0">
+          {null}
+        </TabsContent>
+
+        <TabsContent value="notifications" className="mt-0">
+          <div className="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
+            <div className="space-y-6">
+              <div>
+                <h2 className="font-display text-lg font-bold text-foreground">Notifications</h2>
+                <p className="text-sm text-muted-foreground">
+                  Choose What We Send You And Where. In-App Badges Stay On No Matter What.
+                </p>
+              </div>
+              <NotificationPrefs prefs={prefs} onChange={setPrefs} />
+              <Button className="rounded-full" onClick={savePrefs} disabled={savingPrefs}>
+                {savingPrefs ? "Saving..." : "Save Notifications"}
+              </Button>
+            </div>
+            <div className="space-y-6">
+              <IdentityCard
+                initials={initials || "LT"}
+                name={displayName}
+                email={user?.email ?? ""}
+                verified={!!user?.email_confirmed_at}
+              />
+              <SettingsSummary ownerName={displayName} />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="securityx" className="mt-0">
           <div className="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
             <div className="space-y-6">
               <Card>
