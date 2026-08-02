@@ -51,6 +51,7 @@ import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPlatformWorkspacesRouteImport } from './routes/_authenticated/platform.workspaces'
 import { Route as AuthenticatedPlatformSourcesRouteImport } from './routes/_authenticated/platform.sources'
 import { Route as AuthenticatedPlatformAccessRouteImport } from './routes/_authenticated/platform.access'
+import { Route as AuthenticatedAppWorkspaceRouteImport } from './routes/_authenticated/app.workspace'
 import { Route as AuthenticatedAppTemplatesRouteImport } from './routes/_authenticated/app.templates'
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
@@ -303,6 +304,12 @@ const AuthenticatedPlatformAccessRoute =
     id: '/access',
     path: '/access',
     getParentRoute: () => AuthenticatedPlatformRoute,
+  } as any)
+const AuthenticatedAppWorkspaceRoute =
+  AuthenticatedAppWorkspaceRouteImport.update({
+    id: '/workspace',
+    path: '/workspace',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppTemplatesRoute =
   AuthenticatedAppTemplatesRouteImport.update({
@@ -576,6 +583,7 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
+  '/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/platform/access': typeof AuthenticatedPlatformAccessRoute
   '/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
@@ -656,6 +664,7 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
+  '/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/platform/access': typeof AuthenticatedPlatformAccessRoute
   '/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
@@ -740,6 +749,7 @@ export interface FileRoutesById {
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
   '/_authenticated/app/templates': typeof AuthenticatedAppTemplatesRoute
+  '/_authenticated/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/_authenticated/platform/access': typeof AuthenticatedPlatformAccessRoute
   '/_authenticated/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/_authenticated/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
@@ -824,6 +834,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/team'
     | '/app/templates'
+    | '/app/workspace'
     | '/platform/access'
     | '/platform/sources'
     | '/platform/workspaces'
@@ -904,6 +915,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/team'
     | '/app/templates'
+    | '/app/workspace'
     | '/platform/access'
     | '/platform/sources'
     | '/platform/workspaces'
@@ -987,6 +999,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/settings'
     | '/_authenticated/app/team'
     | '/_authenticated/app/templates'
+    | '/_authenticated/app/workspace'
     | '/_authenticated/platform/access'
     | '/_authenticated/platform/sources'
     | '/_authenticated/platform/workspaces'
@@ -1359,6 +1372,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlatformAccessRouteImport
       parentRoute: typeof AuthenticatedPlatformRoute
     }
+    '/_authenticated/app/workspace': {
+      id: '/_authenticated/app/workspace'
+      path: '/workspace'
+      fullPath: '/app/workspace'
+      preLoaderRoute: typeof AuthenticatedAppWorkspaceRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/templates': {
       id: '/_authenticated/app/templates'
       path: '/templates'
@@ -1653,6 +1673,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
   AuthenticatedAppTemplatesRoute: typeof AuthenticatedAppTemplatesRoute
+  AuthenticatedAppWorkspaceRoute: typeof AuthenticatedAppWorkspaceRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppCampaignsCampaignIdRoute: typeof AuthenticatedAppCampaignsCampaignIdRoute
   AuthenticatedAppCampaignsNewRoute: typeof AuthenticatedAppCampaignsNewRoute
@@ -1685,6 +1706,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
   AuthenticatedAppTemplatesRoute: AuthenticatedAppTemplatesRoute,
+  AuthenticatedAppWorkspaceRoute: AuthenticatedAppWorkspaceRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppCampaignsCampaignIdRoute:
     AuthenticatedAppCampaignsCampaignIdRoute,
@@ -1806,3 +1828,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

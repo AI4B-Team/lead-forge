@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Plug,
   KeyRound,
+  LayoutDashboard,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,8 @@ type NavDef = {
     | "/app/compliance"
     | "/app/numbers"
     | "/app/integrations"
-    | "/app/api";
+    | "/app/api"
+    | "/app/workspace";
   search?: { tab: "profile" | "security" | "notifications" };
 };
 
@@ -47,13 +49,14 @@ const GROUPS: { label: string; items: NavDef[] }[] = [
   {
     label: "Workspace",
     items: [
-      { key: "workspace", label: "Workspace", icon: Building2, to: "/app/settings" },
+      { key: "workspace-admin", label: "Overview", icon: LayoutDashboard, to: "/app/workspace" },
+      { key: "workspace", label: "General", icon: Building2, to: "/app/settings" },
       { key: "team", label: "Team", icon: Users, to: "/app/team" },
-      { key: "numbers", label: "Numbers", icon: Smartphone, to: "/app/numbers" },
+      { key: "numbers", label: "Phone Numbers", icon: Smartphone, to: "/app/numbers" },
     ],
   },
   {
-    label: "Connect",
+    label: "Automation",
     items: [
       { key: "integrations", label: "Integrations", icon: Plug, to: "/app/integrations" },
       { key: "api", label: "API", icon: KeyRound, to: "/app/api" },
@@ -82,7 +85,7 @@ export function SettingsShell({
     <div className="grid items-start gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
       <nav aria-label="Settings" className="lg:sticky lg:top-6">
         <div className="mb-4 hidden text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground lg:block">
-          Settings
+          Workspace Admin
         </div>
         <div className="flex gap-4 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
           {groups.map((g) => (
