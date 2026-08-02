@@ -511,3 +511,56 @@ export function KnowledgeSourceCards({
     </div>
   );
 }
+
+/**
+ * Compact "Improve Your Agent" list — every training source as one settings-style
+ * row: icon, name, status, action. Same dialogs as the card grid.
+ */
+export function KnowledgeSourceList({
+  brandId,
+  sources = [],
+}: {
+  brandId?: string;
+  sources?: KnowledgeItem[];
+}) {
+  return (
+    <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+      {KNOWLEDGE_CARDS.map((spec) => {
+        const Icon = ICONS[spec.key] ?? FileText;
+        const items = sources.filter((s) => s.category === spec.key);
+        return (
+          <div
+            key={spec.key}
+            id={`knowledge-card-${spec.key}`}
+            className="flex scroll-mt-24 items-center gap-3 px-4 py-2.5"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Icon className="h-3.5 w-3.5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold text-foreground">{spec.title}</div>
+              <div className="truncate text-[11px] text-muted-foreground">{spec.action}</div>
+            </div>
+            <div className="shrink-0 text-xs">
+              {items.length === 0 ? (
+                <span className="text-muted-foreground/70">Missing</span>
+              ) : (
+                <span className="inline-flex items-center gap-1 font-medium text-success">
+                  <Check className="h-3.5 w-3.5" />
+                  {items.length} {items.length === 1 ? spec.unit : `${spec.unit}s`}
+                </span>
+              )}
+            </div>
+            {brandId ? (
+              <AddSourceDialog spec={spec} brandId={brandId} items={items} trigger="row" />
+            ) : (
+              <Button size="sm" variant="ghost" className="h-8 shrink-0 rounded-full px-3 text-xs" disabled>
+                <Lock className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
