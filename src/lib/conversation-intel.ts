@@ -135,6 +135,34 @@ export function relativeShort(iso: string): string {
 }
 
 /** Slash commands available in the composer. */
+export function computeNeedsReply(opts: {
+  lastDirection: string;
+  isOptout: boolean;
+  botEnabled: boolean;
+  handoff: string | null;
+  intent: Intent;
+}): boolean {
+  // Opted-out threads never need a reply — compliance short-circuits everything.
+  if (opts.isOptout) return false;
+  if (opts.lastDirection !== "inbound") return false;
+  // With the agent on, routine replies are already handled; a human is only
+  // needed for handoffs and hot leads.
+  if (opts.botEnabled) {
+    return !!opts.handoff || opts.intent === "appointment" || opts.intent === "qualified";
+  }
+  return true;
+}
+
+/**
+ * Urgency blends wait time with lead score so a strong-intent reply sitting two
+ * hours outranks a lukewarm one from ten minutes ago.
+ */
+export function urgencyScore(opts: { score: number; waitingSince: string }): number {
+  const hours = Math.max(0, (Date.now() - new Date(opts.waitingSince).getTime()) / 3_600_000);
+  const waitWeight = Math.min(60, Math.log2(1 + hours * 4) * 14);
+  return Math.round(opts.score * 0.8 + waitWeight);
+}
+
 export const SLASH_COMMANDS = [
   { cmd: "/friendly", label: "Friendly Rewrite", hint: "Warm, casual tone" },
   { cmd: "/professional", label: "Professional Rewrite", hint: "Polished and direct" },
