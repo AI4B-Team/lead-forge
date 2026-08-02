@@ -329,6 +329,15 @@
   height: calc((100vh - 3.5rem) / 0.8 - 4rem);
 }
 
+/* Full-height AI Assistant shell — scoped to the assistant page only, kept
+   independent of the inbox. Height = viewport minus the 56px top bar, then
+   un-zoomed (content renders at 0.8), minus the content padding (4rem) and the
+   page title/subheadline block (~5.5rem). Thread and spec rail scroll inside. */
+.assistant-shell {
+  height: calc((100vh - 3.5rem) / 0.8 - 4rem - 5.5rem);
+  min-height: 30rem;
+}
+
 /* Thin overflow scrollbar — applied only when content actually overflows, so a
    panel that fits reserves no gutter at all. */
 .thin-scroll {
