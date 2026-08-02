@@ -18,6 +18,7 @@ import {
   Upload, TrendingUp, Info, Activity, Zap, CheckCircle2,
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { ActivityList, useActivity } from "@/components/app/activity-feed";
 
 export const Route = createFileRoute("/_authenticated/app/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — LeadTrace" }] }),
@@ -260,6 +261,9 @@ function Dashboard() {
 
   const hasJobs = jobs.length > 0;
   const totalCredits = credits.scrape + credits.skip_trace + credits.sms;
+  // Dashboard mirrors the account-wide activity slide-out.
+  const { data: activityData } = useActivity(workspaceId ?? null, "all", 6);
+  const realActivity = activityData?.events ?? [];
   // Job completions come from the jobs list we already loaded.
   const activityFeed = useMemo<ActivityItem[]>(() => {
     const jobItems: ActivityItem[] = jobs
@@ -417,8 +421,10 @@ function Dashboard() {
                 <Link to="/app/inbox">Inbox <ArrowUpRight className="ml-1 h-3.5 w-3.5" /></Link>
               </Button>
             </CardHeader>
-            <CardContent>
-              {activityFeed.length ? (
+            <CardContent className={realActivity.length ? "px-0" : undefined}>
+              {realActivity.length ? (
+                <ActivityList events={realActivity} />
+              ) : activityFeed.length ? (
                 <ul className="divide-y divide-border">
                   {activityFeed.map((item, i) => (
                     <li key={`${item.text}-${i}`} className="flex items-start gap-3 py-2.5">

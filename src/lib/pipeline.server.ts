@@ -527,6 +527,14 @@ export async function executePipeline(
 
   // 7) EVENTS ---------------------------------------------------------------
   const { emitEvent } = await import("./events.server");
+  const { logActivity } = await import("./activity.server");
+  await logActivity(supabase, workspaceId, {
+    type: "run_completed",
+    summary: `List Run Completed — ${clean.toLocaleString()} Clean`,
+    detail: `${deduped.length.toLocaleString()} Net-New Of ${(inserted?.length ?? 0).toLocaleString()} Processed`,
+    refId: jobId,
+    refType: "list",
+  });
   await emitEvent(supabase, workspaceId, "job.completed", {
     job_id: jobId,
     source_type: job.source_type,

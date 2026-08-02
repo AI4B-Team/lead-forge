@@ -101,6 +101,18 @@ export const requestCoverage = createServerFn({ method: "POST" })
       type: data.type,
     });
     if (error) throw new Error(error.message);
+    {
+      const { logActivity } = await import("./activity.server");
+      await logActivity(context.supabase, data.workspaceId, {
+        type: "adapter_requested",
+        summary:
+          data.type === "template_adapter"
+            ? `Early Access Requested — ${data.templateId ?? "New Source"}`
+            : "New Data Source Requested",
+        detail: data.county ?? data.recordType ?? null,
+        refType: "template",
+      });
+    }
     return { ok: true, email: context.claims?.email ?? null, alreadyRequested: false };
   });
 

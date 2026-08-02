@@ -221,6 +221,23 @@ export const updateCampaignStatus = createServerFn({ method: "POST" })
         campaign_id: data.campaignId,
       });
     }
+    {
+      const { data: c } = await context.supabase
+        .from("campaigns").select("workspace_id, name").eq("id", data.campaignId).maybeSingle();
+      if (c?.workspace_id) {
+        const { logActivity } = await import("./activity.server");
+        const label =
+          data.status === "sending" ? "Launched" :
+          data.status === "paused" ? "Paused" :
+          data.status === "completed" ? "Completed" : "Moved To Draft";
+        await logActivity(context.supabase, c.workspace_id, {
+          type: data.status === "paused" ? "campaign_paused" : "campaign_launched",
+          summary: `Campaign ${label} — ${c.name ?? "Untitled"}`,
+          refId: data.campaignId,
+          refType: "campaign",
+        });
+      }
+    }
     return { ok: true };
   });
 

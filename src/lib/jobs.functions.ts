@@ -410,6 +410,16 @@ export const launchCampaignFromJob = createServerFn({ method: "POST" })
       steps.map((s) => ({ campaign_id: campaign.id, ...s })),
     );
 
+    {
+      const { logActivity } = await import("./activity.server");
+      await logActivity(supabase, job.workspace_id, {
+        type: "campaign_created",
+        summary: `Campaign Created — ${data.name}`,
+        detail: `${(cleanCount ?? 0).toLocaleString()} Clean Leads Attached`,
+        refId: campaign.id,
+        refType: "campaign",
+      });
+    }
     return { campaignId: campaign.id };
   });
 // ---------------------------------------------------------------------------
@@ -434,7 +444,7 @@ export const setListSchedule = createServerFn({ method: "POST" })
     const { scheduleFieldsFor } = await import("./recurring.server");
     const { data: job } = await context.supabase
       .from("jobs")
-      .select("source_type")
+      .select("source_type, workspace_id, name")
       .eq("id", data.jobId)
       .maybeSingle();
     if (job?.source_type === "upload" && data.cadence !== "one_time") {
@@ -443,6 +453,24 @@ export const setListSchedule = createServerFn({ method: "POST" })
     const fields = scheduleFieldsFor(data.cadence, data.customMinutes);
     const { error } = await context.supabase.from("jobs").update(fields).eq("id", data.jobId);
     if (error) throw error;
+    if (job?.workspace_id) {
+      const { logActivity } = await import("./activity.server");
+      const CADENCE_LABEL: Record<string, string> = {
+        one_time: "One-Time Only",
+        every_2h: "Every 2 Hours",
+        every_12h: "Every 12 Hours",
+        daily: "Daily",
+        weekly: "Weekly",
+        custom: "Custom Interval",
+      };
+      await logActivity(context.supabase, job.workspace_id, {
+        type: "cadence_set",
+        summary: `Schedule Set To ${CADENCE_LABEL[data.cadence] ?? data.cadence}`,
+        detail: job.name ?? null,
+        refId: data.jobId,
+        refType: "list",
+      });
+    }
     return fields;
   });
 

@@ -47,5 +47,17 @@ export const topUpCredits = createServerFn({ method: "POST" })
       delta: data.amount,
       reason: "top_up",
     });
+    const { logActivity } = await import("./activity.server");
+    const KIND_LABEL: Record<string, string> = {
+      scrape: "Scrape",
+      skip_trace: "Trace",
+      sms: "SMS",
+    };
+    await logActivity(supabase, data.workspaceId, {
+      type: "credits_purchased",
+      summary: `${data.amount.toLocaleString()} ${KIND_LABEL[data.kind] ?? data.kind} Credits Purchased`,
+      detail: `New Balance ${next.toLocaleString()}`,
+      refType: "credits",
+    });
     return { balance: next };
   });

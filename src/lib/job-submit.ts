@@ -73,7 +73,18 @@ export async function queueJob(
     .select("id")
     .single();
 
-  if (!error && data) return { id: (data as { id: string }).id, duplicate: false };
+  if (!error && data) {
+    const id = (data as { id: string }).id;
+    const { logActivity } = await import("./activity.server");
+    await logActivity(client, input.workspaceId, {
+      type: "list_built",
+      summary: "List Built And Queued",
+      detail: `Source: ${input.sourceType}`,
+      refId: id,
+      refType: "list",
+    });
+    return { id, duplicate: false };
+  }
 
   // Unique violation => the same submission already created a job.
   if (error && (error as { code?: string }).code === "23505") {

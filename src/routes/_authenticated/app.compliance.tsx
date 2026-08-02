@@ -108,8 +108,15 @@ function Compliance() {
       <SettingsShell current="compliance">
       <PageHeader
         title="Compliance Center"
-        description="Everything Needed To Keep Outreach Compliant."
+        description="Everything Needed To Keep Outreach Compliant — And The Permanent Record If You're Ever Asked."
       />
+
+      {/* System of record. The Activity feed in the top bar is convenience only;
+          anything that could become evidence lives here, append-only. */}
+      <p className="mb-5 text-xs text-muted-foreground">
+        This Is The System Of Record: Opt-Outs, Suppression, And Blocked Sends Are Append-Only,
+        Searchable By Person, And Exportable For Evidence.
+      </p>
 
       {/* Single computed status banner — every surface reads the same state. */}
       <div className={`mb-6 rounded-2xl border ${toneClass.border} ${toneClass.bg} p-5`}>
