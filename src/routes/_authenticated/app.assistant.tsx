@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
+import { FirstRunSetup } from "@/components/app/getting-started";
 import { JobSpecCard } from "@/components/app/job-spec-card";
 import { AssistantTrace, buildTraceSteps, openSlots } from "@/components/app/assistant-trace";
 import { Button } from "@/components/ui/button";
