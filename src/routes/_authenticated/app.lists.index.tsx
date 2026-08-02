@@ -35,11 +35,24 @@ import {
   Rocket,
 } from "lucide-react";
 import { toast } from "sonner";
-import { setJobSchedule } from "@/lib/monitoring.functions";
-import { CADENCE_LABEL } from "@/lib/monitoring.shared";
+import {
+  normalizeCadence,
+  scheduleSummary,
+  cadenceLabel,
+  CADENCES,
+  type Cadence,
+} from "@/lib/schedule.shared";
+import { CHANNEL_LABEL, normalizeChannel } from "@/lib/channels";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { LOCAL_TZ } from "@/lib/local-tz";
-import { listJobs, resumeJob } from "@/lib/jobs.functions";
+import {
+  listJobs,
+  resumeJob,
+  setListSchedule,
+  setListScheduleActive,
+  setListAutoLaunch,
+  runListNow,
+} from "@/lib/jobs.functions";
 import { JobStageFlow } from "@/components/app/job-stage-flow";
 import { StatTile } from "@/components/app/stat-tile";
 import { buildPipelineStages } from "@/lib/pipeline-stages";
@@ -140,7 +153,10 @@ function Jobs() {
   const { workspaceId } = useWorkspaceId();
   const navigate = useNavigate();
   const fetchJobs = useServerFn(listJobs);
-  const saveSchedule = useServerFn(setJobSchedule);
+  const saveSchedule = useServerFn(setListSchedule);
+  const setScheduleActive = useServerFn(setListScheduleActive);
+  const saveAutoLaunch = useServerFn(setListAutoLaunch);
+  const runNow = useServerFn(runListNow);
   const retryJob = useServerFn(resumeJob);
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
@@ -185,7 +201,7 @@ function Jobs() {
       } else if (status === "running") {
         if (!isRunningStatus(j.status) || j.stalled) return false;
       } else if (status === "scheduled") {
-        if (!j.schedule || j.schedule === "one_time") return false;
+        if (normalizeCadence(j.schedule) === "one_time" || !j.schedule_active) return false;
       } else if (status === "launched") {
         if (!j.launched) return false;
       } else if (status === "never_launched") {
@@ -251,7 +267,7 @@ function Jobs() {
       // Running counts only genuinely active jobs — stalled ones move to Needs Attention.
       if (isRunningStatus(j.status) && !j.stalled) running += 1;
       if (j.stalled || j.status === "failed") attention += 1;
-      if (j.schedule && j.schedule !== "one_time") scheduled += 1;
+      if (normalizeCadence(j.schedule) !== "one_time" && j.schedule_active) scheduled += 1;
     }
     const now = new Date();
     const day = now.getDay(); // 0 = Sunday, 1 = Monday
@@ -296,7 +312,7 @@ function Jobs() {
       const ordered = [...group].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
-      const recurring = ordered.some((r) => r.schedule && r.schedule !== "one_time");
+      const recurring = ordered.some((r) => normalizeCadence(r.schedule) !== "one_time");
       if (recurring && ordered.length > 1)
         out.push({ latest: ordered[0]!, prior: ordered.slice(1) });
       else for (const r of ordered) out.push({ latest: r, prior: [] });
@@ -587,27 +603,71 @@ function Jobs() {
                           )}
                           <span className="text-foreground">{j.identity.label}</span>
                         </span>
+                        <div className="mt-0.5 whitespace-nowrap text-xs text-muted-foreground">
+                          {CHANNEL_LABEL[normalizeChannel(j.channel)]} Outreach
+                        </div>
                       </td>
                       <td className="p-4">
                         <JobStageFlow stages={buildPipelineStages(j)} />
                       </td>
                       <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                        <CadenceSelect
-                          value={j.schedule}
-                          nextRunAt={j.next_run_at}
-                          onChange={async (schedule) => {
+                        <RescanControl
+                          job={j}
+                          onCadence={async (cadence, customMinutes) => {
                             try {
-                              await saveSchedule({ data: { jobId: j.id, schedule } });
+                              await saveSchedule({
+                                data: { jobId: j.id, cadence, customMinutes },
+                              });
                               toast.success(
-                                schedule === "one_time"
+                                cadence === "one_time"
                                   ? "Rescanning Turned Off."
-                                  : `Rescanning ${CADENCE_LABEL[schedule]}.`,
+                                  : `Rescanning ${cadenceLabel(cadence, customMinutes)}.`,
                               );
                               qc.invalidateQueries({ queryKey: ["jobs-list", workspaceId] });
                             } catch (e) {
                               toast.error(
                                 e instanceof Error ? e.message : "Could Not Save Cadence.",
                               );
+                            }
+                          }}
+                          onToggleActive={async (active) => {
+                            try {
+                              await setScheduleActive({ data: { jobId: j.id, active } });
+                              toast.success(active ? "Rescanning Resumed." : "Rescanning Paused.");
+                              qc.invalidateQueries({ queryKey: ["jobs-list", workspaceId] });
+                            } catch (e) {
+                              toast.error(
+                                e instanceof Error ? e.message : "Could Not Update Schedule.",
+                              );
+                            }
+                          }}
+                          onAutoLaunch={async (autoLaunch) => {
+                            try {
+                              await saveAutoLaunch({ data: { jobId: j.id, autoLaunch } });
+                              toast.success(
+                                autoLaunch
+                                  ? "New Leads Will Launch Automatically."
+                                  : "We'll Notify You Instead Of Sending.",
+                              );
+                              qc.invalidateQueries({ queryKey: ["jobs-list", workspaceId] });
+                            } catch (e) {
+                              toast.error(
+                                e instanceof Error ? e.message : "Could Not Update Auto-Launch.",
+                              );
+                            }
+                          }}
+                          onRunNow={async () => {
+                            toast.info("Rescanning Now — We'll Only Keep What's New.");
+                            try {
+                              const res = await runNow({ data: { jobId: j.id } });
+                              toast.success(
+                                res.netNew > 0
+                                  ? `${res.netNew.toLocaleString()} New Records Found.`
+                                  : "No New Records Since The Last Run.",
+                              );
+                              qc.invalidateQueries({ queryKey: ["jobs-list", workspaceId] });
+                            } catch (e) {
+                              toast.error(e instanceof Error ? e.message : "Could Not Run This List.");
                             }
                           }}
                         />
@@ -671,40 +731,120 @@ function Jobs() {
   );
 }
 /**
- * Recurring-scan cadence per list (spec §15.1). Re-runs reuse the same search
- * and only surface records that were not already in the workspace.
+ * The real RESCAN control. Picking a cadence arms the run engine: the list
+ * re-runs on that interval, keeps only records no earlier run delivered, and
+ * then either launches outreach itself or drops a notification.
  */
-function CadenceSelect({
-  value,
-  nextRunAt,
-  onChange,
+function RescanControl({
+  job,
+  onCadence,
+  onToggleActive,
+  onAutoLaunch,
+  onRunNow,
 }: {
-  value: string;
-  nextRunAt: string | null;
-  onChange: (schedule: "one_time" | "12h" | "daily" | "weekly") => void;
+  job: {
+    schedule: string;
+    custom_interval_minutes: number | null;
+    schedule_active: boolean;
+    auto_launch: boolean;
+    channel: string;
+    next_run_at: string | null;
+  };
+  onCadence: (cadence: Cadence, customMinutes: number | null) => void;
+  onToggleActive: (active: boolean) => void;
+  onAutoLaunch: (autoLaunch: boolean) => void;
+  onRunNow: () => void;
 }) {
+  const cadence = normalizeCadence(job.schedule);
+  const channel = normalizeChannel(job.channel);
+  const [customHours, setCustomHours] = useState(
+    String(Math.max(1, Math.round((job.custom_interval_minutes ?? 360) / 60))),
+  );
+  const summary = scheduleSummary({
+    cadence,
+    customMinutes: job.custom_interval_minutes,
+    nextRunAt: job.next_run_at,
+    active: job.schedule_active,
+  });
+
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex w-[190px] flex-col gap-1.5">
       <Select
-        value={value}
-        onValueChange={(v) => onChange(v as "one_time" | "12h" | "daily" | "weekly")}
+        value={cadence}
+        onValueChange={(v) =>
+          onCadence(
+            v as Cadence,
+            v === "custom" ? Math.max(15, Number(customHours || 6) * 60) : null,
+          )
+        }
       >
-        <SelectTrigger className="h-8 w-[150px] text-xs">
+        <SelectTrigger className="h-8 w-full text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="one_time">One-Time</SelectItem>
-          <SelectItem value="12h">Every 12 Hours</SelectItem>
-          <SelectItem value="daily">Daily</SelectItem>
-          <SelectItem value="weekly">Weekly</SelectItem>
+          {CADENCES.map((c) => (
+            <SelectItem key={c} value={c}>
+              {c === "custom" ? "Custom Interval" : cadenceLabel(c)}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
-      {value !== "one_time" && nextRunAt && (
-        <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-          <Repeat className="h-3 w-3" /> {CADENCE_LABEL[value] ?? "Recurring"} · Next{" "}
-          {new Date(nextRunAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-        </span>
+
+      {cadence === "custom" && (
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-muted-foreground">Every</span>
+          <Input
+            value={customHours}
+            inputMode="numeric"
+            className="h-7 w-14 text-xs"
+            onChange={(e) => setCustomHours(e.target.value.replace(/\D/g, ""))}
+            onBlur={() => onCadence("custom", Math.max(15, Number(customHours || 6) * 60))}
+          />
+          <span className="text-[11px] text-muted-foreground">Hours</span>
+        </div>
       )}
+
+      {cadence !== "one_time" && (
+        <>
+          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Repeat className="h-3 w-3" /> {summary}
+          </span>
+          {channel === "sms" ? (
+            <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={job.auto_launch}
+                onChange={(e) => onAutoLaunch(e.target.checked)}
+                className="h-3 w-3 cursor-pointer accent-primary"
+              />
+              Auto-Launch New Leads
+            </label>
+          ) : (
+            <span className="text-[11px] text-muted-foreground">
+              {CHANNEL_LABEL[channel]} — Notify Me To Export
+            </span>
+          )}
+        </>
+      )}
+
+      <div className="flex items-center gap-2 text-[11px]">
+        <button
+          type="button"
+          onClick={onRunNow}
+          className="cursor-pointer font-semibold text-primary underline-offset-2 hover:underline"
+        >
+          Run Now
+        </button>
+        {cadence !== "one_time" && (
+          <button
+            type="button"
+            onClick={() => onToggleActive(!job.schedule_active)}
+            className="cursor-pointer text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            {job.schedule_active ? "Pause" : "Resume"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
