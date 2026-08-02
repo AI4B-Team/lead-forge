@@ -12,6 +12,7 @@ import { Link } from "@tanstack/react-router";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Users, ShieldCheck, ShieldAlert, Ban, Sparkles, Layers } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { formatLocation } from "@/lib/location";
 import { listLeadRecords, getLeadListMemberships } from "@/lib/monitoring.functions";
 import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
 import { PhoneLink } from "@/components/app/phone-link";
