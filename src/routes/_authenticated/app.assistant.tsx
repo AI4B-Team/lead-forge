@@ -447,6 +447,29 @@ function Assistant() {
     setInferred(new Set());
     setUpload(null);
     setConvId(`c${Date.now()}`);
+    setPanelOpen(false);
+  };
+
+  /**
+   * Panel-only entry (?source=, and the "set it up yourself" affordance): reset,
+   * then apply just the source — the same reset-then-apply as a template pick.
+   */
+  const openPanelWithSource = (source: "business" | "records" | "upload", niche?: string) => {
+    if (workspaceId) clearDraft(workspaceId);
+    setConvId(`c${Date.now()}`);
+    setThread([]);
+    setSelectedTemplate(null);
+    lastTemplateId.current = null;
+    setFirstPrompt("");
+    setCoverage([]);
+    setEstimate(null);
+    setSuggested([]);
+    setConfirmed(false);
+    setRevealed(0);
+    setInferred(new Set());
+    setUpload(null);
+    setSpec({ ...EMPTY_SPEC, sourceType: source, niches: niche ? [niche] : [] });
+    setPanelOpen(true);
   };
 
   // Two-way sync: a manual panel edit is announced in the thread so the next
