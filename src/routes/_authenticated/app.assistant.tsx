@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
-import { FirstRunSetup } from "@/components/app/getting-started";
 import { JobSpecCard } from "@/components/app/job-spec-card";
 import { AssistantTrace, buildTraceSteps, openSlots } from "@/components/app/assistant-trace";
 import { Button } from "@/components/ui/button";
@@ -1150,8 +1149,6 @@ function Assistant() {
         )}
 
         {!started && heroState}
-
-        {!started && <FirstRunSetup workspaceId={workspaceId ?? null} />}
 
         {started && (
           <div className="grid min-h-0 flex-1 items-start gap-6 lg:grid-cols-[1fr_400px]">
