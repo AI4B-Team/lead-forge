@@ -3,6 +3,92 @@ import type { JobSpec } from "@/lib/assistant.shared";
 /** Which source kinds a toggle applies to. */
 export type SourceKind = NonNullable<JobSpec["sourceType"]>;
 
+// ---------------------------------------------------------------------------
+// Output type axis. The catalog holds two different products: sources that
+// produce CONTACTABLE LEADS (they earn the compliance pipeline and a campaign
+// launch) and sources that produce a RESEARCH DATASET (flight prices, sports
+// scores, product listings, headlines). For data sources the whole pipeline
+// vocabulary — skip trace, DNC scrub, "clean textable leads", Launch Estimate
+// — is nonsense, so they get dedupe + export and nothing else.
+// ---------------------------------------------------------------------------
+
+export type OutputType = "leads" | "data";
+
+export const DATA_TEMPLATE_IDS: readonly string[] = [
+  // E-commerce product catalogs (the merchant is not the deliverable here)
+  "amazon-products", "aliexpress", "target", "bestbuy", "homedepot", "wayfair",
+  "newegg", "costco", "shein", "temu",
+  // Travel prices
+  "kayak", "skyscanner",
+  // Sports
+  "espn", "sofascore", "flashscore",
+  // News
+  "google-news", "bing-news", "reuters",
+  // Finance
+  "yahoo-finance", "google-finance", "sec-edgar",
+  // Education catalogs
+  "coursera", "udemy", "edx", "google-scholar",
+  // Author-based social + app reviews + review enrichment
+  "reddit", "pinterest", "quora", "threads", "appstore", "playstore", "google-reviews",
+];
+
+export function templateOutputType(templateId?: string | null): OutputType {
+  return templateId && DATA_TEMPLATE_IDS.includes(templateId) ? "data" : "leads";
+}
+
+export function isDataSource(templateId?: string | null): boolean {
+  return templateOutputType(templateId) === "data";
+}
+
+/** Non-US portals and marketplaces, with the country the source implies. */
+export const INTERNATIONAL_TEMPLATE_COUNTRY: Record<string, string> = {
+  rightmove: "United Kingdom",
+  zoopla: "United Kingdom",
+  idealista: "Spain",
+  cylex: "United Kingdom",
+  hotfrog: "United Kingdom",
+  alibaba: "China",
+  mercadolibre: "Mexico",
+  flipkart: "India",
+  agoda: "Thailand",
+};
+
+export function isInternationalTemplate(templateId?: string | null): boolean {
+  return Boolean(templateId && templateId in INTERNATIONAL_TEMPLATE_COUNTRY);
+}
+
+export function defaultCountryFor(templateId?: string | null): string | null {
+  return (templateId && INTERNATIONAL_TEMPLATE_COUNTRY[templateId]) || null;
+}
+
+/** A run is US-only-SMS eligible unless its geography leaves the US. */
+export function isNonUsRun(opts: { templateId?: string | null; country?: string | null }): boolean {
+  if (isInternationalTemplate(opts.templateId)) return true;
+  const c = (opts.country ?? "").trim().toLowerCase();
+  if (!c) return false;
+  return !["us", "usa", "u.s.", "u.s.a.", "united states", "united states of america", "america"].includes(c);
+}
+
+/** Marketplace SELLER templates: the merchant is the lead, and email is the field. */
+export const SELLER_TEMPLATE_IDS: readonly string[] = [
+  "amazon", "ebay", "etsy", "walmart", "shopify", "alibaba",
+];
+
+/** US real-estate portals, where the lead is either the agent or the owner. */
+export const US_REALESTATE_PORTAL_IDS: readonly string[] = [
+  "zillow", "redfin", "realtor", "trulia",
+];
+
+/** Job boards. The lead is the EMPLOYER, not the posting. */
+export const JOB_BOARD_TEMPLATE_IDS: readonly string[] = [
+  "indeed", "googlejobs", "glassdoor", "ziprecruiter", "linkedin-jobs",
+  "monster", "simplyhired", "dice",
+];
+
+export function isJobBoard(templateId?: string | null): boolean {
+  return Boolean(templateId && JOB_BOARD_TEMPLATE_IDS.includes(templateId));
+}
+
 /**
  * Enrichment profiles. Phone enrichment is not universal:
  * - creator: TikTok / Instagram / YouTube style sources. The deliverable is
@@ -11,9 +97,17 @@ export type SourceKind = NonNullable<JobSpec["sourceType"]>;
  *   skip trace and mobile filtering are hidden entirely here.
  * - b2b: LinkedIn style prospecting, where a decision-maker's direct dial is
  *   legitimately valuable. Skip trace stays visible, but defaults OFF.
+ * - seller: marketplace merchants (Amazon/Etsy/Shopify sellers). Email-first,
+ *   same shape as creators.
+ * - portal: US real-estate portals. Skip trace only makes sense for the
+ *   For-Sale-By-Owner target, so it's gated on that choice.
+ * - data: research datasets. No enrichment at all.
  * - standard: business + public records + uploads. Phones are the product.
  */
-export type EnrichmentProfile = "creator" | "b2b" | "standard";
+export type EnrichmentProfile = "creator" | "b2b" | "seller" | "portal" | "data" | "standard";
+
+/** Whose contact details a real-estate portal run should target. */
+export type ContactTarget = "agents" | "fsbo";
 
 /** Creator templates (including hashtag/search variants). */
 export const CREATOR_TEMPLATE_IDS: readonly string[] = [
@@ -31,7 +125,10 @@ export const B2B_TEMPLATE_IDS: readonly string[] = ["linkedin"];
 
 export function enrichmentProfile(templateId?: string | null): EnrichmentProfile {
   if (!templateId) return "standard";
+  if (DATA_TEMPLATE_IDS.includes(templateId)) return "data";
   if (CREATOR_TEMPLATE_IDS.includes(templateId)) return "creator";
+  if (SELLER_TEMPLATE_IDS.includes(templateId)) return "seller";
+  if (US_REALESTATE_PORTAL_IDS.includes(templateId)) return "portal";
   if (B2B_TEMPLATE_IDS.includes(templateId)) return "b2b";
   return "standard";
 }
