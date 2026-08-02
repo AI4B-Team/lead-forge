@@ -22,7 +22,6 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { SettingsShell } from "@/components/app/settings-shell";
-import { SettingsSummary } from "@/components/app/settings-summary";
 import {
   NotificationPrefs,
   normalizePrefs,
@@ -183,7 +182,6 @@ function AccountPage() {
                 email={user?.email ?? ""}
                 verified={!!user?.email_confirmed_at}
               />
-              <SettingsSummary ownerName={displayName} />
             </div>
           </div>
         </TabsContent>
@@ -209,7 +207,6 @@ function AccountPage() {
                 email={user?.email ?? ""}
                 verified={!!user?.email_confirmed_at}
               />
-              <SettingsSummary ownerName={displayName} />
             </div>
           </div>
         </TabsContent>
@@ -352,7 +349,6 @@ function AccountPage() {
                 email={user?.email ?? ""}
                 verified={!!user?.email_confirmed_at}
               />
-              <SettingsSummary ownerName={displayName} />
             </div>
           </div>
         </TabsContent>
