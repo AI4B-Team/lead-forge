@@ -133,17 +133,31 @@ export function SourceRequestDialog({
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-emerald-500" /> Request Received
+                {done.tier === "review" ? (
+                  <><ScanSearch className="h-5 w-5 text-warning" /> Request Received — Under Review</>
+                ) : (
+                  <><Check className="h-5 w-5 text-emerald-500" /> Request Received</>
+                )}
               </DialogTitle>
               <DialogDescription>
-                {label.trim()} Is On The Build Backlog. Requests From Multiple Workspaces Get Prioritized First.
+                {done.tier === "review"
+                  ? `${label.trim()} Is Logged And Waiting On A Human Terms Review Before We Build It.`
+                  : `${label.trim()} Is On The Build Backlog. Requests From Multiple Workspaces Get Prioritized First.`}
               </DialogDescription>
             </DialogHeader>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• We Scope The Adapter Against The Fields And Cadence You Asked For.</li>
+              {done.tier === "review" ? (
+                <li>• {done.reason}</li>
+              ) : (
+                <li>• We Scope The Adapter Against The Fields And Cadence You Asked For.</li>
+              )}
               <li>• You'll Get An Email At {done.email ?? "Your Account Address"} The Day It Goes Live.</li>
               <li>• Nothing Was Charged — Requests Never Spend Credits.</li>
             </ul>
+            <div className="flex items-start gap-2 rounded-xl border border-border bg-surface p-3 text-xs text-muted-foreground">
+              <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span><span className="font-semibold text-foreground">Outreach Use: </span>{done.outreach}</span>
+            </div>
             <div className="flex justify-end">
               <Button onClick={() => onOpenChange(false)}>Done</Button>
             </div>
