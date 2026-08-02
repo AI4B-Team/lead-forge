@@ -26,11 +26,18 @@ export const listJobs = createServerFn({ method: "GET" })
     const ids = (jobs ?? []).map((j) => j.id);
     const counts = new Map<string, { clean: number; dnc: number; litigator: number }>();
     for (const id of ids) counts.set(id, { clean: 0, dnc: 0, litigator: 0 });
+    // Lists that have kicked off at least one SMS campaign (§ unused inventory).
+    const launched = new Set<string>();
     // Latest progress event per job — powers the stuck-job watchdog (§23).
     const lastEventAt = new Map<string, string>();
     // Records added since the previous recurring run (§ recurring search diffing).
     const newSince = new Map<string, number>();
     if (ids.length) {
+      const { data: linkedCampaigns } = await supabase
+        .from("campaigns")
+        .select("list_job_id")
+        .in("list_job_id", ids);
+      for (const c of linkedCampaigns ?? []) if (c.list_job_id) launched.add(c.list_job_id);
       const { data: events } = await supabase
         .from("job_events")
         .select("job_id, created_at")
@@ -125,6 +132,7 @@ export const listJobs = createServerFn({ method: "GET" })
           next_run_at: j.next_run_at,
           last_run_at: j.last_run_at,
           new_since_last_run: newSince.get(j.id) ?? 0,
+          launched: launched.has(j.id),
           counts: counts.get(j.id) ?? { clean: 0, dnc: 0, litigator: 0 },
         };
       }),
