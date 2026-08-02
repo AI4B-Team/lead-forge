@@ -341,7 +341,7 @@ function JobDetail() {
           count={counts.clean}
           note="Ready To Send"
           ready={isReady}
-          onDownload={() => onDownload("clean")}
+          onDownload={(f) => onDownload("clean", f)}
           onView={() => { setBrowserBucket("clean"); setBrowserOpen(true); }}
         />
         <BucketCard
@@ -351,7 +351,7 @@ function JobDetail() {
           count={counts.dnc}
           note="Download For Suppression"
           ready={isReady}
-          onDownload={() => onDownload("dnc")}
+          onDownload={(f) => onDownload("dnc", f)}
           onView={() => { setBrowserBucket("dnc"); setBrowserOpen(true); }}
         />
         <BucketCard
@@ -361,7 +361,7 @@ function JobDetail() {
           count={counts.litigator}
           note="Download For Analytics"
           ready={isReady}
-          onDownload={() => onDownload("litigator")}
+          onDownload={(f) => onDownload("litigator", f)}
           onView={() => { setBrowserBucket("litigator"); setBrowserOpen(true); }}
         />
       </div>
