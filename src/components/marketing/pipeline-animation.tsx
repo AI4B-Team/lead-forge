@@ -3,7 +3,7 @@ import { Search, Landmark, Upload, Check } from "lucide-react";
 
 const STATES = [
   "Scraped 3,699",
-  "Skip Traced 2,810",
+  "Traced 2,810",
   "Clean 2,140  ·  DNC 512  ·  Litigator 47",
   "Campaign Live",
 ] as const;

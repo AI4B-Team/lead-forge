@@ -20,7 +20,7 @@ const ICONS: Record<PipelineStageKey, typeof Download> = {
 
 /**
  * Horizontal stage flow for the Jobs table using the canonical vocabulary
- * (§23): Found → Deduped → Mobile Verified → Skip Traced → Scrubbed → Clean.
+ * (§23): Found → Deduped → Verified → Traced → Scrubbed → Clean.
  * Labels always render in full — no truncation.
  */
 export function JobStageFlow({ stages, className }: { stages: JobStages; className?: string }) {

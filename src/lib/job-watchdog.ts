@@ -34,7 +34,7 @@ export function stallReason(stage?: string | null) {
 
 const STAGE_PHRASE: Record<string, string> = {
   scraping: "the Found stage",
-  enriching: "the Mobile Verified stage",
-  skiptracing: "the Skip Traced stage",
+  enriching: "the Verified stage",
+  skiptracing: "the Traced stage",
   scrubbing: "the Scrubbed stage",
 };

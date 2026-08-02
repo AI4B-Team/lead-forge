@@ -213,7 +213,7 @@ export const runJob = createServerFn({ method: "POST" })
       job.source_type === "records" || (job.source_type === "upload" && params.skip_trace !== false);
 
     // 2b) CARRIER CHECK — classify every number and, when Mobile Numbers Only
-    // is enabled, drop landline/VoIP so the Mobile Verified stage reports a
+    // is enabled, drop landline/VoIP so the Verified stage reports a
     // real removal instead of passing everything through. Rows with no number
     // yet are held back for skip trace and gated again afterwards.
     const { verifyPending, verifyLineTypes, classifyLineType } = await import("./line-type");

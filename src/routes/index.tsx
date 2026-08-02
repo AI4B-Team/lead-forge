@@ -206,7 +206,7 @@ function ConsolidationBand() {
               Pipeline Status
             </div>
             <div className="mt-2 font-display font-black text-3xl">
-              Skip Traced <span className="text-primary">2,810</span>
+              Traced <span className="text-primary">2,810</span>
             </div>
             <div className="mt-4 h-2 rounded-full bg-surface-muted overflow-hidden">
               <div className="h-full bg-primary" style={{ width: "78%" }} />

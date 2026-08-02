@@ -416,7 +416,7 @@ export const TEMPLATES: Template[] = [
     shortTitle: "Probate",
     shortSubtitle: "New Filings",
     title: "Probate Records",
-    subtitle: "New Probate Filings, Heirs Auto Skip Traced.",
+    subtitle: "New Probate Filings, Heirs Auto Traced.",
     category: "records",
     prompt: "Pull all new probate filings in Hillsborough County FL from the last 90 days and skip trace the heirs",
     icon: Scale,
@@ -640,11 +640,11 @@ export function templateFields(t: Template): string[] {
     case "directories":
       return ["Business Name", "Owner / Contact", "Phone", "Email", "Address", "Category", "Website", "Rating"];
     case "records":
-      return ["Owner Name", "Mailing Address", "Property Address", "Filing Date", "Case / Doc Number", "Phone (Skip Traced)"];
+      return ["Owner Name", "Mailing Address", "Property Address", "Filing Date", "Case / Doc Number", "Phone (Traced)"];
     case "realestate":
       return ["Owner Name", "Property Address", "List Price", "Status", "Agent", "Phone", "Email"];
     case "social":
-      return ["Handle", "Display Name", "Bio", "Followers", "Link In Bio", "Email", "Phone (Skip Traced)"];
+      return ["Handle", "Display Name", "Bio", "Followers", "Link In Bio", "Email", "Phone (Traced)"];
     case "ecommerce":
       return ["Store / Product", "Price", "Seller Name", "Reviews", "Store URL", "Email", "Phone"];
     case "jobs":
@@ -652,7 +652,7 @@ export function templateFields(t: Template): string[] {
     case "reviews":
       return ["Business Name", "Rating", "Review Count", "Latest Review", "Phone", "Email"];
     case "upload":
-      return ["Your Columns (Mapped)", "Normalized Phone", "Line Type", "DNC Status", "Skip Traced Phone"];
+      return ["Your Columns (Mapped)", "Normalized Phone", "Line Type", "DNC Status", "Traced Phone"];
     default:
       return base;
   }
