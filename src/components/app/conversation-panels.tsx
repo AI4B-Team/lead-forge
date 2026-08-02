@@ -90,6 +90,7 @@ export type ThreadRow = {
   sentiment: Sentiment;
   badges: ConvoBadge[];
   lead: { full_name: string | null; business_name: string | null; phone: string | null; city: string | null; state: string | null } | null;
+  lead_tags?: Array<{ id: string; name: string; color: string }>;
   campaign: { name: string; status: string | null } | null;
 };
 
@@ -153,6 +154,11 @@ export function ConversationRow({
               )}
             </span>
           </div>
+          {!!thread.lead_tags?.length && (
+            <div className="mt-1.5">
+              <LeadTagChips tags={thread.lead_tags} max={3} />
+            </div>
+          )}
           {thread.campaign && (
             <div className="text-[10px] text-muted-foreground mt-1.5 truncate">{thread.campaign.name}</div>
           )}
