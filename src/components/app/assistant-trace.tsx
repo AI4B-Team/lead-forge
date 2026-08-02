@@ -41,6 +41,8 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
   if (spec.sourceType) steps.push({ label: "Identified Source", value: SOURCE_LABEL[spec.sourceType] ?? spec.sourceType });
   if (spec.recordType) steps.push({ label: "Record Type", value: spec.recordType });
   if (spec.niches.length) steps.push({ label: "Industry", value: spec.niches.join(", ") });
+  if (spec.targetUrl) steps.push({ label: "Target URL", value: spec.targetUrl });
+  if (spec.filters) steps.push({ label: "Filters", value: spec.filters });
   const states = specStates(spec);
   const stateNames = states.map((code) => US_STATES.find((s) => s.code === code)?.name ?? code);
   if (spec.counties.length) {
