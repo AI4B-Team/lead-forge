@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Bot, Inbox as InboxIcon, Loader2, Plus, Send, Sparkles } from "lucide-react";
+import { Bot, Inbox as InboxIcon, Loader2, PhoneOff, Plus, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import {
@@ -81,6 +81,7 @@ function ConversationsPage() {
   const [notes, setNotes] = useState("");
   const [slashOpen, setSlashOpen] = useState(false);
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const fetchThreads = useServerFn(listThreads);
   const fetchThread = useServerFn(getThread);
