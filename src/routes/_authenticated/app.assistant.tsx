@@ -102,6 +102,27 @@ const GENERIC_PLACEHOLDER =
   "Describe The Leads You Want. E.g. Roofing Companies In Hillsborough County With Mobile Numbers.";
 
 /**
+ * Cycles the composer's example placeholder with a crossfade. Paused while the
+ * user types or a template is selected, so the rotation never fights real input.
+ */
+function useRotatingExample(active: boolean) {
+  const [i, setI] = useState(0);
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    if (!active) { setI(0); setVisible(true); return; }
+    const id = window.setInterval(() => {
+      setVisible(false);
+      window.setTimeout(() => {
+        setI((n) => (n + 1) % COMPOSER_EXAMPLES.length);
+        setVisible(true);
+      }, 320);
+    }, COMPOSER_EXAMPLE_MS);
+    return () => window.clearInterval(id);
+  }, [active]);
+  return { text: COMPOSER_EXAMPLES[i] ?? COMPOSER_EXAMPLES[0], visible };
+}
+
+/**
  * Light slot check used only when a template is selected: the template already
  * knows the source, so all we need from the operator is the "who" and "where".
  */
