@@ -41,6 +41,9 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
     prompt: z.string().optional(),
     fill: z.string().optional(),
     template: z.string().optional(),
+    /** Pre-set the List Settings source (business | records | upload). */
+    source: z.string().optional(),
+    niche: z.string().optional(),
   }),
   head: () => ({
     meta: [
