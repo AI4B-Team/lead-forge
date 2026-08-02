@@ -95,7 +95,7 @@ export function AppSidebar() {
                 </Link>
               </TooltipTrigger>
               {collapsed && (
-                <TooltipContent side="right" className="bg-white text-foreground border-border">
+                <TooltipContent side="right" className="bg-white text-foreground border-border shadow-md">
                   {BRAND_NAME}
                 </TooltipContent>
               )}
