@@ -172,8 +172,9 @@ function JobDetail() {
     const res = await fetchBucket({ data: { jobId, bucket } });
     if (!res.rows.length) return toast.info("No Rows In This Bucket.");
     const type = BUCKET_FILE_TYPE[bucket];
+    const label = bucket === "clean" ? cleanFileType(runTemplateId) : type;
     const rows = shapeExportRows(res.rows as Array<Record<string, unknown>>, exportShapeFor(runTemplateId), runTemplateId);
-    await downloadRows(rows, format, (ext) => brandedFileName(jobName, type, ext), type);
+    await downloadRows(rows, format, (ext) => brandedFileName(jobName, label, ext), label);
   };
 
   // Scrub audit trail: provider, timestamp and per-bucket outcome, exportable.
@@ -479,13 +480,21 @@ function JobDetail() {
               <div className="font-display text-base font-black text-foreground">
                 {isReady
                   ? counts.clean > 0
-                    ? "Your List Is Ready"
-                    : "No Clean Leads In This Run"
+                    ? isDataRun ? "Your Dataset Is Ready" : "Your List Is Ready"
+                    : isDataRun ? "No Rows In This Run" : "No Clean Leads In This Run"
                   : "Building Your List…"}
               </div>
               <div className="text-xs text-muted-foreground">
                 {isReady && counts.clean > 0
-                  ? `${counts.clean.toLocaleString()} ${isCreatorRun ? "Creators With Contact Emails" : "Mobile Verified Leads"}`
+                  ? `${counts.clean.toLocaleString()} ${
+                      isDataRun
+                        ? "Rows — Research Dataset, Not Contactable Leads"
+                        : nonUsRun
+                          ? "Records — Email-Ready (SMS Is US-Only)"
+                          : isCreatorRun
+                            ? "Creators With Contact Emails"
+                            : "Mobile Verified Leads"
+                    }`
                   : isReady
                     ? "Try A Wider Area Or Another Niche."
                     : "You Can Close This Tab — We Keep Working."}
@@ -499,7 +508,7 @@ function JobDetail() {
             <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/lists" })}>
               Back To Lists
             </Button>
-            <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />
+            {campaignable && <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />}
           </div>
         </div>
       </div>
