@@ -17,10 +17,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 import {
   Plus,
   Search,
   Repeat,
+  Play,
+  Pause,
   ChevronRight,
   Landmark,
   Building2,
