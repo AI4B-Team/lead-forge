@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/app/page-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, MessageSquare, Handshake, CalendarCheck, DollarSign } from "lucide-react";
+import { Loader2, Handshake, CalendarCheck, DollarSign, Reply } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { getWorkspacePerformance } from "@/lib/reports.functions";
 import { formatMoney } from "@/lib/performance-intel";
@@ -13,9 +13,8 @@ import {
   AiInsights,
   PerformanceChart,
   CampaignLeaderboard,
-  NumberHealthPanel,
   BestMessagePanel,
-  RecentConversations,
+  WeeklySummary,
 } from "@/components/app/performance-panels";
 
 export const Route = createFileRoute("/_authenticated/app/reports")({
@@ -50,80 +49,127 @@ function Performance() {
     );
   }
 
-  const { kpis, deltas, daily, funnel, campaigns, bestMessage, recent, insights, numbers, timing } = data;
+  const { kpis, deltas, daily, funnel, campaigns, bestMessage, insights, timing } = data;
+
+  const week = weekOverWeek(daily);
+  const bestCampaign = campaigns[0] ? { id: campaigns[0].id, name: campaigns[0].name } : null;
 
   return (
     <div>
       <PageHeader
         title="Performance"
-        description="What Your Outreach Is Actually Producing — Conversations, Appointments And Pipeline."
+        description="Is Your Outreach Making You Money? Appointments, Pipeline And What To Do Next."
       />
 
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
-        <KpiCard
-          label="AI Conversations"
-          value={kpis.conversations.toLocaleString()}
-          deltaPct={deltas.conversations}
-          icon={MessageSquare}
-        />
-        <KpiCard
-          label="Qualified Leads"
-          value={kpis.qualified.toLocaleString()}
-          deltaPct={deltas.qualified}
-          icon={Handshake}
-        />
-        <KpiCard
-          label="Appointments"
-          value={kpis.appointments.toLocaleString()}
-          deltaPct={deltas.appointments}
-          icon={CalendarCheck}
-        />
-        <KpiCard
-          label="Pipeline Value"
-          value={formatMoney(kpis.pipeline)}
-          deltaPct={deltas.pipeline}
-          icon={DollarSign}
-          emphasis
-        />
-      </div>
-
+      {/* Results — hero KPIs, weekly digest and the revenue funnel in one group */}
       <Card className="mb-6">
-        <CardContent className="pt-6 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-          <Secondary label="Messages Sent (30d)" value={kpis.sent.toLocaleString()} deltaPct={deltas.sent} />
-          <Secondary label="Delivery Rate" value={pct(kpis.deliverRate)} deltaPct={deltas.deliverRate} tone="success" />
-          <Secondary label="Reply Rate" value={pct(kpis.replyRate)} deltaPct={deltas.replyRate} tone="success" />
-          <Secondary
-            label="Opt-Out Rate"
-            value={pct(kpis.optOutRate)}
-            deltaPct={deltas.optOutRate}
-            invert
-            tone={kpis.optOutRate > 0.05 ? "danger" : undefined}
-          />
-          <Secondary label="Most Responsive Time" value={timing.bestBand ?? "—"} />
-          <Secondary label="Best Send Day" value={timing.bestDay ?? "—"} />
+        <CardContent className="space-y-6 pt-6">
+          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+            <KpiCard
+              label="Qualified Leads"
+              value={kpis.qualified.toLocaleString()}
+              deltaPct={deltas.qualified}
+              icon={Handshake}
+            />
+            <KpiCard
+              label="Appointments"
+              value={kpis.appointments.toLocaleString()}
+              deltaPct={deltas.appointments}
+              icon={CalendarCheck}
+            />
+            <KpiCard
+              label="Reply Rate"
+              value={pct(kpis.replyRate)}
+              deltaPct={deltas.replyRate}
+              icon={Reply}
+            />
+            <KpiCard
+              label="Pipeline Value"
+              value={formatMoney(kpis.pipeline)}
+              deltaPct={deltas.pipeline}
+              icon={DollarSign}
+              emphasis
+            />
+          </div>
+
+          <div className="border-t border-border pt-4">
+            <WeeklySummary
+              rows={[
+                { label: "Replies", deltaPct: week.replies },
+                { label: "Qualified", deltaPct: week.qualified },
+                { label: "Appointments", deltaPct: week.appointments },
+                { label: "Opt-Outs", deltaPct: week.optOuts, invert: true },
+              ]}
+              bestCampaign={bestCampaign}
+            />
+          </div>
+
+          <div className="border-t border-border pt-6">
+            <div className="mb-5 text-center">
+              <h2 className="font-display text-lg font-black text-foreground">Revenue Funnel</h2>
+              <p className="text-xs text-muted-foreground">Last 30 Days · Where Leads Turn Into Revenue</p>
+            </div>
+            <RevenueFunnel steps={funnel} />
+          </div>
         </CardContent>
       </Card>
 
-      <div className="grid lg:grid-cols-2 gap-6 mb-6">
-        <RevenueFunnel steps={funnel} />
+      {/* Supporting analytics */}
+      <Card className="mb-6">
+        <CardContent className="space-y-5 pt-6">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+            <Secondary label="Messages Sent (30d)" value={kpis.sent.toLocaleString()} deltaPct={deltas.sent} />
+            <Secondary label="Delivery Rate" value={pct(kpis.deliverRate)} deltaPct={deltas.deliverRate} tone="success" />
+            <Secondary label="AI Conversations" value={kpis.conversations.toLocaleString()} deltaPct={deltas.conversations} />
+            <Secondary
+              label="Opt-Out Rate"
+              value={pct(kpis.optOutRate)}
+              deltaPct={deltas.optOutRate}
+              invert
+              tone={kpis.optOutRate > 0.05 ? "danger" : undefined}
+            />
+            <Secondary label="Most Responsive Time" value={timing.bestBand ?? "—"} />
+            <Secondary label="Best Send Day" value={timing.bestDay ?? "—"} />
+          </div>
+          <div className="border-t border-border pt-2">
+            <PerformanceChart daily={daily} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="mb-6 grid gap-6 lg:grid-cols-2">
         <AiInsights insights={insights} />
+        <BestMessagePanel best={bestMessage} />
       </div>
 
-      <div className="mb-6">
-        <PerformanceChart daily={daily} />
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-6 mb-6">
+      <div>
+        <h2 className="mb-3 font-display text-base font-black text-foreground">Campaign Performance</h2>
         <CampaignLeaderboard campaigns={campaigns} />
-        <div className="space-y-6">
-          <BestMessagePanel best={bestMessage} />
-          <RecentConversations recent={recent} />
-        </div>
       </div>
-
-      <NumberHealthPanel data={numbers} />
     </div>
   );
+}
+
+/** Last 7 days vs the 7 before, straight from the daily series. */
+function weekOverWeek(
+  daily: Array<{ replies: number; qualified: number; appointments: number; optOuts: number }>,
+) {
+  const last = daily.slice(-7);
+  const prior = daily.slice(-14, -7);
+  const sum = (rows: typeof last, key: "replies" | "qualified" | "appointments" | "optOuts") =>
+    rows.reduce((a, r) => a + (r[key] ?? 0), 0);
+  const move = (key: "replies" | "qualified" | "appointments" | "optOuts") => {
+    const a = sum(last, key);
+    const b = sum(prior, key);
+    if (!b) return a ? 100 : null;
+    return Math.round(((a - b) / b) * 100);
+  };
+  return {
+    replies: move("replies"),
+    qualified: move("qualified"),
+    appointments: move("appointments"),
+    optOuts: move("optOuts"),
+  };
 }
 
 /** Compact operational metric with movement, secondary to the executive row. */
