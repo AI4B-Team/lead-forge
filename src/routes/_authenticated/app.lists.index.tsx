@@ -33,7 +33,6 @@ import {
   CalendarClock,
   SlidersHorizontal,
   AlertTriangle,
-  RotateCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { setJobSchedule } from "@/lib/monitoring.functions";
