@@ -2,28 +2,31 @@ import { Check, Loader2 } from "lucide-react";
 import { specStates, type JobSpec } from "@/lib/assistant.shared";
 import { US_STATES } from "@/lib/us-geo";
 import { enabledOptions } from "@/lib/pipeline-options";
+import type { Template } from "@/lib/templates";
+import {
+  FIELD_SLOT_LABEL, fieldFilled, fieldsForSpec, isOptionalField,
+} from "@/lib/template-schema";
 
 export type TraceStep = { label: string; value: string };
 
 /**
- * Required slots for a runnable job: source + subject + geography, or for
- * uploads, an attached file with its columns mapped.
+ * Required slots come from the selected template's field schema, so a URL
+ * scraper asks for a URL and a social template never asks for counties.
  */
-export function openSlots(spec: JobSpec, uploadReady = false): string[] {
+export function openSlots(spec: JobSpec, uploadReady = false, template?: Template | null): string[] {
   const open: string[] = [];
-  if (!spec.sourceType) open.push("Source");
-  if (spec.sourceType === "upload") {
-    if (!uploadReady) open.push("File");
-    return open;
+  if (!spec.sourceType && !template) return ["Source"];
+  for (const field of fieldsForSpec(spec, template)) {
+    if (isOptionalField(field)) continue;
+    if (fieldFilled(field, spec, uploadReady)) continue;
+    const label = FIELD_SLOT_LABEL[field];
+    if (!open.includes(label)) open.push(label);
   }
-  if (spec.sourceType === "records" && !spec.recordType) open.push("Record Type");
-  if (spec.sourceType === "business" && !spec.niches.length) open.push("Niche");
-  if (!specStates(spec).length && !spec.counties.length) open.push("Location");
   return open;
 }
 
-export function specSlotsComplete(spec: JobSpec, uploadReady = false): boolean {
-  return Boolean(spec.sourceType) && openSlots(spec, uploadReady).length === 0;
+export function specSlotsComplete(spec: JobSpec, uploadReady = false, template?: Template | null): boolean {
+  return Boolean(spec.sourceType || template) && openSlots(spec, uploadReady, template).length === 0;
 }
 
 const SOURCE_LABEL: Record<string, string> = {

@@ -22,6 +22,10 @@ export const jobSpecSchema = z.object({
   industry: z.string().max(40).nullable().default(null),
   messageAngle: z.string().max(400).nullable().default(null),
   templateId: z.string().max(60).nullable().default(null),
+  /** Site-scraper templates (Contact Details, Universal Crawl) target a URL. */
+  targetUrl: z.string().max(300).nullable().default(null),
+  /** Free-text filter a template's schema exposes (followers, listing status). */
+  filters: z.string().max(200).nullable().default(null),
 });
 
 export type JobSpec = z.infer<typeof jobSpecSchema>;
