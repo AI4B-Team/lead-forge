@@ -254,7 +254,7 @@ function ConversationsPage() {
         title="Conversations"
         description="Where AI And You Work Leads Together — Summaries, Suggested Replies, And Full Context."
       />
-      <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_320px] gap-4 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_288px] gap-4 flex-1 min-h-0">
         {/* Conversation list */}
         <Card className="flex flex-col min-h-0">
           <div className="p-2 border-b flex gap-1 flex-wrap">
