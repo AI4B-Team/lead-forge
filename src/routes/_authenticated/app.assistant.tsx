@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { UploadIntentDialog } from "@/components/app/upload-intent-dialog";
+import { COMPOSER_EXAMPLES, COMPOSER_EXAMPLE_MS } from "@/lib/composer-examples";
 import {
   TARGET_KIND_LABEL, detectUploadIntent, suppressionKeysFrom, targetValuesFrom,
   type IntentDetection, type TargetKind, type UploadIntent,
@@ -100,6 +101,27 @@ function diffSpec(prev: JobSpec, next: JobSpec): string[] {
 
 const GENERIC_PLACEHOLDER =
   "Describe The Leads You Want. E.g. Roofing Companies In Hillsborough County With Mobile Numbers.";
+
+/**
+ * Cycles the composer's example placeholder with a crossfade. Paused while the
+ * user types or a template is selected, so the rotation never fights real input.
+ */
+function useRotatingExample(active: boolean) {
+  const [i, setI] = useState(0);
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    if (!active) { setI(0); setVisible(true); return; }
+    const id = window.setInterval(() => {
+      setVisible(false);
+      window.setTimeout(() => {
+        setI((n) => (n + 1) % COMPOSER_EXAMPLES.length);
+        setVisible(true);
+      }, 320);
+    }, COMPOSER_EXAMPLE_MS);
+    return () => window.clearInterval(id);
+  }, [active]);
+  return { text: COMPOSER_EXAMPLES[i] ?? COMPOSER_EXAMPLES[0], visible };
+}
 
 /**
  * Light slot check used only when a template is selected: the template already
@@ -1002,12 +1024,15 @@ function Assistant() {
     return ordered.slice(0, GRID_SLOTS);
   }, [recents]);
 
+  // Rotation rests when a template supplies its own hint or the user is typing.
+  const example = useRotatingExample(!selectedTemplate && !input.trim());
+
   const heroState = (
     <div className="w-full space-y-8 py-2">
       <div>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">AI Lead Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Describe the leads you want — or build it yourself in the List Builder. Nothing runs until you approve.
+          Describe who you want to reach, upload a list to clean, or build it yourself in the List Builder — nothing runs until you approve.
         </p>
       </div>
 
@@ -1016,8 +1041,10 @@ function Assistant() {
         {!input.trim() && (
           <div className="pointer-events-none absolute inset-x-5 top-5 flex items-center gap-2 pl-0.5 text-base text-muted-foreground">
             <Sparkles className="h-5 w-5 shrink-0 text-primary" />
-            <span className="truncate">
-              {selectedTemplate?.placeholderHint ?? "Tell Me Who You Want To Reach"}
+            <span
+              className={`truncate transition-opacity duration-300 ${example.visible ? "opacity-100" : "opacity-0"}`}
+            >
+              {selectedTemplate?.placeholderHint ?? example.text}
             </span>
           </div>
         )}
