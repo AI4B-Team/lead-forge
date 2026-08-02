@@ -76,14 +76,20 @@ function ListMembershipCell({ leadId, count }: { leadId: string; count: number }
       <PopoverTrigger asChild>
         <button
           type="button"
-          className={`cursor-pointer inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors ${
+          className={
             count > 1
-              ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
-              : "border-border text-muted-foreground hover:bg-surface-muted"
-          }`}
+              ? "cursor-pointer inline-flex items-center gap-1 rounded-full border border-info/30 bg-info/10 px-2 py-0.5 text-[11px] font-medium text-info transition-colors hover:bg-info/20"
+              : "cursor-pointer inline-flex items-center text-[13px] text-muted-foreground underline-offset-2 hover:underline"
+          }
         >
-          {count > 1 ? <Layers className="h-3 w-3" /> : null}
-          {count} {count === 1 ? "List" : "Lists"}
+          {count > 1 ? (
+            <>
+              <Layers className="h-3 w-3" />
+              {count} Lists
+            </>
+          ) : (
+            "1"
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-72 p-2">
