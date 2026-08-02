@@ -231,7 +231,7 @@ function Compliance() {
             <div className="mt-2 text-sm text-muted-foreground">Across Every Campaign</div>
             <div className="my-5 h-px bg-border" />
             <div className="grid grid-cols-3 gap-3">
-              <SupChip label="Opt-Out" value={data?.suppression.opt_out ?? 0} tone="success" />
+              <SupChip label="Opt-Out" value={data?.suppression.opt_out ?? 0} tone="danger" />
               <SupChip label="DNC" value={data?.suppression.dnc ?? 0} tone="warn" />
               <SupChip label="Manual" value={data?.suppression.manual ?? 0} tone="muted" />
             </div>
@@ -425,14 +425,16 @@ function SupChip({
 }: {
   label: string;
   value: number;
-  tone: "success" | "warn" | "muted";
+  tone: "success" | "warn" | "danger" | "muted";
 }) {
   const styles =
     tone === "success"
       ? "border-success/30 bg-success/5 text-success"
       : tone === "warn"
         ? "border-warn/30 bg-warn/5 text-warn"
-        : "border-border bg-surface-muted text-muted-foreground";
+        : tone === "danger"
+          ? "border-danger/30 bg-danger/5 text-danger"
+          : "border-border bg-surface-muted text-muted-foreground";
   return (
     <div className={`rounded-xl border px-3 py-3 ${styles}`}>
       <div className="font-display text-2xl font-black leading-none">{value.toLocaleString()}</div>
