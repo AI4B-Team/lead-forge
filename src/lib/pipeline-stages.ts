@@ -28,6 +28,19 @@ export const PIPELINE_STAGE_LABEL: Record<PipelineStageKey, string> = {
   clean: "Clean",
 };
 
+/**
+ * Single-word stage names for dense surfaces (the Lists table header). The
+ * long forms above stay canonical wherever there is room (results page).
+ */
+export const PIPELINE_STAGE_SHORT_LABEL: Record<PipelineStageKey, string> = {
+  found: "Found",
+  deduped: "Deduped",
+  verified: "Verified",
+  skipTraced: "Traced",
+  scrubbed: "Scrubbed",
+  clean: "Clean",
+};
+
 export type PipelineStageCounts = Record<PipelineStageKey, number>;
 
 /** Job-level raw record count label (§23). Never "Leads". */
@@ -48,10 +61,18 @@ export function buildPipelineStages(job: {
   const scrubbedTotal = job.counts.clean + job.counts.dnc + job.counts.litigator;
   const deduped = clamp(job.rows_deduped ?? scrubbedTotal, found);
   const verified = clamp(job.rows_enriched ?? scrubbedTotal, deduped);
-  const skipTraced = clamp(job.rows_skiptraced ?? scrubbedTotal, verified);
+  // Skip Trace fills missing numbers — it never removes rows, so the records
+  // REMAINING after it always equals the verified count. `rows_skiptraced` is
+  // how many needed tracing (an annotation), never the remaining count.
+  const skipTraced = verified;
   const scrubbed = clamp(scrubbedTotal, skipTraced || verified);
   const clean = clamp(job.counts.clean, scrubbed);
   return { found, deduped, verified, skipTraced, scrubbed, clean };
+}
+
+/** How many records actually needed skip tracing (annotation, not remaining). */
+export function tracedCount(job: { rows_skiptraced?: number | null }) {
+  return Math.max(0, job.rows_skiptraced ?? 0);
 }
 
 function clamp(value: number, ceiling: number) {
