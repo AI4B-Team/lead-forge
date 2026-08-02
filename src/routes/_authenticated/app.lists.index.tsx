@@ -597,7 +597,8 @@ function CadenceSelect({
       </Select>
       {value !== "one_time" && nextRunAt && (
         <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-          <Repeat className="h-3 w-3" /> Next {new Date(nextRunAt).toLocaleDateString()}
+          <Repeat className="h-3 w-3" /> {CADENCE_LABEL[value] ?? "Recurring"} · Next{" "}
+          {new Date(nextRunAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
         </span>
       )}
     </div>
