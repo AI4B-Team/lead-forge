@@ -22,7 +22,9 @@ export type LeadFieldKey =
   | "name"
   | "business"
   | "handle"
+  | "platform"
   | "followers"
+  | "engagement"
   | "location"
   | "phone"
   | "email"
@@ -50,6 +52,9 @@ const str = (v: unknown): string | null => {
 const meta = (row: LeadFieldRow): Record<string, unknown> =>
   row.source_meta && typeof row.source_meta === "object" ? (row.source_meta as Record<string, unknown>) : {};
 
+const socials = (row: LeadFieldRow): Record<string, unknown> =>
+  row.socials && typeof row.socials === "object" ? (row.socials as Record<string, unknown>) : {};
+
 const firstOf = (...vals: unknown[]): string | null => {
   for (const v of vals) {
     const s = str(v);
@@ -66,13 +71,28 @@ export const LEAD_FIELDS: Record<LeadFieldKey, LeadField> = {
     key: "handle",
     label: "Handle",
     kind: "display",
-    value: (r) => firstOf(meta(r).handle, meta(r).username, r.full_name, r.business_name),
+    // Identity, not a fallback for a name: if a run yielded no handle the
+    // column has to stay absent, or every business row would fake one.
+    value: (r) =>
+      firstOf(r.handle, meta(r).handle, meta(r).username, socials(r).instagram, socials(r).tiktok),
+  },
+  platform: {
+    key: "platform",
+    label: "Platform",
+    kind: "display",
+    value: (r) => firstOf(r.platform, meta(r).platform),
   },
   followers: {
     key: "followers",
     label: "Followers",
     kind: "display",
-    value: (r) => firstOf(meta(r).followers, meta(r).follower_count),
+    value: (r) => firstOf(r.followers, meta(r).followers, meta(r).follower_count),
+  },
+  engagement: {
+    key: "engagement",
+    label: "Engagement",
+    kind: "display",
+    value: (r) => firstOf(r.engagement, meta(r).engagement, meta(r).engagement_rate),
   },
   location: {
     key: "location",
@@ -96,13 +116,29 @@ export const OUTREACH_FIELD_KEYS: LeadFieldKey[] = ["phone", "email", "address"]
 
 /** Output shape per enrichment profile — a run yields exactly these fields. */
 const FIELDS_BY_PROFILE: Record<EnrichmentProfile, LeadFieldKey[]> = {
-  creator: ["handle", "followers", "email", "website"],
+  creator: ["handle", "platform", "followers", "engagement", "email", "website"],
   seller: ["business", "website", "email"],
   b2b: ["name", "business", "email", "phone"],
   portal: ["name", "address", "phone", "email"],
   data: ["business", "website", "location"],
   standard: ["name", "business", "location", "phone", "email", "address"],
 };
+
+/**
+ * Candidate columns for the aggregate Leads table, in display order. Every
+ * profile-specific field is a candidate; presence in the current filtered view
+ * decides which ones actually render.
+ */
+export const AGGREGATE_CANDIDATE_KEYS: LeadFieldKey[] = [
+  "handle",
+  "platform",
+  "followers",
+  "engagement",
+  "phone",
+  "email",
+  "address",
+  "website",
+];
 
 /** Site scrapers take a URL in and hand back a business + its contact page. */
 const URL_SCRAPER_IDS = new Set(["contact-details", "universal-crawl", "web-scraper", "site-crawler"]);
