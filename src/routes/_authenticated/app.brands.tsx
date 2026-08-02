@@ -9,11 +9,19 @@ import { Badge } from "@/components/ui/badge";
 import { StatTile } from "@/components/app/stat-tile";
 import { BotTrainer } from "@/components/app/bot-trainer";
 import { BrandCreateDialog } from "@/components/app/brand-create-dialog";
-import { KnowledgeFlow, TrainableSources, bucketKnowledge, knowledgeScore } from "@/components/app/brand-knowledge";
+import {
+  KnowledgeFlow,
+  KnowledgeHealth,
+  KnowledgeOutcome,
+  SampleQuestions,
+  TrainableSources,
+  bucketKnowledge,
+  knowledgeScore,
+} from "@/components/app/brand-knowledge";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { listBrands } from "@/lib/brands.functions";
 import { listBotKnowledge } from "@/lib/bot-training.functions";
-import { Brain, Building2, CheckCircle2, FileStack, Globe, Plus, RefreshCw, Sparkles } from "lucide-react";
+import { Brain, CheckCircle2, FileStack, FileText, Globe, MessageSquareQuote, Plus, RefreshCw, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/brands")({
   head: () => ({
@@ -78,7 +86,7 @@ function Brands() {
     <div>
       <PageHeader
         title="AI Brands"
-        description="Give The AI Everything About Your Business — It Then Communicates Like Your Best Salesperson."
+        description="Train Your AI Once — Then Every Reply Sounds Like Your Best Salesperson."
         descriptionClassName="whitespace-nowrap"
         actions={
           <>
@@ -104,17 +112,25 @@ function Brands() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-        <StatTile label="Brands" value={brands.length} icon={Building2} hint="Trained Identities" />
-        <StatTile label="Knowledge Sources" value={totalSources} icon={FileStack} hint="Across All Brands" />
-        <StatTile
-          label="Knowledge Volume"
-          value={totalChars >= 1000 ? `${Math.round(totalChars / 1000)}k Chars` : `${totalChars} Chars`}
-          icon={Brain}
-          hint={current ? `In ${current.name}` : "Active Brand"}
-        />
-        <StatTile label="Readiness" value={`${score}%`} icon={Sparkles} hint={score >= 80 ? "Your AI Is Ready" : "Keep Training"} />
-      </div>
+      {/* Empty state gets a breathing hero instead of four zeroed-out metrics. */}
+      {current && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+          <StatTile label="Training Sources" value={totalSources} icon={FileStack} hint="Across All Brands" />
+          <StatTile label="Documents Indexed" value={sources.length} icon={FileText} hint={`In ${current.name}`} />
+          <StatTile
+            label="Knowledge Volume"
+            value={totalChars >= 1000 ? `${Math.round(totalChars / 1000)}k Chars` : `${totalChars} Chars`}
+            icon={Brain}
+            hint="Active Brand"
+          />
+          <StatTile
+            label="Accuracy Score"
+            value={`${score}%`}
+            icon={Sparkles}
+            hint={score >= 80 ? "Your AI Is Ready" : "Keep Training"}
+          />
+        </div>
+      )}
 
       {/* Brand cards replace the old dropdown — pick or add in one glance. */}
       {workspaceId && brands.length > 0 && (
@@ -212,6 +228,10 @@ function Brands() {
               </div>
 
               <div className="mt-6 border-t border-border pt-5">
+                <KnowledgeHealth sources={sources} score={score} />
+              </div>
+
+              <div className="mt-6 border-t border-border pt-5">
                 <KnowledgeFlow />
               </div>
             </CardContent>
@@ -226,9 +246,10 @@ function Brands() {
               <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Brain className="h-5 w-5" />
               </span>
-              <h2 className="mt-4 font-display text-3xl font-black text-foreground">Teach Your AI Before It Talks.</h2>
-              <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-                Every Response, Objection, FAQ, Offer And Appointment Comes From Your Approved Company Knowledge — Nothing Invented.
+              <h2 className="mt-4 font-display text-3xl font-black text-foreground">Create Your First AI Brand</h2>
+              <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
+                Upload Your Website And Documents In Under 2 Minutes. Your AI Will Immediately Begin Answering From Your
+                Business Knowledge — No Hallucinations, No Made-Up Promises.
               </p>
               {workspaceId && (
                 <div className="mt-6 flex justify-center">
@@ -237,25 +258,47 @@ function Brands() {
                     onCreated={setActive}
                     trigger={
                       <Button size="lg" className="rounded-full">
-                        <Plus className="h-4 w-4 mr-1.5" /> New Brand
+                        <Plus className="h-4 w-4 mr-1.5" /> Create Brand
                       </Button>
                     }
                   />
                 </div>
               )}
-              <div className="mt-8 border-t border-border pt-6">
-                <KnowledgeFlow />
+
+              {/* Sample questions make the payoff concrete before any upload. */}
+              <div className="mt-8 border-t border-border pt-6 text-left">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  <MessageSquareQuote className="h-3.5 w-3.5" /> Try Asking Your AI
+                </div>
+                <div className="mt-3">
+                  <SampleQuestions />
+                </div>
               </div>
             </CardContent>
           </Card>
 
           <div className="mb-4">
-            <h3 className="font-display text-xl font-bold text-foreground">What Gets Trained</h3>
+            <h3 className="font-display text-xl font-bold text-foreground">What Can I Train?</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Feed The AI Any Of These — It Only Ever Speaks From What You Approve.
             </p>
           </div>
           <TrainableSources />
+
+          <div className="mt-8 mb-4">
+            <h3 className="font-display text-xl font-bold text-foreground">How It Works</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Your Uploads Become Capabilities — Here's What The AI Walks Away Knowing.
+            </p>
+          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <KnowledgeOutcome />
+              <div className="mt-6 border-t border-border pt-5">
+                <KnowledgeFlow />
+              </div>
+            </CardContent>
+          </Card>
         </>
       )}
     </div>
