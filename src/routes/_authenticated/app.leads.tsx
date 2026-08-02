@@ -283,8 +283,7 @@ function LeadsPageInner() {
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="p-4">Name / Business</th>
-                <th className="p-4">Phone</th>
-                <th className="p-4">Line Type</th>
+                <th className="p-4">Channels</th>
                 <th className="p-4">Disposition</th>
                 <th className="p-4">Lists</th>
                 <th className="p-4">First / Last Seen</th>
@@ -292,10 +291,10 @@ function LeadsPageInner() {
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
+                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
               )}
               {!isLoading && rows.length === 0 && (
-                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">
+                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">
                   No Records Match These Filters Yet.
                 </td></tr>
               )}
@@ -330,8 +329,22 @@ function LeadsPageInner() {
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">{r.phone ? <PhoneLink phone={r.phone} /> : <span className="text-muted-foreground">—</span>}</td>
-                  <td className="p-4 text-muted-foreground capitalize">{r.phone_type ?? "unknown"}</td>
+                  <td className="p-4">
+                    <ChannelIcons
+                      contact={{
+                        phone: r.phone,
+                        phone_type: r.phone_type,
+                        email: r.email,
+                        address: r.address,
+                        city: r.city,
+                        state: r.state,
+                        zip: r.zip,
+                        website: r.website,
+                        socials: (r.socials ?? null) as Record<string, string> | null,
+                        disposition: r.disposition,
+                      }}
+                    />
+                  </td>
                   <td className="p-4">
                     <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${DISPOSITION_TONE[r.disposition] ?? "border-border text-muted-foreground"}`}>
                       {r.disposition}
