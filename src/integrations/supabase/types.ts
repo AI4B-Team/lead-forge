@@ -66,10 +66,14 @@ export type Database = {
           frequency: string
           geo: string | null
           id: string
+          login_required: string
           notes: string | null
           notified_at: string | null
+          outreach_level: string | null
+          outreach_note: string | null
           record_type: string | null
           requested_by: string | null
+          risk_tier: string
           screening_reason: string | null
           source_label: string | null
           status: string
@@ -85,10 +89,14 @@ export type Database = {
           frequency?: string
           geo?: string | null
           id?: string
+          login_required?: string
           notes?: string | null
           notified_at?: string | null
+          outreach_level?: string | null
+          outreach_note?: string | null
           record_type?: string | null
           requested_by?: string | null
+          risk_tier?: string
           screening_reason?: string | null
           source_label?: string | null
           status?: string
@@ -104,10 +112,14 @@ export type Database = {
           frequency?: string
           geo?: string | null
           id?: string
+          login_required?: string
           notes?: string | null
           notified_at?: string | null
+          outreach_level?: string | null
+          outreach_note?: string | null
           record_type?: string | null
           requested_by?: string | null
+          risk_tier?: string
           screening_reason?: string | null
           source_label?: string | null
           status?: string
@@ -1641,6 +1653,8 @@ export type Database = {
           first_requested_at: string
           frequencies: string[]
           last_requested_at: string
+          logins: string[]
+          needs_review: number
           queued: number
           requests: number
           sample_url: string
