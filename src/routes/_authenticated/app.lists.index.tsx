@@ -390,6 +390,7 @@ function Jobs() {
                   </td>
                 </tr>
                 );
+                });
               })}
             </tbody>
           </table>
