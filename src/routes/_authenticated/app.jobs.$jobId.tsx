@@ -17,7 +17,7 @@ import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, l
 import { RESCRUB_DAYS } from "@/lib/compliance-rules";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { buildFunnel, funnelViolations } from "@/lib/funnel-math";
-import { launchEstimate, formatUsd, DEFAULT_SEQUENCE_STEPS } from "@/lib/launch-estimate";
+import { launchEstimate, formatUsd } from "@/lib/launch-estimate";
 import { LOCAL_TZ } from "@/lib/local-tz";
 import { PhoneLink } from "@/components/app/phone-link";
 import { setOnboardingPref } from "@/lib/onboarding.functions";
