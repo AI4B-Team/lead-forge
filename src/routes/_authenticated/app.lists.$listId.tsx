@@ -141,7 +141,8 @@ function JobDetail() {
         ? "Public Records"
         : "Business Directories";
   const messageTemplates = (data as { messageTemplates?: string[] }).messageTemplates ?? [];
-  const estimate = launchEstimate(counts.clean, { templates: messageTemplates });
+  // A dataset isn't contactable and SMS is US-only, so neither quotes a launch.
+  const estimate = campaignable ? launchEstimate(counts.clean, { templates: messageTemplates }) : null;
   const grade = qualityGrade(quality);
   // Never ship a funnel whose arithmetic disagrees with the Ready To Send card.
   // This runs in production too: on mismatch we surface a reconciling badge
