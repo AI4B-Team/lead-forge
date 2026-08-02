@@ -146,8 +146,8 @@ export function ProfileDropdown({ className }: { className?: string }) {
           <MenuItem icon={<CreditCard className="h-4 w-4" />} label="Billing" onClick={() => go("/app/billing")} />
           <MenuItem icon={<KeyRound className="h-4 w-4" />} label="API Keys" onClick={() => go("/app/api")} />
           <MenuItem
-            icon={<Palette className="h-4 w-4" />}
-            label="Appearance"
+            icon={<Sun className="h-4 w-4" />}
+            label="Theme"
             onClick={toggle}
             trailing={theme === "dark" ? "Dark" : "Light"}
           />
