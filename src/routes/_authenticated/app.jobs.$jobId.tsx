@@ -253,14 +253,6 @@ function JobDetail() {
               scrubbed: counts.total,
               clean: counts.clean,
             }}
-            readyPill={
-              isReady ? (
-                <Badge className="gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-base font-black">
-                  <Check className="h-4 w-4 shrink-0" strokeWidth={3} />
-                  {counts.clean.toLocaleString()} Ready To Launch
-                </Badge>
-              ) : undefined
-            }
           />
           <div className="rounded-xl border border-border bg-muted/40 p-4">
             <button
@@ -273,7 +265,7 @@ function JobDetail() {
                 {isReady ? "Pipeline Complete" : "Live Progress"}
               </span>
               <span className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
-                {logOpen ? "Hide Processing Log" : "Show Processing Log"}
+                {logOpen ? "Hide Processing Details" : "View Processing Details"}
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform ${logOpen ? "rotate-180" : ""}`} />
               </span>
             </button>
@@ -317,10 +309,14 @@ function JobDetail() {
                 <MiniStat
                   icon={<Check className="h-3 w-3" />}
                   label="Completed"
-                  value={new Date(endedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                  value={`${new Date(endedAt).toLocaleDateString([], { month: "short", day: "numeric" })} • ${new Date(endedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}
                 />
                 <MiniStat icon={<Clock className="h-3 w-3" />} label="Processing Time" value={fmtDuration(elapsedMs)} />
-                <MiniStat icon={<Coins className="h-3 w-3" />} label="Rows Processed" value={processed.toLocaleString()} />
+                <MiniStat
+                  icon={<Coins className="h-3 w-3" />}
+                  label="Credits Used"
+                  value={(data.creditsUsed ?? 0).toLocaleString()}
+                />
                 <MiniStat
                   icon={<Database className="h-3 w-3" />}
                   label="Source"

@@ -59,7 +59,7 @@ export function PipelineFunnel({
   const done = completedThrough ?? built.length - 1;
 
   return (
-    <div className={cn("flex items-start pt-10", className)}>
+    <div className={cn("flex items-start", readyPill ? "pt-10" : "pt-1", className)}>
       {built.map((s, i) => {
         const isClean = s.key === "clean";
         const pct = stageFillPercent(s.remaining, found, small ? 12 : 8);

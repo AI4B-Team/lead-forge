@@ -88,7 +88,10 @@ export function buildFunnel(input: FunnelInput): FunnelStage[] {
     stage("skipTraced", "Skip Traced", skipTraced, skipTraced, {
       annotation: traced > 0 ? `${traced.toLocaleString()} Traced` : "Not Needed",
     }),
-    stage("scrubbed", "Scrubbed", scrubbed, skipTraced, { removalNoun: "DNC & Litigators Removed" }),
+    stage("scrubbed", "Scrubbed", scrubbed, skipTraced, {
+      removalNoun: "DNC & Litigators Removed",
+      annotation: "Compliance Checked",
+    }),
     stage("clean", "Clean", clean, scrubbed, { annotation: "Launch Ready", alwaysAnnotate: true }),
   ];
 }

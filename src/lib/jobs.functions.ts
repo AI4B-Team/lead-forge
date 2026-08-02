@@ -174,6 +174,16 @@ export const getJobReview = createServerFn({ method: "GET" })
     const { count: mobile } = await supabase
       .from("leads").select("id", { count: "exact", head: true }).eq("job_id", data.jobId).eq("phone_type", "mobile");
 
+    // Credits burned by this job (ledger debits are negative deltas).
+    const { data: ledger } = await supabase
+      .from("credit_ledger")
+      .select("delta")
+      .eq("job_id", data.jobId);
+    const creditsUsed = (ledger ?? []).reduce(
+      (sum, row) => sum + Math.max(0, -(row.delta ?? 0)),
+      0,
+    );
+
     const t = total ?? 0;
     const cleanRate = t ? (clean ?? 0) / t : 0;
     const mobileRate = t ? (mobile ?? 0) / t : 0;
@@ -204,6 +214,7 @@ export const getJobReview = createServerFn({ method: "GET" })
       scrub,
       counts: { total: t, clean: clean ?? 0, dnc: dnc ?? 0, litigator: litigator ?? 0, mobile: mobile ?? 0 },
       quality,
+      creditsUsed,
       scrubFreshness: {
         scrubbedAt: scrub?.created_at ?? null,
         ageDays: scrubAgeDays(scrub?.created_at ?? null),
