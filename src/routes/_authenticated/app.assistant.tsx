@@ -11,10 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { UploadIntentDialog } from "@/components/app/upload-intent-dialog";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  TARGET_KIND_LABEL, detectUploadIntent, suppressionKeysFrom, targetValuesFrom,
+  type IntentDetection, type TargetKind, type UploadIntent,
+} from "@/lib/upload-intent";
 import { toast } from "sonner";
 import {
   Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal,
@@ -150,8 +151,9 @@ function Assistant() {
   /** Inline upload state — survives a source switch so it can be restored. */
   const [upload, setUpload] = useState<UploadAttachment | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
-  /** File awaiting confirmation that it may replace a non-upload source. */
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  /** File read but awaiting an intent choice before it changes anything. */
+  const [pendingUpload, setPendingUpload] = useState<UploadAttachment | null>(null);
+  const [pendingDetection, setPendingDetection] = useState<IntentDetection | null>(null);
   /** Beta waitlist: template ids already requested + the notify address. */
   const [requestedAdapters, setRequestedAdapters] = useState<Set<string>>(new Set());
   const [notifyEmail, setNotifyEmail] = useState<string | null>(null);
