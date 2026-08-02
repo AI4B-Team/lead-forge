@@ -32,6 +32,7 @@ import {
   CalendarClock,
   SlidersHorizontal,
   AlertTriangle,
+  Rocket,
 } from "lucide-react";
 import { toast } from "sonner";
 import { setJobSchedule } from "@/lib/monitoring.functions";
@@ -170,6 +171,10 @@ function Jobs() {
         if (!isRunningStatus(j.status) || j.stalled) return false;
       } else if (status === "scheduled") {
         if (!j.schedule || j.schedule === "one_time") return false;
+      } else if (status === "launched") {
+        if (!j.launched) return false;
+      } else if (status === "never_launched") {
+        if (j.launched || j.status !== "ready") return false;
       } else if (status !== "all" && j.status !== status) return false;
       if (needle) {
         // Match every populated spec field: name, template, niche/keyword,
@@ -215,10 +220,16 @@ function Jobs() {
     let running = 0;
     let scheduled = 0;
     let attention = 0;
+    let launched = 0;
+    let neverLaunched = 0;
     for (const j of jobs) {
       clean += j.counts.clean;
       // SMS Ready: clean leads sitting on runs that have finished scrubbing.
       if (j.status === "ready") smsReady += j.counts.clean;
+      // Launched = distinct lists with a linked campaign; the rest of the
+      // Ready pile is clean inventory nobody has texted yet.
+      if (j.launched) launched += 1;
+      else if (j.status === "ready") neverLaunched += 1;
       // Running counts only genuinely active jobs — stalled ones move to Needs Attention.
       if (isRunningStatus(j.status) && !j.stalled) running += 1;
       if (j.stalled || j.status === "failed") attention += 1;
@@ -231,6 +242,8 @@ function Jobs() {
       running,
       scheduled,
       attention,
+      launched,
+      neverLaunched,
     };
   }, [allRows]);
 
@@ -283,38 +296,19 @@ function Jobs() {
         }
       />
 
-      {/* Action-first strip: problems lead, vanity metrics trail. */}
-      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+      {/* Narrative order: inventory built → cleaned → launched → automated → live → broken. */}
+      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <StatTile
-          label="Attention"
-          value={summary.attention.toLocaleString()}
-          icon={AlertTriangle}
-          hint={
-            summary.attention > 0 ? `No Progress For ${STALL_HOURS}h+` : "Nothing Stalled Or Failed"
-          }
-          tone={summary.attention > 0 ? "alert" : "muted"}
-          onClick={summary.attention > 0 ? () => setStatus("attention") : undefined}
-        />
-        <StatTile
-          label="Running"
-          value={summary.running.toLocaleString()}
-          icon={Activity}
-          hint="Actively Progressing"
-          tone={summary.running > 0 ? "default" : "muted"}
-          onClick={summary.running > 0 ? () => setStatus("running") : undefined}
-        />
-        <StatTile
-          label="Scheduled"
-          value={summary.scheduled.toLocaleString()}
-          icon={CalendarClock}
-          hint="Recurring Rescans"
-          tone={summary.scheduled > 0 ? "default" : "muted"}
-          onClick={summary.scheduled > 0 ? () => setStatus("scheduled") : undefined}
+          label="Total Lists"
+          value={summary.total.toLocaleString()}
+          icon={Layers}
+          help="Every list you've built in this workspace."
         />
         <StatTile
           label="Clean Leads"
           value={summary.clean.toLocaleString()}
           icon={Users}
+          help="Contacts that passed every scrub and are ready to text (all SMS-ready unless a list is email-only)."
           hint={
             summary.clean === 0
               ? "Passed Every Scrub"
@@ -323,7 +317,47 @@ function Jobs() {
                 : `${summary.smsReady.toLocaleString()} SMS-Ready · ${(summary.clean - summary.smsReady).toLocaleString()} Email-Only`
           }
         />
-        <StatTile label="Total Lists" value={summary.total.toLocaleString()} icon={Layers} />
+        <StatTile
+          label="Launched"
+          value={summary.launched.toLocaleString()}
+          icon={Rocket}
+          help="Lists that have started an SMS campaign. The rest are clean and waiting."
+          hint={`${summary.neverLaunched.toLocaleString()} Never Launched`}
+          tone={summary.launched > 0 ? "default" : "muted"}
+          onClick={summary.launched > 0 ? () => setStatus("launched") : undefined}
+          onHintClick={
+            summary.neverLaunched > 0 ? () => setStatus("never_launched") : undefined
+          }
+        />
+        <StatTile
+          label="Scheduled"
+          value={summary.scheduled.toLocaleString()}
+          icon={CalendarClock}
+          help="Lists set to rescan automatically on a recurring cadence."
+          hint="Recurring Rescans"
+          tone={summary.scheduled > 0 ? "default" : "muted"}
+          onClick={summary.scheduled > 0 ? () => setStatus("scheduled") : undefined}
+        />
+        <StatTile
+          label="Running"
+          value={summary.running.toLocaleString()}
+          icon={Activity}
+          help="Lists whose pipeline is working right now — scraping, enriching, or scrubbing."
+          hint="Actively Progressing"
+          tone={summary.running > 0 ? "default" : "muted"}
+          onClick={summary.running > 0 ? () => setStatus("running") : undefined}
+        />
+        <StatTile
+          label="Attention"
+          value={summary.attention.toLocaleString()}
+          icon={AlertTriangle}
+          help="Lists that stalled or failed and need you to retry."
+          hint={
+            summary.attention > 0 ? `No Progress For ${STALL_HOURS}h+` : "Nothing Stalled Or Failed"
+          }
+          tone={summary.attention > 0 ? "alert" : "muted"}
+          onClick={summary.attention > 0 ? () => setStatus("attention") : undefined}
+        />
       </div>
 
       <Card className="mb-4">
@@ -382,6 +416,8 @@ function Jobs() {
                 <SelectItem value="scraping">Scraping</SelectItem>
                 <SelectItem value="scrubbing">Scrubbing</SelectItem>
                 <SelectItem value="ready">Ready</SelectItem>
+                <SelectItem value="launched">Launched</SelectItem>
+                <SelectItem value="never_launched">Ready — Never Launched</SelectItem>
                 <SelectItem value="running">Running</SelectItem>
                 <SelectItem value="scheduled">Scheduled</SelectItem>
                 <SelectItem value="attention">Needs Attention</SelectItem>
