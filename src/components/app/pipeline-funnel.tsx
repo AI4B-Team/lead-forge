@@ -2,6 +2,7 @@ import { ChevronRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buildFunnel, stageFillPercent } from "@/lib/funnel-math";
 import { useCountUp } from "@/hooks/use-count-up";
+import type { ReactNode } from "react";
 
 export type FunnelStages = {
   found: number;
