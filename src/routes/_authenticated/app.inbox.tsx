@@ -300,17 +300,15 @@ function ConversationsPage() {
   const aiHandling = !!threadQ.data?.messages.some((m) => m.is_bot) && !threadQ.data?.handoff;
 
   return (
-    <div className="inbox-shell flex flex-col">
-      <div className="shrink-0">
-        <PageHeader
-          title="Conversations"
-          description="Where AI And You Work Leads Together — Summaries, Suggested Replies, And Full Context."
-        />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_288px] gap-4 flex-1 min-h-0">
+    <div className="flex flex-col">
+      <PageHeader
+        title="Conversations"
+        description="Where AI And You Work Leads Together — Summaries, Suggested Replies, And Full Context."
+      />
+      <div className="inbox-shell grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_288px]">
         {/* Conversation list */}
         <Card className="flex flex-col min-h-0">
-          <div className="p-2 border-b flex items-center gap-0.5 flex-nowrap overflow-hidden">
+          <div className="shrink-0 p-2 border-b flex items-center gap-0.5 flex-nowrap overflow-hidden">
             {PRIMARY_FILTERS.map((f) => {
               const active = filter === f.key && !showArchived;
               const count = counts ? counts[f.key] : 0;
