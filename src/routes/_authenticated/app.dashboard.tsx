@@ -313,35 +313,39 @@ function Dashboard() {
 
       {/* Composition order locked by spec §18: digest + stats → quick run → checklist → templates. */}
       <ScanDigest workspaceId={workspaceId ?? null} />
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <Metric
-          icon={<ListChecks className="h-4 w-4" />}
-          label="Lists"
-          value={metrics.lists.toString()}
-          note={metrics.processing ? `${metrics.processing} Running` : "All Processed"}
-          noteTone={metrics.processing ? "success" : undefined}
-        />
-        <Metric
-          icon={<MessageSquare className="h-4 w-4" />}
-          label="Live Campaigns"
-          value={(metrics.sending + metrics.scheduled).toString()}
-          note={
-            metrics.sending + metrics.scheduled
-              ? `${metrics.sending} Sending · ${metrics.scheduled} Scheduled`
-              : undefined
-          }
-          noteNode={
-            metrics.sending + metrics.scheduled ? undefined : (
-              <>
-                None Running Yet —{" "}
-                <Link to="/app/campaigns/new" className="font-semibold text-primary underline-offset-2 hover:underline">
-                  Launch Your First
-                </Link>
-              </>
-            )
-          }
-        />
-      </div>
+      <TooltipProvider>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Metric
+            icon={<ListChecks className="h-4 w-4" />}
+            label="Lists"
+            value={metrics.lists.toString()}
+            note={metrics.processing ? `${metrics.processing} Running` : "All Processed"}
+            noteTone={metrics.processing ? "success" : undefined}
+            help="The number of lists you have built or uploaded, including one-time and recurring lists."
+          />
+          <Metric
+            icon={<MessageSquare className="h-4 w-4" />}
+            label="Live Campaigns"
+            value={(metrics.sending + metrics.scheduled).toString()}
+            note={
+              metrics.sending + metrics.scheduled
+                ? `${metrics.sending} Sending · ${metrics.scheduled} Scheduled`
+                : undefined
+            }
+            noteNode={
+              metrics.sending + metrics.scheduled ? undefined : (
+                <>
+                  None Running Yet —{" "}
+                  <Link to="/app/campaigns/new" className="font-semibold text-primary underline-offset-2 hover:underline">
+                    Launch Your First
+                  </Link>
+                </>
+              )
+            }
+            help="Campaigns that are currently sending or scheduled to send messages."
+          />
+        </div>
+      </TooltipProvider>
 
       <QuickRun />
       <GettingStarted workspaceId={workspaceId ?? null} />
