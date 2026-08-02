@@ -18,7 +18,7 @@ import { enrichmentProfile, type EnrichmentProfile } from "@/lib/pipeline-option
 
 export type LeadFieldKind = "outreach" | "display";
 
-export type LeadFieldKey =
+export type KnownLeadFieldKey =
   | "name"
   | "business"
   | "handle"
@@ -31,6 +31,13 @@ export type LeadFieldKey =
   | "address"
   | "website";
 
+/**
+ * Field keys are NOT a closed enum. Built-in templates use registry keys;
+ * custom/requested scrapes contribute keys nobody shipped code for (parcel_id,
+ * tax_amount, …). Both flow through the same renderer.
+ */
+export type LeadFieldKey = KnownLeadFieldKey | (string & {});
+
 export type LeadFieldRow = Record<string, unknown> & {
   source_meta?: unknown;
 };
@@ -39,6 +46,8 @@ export type LeadField = {
   key: LeadFieldKey;
   label: string;
   kind: LeadFieldKind;
+  /** Outreach channel this field maps to, when it is one. */
+  channel?: "phone" | "email" | "address";
   /** Raw display value for this row, or null when the record has none. */
   value: (row: LeadFieldRow) => string | null;
 };
@@ -64,7 +73,7 @@ const firstOf = (...vals: unknown[]): string | null => {
 };
 
 /** Every field the app knows how to show, defined exactly once. */
-export const LEAD_FIELDS: Record<LeadFieldKey, LeadField> = {
+export const LEAD_FIELDS: Record<KnownLeadFieldKey, LeadField> = {
   name: { key: "name", label: "Name", kind: "display", value: (r) => str(r.full_name) },
   business: { key: "business", label: "Business", kind: "display", value: (r) => str(r.business_name) },
   handle: {
@@ -100,9 +109,9 @@ export const LEAD_FIELDS: Record<LeadFieldKey, LeadField> = {
     kind: "display",
     value: (r) => [str(r.city), str(r.state)].filter(Boolean).join(", ") || null,
   },
-  phone: { key: "phone", label: "Phone", kind: "outreach", value: (r) => str(r.phone) },
-  email: { key: "email", label: "Email", kind: "outreach", value: (r) => firstOf(r.email, meta(r).email) },
-  address: { key: "address", label: "Address", kind: "outreach", value: (r) => str(r.address) },
+  phone: { key: "phone", label: "Phone", kind: "outreach", channel: "phone", value: (r) => str(r.phone) },
+  email: { key: "email", label: "Email", kind: "outreach", channel: "email", value: (r) => firstOf(r.email, meta(r).email) },
+  address: { key: "address", label: "Address", kind: "outreach", channel: "address", value: (r) => str(r.address) },
   website: {
     key: "website",
     label: "Website",
@@ -112,10 +121,10 @@ export const LEAD_FIELDS: Record<LeadFieldKey, LeadField> = {
 };
 
 /** The three real outreach channels. Website/social are deliberately absent. */
-export const OUTREACH_FIELD_KEYS: LeadFieldKey[] = ["phone", "email", "address"];
+export const OUTREACH_FIELD_KEYS: KnownLeadFieldKey[] = ["phone", "email", "address"];
 
 /** Output shape per enrichment profile — a run yields exactly these fields. */
-const FIELDS_BY_PROFILE: Record<EnrichmentProfile, LeadFieldKey[]> = {
+const FIELDS_BY_PROFILE: Record<EnrichmentProfile, KnownLeadFieldKey[]> = {
   creator: ["handle", "platform", "followers", "engagement", "email", "website"],
   seller: ["business", "website", "email"],
   b2b: ["name", "business", "email", "phone"],
@@ -129,7 +138,7 @@ const FIELDS_BY_PROFILE: Record<EnrichmentProfile, LeadFieldKey[]> = {
  * profile-specific field is a candidate; presence in the current filtered view
  * decides which ones actually render.
  */
-export const AGGREGATE_CANDIDATE_KEYS: LeadFieldKey[] = [
+export const AGGREGATE_CANDIDATE_KEYS: KnownLeadFieldKey[] = [
   "handle",
   "platform",
   "followers",
@@ -143,20 +152,119 @@ export const AGGREGATE_CANDIDATE_KEYS: LeadFieldKey[] = [
 /** Site scrapers take a URL in and hand back a business + its contact page. */
 const URL_SCRAPER_IDS = new Set(["contact-details", "universal-crawl", "web-scraper", "site-crawler"]);
 
-const FIELDS_BY_TEMPLATE: Record<string, LeadFieldKey[]> = {
+const FIELDS_BY_TEMPLATE: Record<string, KnownLeadFieldKey[]> = {
   probate: ["name", "address", "phone"],
   "google-maps": ["business", "location", "phone", "website", "email"],
   yelp: ["business", "location", "phone", "website", "email"],
 };
 
-/** Columns a given run's results table should render, from its template. */
-export function resultFieldsForTemplate(templateId?: string | null): LeadField[] {
+/**
+ * A custom scrape's declared output schema, stored on the run/template record
+ * when a requested adapter is built. Keys are unknown to this file by design.
+ */
+export type CustomFieldSchema = Array<
+  { key: string; label?: string | null; type?: string | null; kind?: string | null }
+>;
+
+/** Keys the registry already reads (directly or as an alias) — never re-derived. */
+const CLAIMED_META_KEYS = new Set([
+  "handle", "username", "platform", "followers", "follower_count", "engagement",
+  "engagement_rate", "email", "website", "url", "profile_url", "phone", "address",
+  "city", "state", "zip", "name", "full_name", "business", "business_name",
+]);
+
+/** Structural noise that is never a user-facing column. */
+const NOISE_META_KEYS = new Set(["id", "raw", "html", "body", "source", "source_id", "scraped_at", "row_index"]);
+
+const humanize = (key: string): string =>
+  key
+    .replace(/[_\-.]+/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .trim()
+    .split(/\s+/)
+    .map((w) => (w.length <= 3 && w === w.toUpperCase() ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
+    .join(" ") || key;
+
+/**
+ * Minimal classification for a field nobody shipped code for: only the three
+ * lawful outreach channels are detected (so reachability and campaign
+ * eligibility keep working); everything else is display-only. Websites and
+ * socials stay display-only on purpose — you can't contact a URL.
+ */
+export function classifyFieldKey(key: string, declaredType?: string | null): Pick<LeadField, "kind" | "channel"> {
+  const k = `${key} ${declaredType ?? ""}`.toLowerCase();
+  if (/(website|url|instagram|facebook|linkedin|tiktok|twitter|handle|social|profile)/.test(k)) {
+    return { kind: "display" };
+  }
+  if (/(^|[^a-z])(phone|mobile|cell|tel|telephone|sms)([^a-z]|$)/.test(k)) return { kind: "outreach", channel: "phone" };
+  if (/e-?mail/.test(k)) return { kind: "outreach", channel: "email" };
+  if (/(address|mailing|street)/.test(k)) return { kind: "outreach", channel: "address" };
+  return { kind: "display" };
+}
+
+/** Build a renderable field for a key this codebase has never seen. */
+export function customField(key: string, label?: string | null, declaredType?: string | null): LeadField {
+  const classified = classifyFieldKey(key, declaredType);
+  return {
+    key,
+    label: label?.trim() || humanize(key),
+    ...classified,
+    value: (r) => firstOf((r as Record<string, unknown>)[key], meta(r)[key]),
+  };
+}
+
+/** Fields from an explicit custom output schema. */
+export function schemaFields(schema?: CustomFieldSchema | null): LeadField[] {
+  if (!schema?.length) return [];
+  const seen = new Set<string>();
+  const out: LeadField[] = [];
+  for (const f of schema) {
+    const key = typeof f === "string" ? f : f?.key;
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(customField(key, typeof f === "string" ? null : f.label, typeof f === "string" ? null : (f.type ?? f.kind)));
+  }
+  return out;
+}
+
+/**
+ * Infer columns from the rows themselves, so a custom scrape's output surfaces
+ * before any formal schema is attached to it.
+ */
+export function discoverFields(rows: LeadFieldRow[], exclude: Iterable<string> = []): LeadField[] {
+  const taken = new Set<string>([...CLAIMED_META_KEYS, ...NOISE_META_KEYS, ...exclude]);
+  const keys: string[] = [];
+  for (const row of rows) {
+    for (const [k, v] of Object.entries(meta(row))) {
+      if (!k || k.startsWith("_") || taken.has(k)) continue;
+      if (v == null || typeof v === "object") continue;
+      if (!String(v).trim()) continue;
+      taken.add(k);
+      keys.push(k);
+    }
+  }
+  return keys.sort((a, b) => a.localeCompare(b)).map((k) => customField(k));
+}
+
+/**
+ * Columns a given run's results table should render: registry fields for the
+ * template it ran, plus whatever that run's own schema/data declares. A brand
+ * new custom scrape therefore needs zero table code.
+ */
+export function resultFieldsForTemplate(
+  templateId?: string | null,
+  rows: LeadFieldRow[] = [],
+  schema?: CustomFieldSchema | null,
+): LeadField[] {
   const keys = templateId && FIELDS_BY_TEMPLATE[templateId]
     ? FIELDS_BY_TEMPLATE[templateId]
     : templateId && URL_SCRAPER_IDS.has(templateId)
-      ? (["business", "website", "email"] as LeadFieldKey[])
+      ? (["business", "website", "email"] as KnownLeadFieldKey[])
       : FIELDS_BY_PROFILE[enrichmentProfile(templateId)];
-  return keys.map((k) => LEAD_FIELDS[k]);
+  const base = keys.map((k) => LEAD_FIELDS[k]);
+  const declared = schemaFields(schema);
+  const known = new Set([...base, ...declared].map((f) => f.key));
+  return [...base, ...declared, ...discoverFields(rows, known)];
 }
 
 /** Keep only the schema fields this run actually populated. */
@@ -170,11 +278,25 @@ export function populatedFields(fields: LeadField[], rows: LeadFieldRow[]): Lead
  * present anywhere in the current filtered view, so a narrowed filter never
  * leaves a wall of dashes.
  */
-export function presentFieldKeys(rows: LeadFieldRow[], candidates: LeadFieldKey[]): Set<LeadFieldKey> {
-  const present = new Set<LeadFieldKey>();
+export function presentFieldKeys(rows: LeadFieldRow[], candidates: KnownLeadFieldKey[]): Set<KnownLeadFieldKey> {
+  const present = new Set<KnownLeadFieldKey>();
   for (const key of candidates) {
     const field = LEAD_FIELDS[key];
     if (rows.some((r) => field.value(r) !== null)) present.add(key);
   }
   return present;
+}
+
+/**
+ * Columns for the deduplicated Leads master: registry candidates present in the
+ * current filtered view, followed by any novel fields custom scrapes
+ * contributed. Unrecognized fields render as display columns; they can never
+ * break the table because nothing looks them up by name.
+ */
+export function aggregateFields(rows: LeadFieldRow[]): LeadField[] {
+  if (rows.length === 0) return [LEAD_FIELDS.phone, LEAD_FIELDS.email];
+  const present = presentFieldKeys(rows, AGGREGATE_CANDIDATE_KEYS);
+  const base = AGGREGATE_CANDIDATE_KEYS.filter((k) => present.has(k)).map((k) => LEAD_FIELDS[k]);
+  const custom = discoverFields(rows, base.map((f) => f.key));
+  return [...base, ...custom];
 }

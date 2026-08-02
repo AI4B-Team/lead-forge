@@ -19,7 +19,7 @@ import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
 import { LeadTagChips } from "@/components/app/lead-tag-picker";
 import { PhoneCell, EmailCell } from "@/components/app/channel-icons";
 import { mailingAddress } from "@/lib/contact-channels";
-import { presentFieldKeys, LEAD_FIELDS, AGGREGATE_CANDIDATE_KEYS, type LeadFieldKey } from "@/lib/lead-fields";
+import { aggregateFields, type LeadField } from "@/lib/lead-fields";
 
 export const Route = createFileRoute("/_authenticated/app/leads")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -175,11 +175,9 @@ function LeadsPageInner() {
   // list's criteria. Website is a display field, never a contact channel.
   // Candidates come from the shared registry, so a creator run's handle /
   // platform / followers surface here the same way the export file shows them.
-  const candidates = AGGREGATE_CANDIDATE_KEYS;
-  const present = presentFieldKeys(rows as Array<Record<string, unknown>>, candidates);
-  const dynamicCols: LeadFieldKey[] = rows.length === 0
-    ? ["phone", "email"]
-    : candidates.filter((k) => present.has(k));
+  // Registry fields present in this view, plus any novel fields a custom
+  // scrape contributed — no column code per source.
+  const dynamicCols: LeadField[] = aggregateFields(rows as Array<Record<string, unknown>>);
   const colCount = dynamicCols.length + 4;
   const byRecordType = Object.entries(data?.byRecordType ?? {});
   const bySource = Object.entries(data?.bySource ?? {});
@@ -302,8 +300,8 @@ function LeadsPageInner() {
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="p-4">Name / Business</th>
-                {dynamicCols.map((k) => (
-                  <th key={k} className="p-4">{LEAD_FIELDS[k].label}</th>
+                {dynamicCols.map((f) => (
+                  <th key={f.key} className="p-4">{f.label}</th>
                 ))}
                 <th className="p-4">Disposition</th>
                 <th className="p-4">Lists</th>
@@ -362,7 +360,9 @@ function LeadsPageInner() {
                       </div>
                     </div>
                   </td>
-                  {dynamicCols.map((k) => (
+                  {dynamicCols.map((f) => {
+                    const k = f.key;
+                    return (
                     <td key={k} className="p-4">
                       {k === "phone" ? (
                         <PhoneCell contact={contact} />
@@ -391,11 +391,26 @@ function LeadsPageInner() {
                         ) : (
                           <span className="text-muted-foreground/40">—</span>
                         )
-                      ) : (
-                        // Display/identity fields (handle, platform, followers,
-                        // engagement) — never reachability.
+                      ) : f.channel ? (
+                        // Custom outreach-channel field (e.g. a county portal's
+                        // "mailing_address"): channel treatment, generic render.
                         (() => {
-                          const v = LEAD_FIELDS[k].value(r as unknown as Record<string, unknown>);
+                          const v = f.value(r as unknown as Record<string, unknown>);
+                          if (!v) return <span className="text-muted-foreground/40">—</span>;
+                          return (
+                            <div className="max-w-[200px]">
+                              <div className="truncate text-foreground" title={v}>{v}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {f.channel === "address" ? "Mailable" : f.channel === "email" ? "Emailable" : "Textable"}
+                              </div>
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        // Display fields — registry identity fields and unknown
+                        // custom-scrape fields alike. Never reachability.
+                        (() => {
+                          const v = f.value(r as unknown as Record<string, unknown>);
                           if (!v) return <span className="text-muted-foreground/40">—</span>;
                           return (
                             <span
@@ -408,7 +423,8 @@ function LeadsPageInner() {
                         })()
                       )}
                     </td>
-                  ))}
+                    );
+                  })}
                   <td className="p-4">
                     <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${DISPOSITION_TONE[r.disposition] ?? "border-border text-muted-foreground"}`}>
                       {r.disposition}

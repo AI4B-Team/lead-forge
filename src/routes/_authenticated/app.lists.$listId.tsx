@@ -21,7 +21,7 @@ import { normalizeChannel, channelPrimaryAction, CHANNEL_LEAD_NOUN } from "@/lib
 import { buildFunnel, funnelViolations } from "@/lib/funnel-math";
 import { enrichmentProfile, isDataSource, isNonUsRun } from "@/lib/pipeline-options";
 import { exportShapeFor, shapeExportRows, cleanFileType } from "@/lib/export-columns";
-import { populatedFields, resultFieldsForTemplate, type LeadField } from "@/lib/lead-fields";
+import { populatedFields, resultFieldsForTemplate, type CustomFieldSchema, type LeadField } from "@/lib/lead-fields";
 import { launchEstimate, formatUsd } from "@/lib/launch-estimate";
 import { LOCAL_TZ } from "@/lib/local-tz";
 import { PhoneLink } from "@/components/app/phone-link";
@@ -115,6 +115,13 @@ function JobDetail() {
   // Creator sources deliver emails, not dials — their funnel, KPI strip and
   // export columns all follow the creator layout.
   const runTemplateId = typeof params.templateId === "string" ? params.templateId : null;
+  // A custom/requested adapter can declare its own output fields on the run;
+  // when it hasn't, columns are inferred from the rows themselves.
+  const runOutputFields = (Array.isArray(params.output_fields)
+    ? params.output_fields
+    : Array.isArray(params.outputFields)
+      ? params.outputFields
+      : null) as CustomFieldSchema | null;
   const isCreatorRun = enrichmentProfile(runTemplateId) === "creator";
   // Research datasets have no compliance pipeline: Found -> Deduped -> Exported.
   const isDataRun = isDataSource(runTemplateId);
@@ -228,6 +235,7 @@ function JobDetail() {
             <LeadsBrowser
               jobId={jobId}
               templateId={runTemplateId}
+              outputFields={runOutputFields}
               disabled={!isReady}
               open={browserOpen}
               onOpenChange={setBrowserOpen}
@@ -663,9 +671,10 @@ type LeadRow = {
   source_meta?: unknown;
 };
 
-function LeadsBrowser({ jobId, templateId, disabled, open, onOpenChange, bucket, onBucketChange }: {
+function LeadsBrowser({ jobId, templateId, outputFields, disabled, open, onOpenChange, bucket, onBucketChange }: {
   jobId: string;
   templateId: string | null;
+  outputFields?: CustomFieldSchema | null;
   disabled: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -689,7 +698,7 @@ function LeadsBrowser({ jobId, templateId, disabled, open, onOpenChange, bucket,
   // from that template's output schema — never a phone column for a source
   // that can't produce phones.
   const fields = populatedFields(
-    resultFieldsForTemplate(templateId),
+    resultFieldsForTemplate(templateId, leads as Array<Record<string, unknown>>, outputFields),
     leads as Array<Record<string, unknown>>,
   );
   return (
