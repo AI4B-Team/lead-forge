@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Bot, Inbox as InboxIcon, Loader2, Plus, Send, Sparkles } from "lucide-react";
+import { Bot, Inbox as InboxIcon, Loader2, PhoneOff, Plus, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import {
@@ -20,6 +20,7 @@ import {
   blacklistThread,
 } from "@/lib/inbox.functions";
 import { listQuickReplies, createQuickReply } from "@/lib/tags.functions";
+import { listNumbers } from "@/lib/numbers.functions";
 import {
   AiActivityPill,
   AiSummary,
@@ -80,6 +81,7 @@ function ConversationsPage() {
   const [notes, setNotes] = useState("");
   const [slashOpen, setSlashOpen] = useState(false);
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const fetchThreads = useServerFn(listThreads);
   const fetchThread = useServerFn(getThread);
@@ -90,8 +92,21 @@ function ConversationsPage() {
   const runSummary = useServerFn(summarizeThread);
   const runSuggest = useServerFn(suggestThreadReplies);
   const runBlacklist = useServerFn(blacklistThread);
+  const fetchNumbers = useServerFn(listNumbers);
 
   useEffect(() => setArchived(readArchive()), []);
+
+  // A reply can only leave the building from an active sending number. Without
+  // one every send path fails server-side, so we surface it instead of letting
+  // "Use" look like a no-op.
+  const numbersQ = useQuery({
+    queryKey: ["inbox-sending-numbers", workspaceId],
+    queryFn: () => fetchNumbers({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId,
+    staleTime: 60_000,
+  });
+  const hasSendingNumber = (numbersQ.data?.rows ?? []).some((n) => n.status === "active");
+  const numbersKnown = !!numbersQ.data;
 
   const threadsQ = useQuery({
     queryKey: ["inbox-threads", workspaceId, filter],
@@ -194,6 +209,7 @@ function ConversationsPage() {
 
   const handleSend = async () => {
     if (!workspaceId || !selected || !reply.trim()) return;
+    if (numbersKnown && !hasSendingNumber) return warnNoNumber();
     setSending(true);
     try {
       await send({ data: { workspaceId, threadKey: selected, body: reply.trim() } });
@@ -408,12 +424,27 @@ function ConversationsPage() {
                 loading={suggestM.isPending}
                 onUse={(body) => {
                   setReply(body);
+                  if (numbersKnown && !hasSendingNumber) {
+                    warnNoNumber();
+                    return;
+                  }
                   void handleSendWith(body);
                 }}
                 onEdit={(body) => setReply(body)}
                 onRegenerate={() => suggestM.mutate({})}
               />
 
+              {numbersKnown && !hasSendingNumber && (
+                <div className="mx-3 mt-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 flex items-center gap-2">
+                  <PhoneOff className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <p className="text-[11px] text-muted-foreground flex-1">
+                    No Active Sending Number — Replies Cannot Be Delivered Yet. Drafts Are Still Saved Here.
+                  </p>
+                  <Button asChild size="sm" className="h-6 rounded-full text-[10px] px-2.5 shrink-0">
+                    <Link to="/app/numbers">Get A Number</Link>
+                  </Button>
+                </div>
+              )}
               {!!snippetsQ.data?.snippets.length && (
                 <div className="px-3 pt-2 flex flex-wrap gap-1">
                   {snippetsQ.data.snippets.map((s) => (
@@ -499,9 +530,19 @@ function ConversationsPage() {
                     </Button>
                     <Button
                       onClick={handleSend}
-                      disabled={activeThread?.is_optout || sending || !reply.trim()}
+                      disabled={
+                        activeThread?.is_optout ||
+                        sending ||
+                        !reply.trim() ||
+                        (numbersKnown && !hasSendingNumber)
+                      }
                       size="sm"
                       className="ml-auto h-8 rounded-full px-4 cursor-pointer"
+                      title={
+                        numbersKnown && !hasSendingNumber
+                          ? "Add An Active Sending Number To Send Replies"
+                          : undefined
+                      }
                     >
                       {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-3.5 w-3.5 mr-1" /> Send</>}
                     </Button>
@@ -529,6 +570,7 @@ function ConversationsPage() {
 
   async function handleSendWith(body: string) {
     if (!workspaceId || !selected) return;
+    if (numbersKnown && !hasSendingNumber) return warnNoNumber();
     setSending(true);
     try {
       await send({ data: { workspaceId, threadKey: selected, body } });
@@ -541,5 +583,12 @@ function ConversationsPage() {
     } finally {
       setSending(false);
     }
+  }
+
+  function warnNoNumber() {
+    toast.error("No Active Sending Number", {
+      description: "Your Draft Is In The Composer. Add A Sending Number To Deliver Replies.",
+      action: { label: "Get A Number", onClick: () => void navigate({ to: "/app/numbers" }) },
+    });
   }
 }
