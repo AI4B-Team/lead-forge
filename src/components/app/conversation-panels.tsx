@@ -272,7 +272,7 @@ export function SuggestedReplies({
         <div className="mt-1.5 h-8 rounded-lg bg-muted animate-pulse" />
       ) : active ? (
         <div className="mt-1.5 flex items-start gap-2">
-          <p className="text-xs text-foreground flex-1 whitespace-pre-wrap line-clamp-3">{active.body}</p>
+        <p className="text-xs text-foreground flex-1 whitespace-pre-wrap line-clamp-4">{active.body}</p>
           <div className="flex gap-1 shrink-0">
             <Button size="sm" className="h-6 text-[10px] px-2 rounded-full" onClick={() => onUse(active.body)}>
               Use
