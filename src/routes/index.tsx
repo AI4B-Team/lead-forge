@@ -454,12 +454,12 @@ function SectionHeading({
   subtitle?: string;
 }) {
   return (
-    <div className="text-center max-w-3xl mx-auto">
+    <div className="mx-auto w-full max-w-4xl text-center">
       <div className="text-primary text-xs font-semibold uppercase tracking-[0.18em]">{eyebrow}</div>
-      <h2 className="mt-3 font-display text-4xl md:text-5xl font-black text-foreground leading-tight whitespace-nowrap">
+      <h2 className="mt-3 text-balance font-display text-3xl sm:text-4xl md:text-5xl font-black text-foreground leading-tight">
         {title}
       </h2>
-      {subtitle && <p className="mt-4 text-base text-muted-foreground whitespace-nowrap">{subtitle}</p>}
+      {subtitle && <p className="mt-4 text-pretty text-base text-muted-foreground">{subtitle}</p>}
     </div>
   );
 }
