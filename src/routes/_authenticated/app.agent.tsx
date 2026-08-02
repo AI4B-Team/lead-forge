@@ -313,7 +313,8 @@ function AgentPage() {
           {/* 5 — Recent Training */}
           <div className="mt-8">
             <h2 className="font-display text-xl font-bold text-foreground">Recent Training</h2>
-            <div className="mt-2">
+            <p className="mt-1 text-sm text-muted-foreground">Every Lesson Your Agent Has Learned, Newest First.</p>
+            <div className="mt-3">
               <RecentTraining brandId={agent.id} sources={sources} />
             </div>
           </div>

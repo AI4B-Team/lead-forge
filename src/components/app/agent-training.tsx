@@ -7,11 +7,12 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Mic, MicOff, Paperclip, Loader2, Trash2, Sparkles, Link2 } from "lucide-react";
+import { Mic, MicOff, Paperclip, Loader2, Trash2, Sparkles, Link2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { addBotKnowledge, deleteBotKnowledge } from "@/lib/bot-training.functions";
 import { TEXTUAL_FILE, type KnowledgeItem } from "@/lib/knowledge-cards.shared";
+
 
 type SpeechRecognitionLike = {
   continuous: boolean;
@@ -247,6 +248,41 @@ const LABELS: Record<string, string> = {
   catalog: "Product Catalog",
 };
 
+function TrainingItem({
+  source,
+  onDelete,
+}: {
+  source: KnowledgeItem;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="group relative flex items-center gap-3 rounded-2xl border border-border bg-background p-4">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+        <CheckCircle2 className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-semibold text-foreground">
+          {LABELS[source.category] ?? source.title}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {source.title}
+        </div>
+        <div className="mt-0.5 text-[11px] text-muted-foreground/80">
+          {source.chars.toLocaleString()} Chars · {ago(source.created_at)}
+        </div>
+      </div>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-8 w-8 shrink-0 opacity-0 transition group-hover:opacity-100"
+        onClick={() => onDelete(source.id)}
+      >
+        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+      </Button>
+    </div>
+  );
+}
+
 export function RecentTraining({ brandId, sources }: { brandId: string; sources: KnowledgeItem[] }) {
   const qc = useQueryClient();
   const remove = useServerFn(deleteBotKnowledge);
@@ -269,31 +305,13 @@ export function RecentTraining({ brandId, sources }: { brandId: string; sources:
 
   return (
     <div>
-      <div className="divide-y divide-border">
+      <div className="grid gap-3">
         {rows.map((s) => (
-          <div key={s.id} className="group flex items-center gap-3 py-2.5">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium text-foreground">
-                {LABELS[s.category] ?? s.title}
-                <span className="ml-2 font-normal text-muted-foreground">{s.title}</span>
-              </div>
-              <div className="text-[11px] text-muted-foreground">
-                {ago(s.created_at)} · {s.chars.toLocaleString()} Chars
-              </div>
-            </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 shrink-0 opacity-0 transition group-hover:opacity-100"
-              onClick={() => del(s.id)}
-            >
-              <Trash2 className="h-3.5 w-3.5 text-destructive" />
-            </Button>
-          </div>
+          <TrainingItem key={s.id} source={s} onDelete={del} />
         ))}
       </div>
       {sources.length > 5 && (
-        <Button variant="ghost" size="sm" className="mt-1 h-7 rounded-full px-2 text-xs" onClick={() => setAll(!all)}>
+        <Button variant="ghost" size="sm" className="mt-3 h-7 rounded-full px-2 text-xs" onClick={() => setAll(!all)}>
           {all ? "Show Less" : `Show All ${sources.length}`}
         </Button>
       )}
