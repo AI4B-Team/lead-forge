@@ -19,6 +19,11 @@ export const jobSpecSchema = z.object({
   dedupe: z.boolean().default(true),
   mobileOnly: z.boolean().default(true),
   skipTrace: z.boolean().default(true),
+  /**
+   * Creator sources only: keep only creators who publish a contact email.
+   * Creator outreach runs on email/DM, never on skip-traced cell numbers.
+   */
+  emailRequired: z.boolean().default(true),
   industry: z.string().max(40).nullable().default(null),
   messageAngle: z.string().max(400).nullable().default(null),
   templateId: z.string().max(60).nullable().default(null),
