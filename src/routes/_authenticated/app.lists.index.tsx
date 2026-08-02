@@ -474,7 +474,7 @@ function Jobs() {
                       </td>
                       <td className="p-4">
                         <span className="inline-flex items-center gap-2 whitespace-nowrap text-muted-foreground">
-                          <src.icon className="h-4 w-4 shrink-0" /> {src.label}
+                          <src.icon className="h-4 w-4 shrink-0" /> {j.identity.label}
                         </span>
                       </td>
                       <td className="p-4">
@@ -504,17 +504,22 @@ function Jobs() {
                       <td className="p-4">
                         {j.stalled ? (
                           <div
-                            className="flex flex-col items-start gap-1.5"
+                            className="flex items-center gap-2 whitespace-nowrap"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <StatusBadge status="attention" />
-                            <span className="max-w-[220px] text-[11px] leading-snug text-muted-foreground">
-                              {stallReason(j.status)}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 rounded-full px-2 text-[11px]"
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-help">
+                                  <ListStatusBadge status={j.status} stalled />
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-[260px] text-xs leading-snug">
+                                {stallReason(j.status)}
+                              </TooltipContent>
+                            </Tooltip>
+                            <button
+                              type="button"
+                              className="cursor-pointer text-xs font-semibold text-primary underline-offset-2 hover:underline"
                               onClick={async () => {
                                 try {
                                   await retryJob({ data: { jobId: j.id } });
@@ -527,11 +532,11 @@ function Jobs() {
                                 }
                               }}
                             >
-                              <RotateCw className="mr-1 h-3 w-3" /> Retry
-                            </Button>
+                              Retry
+                            </button>
                           </div>
                         ) : (
-                          <StatusBadge status={(j.status ?? "queued") as JobStatus} />
+                          <ListStatusBadge status={j.status} />
                         )}
                       </td>
                       <td className="p-4">
