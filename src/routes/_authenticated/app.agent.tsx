@@ -136,8 +136,11 @@ function AgentSetup({ workspaceId }: { workspaceId: string }) {
 
           <div className="mt-6 border-t border-border pt-5">
             <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              <MessageSquareQuote className="h-3.5 w-3.5" /> Try Asking Your Agent
+              <MessageSquareQuote className="h-3.5 w-3.5" /> What You'll Be Able To Ask
             </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Once Your Agent Is Created And Trained, You Can Test It With Questions Like These.
+            </p>
             <div className="mt-3">
               <SampleQuestions />
             </div>
