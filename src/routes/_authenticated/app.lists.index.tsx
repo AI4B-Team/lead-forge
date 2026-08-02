@@ -151,6 +151,7 @@ function Jobs() {
     // Stuck-job watchdog (§23): running with no progress events for 2h.
     return jobs.map((j) => ({
       ...j,
+      identity: sourceIdentity(j),
       stalled: isStalled({
         status: j.status,
         lastEventAt: j.last_event_at,
@@ -164,15 +165,40 @@ function Jobs() {
     const needle = q.trim().toLowerCase();
     const cutoff = range === "all" ? 0 : Date.now() - Number(range) * 86400000;
     return jobs.filter((j) => {
-      if (source !== "all" && j.source_type !== source) return false;
+      if (source !== "all" && j.identity.key !== source) return false;
       if (status === "attention") {
         if (!j.stalled) return false;
       } else if (status !== "all" && j.status !== status) return false;
-      if (needle && !j.name.toLowerCase().includes(needle)) return false;
+      if (needle) {
+        // Match every populated spec field: name, template, niche/keyword,
+        // record type, state, counties, city, country, and URL.
+        const haystack = [j.name, j.identity.label, j.identity.categoryLabel, ...j.spec_terms]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(needle)) return false;
+      }
       if (cutoff && new Date(j.created_at).getTime() < cutoff) return false;
       return true;
     });
   }, [allRows, q, source, status, range]);
+
+  /** Only templates/sources this workspace has actually used, grouped. */
+  const sourceOptions = useMemo(() => {
+    const byGroup = new Map<string, Map<string, string>>();
+    for (const j of allRows) {
+      const { group, key, label } = j.identity;
+      const bucket = byGroup.get(group) ?? new Map<string, string>();
+      bucket.set(key, label);
+      byGroup.set(group, bucket);
+    }
+    return GROUP_ORDER.filter((g) => byGroup.has(g)).map((g) => ({
+      group: g,
+      items: [...byGroup.get(g)!.entries()]
+        .map(([key, label]) => ({ key, label }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    }));
+  }, [allRows]);
 
   const summary = useMemo(() => {
     const jobs = allRows;
