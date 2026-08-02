@@ -250,7 +250,7 @@ function Assistant() {
    * A file added from either entry point (panel dropzone or composer attach)
    * flips the source to Upload My List and runs the shared mapping step.
    */
-  const attachFile = async (file: File) => {
+  const attachFile = async (file: File, clearSetup = false) => {
     if (!isSpreadsheet(file)) {
       toast.error("Attach A .csv Or .xlsx File.");
       return;
@@ -258,6 +258,12 @@ function Assistant() {
     try {
       const next = await readAttachment(file);
       setUpload(next);
+      if (clearSetup) {
+        setSpec(withEnrichmentDefaults({ ...EMPTY_SPEC, sourceType: "upload" }, undefined));
+        setCoverage([]);
+        setEstimate(null);
+        setInferred(new Set());
+      }
       if (spec.sourceType !== "upload") {
         setSpec((s) => ({ ...s, sourceType: "upload" }));
         setInferred((prev) => { const out = new Set(prev); out.delete("sourceType"); return out; });
@@ -290,6 +296,27 @@ function Assistant() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could Not Read That File");
     }
+  };
+
+  /** Current non-upload setup, named for the swap confirmation. */
+  const currentSourceLabel =
+    selectedTemplate?.title ??
+    (spec.sourceType === "records" ? "Public Records" : "Business Search");
+
+  /**
+   * Composer/panel entry point. Attaching a file means "run this list through
+   * the pipeline", so a non-upload source must be confirmed before it's wiped.
+   */
+  const requestAttach = (file: File) => {
+    if (!isSpreadsheet(file)) {
+      toast.error("Attach A .csv Or .xlsx File.");
+      return;
+    }
+    if (spec.sourceType === "upload") {
+      void attachFile(file);
+      return;
+    }
+    setPendingFile(file);
   };
 
   const saveMapping = (map: ColumnMap) => {
