@@ -53,6 +53,8 @@ export async function queueJob(
     schedule?: string | null;
     /** Outreach channel for the finished list — drives pipeline gating. */
     channel?: "sms" | "email" | "direct_mail" | null;
+    /** Member who queued this run; every credit debit is attributed to them. */
+    createdBy?: string | null;
   },
 ): Promise<QueuedJob> {
   const key = await buildIdempotencyKey({ sourceType: input.sourceType, params: input.params });
@@ -66,6 +68,7 @@ export async function queueJob(
   if (input.recordType) row.record_type = input.recordType;
   if (input.channel) row.channel = input.channel;
   if (input.schedule) row.schedule = input.schedule;
+  if (input.createdBy) row.created_by = input.createdBy;
 
   const { data, error } = await client
     .from("jobs")
@@ -82,6 +85,7 @@ export async function queueJob(
       detail: `Source: ${input.sourceType}`,
       refId: id,
       refType: "list",
+      actorId: input.createdBy ?? null,
     });
     return { id, duplicate: false };
   }

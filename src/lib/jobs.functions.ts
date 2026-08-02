@@ -418,6 +418,7 @@ export const launchCampaignFromJob = createServerFn({ method: "POST" })
         detail: `${(cleanCount ?? 0).toLocaleString()} Clean Leads Attached`,
         refId: campaign.id,
         refType: "campaign",
+        actorId: context.userId,
       });
     }
     return { campaignId: campaign.id };
@@ -469,6 +470,7 @@ export const setListSchedule = createServerFn({ method: "POST" })
         detail: job.name ?? null,
         refId: data.jobId,
         refType: "list",
+        actorId: context.userId,
       });
     }
     return fields;

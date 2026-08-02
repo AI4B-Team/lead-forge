@@ -161,6 +161,7 @@ export const requestCoverage = createServerFn({ method: "POST" })
               : `Source Request Not Buildable — ${label ?? "New Source"}`,
         detail: screen.reason ?? data.county ?? data.recordType ?? data.targetUrl ?? null,
         refType: "template",
+        actorId: context.userId,
       });
     }
     return {
@@ -212,6 +213,17 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const spec = data.spec;
     if (!spec.sourceType) throw new Error("Pick A Source First");
+    // Role + cap enforcement lives server-side: a client that skips the
+    // pre-flight check still cannot spend past its cap.
+    {
+      const { assertSpendAllowed } = await import("./accountability.server");
+      const estimated = Math.max(0, Number((spec as { maxResults?: number }).maxResults ?? 0));
+      await assertSpendAllowed(context.supabase, data.workspaceId, context.userId, {
+        amount: estimated,
+        action: "build_list",
+        summary: `Build List · ${spec.name ?? spec.templateId ?? spec.sourceType}`,
+      });
+    }
     if (spec.sourceType === "upload") throw new Error("Uploaded Lists Start On The Upload Page");
     if (spec.sourceType === "business" && !spec.niches.length) throw new Error("Add At Least One Niche");
     if (spec.sourceType === "records" && !spec.recordType) throw new Error("Pick A Record Type");
@@ -244,6 +256,7 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
       });
     const queued = await queueJob(context.supabase, {
       workspaceId: data.workspaceId,
+      createdBy: context.userId,
       sourceType: spec.sourceType,
       channel,
       params: {

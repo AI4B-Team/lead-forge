@@ -539,6 +539,7 @@ export async function executePipeline(
     detail: `${deduped.length.toLocaleString()} Net-New Of ${(inserted?.length ?? 0).toLocaleString()} Processed`,
     refId: jobId,
     refType: "list",
+    actorId: actorUserId,
   });
   await emitEvent(supabase, workspaceId, "job.completed", {
     job_id: jobId,
