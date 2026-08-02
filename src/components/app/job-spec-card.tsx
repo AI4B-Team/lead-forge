@@ -133,30 +133,6 @@ function Confidence({ value, show }: { value: number; show: boolean }) {
   );
 }
 
-/**
- * Click-to-open "?" hint. Popover (not a tooltip) so it works on touch and
- * stays open while the user reads it.
- */
-function HelpHint({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={`What Does ${title} Mean?`}
-          className="text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <HelpCircle className="h-3.5 w-3.5" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" side="left" className="w-72 space-y-1">
-        <div className="text-sm font-semibold text-foreground">{title}</div>
-        <p className="text-xs leading-relaxed text-muted-foreground">{children}</p>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 function FieldLabel({
   children,
   confidence,
