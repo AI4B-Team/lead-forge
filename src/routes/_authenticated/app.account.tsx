@@ -333,10 +333,10 @@ function AccountPage() {
                 </CardHeader>
                 <CardContent className="flex items-center justify-between gap-4">
                   <p className="text-sm text-muted-foreground">
-                    Push Leads And Campaign Events Into Your Own Stack. Manage Keys And Webhooks In Workspace Settings.
+                    Push Leads And Campaign Events Into Your Own Stack. Manage Keys On The Integrations Page.
                   </p>
                   <Button variant="outline" className="rounded-full" asChild>
-                    <a href="/app/settings">Open</a>
+                    <a href="/app/integrations#api">Open</a>
                   </Button>
                 </CardContent>
               </Card>

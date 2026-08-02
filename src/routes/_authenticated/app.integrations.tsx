@@ -138,7 +138,7 @@ function IntegrationsPage() {
 
         <div className="space-y-8">
           {groups.map((g) => (
-            <section key={g.label}>
+            <section key={g.label} id={g.label.toLowerCase()} className="scroll-mt-24">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <h2 className="font-display text-base font-bold text-foreground">{g.label}</h2>
                 <p className="text-xs text-muted-foreground">{g.hint}</p>
