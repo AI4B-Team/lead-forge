@@ -17,10 +17,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 import {
   Plus,
   Search,
   Repeat,
+  Play,
+  Pause,
   ChevronRight,
   Landmark,
   Building2,
@@ -313,8 +316,31 @@ function Jobs() {
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
       const recurring = ordered.some((r) => normalizeCadence(r.schedule) !== "one_time");
-      if (recurring && ordered.length > 1)
-        out.push({ latest: ordered[0]!, prior: ordered.slice(1) });
+      if (recurring && ordered.length > 1) {
+        // A rescan that just started reports zeros for every stage. Rolling
+        // that up would make a productive scheduled list look like it found
+        // nothing, so the summary row borrows its pipeline counts from the
+        // most recent run that actually produced output. Status, schedule and
+        // timestamps still come from the newest run.
+        const newest = ordered[0]!;
+        const hasOutput = (r: (typeof rows)[number]) =>
+          (r.rows_in ?? 0) > 0 ||
+          r.counts.clean + r.counts.dnc + r.counts.litigator > 0;
+        const statsFrom = hasOutput(newest) ? newest : ordered.find(hasOutput);
+        out.push({
+          latest: statsFrom && statsFrom !== newest
+            ? {
+                ...newest,
+                rows_in: statsFrom.rows_in,
+                rows_deduped: statsFrom.rows_deduped,
+                rows_enriched: statsFrom.rows_enriched,
+                rows_skiptraced: statsFrom.rows_skiptraced,
+                counts: statsFrom.counts,
+              }
+            : newest,
+          prior: ordered.slice(1),
+        });
+      }
       else for (const r of ordered) out.push({ latest: r, prior: [] });
     }
     return out.sort(
@@ -760,8 +786,16 @@ function RescanControl({
   const channel = normalizeChannel(job.channel);
   /** A file import has nothing to re-scrape, so cadence is locked to one-time. */
   const staticSource = job.source_type === "upload";
-  const [customHours, setCustomHours] = useState(
-    String(Math.max(1, Math.round((job.custom_interval_minutes ?? 360) / 60))),
+  const savedMinutes = job.custom_interval_minutes ?? 360;
+  const savedIsDays = savedMinutes % 1440 === 0 && savedMinutes >= 1440;
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customUnit, setCustomUnit] = useState<"hours" | "days">(savedIsDays ? "days" : "hours");
+  const [customValue, setCustomValue] = useState(
+    String(savedIsDays ? savedMinutes / 1440 : Math.max(1, Math.round(savedMinutes / 60))),
+  );
+  const customMinutes = Math.max(
+    15,
+    Number(customValue || 1) * (customUnit === "days" ? 1440 : 60),
   );
   const summary = scheduleSummary({
     cadence,
@@ -771,94 +805,167 @@ function RescanControl({
   });
 
   return (
-    <div className="flex w-[190px] flex-col gap-1.5">
+    <div className="flex w-[210px] flex-col gap-1.5">
       {staticSource ? (
         <>
           <div className="flex h-8 w-full items-center rounded-md border border-border bg-muted/40 px-2 text-xs text-muted-foreground">
             One-Time Only
           </div>
           <span className="text-[11px] leading-snug text-muted-foreground">
-            Uploaded Lists Can't Rescan — Upload A New File To Refresh.
+            Uploaded Lists Can't Rescan.
           </span>
         </>
       ) : (
-      <Select
-        value={cadence}
-        onValueChange={(v) =>
-          onCadence(
-            v as Cadence,
-            v === "custom" ? Math.max(15, Number(customHours || 6) * 60) : null,
-          )
-        }
-      >
-        <SelectTrigger className="h-8 w-full text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {CADENCES.map((c) => (
-            <SelectItem key={c} value={c}>
-              {c === "custom" ? "Custom Interval" : cadenceLabel(c)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      )}
+        // The dropdown owns the recurring schedule. Run Now and Pause are
+        // actions, so they sit as compact icon buttons attached to it —
+        // adjacent to the schedule without ever being options inside it.
+        <div className="flex items-center gap-1">
+          <Popover
+            open={customOpen}
+            onOpenChange={(o: boolean) => {
+              setCustomOpen(o);
+              if (!o && cadence !== "custom") {
+                setCustomValue(
+                  String(savedIsDays ? savedMinutes / 1440 : Math.max(1, Math.round(savedMinutes / 60))),
+                );
+              }
+            }}
+          >
+            <PopoverAnchor asChild>
+              <div className="min-w-0 flex-1">
+                <Select
+                  value={cadence}
+                  onValueChange={(v) => {
+                    if (v === "custom") {
+                      setCustomOpen(true);
+                      return;
+                    }
+                    onCadence(v as Cadence, null);
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-full text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CADENCES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c === "custom" ? "Custom Interval" : cadenceLabel(c)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </PopoverAnchor>
+            <PopoverContent align="start" className="w-56 p-3">
+              <p className="text-xs font-semibold">Custom Rescan Interval</p>
+              <div className="mt-2 flex items-center gap-1.5">
+                <span className="text-[11px] text-muted-foreground">Every</span>
+                <Input
+                  value={customValue}
+                  inputMode="numeric"
+                  className="h-8 w-14 text-xs"
+                  onChange={(e) => setCustomValue(e.target.value.replace(/\D/g, ""))}
+                />
+                <Select value={customUnit} onValueChange={(v) => setCustomUnit(v as "hours" | "days")}>
+                  <SelectTrigger className="h-8 flex-1 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hours">Hours</SelectItem>
+                    <SelectItem value="days">Days</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="mt-3 flex items-center justify-end gap-2">
+                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setCustomOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    onCadence("custom", customMinutes);
+                    setCustomOpen(false);
+                  }}
+                >
+                  Save Interval
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
 
-      {!staticSource && cadence === "custom" && (
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-muted-foreground">Every</span>
-          <Input
-            value={customHours}
-            inputMode="numeric"
-            className="h-7 w-14 text-xs"
-            onChange={(e) => setCustomHours(e.target.value.replace(/\D/g, ""))}
-            onBlur={() => onCadence("custom", Math.max(15, Number(customHours || 6) * 60))}
-          />
-          <span className="text-[11px] text-muted-foreground">Hours</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                className="h-8 w-8 shrink-0"
+                onClick={onRunNow}
+                aria-label="Run Now"
+              >
+                <Play className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">Run Now</TooltipContent>
+          </Tooltip>
+
+          {cadence !== "one_time" && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => onToggleActive(!job.schedule_active)}
+                  aria-label={job.schedule_active ? "Pause Schedule" : "Resume Schedule"}
+                >
+                  {job.schedule_active ? (
+                    <Pause className="h-3.5 w-3.5" />
+                  ) : (
+                    <Play className="h-3.5 w-3.5 text-primary" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs">
+                {job.schedule_active ? "Pause Schedule" : "Resume Schedule"}
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       )}
 
-      {!staticSource && cadence !== "one_time" && (
-        <>
-          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Repeat className="h-3 w-3" /> {summary}
+      {/* One line, every cadence — so scheduled and one-time rows align. */}
+      {!staticSource &&
+        (cadence === "one_time" ? (
+          <span className="truncate text-[11px] text-muted-foreground">Runs Only When You Trigger It</span>
+        ) : (
+          <span className="flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+            <Repeat className="h-3 w-3 shrink-0" />
+            <span className="truncate">{summary}</span>
+            {channel === "sms" ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => onAutoLaunch(!job.auto_launch)}
+                    className={`ml-auto shrink-0 cursor-pointer rounded-full border px-1.5 text-[10px] font-semibold ${
+                      job.auto_launch
+                        ? "border-primary/30 bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground"
+                    }`}
+                  >
+                    Auto
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[220px] text-xs">
+                  {job.auto_launch
+                    ? "Auto-Launching New Leads Into Outreach."
+                    : "Auto-Launch Off — We'll Notify You Instead."}
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
           </span>
-          {channel === "sms" ? (
-            <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={job.auto_launch}
-                onChange={(e) => onAutoLaunch(e.target.checked)}
-                className="h-3 w-3 cursor-pointer accent-primary"
-              />
-              Auto-Launch New Leads
-            </label>
-          ) : (
-            <span className="text-[11px] text-muted-foreground">
-              {CHANNEL_LABEL[channel]} — Notify Me To Export
-            </span>
-          )}
-        </>
-      )}
-
-      <div className="flex items-center gap-2 text-[11px]">
-        <button
-          type="button"
-          onClick={onRunNow}
-          className="cursor-pointer font-semibold text-primary underline-offset-2 hover:underline"
-        >
-          Run Now
-        </button>
-        {!staticSource && cadence !== "one_time" && (
-          <button
-            type="button"
-            onClick={() => onToggleActive(!job.schedule_active)}
-            className="cursor-pointer text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-          >
-            {job.schedule_active ? "Pause" : "Resume"}
-          </button>
-        )}
-      </div>
+        ))}
     </div>
   );
 }
