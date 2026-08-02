@@ -891,7 +891,7 @@ function Assistant() {
             <button
               type="button"
               onClick={() => openPanelWithSource("business")}
-              className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
+              className="inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
             >
               <SlidersHorizontal className="mr-1.5 h-4 w-4" /> Build It Yourself
             </button>
