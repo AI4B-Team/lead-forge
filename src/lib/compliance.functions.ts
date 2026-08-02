@@ -2,6 +2,31 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { jobLabel, type JobRef } from "@/lib/compliance.shared";
+import { phoneVariants } from "@/lib/optout.server";
+
+/** Digits-only form used for partial phone matching. */
+function digitsOnly(v: string): string {
+  return v.replace(/\D/g, "");
+}
+
+/** Canonical +1XXXXXXXXXX when possible, otherwise the raw input. */
+function normalizePhone(v: string): string {
+  const d = digitsOnly(v);
+  const ten = d.length === 11 && d.startsWith("1") ? d.slice(1) : d;
+  return ten.length === 10 ? `+1${ten}` : v.trim();
+}
+
+const REASON_BUCKETS = {
+  opt_out: ["optout", "opt_out", "opt-out", "stop"],
+  dnc: ["dnc", "litigator"],
+} as const;
+
+export function reasonBucket(reason: string | null | undefined): "opt_out" | "dnc" | "manual" {
+  const r = (reason ?? "").toLowerCase();
+  if (REASON_BUCKETS.opt_out.some((k) => r.includes(k))) return "opt_out";
+  if (REASON_BUCKETS.dnc.some((k) => r.includes(k))) return "dnc";
+  return "manual";
+}
 
 /** Real compliance inputs for a workspace: registration stage, scrub history, suppression. */
 export const getComplianceState = createServerFn({ method: "GET" })
