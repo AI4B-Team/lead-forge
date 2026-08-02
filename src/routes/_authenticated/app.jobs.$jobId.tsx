@@ -386,7 +386,7 @@ function JobDetail() {
             <Activity className="h-4 w-4 text-primary" />
             <CardTitle className="text-base font-display">List Quality Score</CardTitle>
           </div>
-          <div className="flex items-baseline gap-3">
+          <div className="flex items-center gap-3">
             <span
               className={`font-display text-4xl font-black leading-none ${
                 grade.tone === "success" ? "text-success" : grade.tone === "warn" ? "text-warn" : "text-danger"
@@ -394,6 +394,7 @@ function JobDetail() {
             >
               {isReady ? grade.letter : "—"}
             </span>
+            <div className="h-8 w-px bg-border" aria-hidden="true" />
             <span className="font-display text-2xl font-black tabular-nums text-foreground">
               {isReady ? quality : "—"}<span className="text-sm text-muted-foreground">/100</span>
             </span>
