@@ -67,10 +67,11 @@ const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   state: "State",
   counties: "Counties",
   recencyDays: "Recency",
-  removeFranchises: "Remove Franchises",
-  dedupe: "Dedupe",
-  mobileOnly: "Mobile Only",
-  skipTrace: "Skip Trace",
+  // Toggle names come from the shared config so chips match the panel and checklist.
+  removeFranchises: PIPELINE_OPTION_LABELS.removeFranchises,
+  dedupe: PIPELINE_OPTION_LABELS.dedupe,
+  mobileOnly: PIPELINE_OPTION_LABELS.mobileOnly,
+  skipTrace: PIPELINE_OPTION_LABELS.skipTrace,
   industry: "Industry Preset",
   messageAngle: "First-Touch Angle",
 };
