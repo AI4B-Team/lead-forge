@@ -319,6 +319,15 @@ export function enabledOptions(spec: JobSpec): readonly PipelineOption[] {
 }
 
 /**
+ * Toggles that are relevant to the selected source but currently OFF. The
+ * checklist renders these as empty checkboxes: offered, not happening. Nothing
+ * mentions them conversationally — their presence in the list is the affordance.
+ */
+export function availableOptions(spec: JobSpec): readonly PipelineOption[] {
+  return optionsForSource(spec.sourceType, spec.templateId, specOptionContext(spec)).filter((o) => !spec[o.id]);
+}
+
+/**
  * Snap a spec's toggles onto the defaults of the selected source's profile.
  * Called whenever a template is picked so a creator source never carries a
  * stale skipTrace/mobileOnly true, and LinkedIn starts with skip trace off.
