@@ -173,7 +173,7 @@ export const listJobLeads = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     let q = context.supabase
       .from("leads")
-      .select("id, full_name, business_name, phone, phone_type, email, city, state, address, scrub_status")
+      .select("id, full_name, business_name, phone, phone_type, email, city, state, address, zip, source_meta, scrub_status")
       .eq("job_id", data.jobId)
       .order("full_name", { ascending: true })
       .limit(data.limit);
