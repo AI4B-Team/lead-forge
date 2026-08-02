@@ -15,7 +15,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
 import { queueJob } from "@/lib/job-submit";
 
-export const Route = createFileRoute("/_authenticated/app/new-job/records")({
+export const Route = createFileRoute("/_authenticated/app/new-list/records")({
   head: () => ({ meta: [{ title: "Scrape Public Records — LeadTrace" }] }),
   component: Wizard,
 });
@@ -62,12 +62,12 @@ function Wizard() {
           date_to: to || null,
         },
       });
-      navigate({ to: "/app/jobs/$jobId", params: { jobId: id } });
+      navigate({ to: "/app/lists/$listId", params: { listId: id } });
       if (duplicate) {
         toast.info("This Search Was Already Queued — Opening That Run.");
         return;
       }
-      toast.success("Job Queued. Running Pipeline…");
+      toast.success("List Queued. Running Pipeline…");
       runJobFn({ data: { jobId: id } }).catch((e) =>
         toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
       );
@@ -138,10 +138,10 @@ function Wizard() {
 
           <div className="flex gap-2 justify-end">
             <Button asChild variant="outline" className="rounded-full">
-              <Link to="/app/new-job">Back</Link>
+              <Link to="/app/new-list">Back</Link>
             </Button>
             <Button className="rounded-full" onClick={run} disabled={busy || !workspaceId}>
-              {busy ? "Queuing…" : "Run Job"}
+              {busy ? "Queuing…" : "Run List"}
             </Button>
           </div>
         </CardContent>

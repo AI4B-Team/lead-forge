@@ -208,7 +208,7 @@ function NewCampaign() {
   const bodies = cleanSteps.map((s) => s.body);
   const selectedJobRow = jobs?.find((j) => j.id === selectedJob);
   const listName = selectedJobRow
-    ? ((selectedJobRow.params ?? {}) as { name?: string }).name ?? `Job ${selectedJobRow.id.slice(0, 8)}`
+    ? ((selectedJobRow.params ?? {}) as { name?: string }).name ?? `List ${selectedJobRow.id.slice(0, 8)}`
     : "";
   const brandName = brands?.find((b) => b.id === brandId)?.name ?? "";
   const recipients = preview?.recipients ?? selectedJobRow?.rows_deduped ?? 0;
@@ -301,7 +301,7 @@ function NewCampaign() {
 
           <Step id="list" n={3} title="Choose List" hint="Only Clean, Scrubbed Lists Can Be Loaded.">
             {!jobs?.length ? (
-              <Card><CardContent className="pt-6 text-sm text-muted-foreground">No Ready Lists Yet. Run A Job First.</CardContent></Card>
+              <Card><CardContent className="pt-6 text-sm text-muted-foreground">No Ready Lists Yet. Run A List First.</CardContent></Card>
             ) : (
               <div className="grid md:grid-cols-2 gap-3">
                 {jobs.map((j) => (
@@ -510,7 +510,7 @@ function ListCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="font-display font-bold text-foreground truncate">
-            {params.name ?? `Job ${job.id.slice(0, 8)}`}
+            {params.name ?? `List ${job.id.slice(0, 8)}`}
           </div>
           <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
             <Icon className="h-3.5 w-3.5" />

@@ -52,8 +52,7 @@ import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
 import { Route as AuthenticatedAppRegistrationRouteImport } from './routes/_authenticated/app.registration'
 import { Route as AuthenticatedAppNumbersRouteImport } from './routes/_authenticated/app.numbers'
-import { Route as AuthenticatedAppNewJobRouteImport } from './routes/_authenticated/app.new-job'
-import { Route as AuthenticatedAppListsRouteImport } from './routes/_authenticated/app.lists'
+import { Route as AuthenticatedAppNewListRouteImport } from './routes/_authenticated/app.new-list'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
@@ -63,6 +62,9 @@ import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppAssistantRouteImport } from './routes/_authenticated/app.assistant'
 import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
 import { Route as AuthenticatedAppAccountRouteImport } from './routes/_authenticated/app.account'
+import { Route as AuthenticatedAppNewJobIndexRouteImport } from './routes/_authenticated/app.new-job.index'
+import { Route as AuthenticatedAppListsIndexRouteImport } from './routes/_authenticated/app.lists.index'
+import { Route as AuthenticatedAppJobsIndexRouteImport } from './routes/_authenticated/app.jobs.index'
 import { Route as AuthenticatedAppCampaignsIndexRouteImport } from './routes/_authenticated/app.campaigns.index'
 import { Route as ApiPublicV1LeadsRouteImport } from './routes/api/public/v1/leads'
 import { Route as ApiPublicV1JobsRouteImport } from './routes/api/public/v1/jobs'
@@ -72,10 +74,12 @@ import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/pu
 import { Route as ApiPublicHooksTelnyxInboundRouteImport } from './routes/api/public/hooks/telnyx-inbound'
 import { Route as ApiPublicHooksTelnyxDlrRouteImport } from './routes/api/public/hooks/telnyx-dlr'
 import { Route as ApiPublicHooksInboundSmsRouteImport } from './routes/api/public/hooks/inbound-sms'
-import { Route as AuthenticatedAppNewJobUploadRouteImport } from './routes/_authenticated/app.new-job.upload'
-import { Route as AuthenticatedAppNewJobRecordsRouteImport } from './routes/_authenticated/app.new-job.records'
-import { Route as AuthenticatedAppNewJobBusinessRouteImport } from './routes/_authenticated/app.new-job.business'
-import { Route as AuthenticatedAppJobsJobIdRouteImport } from './routes/_authenticated/app.jobs.$jobId'
+import { Route as AuthenticatedAppNewListUploadRouteImport } from './routes/_authenticated/app.new-list.upload'
+import { Route as AuthenticatedAppNewListRecordsRouteImport } from './routes/_authenticated/app.new-list.records'
+import { Route as AuthenticatedAppNewListBusinessRouteImport } from './routes/_authenticated/app.new-list.business'
+import { Route as AuthenticatedAppNewJobSplatRouteImport } from './routes/_authenticated/app.new-job.$'
+import { Route as AuthenticatedAppListsListIdRouteImport } from './routes/_authenticated/app.lists.$listId'
+import { Route as AuthenticatedAppJobsSplatRouteImport } from './routes/_authenticated/app.jobs.$'
 import { Route as AuthenticatedAppCampaignsNewRouteImport } from './routes/_authenticated/app.campaigns.new'
 import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
 import { Route as ApiPublicV1JobsJobIdRouteImport } from './routes/api/public/v1/jobs.$jobId'
@@ -297,14 +301,9 @@ const AuthenticatedAppNumbersRoute = AuthenticatedAppNumbersRouteImport.update({
   path: '/numbers',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAppNewJobRoute = AuthenticatedAppNewJobRouteImport.update({
-  id: '/new-job',
-  path: '/new-job',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
-const AuthenticatedAppListsRoute = AuthenticatedAppListsRouteImport.update({
-  id: '/lists',
-  path: '/lists',
+const AuthenticatedAppNewListRoute = AuthenticatedAppNewListRouteImport.update({
+  id: '/new-list',
+  path: '/new-list',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppLeadsRoute = AuthenticatedAppLeadsRouteImport.update({
@@ -355,6 +354,24 @@ const AuthenticatedAppAccountRoute = AuthenticatedAppAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppNewJobIndexRoute =
+  AuthenticatedAppNewJobIndexRouteImport.update({
+    id: '/new-job/',
+    path: '/new-job/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppListsIndexRoute =
+  AuthenticatedAppListsIndexRouteImport.update({
+    id: '/lists/',
+    path: '/lists/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppJobsIndexRoute =
+  AuthenticatedAppJobsIndexRouteImport.update({
+    id: '/jobs/',
+    path: '/jobs/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppCampaignsIndexRoute =
   AuthenticatedAppCampaignsIndexRouteImport.update({
     id: '/campaigns/',
@@ -404,28 +421,40 @@ const ApiPublicHooksInboundSmsRoute =
     path: '/api/public/hooks/inbound-sms',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedAppNewJobUploadRoute =
-  AuthenticatedAppNewJobUploadRouteImport.update({
+const AuthenticatedAppNewListUploadRoute =
+  AuthenticatedAppNewListUploadRouteImport.update({
     id: '/upload',
     path: '/upload',
-    getParentRoute: () => AuthenticatedAppNewJobRoute,
+    getParentRoute: () => AuthenticatedAppNewListRoute,
   } as any)
-const AuthenticatedAppNewJobRecordsRoute =
-  AuthenticatedAppNewJobRecordsRouteImport.update({
+const AuthenticatedAppNewListRecordsRoute =
+  AuthenticatedAppNewListRecordsRouteImport.update({
     id: '/records',
     path: '/records',
-    getParentRoute: () => AuthenticatedAppNewJobRoute,
+    getParentRoute: () => AuthenticatedAppNewListRoute,
   } as any)
-const AuthenticatedAppNewJobBusinessRoute =
-  AuthenticatedAppNewJobBusinessRouteImport.update({
+const AuthenticatedAppNewListBusinessRoute =
+  AuthenticatedAppNewListBusinessRouteImport.update({
     id: '/business',
     path: '/business',
-    getParentRoute: () => AuthenticatedAppNewJobRoute,
+    getParentRoute: () => AuthenticatedAppNewListRoute,
   } as any)
-const AuthenticatedAppJobsJobIdRoute =
-  AuthenticatedAppJobsJobIdRouteImport.update({
-    id: '/jobs/$jobId',
-    path: '/jobs/$jobId',
+const AuthenticatedAppNewJobSplatRoute =
+  AuthenticatedAppNewJobSplatRouteImport.update({
+    id: '/new-job/$',
+    path: '/new-job/$',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppListsListIdRoute =
+  AuthenticatedAppListsListIdRouteImport.update({
+    id: '/lists/$listId',
+    path: '/lists/$listId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppJobsSplatRoute =
+  AuthenticatedAppJobsSplatRouteImport.update({
+    id: '/jobs/$',
+    path: '/jobs/$',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppCampaignsNewRoute =
@@ -491,8 +520,7 @@ export interface FileRoutesByFullPath {
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
-  '/app/lists': typeof AuthenticatedAppListsRoute
-  '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
+  '/app/new-list': typeof AuthenticatedAppNewListRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
@@ -502,10 +530,12 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
-  '/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
-  '/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
-  '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
-  '/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
+  '/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
+  '/app/lists/$listId': typeof AuthenticatedAppListsListIdRoute
+  '/app/new-job/$': typeof AuthenticatedAppNewJobSplatRoute
+  '/app/new-list/business': typeof AuthenticatedAppNewListBusinessRoute
+  '/app/new-list/records': typeof AuthenticatedAppNewListRecordsRoute
+  '/app/new-list/upload': typeof AuthenticatedAppNewListUploadRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
@@ -515,6 +545,9 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
+  '/app/jobs/': typeof AuthenticatedAppJobsIndexRoute
+  '/app/lists/': typeof AuthenticatedAppListsIndexRoute
+  '/app/new-job/': typeof AuthenticatedAppNewJobIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
 export interface FileRoutesByTo {
@@ -561,8 +594,7 @@ export interface FileRoutesByTo {
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
-  '/app/lists': typeof AuthenticatedAppListsRoute
-  '/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
+  '/app/new-list': typeof AuthenticatedAppNewListRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
@@ -572,10 +604,12 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
-  '/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
-  '/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
-  '/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
-  '/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
+  '/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
+  '/app/lists/$listId': typeof AuthenticatedAppListsListIdRoute
+  '/app/new-job/$': typeof AuthenticatedAppNewJobSplatRoute
+  '/app/new-list/business': typeof AuthenticatedAppNewListBusinessRoute
+  '/app/new-list/records': typeof AuthenticatedAppNewListRecordsRoute
+  '/app/new-list/upload': typeof AuthenticatedAppNewListUploadRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
@@ -585,6 +619,9 @@ export interface FileRoutesByTo {
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/app/campaigns': typeof AuthenticatedAppCampaignsIndexRoute
+  '/app/jobs': typeof AuthenticatedAppJobsIndexRoute
+  '/app/lists': typeof AuthenticatedAppListsIndexRoute
+  '/app/new-job': typeof AuthenticatedAppNewJobIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
 export interface FileRoutesById {
@@ -634,8 +671,7 @@ export interface FileRoutesById {
   '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
-  '/_authenticated/app/lists': typeof AuthenticatedAppListsRoute
-  '/_authenticated/app/new-job': typeof AuthenticatedAppNewJobRouteWithChildren
+  '/_authenticated/app/new-list': typeof AuthenticatedAppNewListRouteWithChildren
   '/_authenticated/app/numbers': typeof AuthenticatedAppNumbersRoute
   '/_authenticated/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
@@ -645,10 +681,12 @@ export interface FileRoutesById {
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/_authenticated/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
-  '/_authenticated/app/jobs/$jobId': typeof AuthenticatedAppJobsJobIdRoute
-  '/_authenticated/app/new-job/business': typeof AuthenticatedAppNewJobBusinessRoute
-  '/_authenticated/app/new-job/records': typeof AuthenticatedAppNewJobRecordsRoute
-  '/_authenticated/app/new-job/upload': typeof AuthenticatedAppNewJobUploadRoute
+  '/_authenticated/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
+  '/_authenticated/app/lists/$listId': typeof AuthenticatedAppListsListIdRoute
+  '/_authenticated/app/new-job/$': typeof AuthenticatedAppNewJobSplatRoute
+  '/_authenticated/app/new-list/business': typeof AuthenticatedAppNewListBusinessRoute
+  '/_authenticated/app/new-list/records': typeof AuthenticatedAppNewListRecordsRoute
+  '/_authenticated/app/new-list/upload': typeof AuthenticatedAppNewListUploadRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
@@ -658,6 +696,9 @@ export interface FileRoutesById {
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/_authenticated/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
+  '/_authenticated/app/jobs/': typeof AuthenticatedAppJobsIndexRoute
+  '/_authenticated/app/lists/': typeof AuthenticatedAppListsIndexRoute
+  '/_authenticated/app/new-job/': typeof AuthenticatedAppNewJobIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
 export interface FileRouteTypes {
@@ -707,8 +748,7 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/inbox'
     | '/app/leads'
-    | '/app/lists'
-    | '/app/new-job'
+    | '/app/new-list'
     | '/app/numbers'
     | '/app/registration'
     | '/app/reports'
@@ -718,10 +758,12 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/campaigns/$campaignId'
     | '/app/campaigns/new'
-    | '/app/jobs/$jobId'
-    | '/app/new-job/business'
-    | '/app/new-job/records'
-    | '/app/new-job/upload'
+    | '/app/jobs/$'
+    | '/app/lists/$listId'
+    | '/app/new-job/$'
+    | '/app/new-list/business'
+    | '/app/new-list/records'
+    | '/app/new-list/upload'
     | '/api/public/hooks/inbound-sms'
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
@@ -731,6 +773,9 @@ export interface FileRouteTypes {
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
     | '/app/campaigns/'
+    | '/app/jobs/'
+    | '/app/lists/'
+    | '/app/new-job/'
     | '/api/public/v1/jobs/$jobId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -777,8 +822,7 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/inbox'
     | '/app/leads'
-    | '/app/lists'
-    | '/app/new-job'
+    | '/app/new-list'
     | '/app/numbers'
     | '/app/registration'
     | '/app/reports'
@@ -788,10 +832,12 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/campaigns/$campaignId'
     | '/app/campaigns/new'
-    | '/app/jobs/$jobId'
-    | '/app/new-job/business'
-    | '/app/new-job/records'
-    | '/app/new-job/upload'
+    | '/app/jobs/$'
+    | '/app/lists/$listId'
+    | '/app/new-job/$'
+    | '/app/new-list/business'
+    | '/app/new-list/records'
+    | '/app/new-list/upload'
     | '/api/public/hooks/inbound-sms'
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
@@ -801,6 +847,9 @@ export interface FileRouteTypes {
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
     | '/app/campaigns'
+    | '/app/jobs'
+    | '/app/lists'
+    | '/app/new-job'
     | '/api/public/v1/jobs/$jobId'
   id:
     | '__root__'
@@ -849,8 +898,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/dashboard'
     | '/_authenticated/app/inbox'
     | '/_authenticated/app/leads'
-    | '/_authenticated/app/lists'
-    | '/_authenticated/app/new-job'
+    | '/_authenticated/app/new-list'
     | '/_authenticated/app/numbers'
     | '/_authenticated/app/registration'
     | '/_authenticated/app/reports'
@@ -860,10 +908,12 @@ export interface FileRouteTypes {
     | '/_authenticated/app/'
     | '/_authenticated/app/campaigns/$campaignId'
     | '/_authenticated/app/campaigns/new'
-    | '/_authenticated/app/jobs/$jobId'
-    | '/_authenticated/app/new-job/business'
-    | '/_authenticated/app/new-job/records'
-    | '/_authenticated/app/new-job/upload'
+    | '/_authenticated/app/jobs/$'
+    | '/_authenticated/app/lists/$listId'
+    | '/_authenticated/app/new-job/$'
+    | '/_authenticated/app/new-list/business'
+    | '/_authenticated/app/new-list/records'
+    | '/_authenticated/app/new-list/upload'
     | '/api/public/hooks/inbound-sms'
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
@@ -873,6 +923,9 @@ export interface FileRouteTypes {
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
     | '/_authenticated/app/campaigns/'
+    | '/_authenticated/app/jobs/'
+    | '/_authenticated/app/lists/'
+    | '/_authenticated/app/new-job/'
     | '/api/public/v1/jobs/$jobId'
   fileRoutesById: FileRoutesById
 }
@@ -1224,18 +1277,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppNumbersRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/new-job': {
-      id: '/_authenticated/app/new-job'
-      path: '/new-job'
-      fullPath: '/app/new-job'
-      preLoaderRoute: typeof AuthenticatedAppNewJobRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/lists': {
-      id: '/_authenticated/app/lists'
-      path: '/lists'
-      fullPath: '/app/lists'
-      preLoaderRoute: typeof AuthenticatedAppListsRouteImport
+    '/_authenticated/app/new-list': {
+      id: '/_authenticated/app/new-list'
+      path: '/new-list'
+      fullPath: '/app/new-list'
+      preLoaderRoute: typeof AuthenticatedAppNewListRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/leads': {
@@ -1301,6 +1347,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAccountRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/new-job/': {
+      id: '/_authenticated/app/new-job/'
+      path: '/new-job'
+      fullPath: '/app/new-job/'
+      preLoaderRoute: typeof AuthenticatedAppNewJobIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/lists/': {
+      id: '/_authenticated/app/lists/'
+      path: '/lists'
+      fullPath: '/app/lists/'
+      preLoaderRoute: typeof AuthenticatedAppListsIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/jobs/': {
+      id: '/_authenticated/app/jobs/'
+      path: '/jobs'
+      fullPath: '/app/jobs/'
+      preLoaderRoute: typeof AuthenticatedAppJobsIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/campaigns/': {
       id: '/_authenticated/app/campaigns/'
       path: '/campaigns'
@@ -1364,32 +1431,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksInboundSmsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/app/new-job/upload': {
-      id: '/_authenticated/app/new-job/upload'
+    '/_authenticated/app/new-list/upload': {
+      id: '/_authenticated/app/new-list/upload'
       path: '/upload'
-      fullPath: '/app/new-job/upload'
-      preLoaderRoute: typeof AuthenticatedAppNewJobUploadRouteImport
-      parentRoute: typeof AuthenticatedAppNewJobRoute
+      fullPath: '/app/new-list/upload'
+      preLoaderRoute: typeof AuthenticatedAppNewListUploadRouteImport
+      parentRoute: typeof AuthenticatedAppNewListRoute
     }
-    '/_authenticated/app/new-job/records': {
-      id: '/_authenticated/app/new-job/records'
+    '/_authenticated/app/new-list/records': {
+      id: '/_authenticated/app/new-list/records'
       path: '/records'
-      fullPath: '/app/new-job/records'
-      preLoaderRoute: typeof AuthenticatedAppNewJobRecordsRouteImport
-      parentRoute: typeof AuthenticatedAppNewJobRoute
+      fullPath: '/app/new-list/records'
+      preLoaderRoute: typeof AuthenticatedAppNewListRecordsRouteImport
+      parentRoute: typeof AuthenticatedAppNewListRoute
     }
-    '/_authenticated/app/new-job/business': {
-      id: '/_authenticated/app/new-job/business'
+    '/_authenticated/app/new-list/business': {
+      id: '/_authenticated/app/new-list/business'
       path: '/business'
-      fullPath: '/app/new-job/business'
-      preLoaderRoute: typeof AuthenticatedAppNewJobBusinessRouteImport
-      parentRoute: typeof AuthenticatedAppNewJobRoute
+      fullPath: '/app/new-list/business'
+      preLoaderRoute: typeof AuthenticatedAppNewListBusinessRouteImport
+      parentRoute: typeof AuthenticatedAppNewListRoute
     }
-    '/_authenticated/app/jobs/$jobId': {
-      id: '/_authenticated/app/jobs/$jobId'
-      path: '/jobs/$jobId'
-      fullPath: '/app/jobs/$jobId'
-      preLoaderRoute: typeof AuthenticatedAppJobsJobIdRouteImport
+    '/_authenticated/app/new-job/$': {
+      id: '/_authenticated/app/new-job/$'
+      path: '/new-job/$'
+      fullPath: '/app/new-job/$'
+      preLoaderRoute: typeof AuthenticatedAppNewJobSplatRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/lists/$listId': {
+      id: '/_authenticated/app/lists/$listId'
+      path: '/lists/$listId'
+      fullPath: '/app/lists/$listId'
+      preLoaderRoute: typeof AuthenticatedAppListsListIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/jobs/$': {
+      id: '/_authenticated/app/jobs/$'
+      path: '/jobs/$'
+      fullPath: '/app/jobs/$'
+      preLoaderRoute: typeof AuthenticatedAppJobsSplatRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/campaigns/new': {
@@ -1416,22 +1497,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedAppNewJobRouteChildren {
-  AuthenticatedAppNewJobBusinessRoute: typeof AuthenticatedAppNewJobBusinessRoute
-  AuthenticatedAppNewJobRecordsRoute: typeof AuthenticatedAppNewJobRecordsRoute
-  AuthenticatedAppNewJobUploadRoute: typeof AuthenticatedAppNewJobUploadRoute
+interface AuthenticatedAppNewListRouteChildren {
+  AuthenticatedAppNewListBusinessRoute: typeof AuthenticatedAppNewListBusinessRoute
+  AuthenticatedAppNewListRecordsRoute: typeof AuthenticatedAppNewListRecordsRoute
+  AuthenticatedAppNewListUploadRoute: typeof AuthenticatedAppNewListUploadRoute
 }
 
-const AuthenticatedAppNewJobRouteChildren: AuthenticatedAppNewJobRouteChildren =
+const AuthenticatedAppNewListRouteChildren: AuthenticatedAppNewListRouteChildren =
   {
-    AuthenticatedAppNewJobBusinessRoute: AuthenticatedAppNewJobBusinessRoute,
-    AuthenticatedAppNewJobRecordsRoute: AuthenticatedAppNewJobRecordsRoute,
-    AuthenticatedAppNewJobUploadRoute: AuthenticatedAppNewJobUploadRoute,
+    AuthenticatedAppNewListBusinessRoute: AuthenticatedAppNewListBusinessRoute,
+    AuthenticatedAppNewListRecordsRoute: AuthenticatedAppNewListRecordsRoute,
+    AuthenticatedAppNewListUploadRoute: AuthenticatedAppNewListUploadRoute,
   }
 
-const AuthenticatedAppNewJobRouteWithChildren =
-  AuthenticatedAppNewJobRoute._addFileChildren(
-    AuthenticatedAppNewJobRouteChildren,
+const AuthenticatedAppNewListRouteWithChildren =
+  AuthenticatedAppNewListRoute._addFileChildren(
+    AuthenticatedAppNewListRouteChildren,
   )
 
 interface AuthenticatedAppRouteChildren {
@@ -1444,8 +1525,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
-  AuthenticatedAppListsRoute: typeof AuthenticatedAppListsRoute
-  AuthenticatedAppNewJobRoute: typeof AuthenticatedAppNewJobRouteWithChildren
+  AuthenticatedAppNewListRoute: typeof AuthenticatedAppNewListRouteWithChildren
   AuthenticatedAppNumbersRoute: typeof AuthenticatedAppNumbersRoute
   AuthenticatedAppRegistrationRoute: typeof AuthenticatedAppRegistrationRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
@@ -1455,8 +1535,13 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppCampaignsCampaignIdRoute: typeof AuthenticatedAppCampaignsCampaignIdRoute
   AuthenticatedAppCampaignsNewRoute: typeof AuthenticatedAppCampaignsNewRoute
-  AuthenticatedAppJobsJobIdRoute: typeof AuthenticatedAppJobsJobIdRoute
+  AuthenticatedAppJobsSplatRoute: typeof AuthenticatedAppJobsSplatRoute
+  AuthenticatedAppListsListIdRoute: typeof AuthenticatedAppListsListIdRoute
+  AuthenticatedAppNewJobSplatRoute: typeof AuthenticatedAppNewJobSplatRoute
   AuthenticatedAppCampaignsIndexRoute: typeof AuthenticatedAppCampaignsIndexRoute
+  AuthenticatedAppJobsIndexRoute: typeof AuthenticatedAppJobsIndexRoute
+  AuthenticatedAppListsIndexRoute: typeof AuthenticatedAppListsIndexRoute
+  AuthenticatedAppNewJobIndexRoute: typeof AuthenticatedAppNewJobIndexRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
@@ -1469,8 +1554,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
-  AuthenticatedAppListsRoute: AuthenticatedAppListsRoute,
-  AuthenticatedAppNewJobRoute: AuthenticatedAppNewJobRouteWithChildren,
+  AuthenticatedAppNewListRoute: AuthenticatedAppNewListRouteWithChildren,
   AuthenticatedAppNumbersRoute: AuthenticatedAppNumbersRoute,
   AuthenticatedAppRegistrationRoute: AuthenticatedAppRegistrationRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
@@ -1481,8 +1565,13 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppCampaignsCampaignIdRoute:
     AuthenticatedAppCampaignsCampaignIdRoute,
   AuthenticatedAppCampaignsNewRoute: AuthenticatedAppCampaignsNewRoute,
-  AuthenticatedAppJobsJobIdRoute: AuthenticatedAppJobsJobIdRoute,
+  AuthenticatedAppJobsSplatRoute: AuthenticatedAppJobsSplatRoute,
+  AuthenticatedAppListsListIdRoute: AuthenticatedAppListsListIdRoute,
+  AuthenticatedAppNewJobSplatRoute: AuthenticatedAppNewJobSplatRoute,
   AuthenticatedAppCampaignsIndexRoute: AuthenticatedAppCampaignsIndexRoute,
+  AuthenticatedAppJobsIndexRoute: AuthenticatedAppJobsIndexRoute,
+  AuthenticatedAppListsIndexRoute: AuthenticatedAppListsIndexRoute,
+  AuthenticatedAppNewJobIndexRoute: AuthenticatedAppNewJobIndexRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =

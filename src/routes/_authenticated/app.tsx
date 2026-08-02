@@ -32,7 +32,7 @@ function AppLayout() {
                 <div className="mr-2 flex items-center gap-2">
                   <CreditMenu />
                   <Button asChild size="sm" className="rounded-full">
-                    <Link to="/app/new-job"><Plus className="mr-1 h-3.5 w-3.5" /> Build List</Link>
+                    <Link to="/app/new-list"><Plus className="mr-1 h-3.5 w-3.5" /> Build List</Link>
                   </Button>
                 </div>
                 <Tooltip>

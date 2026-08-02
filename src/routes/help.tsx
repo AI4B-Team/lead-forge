@@ -90,10 +90,10 @@ const POPULAR = [
 ];
 
 const FAQS = [
-  { q: "Do I Need To Install Anything?", a: "No. Everything runs in the browser, and jobs keep running server-side after you close the tab." },
+  { q: "Do I Need To Install Anything?", a: "No. Everything runs in the browser, and runs keep going server-side after you close the tab." },
   { q: "Can I Text Landlines?", a: "Landlines and VoIP stay on your list for calling, but they're excluded from the textable pool." },
   { q: "How Fresh Is The DNC Scrub?", a: "Lists older than 30 days are re-scrubbed automatically before a campaign can launch." },
-  { q: "What Happens If A Provider Is Down?", a: "Your job pauses safely, shows the exact stage that stalled, and resumes on its own — nothing is discarded." },
+  { q: "What Happens If A Provider Is Down?", a: "Your run pauses safely, shows the exact stage that stalled, and resumes on its own — nothing is discarded." },
   { q: "Is Skip Tracing Included?", a: "Skip tracing is included on Growth and up within daily and monthly fair-use limits, then metered per hit." },
   { q: "Can I Bring My Own Data?", a: "Yes. Upload a CSV, map your columns, and run the same clean-and-scrub pipeline without paying for sourcing." },
 ];

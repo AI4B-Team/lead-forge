@@ -52,7 +52,7 @@ export function WebhookEndpoints() {
           <Webhook className="h-4 w-4" /> Integrations & Webhooks
         </CardTitle>
         <p className="text-sm text-muted-foreground mt-1">
-          Push Job, Lead, And Reply Events To Any External System. Each Request Is Signed With Your Endpoint Secret.
+          Push List, Lead, And Reply Events To Any External System. Each Request Is Signed With Your Endpoint Secret.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -23,10 +23,10 @@ export function QuickRun() {
   const activeType = TYPES.find((t) => t.key === type)!;
 
   const run = () => {
-    if (type === "upload") return void navigate({ to: "/app/new-job/upload", search: { reattach: false } });
-    if (type === "records") return void navigate({ to: "/app/new-job/records" });
+    if (type === "upload") return void navigate({ to: "/app/new-list/upload", search: { reattach: false } });
+    if (type === "records") return void navigate({ to: "/app/new-list/records" });
     void navigate({
-      to: "/app/new-job/business",
+      to: "/app/new-list/business",
       search: {
         ...(niche.trim() ? { niche: niche.trim() } : {}),
         ...(location.trim() ? { location: location.trim() } : {}),
@@ -82,7 +82,7 @@ export function QuickRun() {
         </div>
 
         <Button className="rounded-full shrink-0" onClick={run}>
-          Start Job <ArrowRight className="ml-1 h-4 w-4" />
+          Start List <ArrowRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
     </div>

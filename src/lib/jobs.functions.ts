@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { RESCRUB_DAYS, SCRUB_STALE_MESSAGE, isScrubStale, scrubAgeDays } from "@/lib/compliance-rules";
-import { assignJobNames, cadenceBadge } from "@/lib/job-naming";
+import { assignJobNames, cadenceBadge, jobSearchKey } from "@/lib/job-naming";
 
 // List every job for a workspace with lead-bucket counts for the Lists page.
 export const listJobs = createServerFn({ method: "GET" })
@@ -77,6 +77,14 @@ export const listJobs = createServerFn({ method: "GET" })
           id: j.id,
           name: names.get(j.id)?.name ?? `${j.source_type} · ${j.id.slice(0, 8)}`,
           run_index: names.get(j.id)?.runIndex ?? 1,
+          run_total: names.get(j.id)?.runTotal ?? 1,
+          group_key: jobSearchKey({
+            id: j.id,
+            source_type: j.source_type,
+            record_type: j.record_type,
+            params: (j.params ?? {}) as Record<string, unknown>,
+            created_at: j.created_at,
+          }),
           cadence_badge: cadenceBadge(j.schedule),
           source_type: j.source_type,
           status: j.status,
@@ -153,7 +161,7 @@ export const getJobReview = createServerFn({ method: "GET" })
       .select("*")
       .eq("id", data.jobId)
       .maybeSingle();
-    if (error || !job) throw new Error("Job Not Found");
+    if (error || !job) throw new Error("List Not Found");
 
     const { data: scrub } = await supabase
       .from("scrub_runs")
@@ -258,7 +266,7 @@ export const pauseJob = createServerFn({ method: "POST" })
     await context.supabase.from("job_events").insert({
       job_id: data.jobId,
       stage: "paused",
-      message: "Job Paused. Nothing Is Discarded — Resume Any Time.",
+      message: "Run Paused. Nothing Is Discarded — Resume Any Time.",
     } as never);
     return { ok: true };
   });
@@ -276,7 +284,7 @@ export const resumeJob = createServerFn({ method: "POST" })
     await context.supabase.from("job_events").insert({
       job_id: data.jobId,
       stage: "queued",
-      message: "Job Resumed From The Last Completed Stage.",
+      message: "Run Resumed From The Last Completed Stage.",
     } as never);
     return { ok: true };
   });
@@ -318,8 +326,8 @@ export const launchCampaignFromJob = createServerFn({ method: "POST" })
       .select("id, workspace_id, status")
       .eq("id", data.jobId)
       .maybeSingle();
-    if (jerr || !job) throw new Error("Job Not Found");
-    if (job.status !== "ready") throw new Error("Job Is Not Ready. Scrub Must Complete First.");
+    if (jerr || !job) throw new Error("List Not Found");
+    if (job.status !== "ready") throw new Error("List Is Not Ready. Scrub Must Complete First.");
 
     // §6: a list older than 30 days must be re-scrubbed before it can send.
     const { data: lastScrub } = await supabase

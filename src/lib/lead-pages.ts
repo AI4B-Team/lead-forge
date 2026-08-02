@@ -796,7 +796,7 @@ export function startSearchLink(page: LeadPage) {
   if (!niche) return { mode: "signup" as const };
   return {
     mode: "signup" as const,
-    redirect: `/app/new-job/business?niche=${encodeURIComponent(niche)}`,
+    redirect: `/app/new-list/business?niche=${encodeURIComponent(niche)}`,
   };
 }
 

@@ -74,7 +74,7 @@ function Compliance() {
 
   function exportAudit() {
     const header = [
-      "scrub_date", "job", "provider", "provider_reference_id",
+      "scrub_date", "list", "provider", "provider_reference_id",
       "total", "clean", "dnc", "litigator", "removed",
     ];
     const lines = [header.join(",")].concat(
@@ -255,7 +255,7 @@ function Compliance() {
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search Jobs"
+                placeholder="Search Lists"
                 className="h-9 w-48 rounded-full pl-8"
               />
             </div>
@@ -286,7 +286,7 @@ function Compliance() {
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="p-4">Date</th>
-                <th className="p-4">Job</th>
+                <th className="p-4">List</th>
                 <th className="p-4">Total</th>
                 <th className="p-4">Clean / DNC / Litigator</th>
                 <th className="p-4">Removed</th>

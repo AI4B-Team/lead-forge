@@ -30,7 +30,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { FileSpreadsheet, FileText, Files } from "lucide-react";
 import { ChevronDown, Database, Coins } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
+export const Route = createFileRoute("/_authenticated/app/lists/$listId")({
   head: () => ({ meta: [{ title: "Pipeline Review — LeadTrace" }] }),
   component: JobDetail,
 });
@@ -50,7 +50,7 @@ function fmtDuration(ms: number) {
 }
 
 function JobDetail() {
-  const { jobId } = Route.useParams();
+  const { listId: jobId } = Route.useParams();
   const navigate = useNavigate();
   const fetchReview = useServerFn(getJobReview);
   const fetchBucket = useServerFn(getLeadsByBucket);
@@ -140,13 +140,13 @@ function JobDetail() {
     try {
       if (job.status === "paused" || job.status === "failed") {
         await doResume({ data: { jobId } });
-        toast.success("Job Resumed");
+        toast.success("Run Resumed");
       } else {
         await doPause({ data: { jobId } });
-        toast.success("Job Paused");
+        toast.success("Run Paused");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could Not Update Job");
+      toast.error(e instanceof Error ? e.message : "Could Not Update Run");
     }
   };
 
@@ -299,7 +299,7 @@ function JobDetail() {
             </ul>
             {!isReady && (
               <div className="mt-3 text-xs text-muted-foreground">
-                You Can Close This Tab — The Job Keeps Running On Our Servers.
+                You Can Close This Tab — The Run Keeps Going On Our Servers.
               </div>
             )}
             </>
@@ -464,7 +464,7 @@ function JobDetail() {
               <Download className="mr-1 h-4 w-4" /> Scrub Audit
             </Button>
             <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/lists" })}>
-              Back To Jobs
+              Back To Lists
             </Button>
             <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />
           </div>

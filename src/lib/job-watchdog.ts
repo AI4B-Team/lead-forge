@@ -28,7 +28,7 @@ export function isStalled(input: {
 }
 
 export function stallReason(stage?: string | null) {
-  const label = STAGE_PHRASE[stage ?? ""] ?? "this job";
+  const label = STAGE_PHRASE[stage ?? ""] ?? "this run";
   return `No progress reported on ${label} for over ${STALL_HOURS} hours. Nothing has been lost — retry to resume from the last completed stage.`;
 }
 

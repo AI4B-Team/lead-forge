@@ -38,8 +38,8 @@ import { buildPipelineStages, ROWS_PROCESSED_LABEL } from "@/lib/pipeline-stages
 import { isStalled, isRunningStatus, stallReason, STALL_HOURS } from "@/lib/job-watchdog";
 import type { JobStatus } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/_authenticated/app/lists")({
-  head: () => ({ meta: [{ title: "Jobs — LeadTrace" }] }),
+export const Route = createFileRoute("/_authenticated/app/lists/")({
+  head: () => ({ meta: [{ title: "Lists — LeadTrace" }] }),
   component: Jobs,
 });
 
@@ -51,6 +51,11 @@ const SOURCE_META: Record<string, { label: string; icon: typeof Landmark }> = {
 };
 
 /** "Jul 31" / "Yesterday" plus a 12-hour time — far easier to scan than 7/31/2026. */
+/** Parent row shows the list itself, so drop the "· Run #N" suffix. */
+function listBaseName(name: string) {
+  return name.split(" · Run #")[0]!;
+}
+
 function formatCreated(iso: string) {
   const d = new Date(iso);
   const now = new Date();
@@ -132,20 +137,53 @@ function Jobs() {
     };
   }, [allRows]);
 
+  // Recurring framing (§ runs under lists): where a list has a recurring
+  // cadence, its runs collapse under one row — latest run on top, prior runs
+  // revealed on expand. One-off lists keep rendering as single rows.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleGroup = (key: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  const entries = useMemo(() => {
+    const byKey = new Map<string, typeof rows>();
+    for (const r of rows) {
+      const arr = byKey.get(r.group_key);
+      if (arr) arr.push(r);
+      else byKey.set(r.group_key, [r]);
+    }
+    const out: { latest: (typeof rows)[number]; prior: typeof rows }[] = [];
+    for (const group of byKey.values()) {
+      const ordered = [...group].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+      const recurring = ordered.some((r) => r.schedule && r.schedule !== "one_time");
+      if (recurring && ordered.length > 1) out.push({ latest: ordered[0]!, prior: ordered.slice(1) });
+      else for (const r of ordered) out.push({ latest: r, prior: [] });
+    }
+    return out.sort(
+      (a, b) => new Date(b.latest.created_at).getTime() - new Date(a.latest.created_at).getTime(),
+    );
+  }, [rows]);
+
   return (
     <div>
       <PageHeader
-        title="Jobs"
-        description="Every Pipeline You Have Run — Source, Scrub, Verification, And Results. Click A Row To Open The Job Overview."
+        title="Lists"
+        description="Every Pipeline You Have Run — Source, Scrub, Verification, And Results. Click A Row To Open The Latest Run."
         actions={
           <Button asChild className="rounded-full">
-            <Link to="/app/new-job"><Plus className="mr-1 h-4 w-4" /> New Job</Link>
+            <Link to="/app/new-list"><Plus className="mr-1 h-4 w-4" /> New List</Link>
           </Button>
         }
       />
 
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-6">
-        <StatTile label="Total Jobs" value={summary.total.toLocaleString()} icon={Layers} />
+        <StatTile label="Total Lists" value={summary.total.toLocaleString()} icon={Layers} />
         <StatTile label={ROWS_PROCESSED_LABEL} value={summary.rowsProcessed.toLocaleString()} icon={Users} />
         <StatTile label="Clean Rate" value={`${summary.cleanRate}%`} icon={ShieldCheck} hint="Clean Of All Scrubbed" />
         <StatTile label="Running" value={summary.running.toLocaleString()} icon={Activity} hint="Actively Progressing" />
@@ -165,7 +203,7 @@ function Jobs() {
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search Jobs By Name, County, Or Niche…"
+              placeholder="Search Lists By Name, County, Or Niche…"
               className="h-11 pl-9 text-base"
             />
           </div>
@@ -232,25 +270,52 @@ function Jobs() {
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading Jobs…</td></tr>
+                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading Lists…</td></tr>
               )}
               {!isLoading && rows.length === 0 && (
                 <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">
-                  No Jobs Match. <Link to="/app/new-job" className="text-primary underline">Start A New Job</Link>.
+                  No Lists Match. <Link to="/app/new-list" className="text-primary underline">Start A New List</Link>.
                 </td></tr>
               )}
-              {rows.map((j) => {
+              {entries.flatMap(({ latest, prior }) => {
+                const open = expanded.has(latest.group_key);
+                const shown = open ? [latest, ...prior] : [latest];
+                return shown.map((j, idx) => {
+                const isChild = idx > 0;
+                const isParent = prior.length > 0 && idx === 0;
                 const src = SOURCE_META[j.source_type] ?? { label: j.source_type, icon: Layers };
                 const created = formatCreated(j.created_at);
                 return (
                 <tr
                   key={j.id}
-                  onClick={() => navigate({ to: "/app/jobs/$jobId", params: { jobId: j.id } })}
-                  className="group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-muted"
+                  onClick={() => navigate({ to: "/app/lists/$listId", params: { listId: j.id } })}
+                  className={`group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-muted ${
+                    isChild ? "bg-surface-muted/40" : ""
+                  }`}
                 >
-                  <td className="p-4">
+                  <td className={`p-4 ${isChild ? "pl-10" : ""}`}>
                     <div className="flex items-center gap-2">
-                      <span className="whitespace-nowrap font-medium text-foreground group-hover:text-primary">{j.name}</span>
+                      {isParent && (
+                        <button
+                          type="button"
+                          aria-label={open ? "Hide Prior Runs" : "Show Prior Runs"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleGroup(latest.group_key);
+                          }}
+                          className="grid h-5 w-5 shrink-0 place-items-center rounded border border-border text-muted-foreground hover:text-foreground"
+                        >
+                          <ChevronRight className={`h-3 w-3 transition-transform ${open ? "rotate-90" : ""}`} />
+                        </button>
+                      )}
+                      <span className="whitespace-nowrap font-medium text-foreground group-hover:text-primary">
+                        {isChild ? `Run #${j.run_index}` : listBaseName(j.name)}
+                      </span>
+                      {isParent && (
+                        <span className="whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                          {prior.length + 1} Runs
+                        </span>
+                      )}
                       {j.cadence_badge && (
                         <span className="whitespace-nowrap rounded-full border border-border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
                           {j.cadence_badge}
@@ -310,7 +375,7 @@ function Jobs() {
                               toast.success("Retrying From The Last Completed Stage.");
                               qc.invalidateQueries({ queryKey: ["jobs-list", workspaceId] });
                             } catch (e) {
-                              toast.error(e instanceof Error ? e.message : "Could Not Retry This Job.");
+                              toast.error(e instanceof Error ? e.message : "Could Not Retry This Run.");
                             }
                           }}
                         >
@@ -330,6 +395,7 @@ function Jobs() {
                   </td>
                 </tr>
                 );
+                });
               })}
             </tbody>
           </table>

@@ -17,7 +17,7 @@ import { attachmentRows, readAttachment, type UploadAttachment } from "@/lib/upl
 import { ColumnMapper } from "@/components/app/column-mapper";
 import { queueJob } from "@/lib/job-submit";
 
-export const Route = createFileRoute("/_authenticated/app/new-job/upload")({
+export const Route = createFileRoute("/_authenticated/app/new-list/upload")({
   validateSearch: (search: Record<string, unknown>) => ({
     reattach: search['reattach'] === "1" || search['reattach'] === true,
   }),
@@ -72,12 +72,12 @@ function Wizard() {
           rows: attached ? attachmentRows({ ...attached, map: mapping }) : null,
         },
       });
-      navigate({ to: "/app/jobs/$jobId", params: { jobId: id } });
+      navigate({ to: "/app/lists/$listId", params: { listId: id } });
       if (duplicate) {
         toast.info("This File Was Already Queued — Opening That Run.");
         return;
       }
-      toast.success("Job Queued. Running Pipeline…");
+      toast.success("List Queued. Running Pipeline…");
       runJobFn({ data: { jobId: id } }).catch((e) =>
         toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
       );
@@ -143,10 +143,10 @@ function Wizard() {
 
           <div className="flex gap-2 justify-end">
             <Button asChild variant="outline" className="rounded-full">
-              <Link to="/app/new-job">Back</Link>
+              <Link to="/app/new-list">Back</Link>
             </Button>
             <Button className="rounded-full" onClick={run} disabled={busy || !workspaceId || !file}>
-              {busy ? "Queuing…" : "Run Job"}
+              {busy ? "Queuing…" : "Run List"}
             </Button>
           </div>
         </CardContent>

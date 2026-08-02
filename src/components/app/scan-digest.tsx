@@ -69,7 +69,7 @@ export function ScanDigest({ workspaceId }: { workspaceId: string | null }) {
           <CardTitle className="text-base font-display">Since Your Last Visit</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
             {data.newRecords.toLocaleString()} New {data.newRecords === 1 ? "Record" : "Records"} Across{" "}
-            {data.recurring.length} Recurring {data.recurring.length === 1 ? "Job" : "Jobs"}.
+            {data.recurring.length} Recurring {data.recurring.length === 1 ? "List" : "Lists"}.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -92,8 +92,8 @@ export function ScanDigest({ workspaceId }: { workspaceId: string | null }) {
             <div key={j.id} className="flex items-center justify-between gap-3 py-2.5">
               <div className="min-w-0">
                 <Link
-                  to="/app/jobs/$jobId"
-                  params={{ jobId: j.id }}
+                  to="/app/lists/$listId"
+                  params={{ listId: j.id }}
                   className="font-medium text-foreground hover:text-primary truncate block"
                 >
                   {j.name}

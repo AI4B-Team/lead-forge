@@ -55,7 +55,7 @@ export const Route = createFileRoute("/_authenticated/app/templates")({
       { title: "Template Library — LeadTrace App" },
       { name: "description", content: "Browse every LeadTrace source template and send it straight to the AI Assistant as a ready-to-edit prompt." },
       { property: "og:title", content: "Template Library — LeadTrace App" },
-      { property: "og:description", content: "Pick a source template and the assistant drafts the job for you." },
+      { property: "og:description", content: "Pick a source template and the assistant drafts the list for you." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -103,7 +103,7 @@ function AppTemplates() {
     <div>
       <PageHeader
         title="Template Library"
-        description="Pick A Source To Start A Job. Selecting A Template Drops Its Prompt Into The AI Assistant."
+        description="Pick A Source To Start A List. Selecting A Template Drops Its Prompt Into The AI Assistant."
       />
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1">

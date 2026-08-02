@@ -179,7 +179,7 @@ function Dashboard() {
       setJobs(
         rawJobs.slice(0, 5).map((j) => ({
           id: j.id,
-          name: names.get(j.id)?.name ?? "Untitled Job",
+          name: names.get(j.id)?.name ?? "Untitled List",
           cadence: cadenceBadge(j.schedule),
           source_type: j.source_type,
           status: j.status,
@@ -267,7 +267,7 @@ function Dashboard() {
       .slice(0, 3)
       .map((j) => ({
         tone: "leads" as const,
-        text: `${(j.rows_in ?? 0).toLocaleString()} New Contacts · ${j.name ?? "Job"}`,
+        text: `${(j.rows_in ?? 0).toLocaleString()} New Contacts · ${j.name ?? "List"}`,
         at: j.created_at,
       }));
     return [...jobItems, ...activity].slice(0, 6);
@@ -283,7 +283,7 @@ function Dashboard() {
         description="A live look at your leads, lists, campaigns, and deliverability."
         actions={
           <Button asChild className="rounded-full">
-            <Link to="/app/new-job"><Plus className="mr-1 h-4 w-4" /> Build List</Link>
+            <Link to="/app/new-list"><Plus className="mr-1 h-4 w-4" /> Build List</Link>
           </Button>
         }
       />
@@ -317,7 +317,7 @@ function Dashboard() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <Metric
           icon={<ListChecks className="h-4 w-4" />}
-          label="Jobs"
+          label="Lists"
           value={metrics.lists.toString()}
           note={metrics.processing ? `${metrics.processing} running` : "All processed"}
           noteTone={metrics.processing ? "success" : undefined}
@@ -350,7 +350,7 @@ function Dashboard() {
       <div className="grid md:grid-cols-3 gap-4 mt-6">
         <Card className="md:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base font-display">Recent Jobs</CardTitle>
+            <CardTitle className="text-base font-display">Recent Lists</CardTitle>
             <Button asChild variant="ghost" size="sm">
               <Link to="/app/lists">View All <ArrowUpRight className="ml-1 h-3.5 w-3.5" /></Link>
             </Button>
@@ -359,13 +359,13 @@ function Dashboard() {
             {hasJobs ? (
               <div className="divide-y divide-border">
                 {jobs.map((j) => {
-                  const meta = SOURCE_META[j.source_type] ?? { icon: MapPin, label: "Job" };
+                  const meta = SOURCE_META[j.source_type] ?? { icon: MapPin, label: "List" };
                   const Icon = meta.icon;
                   return (
                     <Link
                       key={j.id}
-                      to="/app/jobs/$jobId"
-                      params={{ jobId: j.id }}
+                      to="/app/lists/$listId"
+                      params={{ listId: j.id }}
                       className="-mx-2 flex items-start gap-4 rounded-lg px-2 py-3 hover:bg-surface-muted"
                     >
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
@@ -403,9 +403,9 @@ function Dashboard() {
               </div>
             ) : (
               <div className="py-10 text-center">
-                <div className="text-sm text-muted-foreground">No Jobs Yet.</div>
+                <div className="text-sm text-muted-foreground">No Lists Yet.</div>
                 <Button asChild className="mt-4 rounded-full">
-                  <Link to="/app/new-job"><Plus className="mr-1 h-4 w-4" /> Build Your First List</Link>
+                  <Link to="/app/new-list"><Plus className="mr-1 h-4 w-4" /> Build Your First List</Link>
                 </Button>
               </div>
             )}
@@ -449,7 +449,7 @@ function Dashboard() {
                 </ul>
               ) : (
                 <div className="py-8 text-center text-sm text-muted-foreground">
-                  Nothing Yet — Activity Shows Up Once Your First Job Runs.
+                  Nothing Yet — Activity Shows Up Once Your First List Runs.
                 </div>
               )}
             </CardContent>

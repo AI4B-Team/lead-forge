@@ -2,8 +2,8 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { PageHeader } from "@/components/app/page-header";
 import { Search, Landmark, Upload, ArrowRight, Sparkles } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/app/new-job")({
-  head: () => ({ meta: [{ title: "New Job — LeadTrace" }] }),
+export const Route = createFileRoute("/_authenticated/app/new-list")({
+  head: () => ({ meta: [{ title: "New List — LeadTrace" }] }),
   component: NewJob,
 });
 
@@ -15,13 +15,13 @@ const generateDoors = [
     body: "Describe your ideal leads. AI builds the search for you.",
   },
   {
-    to: "/app/new-job/business",
+    to: "/app/new-list/business",
     icon: Search,
     title: "Business Search",
     body: "Find businesses by industry and location.",
   },
   {
-    to: "/app/new-job/records",
+    to: "/app/new-list/records",
     icon: Landmark,
     title: "Public Records",
     body: "Search probates, code violations, tax defaults, and more.",
@@ -30,7 +30,7 @@ const generateDoors = [
 
 const importDoors = [
   {
-    to: "/app/new-job/upload",
+    to: "/app/new-list/upload",
     icon: Upload,
     title: "Import List",
     body: "Import your CSV for cleaning, enrichment, and outreach.",
@@ -63,14 +63,14 @@ function DoorCard({ door }: { door: (typeof generateDoors)[number] | (typeof imp
 
 function NewJob() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isRoot = pathname === "/app/new-job";
+  const isRoot = pathname === "/app/new-list";
 
   if (!isRoot) return <Outlet />;
 
   return (
     <div>
       <PageHeader
-        title="Start A New Job"
+        title="Start A New List"
         description="Three doors in. One compliant pipeline out. Pick a source to begin."
       />
       <div className="space-y-10">

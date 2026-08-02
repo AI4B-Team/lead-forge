@@ -104,7 +104,7 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const spec = data.spec;
     if (!spec.sourceType) throw new Error("Pick A Source First");
-    if (spec.sourceType === "upload") throw new Error("Upload Jobs Start On The Upload Page");
+    if (spec.sourceType === "upload") throw new Error("Uploaded Lists Start On The Upload Page");
     if (spec.sourceType === "business" && !spec.niches.length) throw new Error("Add At Least One Niche");
     if (spec.sourceType === "records" && !spec.recordType) throw new Error("Pick A Record Type");
 
