@@ -900,15 +900,20 @@ function Assistant() {
         className="resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
       />
       <div className="mt-3 flex items-center justify-between gap-3">
-        <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-[11px] font-medium text-foreground hover:text-primary">
-          <Paperclip className="h-3.5 w-3.5" /> Attach File
-          <input
-            type="file"
-            className="hidden"
-            accept=".csv,.xlsx"
-            onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
-          />
-        </label>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-[11px] font-medium text-foreground hover:text-primary">
+              <Paperclip className="h-3.5 w-3.5" /> Upload List
+              <input
+                type="file"
+                className="hidden"
+                accept=".csv,.xlsx"
+                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) requestAttach(f); }}
+              />
+            </label>
+          </TooltipTrigger>
+          <TooltipContent>Upload A CSV Or Excel List To Clean, Scrub, And Enrich</TooltipContent>
+        </Tooltip>
         <Button
           className="rounded-full px-5"
           disabled={busy || (!input.trim() && !selectedTemplate && !upload)}
