@@ -419,10 +419,10 @@ export const tickCampaign = createServerFn({ method: "POST" })
       .order("health_score", { ascending: false });
     if (!numbers?.length) return { dispatched: 0, reason: "no_numbers" };
 
-    // Suppression phones
-    const { data: sup } = await supabase
-      .from("suppression").select("phone").eq("workspace_id", campaign.workspace_id);
-    const suppressed = new Set((sup ?? []).map((r) => r.phone));
+    // Suppression + opt-out gate (single source of truth for every send path).
+    const { loadSuppressionSet, loadOptedOutLeadIds, logBlockedSend } = await import("@/lib/optout.server");
+    const suppressed = await loadSuppressionSet(supabase, campaign.workspace_id);
+    const optedOut = await loadOptedOutLeadIds(supabase, campaign.workspace_id);
 
     // Already messaged lead ids for this campaign (touch 1 dedup)
     const { data: prevMsgs } = await supabase
@@ -465,11 +465,31 @@ export const tickCampaign = createServerFn({ method: "POST" })
     // duplicate_policy = "skip" (default) never re-messages a lead already
     // contacted by this campaign.
     const skipDupes = (campaign.duplicate_policy ?? "skip") === "skip";
+    const blocked: Array<{ id: string; phone: string; reason: "opted_out" | "suppressed" }> = [];
     const toSend = leads
-      .filter((l) => l.phone && !suppressed.has(l.phone) && (!skipDupes || !messaged.has(l.id)))
+      .filter((l) => {
+        if (!l.phone) return false;
+        if (optedOut.has(l.id)) {
+          blocked.push({ id: l.id, phone: l.phone, reason: "opted_out" });
+          return false;
+        }
+        if (suppressed.has(l.phone) || suppressed.has(l.phone.replace(/\D/g, ""))) {
+          blocked.push({ id: l.id, phone: l.phone, reason: "suppressed" });
+          return false;
+        }
+        return !skipDupes || !messaged.has(l.id);
+      })
       // 6pm rule: a first touch never starts after 6pm recipient local time.
       .filter((l) => canStartNewDrop(l.phone as string))
       .slice(0, take);
+
+    for (const b of blocked.slice(0, 50)) {
+      await logBlockedSend(
+        supabase,
+        { workspaceId: campaign.workspace_id, leadId: b.id, source: `campaign:${campaign.id}`, actorId: context.userId },
+        { ok: false, reason: b.reason, message: "blocked", phone: b.phone },
+      );
+    }
 
     let dispatched = 0;
     const rows: Array<Record<string, unknown>> = [];
