@@ -16,7 +16,6 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { formatLocation } from "@/lib/location";
 import { listLeadRecords, getLeadListMemberships } from "@/lib/monitoring.functions";
 import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
-import { PhoneLink } from "@/components/app/phone-link";
 import { LeadTagChips } from "@/components/app/lead-tag-picker";
 import { ChannelIcons } from "@/components/app/channel-icons";
 
