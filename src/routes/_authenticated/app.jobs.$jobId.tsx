@@ -605,15 +605,49 @@ function DetailRow({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value, muted = false }: { label: string; value: string; muted?: boolean }) {
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">{label}</div>
-        <div className="mt-2 font-display text-3xl font-black text-foreground">{value.toLocaleString()}</div>
+        <div
+          className={`mt-2 font-display font-black tabular-nums ${
+            muted ? "text-xl text-muted-foreground" : "text-3xl text-foreground"
+          }`}
+        >
+          {value}
+        </div>
       </CardContent>
     </Card>
   );
+}
+
+/**
+ * Skimmable icon per progress line so users can scan the run at a glance.
+ * Chosen from the stage first, then narrowed by what the message reports.
+ */
+function EventIcon({ stage, message }: { stage: string | null; message: string }) {
+  const m = message.toLowerCase();
+  const cls = "h-3.5 w-3.5";
+  if (/litigator/.test(m)) return <Scale className={`${cls} text-danger`} />;
+  if (/dnc/.test(m) && /flagged|removed/.test(m)) return <Ban className={`${cls} text-warn`} />;
+  if (/duplicate/.test(m)) return <Copy className={`${cls} text-muted-foreground`} />;
+  switch (stage) {
+    case "queued":
+      return <Hourglass className={`${cls} text-muted-foreground`} />;
+    case "scraping":
+      return <Search className={`${cls} text-muted-foreground`} />;
+    case "enriching":
+      return <Copy className={`${cls} text-muted-foreground`} />;
+    case "skiptracing":
+      return <Smartphone className={`${cls} text-muted-foreground`} />;
+    case "scrubbing":
+      return <ShieldCheck className={`${cls} text-warn`} />;
+    case "ready":
+      return <Check className={`${cls} text-success`} strokeWidth={3} />;
+    default:
+      return <Activity className={`${cls} text-muted-foreground`} />;
+  }
 }
 
 // Compact run telemetry used under the funnel: elapsed, rate, ETA, scrub stamp.
