@@ -175,6 +175,7 @@ function Jobs() {
       <PageHeader
         title="Lists"
         description="Every Pipeline You Have Run — Source, Scrub, Verification, And Results. Click A Row To Open The Latest Run."
+        descriptionClassName="whitespace-nowrap"
         actions={
           <Button asChild className="rounded-full">
             <Link to="/app/assistant"><Plus className="mr-1 h-4 w-4" /> New List</Link>
