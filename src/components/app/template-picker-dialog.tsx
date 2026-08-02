@@ -83,7 +83,7 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[80vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+      <DialogContent className="flex max-h-[80vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[62rem]">
         <DialogHeader className="border-b px-6 pb-4 pt-6">
           <DialogTitle>All Templates</DialogTitle>
           <div className="relative mt-3">
