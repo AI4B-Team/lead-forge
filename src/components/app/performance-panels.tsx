@@ -403,10 +403,11 @@ export function NumberHealthPanel({
           <div className="rounded-xl border border-dashed border-border p-6 text-center">
             <div className="font-display font-bold text-foreground">No Sending Numbers Yet</div>
             <div className="text-sm text-muted-foreground mt-1">
-              Buy Local Numbers To Start Rotating Traffic And Building Carrier Reputation.
+              No Active Sending Number — Replies Cannot Be Delivered Yet. Add One To Start Rotating Traffic And Building
+              Carrier Reputation.
             </div>
             <Button asChild size="sm" className="rounded-full mt-3">
-              <Link to="/app/numbers">Manage Numbers</Link>
+              <Link to="/app/numbers">Get A Number</Link>
             </Button>
           </div>
         ) : (
