@@ -278,7 +278,7 @@ function Brands() {
           </Card>
 
           <div className="mb-4">
-            <h3 className="font-display text-xl font-bold text-foreground">What Can I Train?</h3>
+            <h3 className="font-display text-xl font-bold text-foreground">Knowledge Sources</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Feed The AI Any Of These — It Only Ever Speaks From What You Approve.
             </p>
