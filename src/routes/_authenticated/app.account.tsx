@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import {
   MonitorSmartphone,
   History,
   Mail,
+  KeyRound as KeyRoundIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -325,6 +326,8 @@ function AccountPage() {
               </Card>
 
             </div>
+
+            <div className="lg:hidden" />
 
             <div className="space-y-6">
               <IdentityCard
