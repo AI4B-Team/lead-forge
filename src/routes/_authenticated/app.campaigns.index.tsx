@@ -110,11 +110,11 @@ function Campaigns() {
       />
       {allCampaigns.length > 0 && (
         <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <StatTile label="Campaigns" value={allCampaigns.length} hint={`${overview.active} Active · ${overview.draft} Draft`} icon={Rocket} />
-          <StatTile label="Messages Sent" value={overview.sent} icon={Send} />
-          <StatTile label="Replies" value={overview.replies} icon={MessageSquare} />
-          <StatTile label="AI Conversations" value={overview.aiChats} icon={BotIcon} />
-          <StatTile label="Needs Human" value={overview.needsHuman} hint="Handoffs Awaiting You" icon={UserRound} />
+          <StatTile label="Campaigns" value={allCampaigns.length} hint={`${overview.active} Active · ${overview.draft} Draft`} icon={Rocket} help="Total campaigns in this workspace, including drafts and active sends." />
+          <StatTile label="Messages Sent" value={overview.sent} icon={Send} help="Total outbound messages sent across all campaigns." />
+          <StatTile label="Replies" value={overview.replies} icon={MessageSquare} help="Inbound replies received from contacts across all campaigns." />
+          <StatTile label="AI Conversations" value={overview.aiChats} icon={BotIcon} help="Conversations currently handled by your AI agent." />
+          <StatTile label="Needs Human" value={overview.needsHuman} hint="Handoffs Awaiting You" icon={UserRound} help="Leads that asked for a human or need manual follow-up." />
         </div>
       )}
       {(tagList.length > 0 || (tagCounts.untagged ?? 0) > 0) && allCampaigns.length > 0 && (
