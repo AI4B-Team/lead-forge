@@ -417,13 +417,17 @@ function JobDetail() {
               icon={<Send className="h-3.5 w-3.5" />}
               value={estimate.messages.toLocaleString()}
               label="Messages"
-              note={`${DEFAULT_SEQUENCE_STEPS}-Step Drip`}
+              note={`${estimate.steps}-Step Drip · ${estimate.segments.toLocaleString()} Segments`}
             />
             <MoneyStat
               icon={<DollarSign className="h-3.5 w-3.5" />}
-              value={`≈ ${formatUsd(estimate.cost)}`}
+              value={`${estimate.assumed ? "From ≈ " : "≈ "}${formatUsd(estimate.cost)}`}
               label="Estimated Cost"
-              note="Flat Rate Per Segment"
+              note={
+                estimate.assumed
+                  ? "Assumes 1 Segment Per Message"
+                  : "Flat Rate Per Segment · Measured From Your Templates"
+              }
             />
           </CardContent>
         </Card>
