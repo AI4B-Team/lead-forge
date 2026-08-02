@@ -26,6 +26,8 @@ import {
   blacklistThread,
 } from "@/lib/inbox.functions";
 import { listQuickReplies, createQuickReply } from "@/lib/tags.functions";
+import { listTags } from "@/lib/tags.functions";
+import { LeadTagBar } from "@/components/app/lead-tag-picker";
 import { listNumbers } from "@/lib/numbers.functions";
 import {
   AiActivityPill,
@@ -85,6 +87,8 @@ function ConversationsPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [showArchived, setShowArchived] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const [archived, setArchived] = useState<string[]>([]);
@@ -103,6 +107,7 @@ function ConversationsPage() {
   const runSuggest = useServerFn(suggestThreadReplies);
   const runBlacklist = useServerFn(blacklistThread);
   const fetchNumbers = useServerFn(listNumbers);
+  const fetchWorkspaceTags = useServerFn(listTags);
 
   useEffect(() => setArchived(readArchive()), []);
 
@@ -119,10 +124,21 @@ function ConversationsPage() {
   const numbersKnown = !!numbersQ.data;
 
   const threadsQ = useQuery({
-    queryKey: ["inbox-threads", workspaceId, filter],
-    queryFn: () => fetchThreads({ data: { workspaceId: workspaceId!, filter } }),
+    queryKey: ["inbox-threads", workspaceId, filter, tagFilter],
+    queryFn: () =>
+      fetchThreads({
+        data: { workspaceId: workspaceId!, filter, ...(tagFilter ? { tagId: tagFilter } : {}) },
+      }),
     enabled: !!workspaceId,
     refetchInterval: 15000,
+  });
+
+  // Workspace tag vocabulary — shared with campaigns and the Leads page.
+  const tagsQ = useQuery({
+    queryKey: ["tags", workspaceId],
+    queryFn: () => fetchWorkspaceTags({ data: { workspaceId: workspaceId! } }),
+    enabled: !!workspaceId,
+    staleTime: 60_000,
   });
 
   const threadQ = useQuery({
@@ -427,10 +443,16 @@ function ConversationsPage() {
                       toast.success("Appointment Ask Drafted");
                     }}
                     onArchive={toggleArchive}
-                    onTag={() => toast.info("Campaign Tags Are Managed On The Campaigns Page")}
+                    onTag={() => setTagPickerOpen(true)}
                     onBlacklist={doBlacklist}
                     archived={!!selected && archived.includes(selected)}
                     blacklisting={false}
+                  />
+                  <LeadTagBar
+                    workspaceId={workspaceId}
+                    leadId={threadQ.data?.lead?.id ?? null}
+                    open={tagPickerOpen}
+                    onOpenChange={setTagPickerOpen}
                   />
                 </div>
 
