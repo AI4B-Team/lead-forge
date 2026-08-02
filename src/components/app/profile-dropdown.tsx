@@ -78,7 +78,7 @@ export function ProfileDropdown({ className }: { className?: string }) {
           <Button className="w-full gap-2 rounded-full" onClick={() => go("/app/billing")}>
             <Zap className="h-4 w-4" /> Top Up Credits
           </Button>
-          <Button variant="outline" className="w-full gap-2 rounded-full" onClick={() => go("/app/settings")}>
+          <Button variant="outline" className="w-full gap-2 rounded-full" onClick={() => go("/app/team")}>
             <UserPlus className="h-4 w-4" /> Invite Teammate
           </Button>
         </div>
