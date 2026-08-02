@@ -605,7 +605,9 @@ export function BlockedAttemptsLog({ workspaceId }: { workspaceId: string | null
         <div>
           <CardTitle className="text-base font-display">Blocked Send Attempts</CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">
-            Every Time We Refused To Text Someone — Logged With Path, Reason, And Timestamp.
+            Every Time We Refused To Text Someone — Logged With Path,
+            <br />
+            Reason & Timestamp.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
