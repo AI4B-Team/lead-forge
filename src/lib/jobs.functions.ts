@@ -17,7 +17,7 @@ export const listJobs = createServerFn({ method: "GET" })
     const { data: jobs, error } = await supabase
       .from("jobs")
       .select(
-        "id, source_type, record_type, status, rows_in, rows_deduped, rows_enriched, rows_skiptraced, params, created_at, schedule, next_run_at, last_run_at",
+        "id, source_type, record_type, status, rows_in, rows_deduped, rows_enriched, rows_skiptraced, params, created_at, schedule, next_run_at, last_run_at, custom_interval_minutes, schedule_active, auto_launch, channel, net_new_count",
       )
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: false });
@@ -129,6 +129,11 @@ export const listJobs = createServerFn({ method: "GET" })
           last_event_at: lastEventAt.get(j.id) ?? null,
           record_type: j.record_type ?? "business",
           schedule: j.schedule ?? "one_time",
+          custom_interval_minutes: j.custom_interval_minutes ?? null,
+          schedule_active: j.schedule_active !== false,
+          auto_launch: j.auto_launch === true,
+          channel: j.channel ?? "sms",
+          net_new_count: j.net_new_count ?? null,
           next_run_at: j.next_run_at,
           last_run_at: j.last_run_at,
           new_since_last_run: newSince.get(j.id) ?? 0,
