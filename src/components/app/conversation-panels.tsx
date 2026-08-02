@@ -510,12 +510,10 @@ export function LeadProfilePanel({
           <Progress value={score} className="h-1.5 mt-2" />
           {thread && (
             <div className="flex items-center gap-1 mt-2 flex-wrap">
-              {thread.badges.map((b) => (
+              {thread.badges.slice(0, 1).map((b) => (
                 <ConvoBadgeChip key={b} badge={b} />
               ))}
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-[18px]">
-                {SENTIMENT_LABEL[thread.sentiment]}
-              </Badge>
+              <span className="text-[10px] text-muted-foreground">{SENTIMENT_LABEL[thread.sentiment]}</span>
             </div>
           )}
         </div>
