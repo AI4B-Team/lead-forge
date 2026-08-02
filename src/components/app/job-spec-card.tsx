@@ -434,6 +434,28 @@ export function JobSpecCard({
           </div>
         )}
 
+        {has("contactTarget") && (
+          <div>
+            <FieldLabel
+              confidence={94}
+              show={Boolean(spec.contactTarget) && inf("contactTarget")}
+              hint="Whose contact details you want. Listing Agents publish their phone numbers. For Sale By Owner reaches the homeowner directly — the one every wholesaler wants — and those records get skip traced."
+            >
+              Contact Target
+            </FieldLabel>
+            <Select
+              value={spec.contactTarget ?? ""}
+              onValueChange={(v) => set("contactTarget", v as "agents" | "fsbo")}
+            >
+              <SelectTrigger className="mt-1"><SelectValue placeholder="Agents Or Owners?" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="agents">Listing Agents</SelectItem>
+                <SelectItem value="fsbo">For Sale By Owner</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         {(has("niche") || has("keyword")) && (
           <div>
             <FieldLabel
@@ -473,23 +495,71 @@ export function JobSpecCard({
           </div>
         )}
 
+        {has("city") && (
+          <div>
+            <FieldLabel
+              confidence={95}
+              show={Boolean(spec.city) && inf("city")}
+              hint="This source is organized by city, not county — rentals, commercial listings, hosts and venues are all searched by metro."
+            >
+              City
+            </FieldLabel>
+            <CommitInput
+              className="mt-1"
+              value={spec.city ?? ""}
+              onCommit={(v) => set("city", v.trim() || null)}
+              placeholder="e.g. Miami, FL"
+            />
+          </div>
+        )}
+
+        {has("country") && (
+          <div>
+            <FieldLabel
+              confidence={95}
+              show={Boolean(spec.country) && inf("country")}
+              hint="This source covers a country or marketplace region rather than US counties. We pre-fill the country the source implies."
+            >
+              Country / Region
+            </FieldLabel>
+            <CommitInput
+              className="mt-1"
+              value={spec.country ?? defaultCountryFor(spec.templateId) ?? ""}
+              onCommit={(v) => set("country", v.trim() || null)}
+              placeholder={defaultCountryFor(spec.templateId) ?? "e.g. United Kingdom"}
+            />
+          </div>
+        )}
+
         {(has("audienceFilter") || has("listingFilter")) && (
           <div>
             <FieldLabel
-              hintTitle={has("listingFilter") ? "Listing Filters" : "Audience Filters"}
+              hintTitle={filterLabel ?? (has("listingFilter") ? "Listing Filters" : "Audience Filters")}
               hint={
-                has("listingFilter")
+                filterLabel
+                  ? "Narrow the results by the traits that matter for this source — funding stage, company size, star rating, or review count."
+                  : has("listingFilter")
                   ? "Narrow the results by listing traits — price band, days on market, for-sale-by-owner, and similar."
                   : "Narrow the results by audience traits — follower range, location, bio keywords, and similar."
               }
             >
-              {has("listingFilter") ? "Listing Filters (Optional)" : "Audience Filters (Optional)"}
+              {filterLabel
+                ? `${filterLabel} (Optional)`
+                : has("listingFilter")
+                  ? "Listing Filters (Optional)"
+                  : "Audience Filters (Optional)"}
             </FieldLabel>
             <CommitInput
               className="mt-1"
               value={spec.filters ?? ""}
               onCommit={(v) => set("filters", v.trim() || null)}
-              placeholder={has("listingFilter") ? "e.g. For Sale By Owner, 90+ Days On Market" : "e.g. 5k–50k Followers"}
+              placeholder={
+                filterLabel
+                  ? "e.g. Series A+, 4.5★ And 50+ Reviews"
+                  : has("listingFilter")
+                    ? "e.g. Price Band, 90+ Days On Market"
+                    : "e.g. 5k–50k Followers"
+              }
             />
           </div>
         )}
