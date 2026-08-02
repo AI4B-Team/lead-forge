@@ -27,8 +27,7 @@ import {
   suggestThreadReplies,
   blacklistThread,
 } from "@/lib/inbox.functions";
-import { listQuickReplies, createQuickReply } from "@/lib/tags.functions";
-import { listTags } from "@/lib/tags.functions";
+import { listQuickReplies, createQuickReply, listTags } from "@/lib/tags.functions";
 import { LeadTagBar } from "@/components/app/lead-tag-picker";
 import { listNumbers } from "@/lib/numbers.functions";
 import {
