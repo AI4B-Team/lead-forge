@@ -21,9 +21,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Tooltip, TooltipContent, TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Ban, ChevronLeft, ChevronRight, Download, Search, ShieldOff, Upload, User,
   ArrowUpRight, ArrowDownLeft, Bot, CircleSlash,
 } from "lucide-react";
