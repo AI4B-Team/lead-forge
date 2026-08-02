@@ -3,7 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ActivityType } from "./activity.shared";
 
-type AnyClient = SupabaseClient<any, any, any>;
+type AnyClient = Pick<SupabaseClient<any, any, any>, "from">;
 
 export async function logActivity(
   supabase: AnyClient,
