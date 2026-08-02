@@ -25,6 +25,10 @@ import {
   CircleCheck,
   Quote,
   ArrowRight,
+  TriangleAlert,
+  Lightbulb,
+  Check,
+  Copy,
 } from "lucide-react";
 import { INTENT_LABELS, formatMoney, type Intent } from "@/lib/performance-intel";
 
