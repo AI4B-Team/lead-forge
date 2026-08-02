@@ -61,7 +61,7 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
   // Toggle lines use the exact List Builder labels, in panel order, so the two
   // lists can be checked off against each other.
   for (const option of enabledOptions(spec)) {
-    steps.push({ label: option.label, value: "Enabled" });
+    steps.push({ label: option.checklistLabel ?? option.label, value: "Enabled" });
   }
   if (spec.industry) steps.push({ label: "Recommended Playbook", value: spec.industry });
   return steps;
