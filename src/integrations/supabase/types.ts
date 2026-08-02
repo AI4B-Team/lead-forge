@@ -725,6 +725,7 @@ export type Database = {
       }
       lead_records: {
         Row: {
+          address: string | null
           business_name: string | null
           city: string | null
           created_at: string
@@ -742,13 +743,16 @@ export type Database = {
           phone: string | null
           phone_type: string | null
           record_types: string[]
+          socials: Json
           source_types: string[]
           state: string | null
           updated_at: string
+          website: string | null
           workspace_id: string
           zip: string | null
         }
         Insert: {
+          address?: string | null
           business_name?: string | null
           city?: string | null
           created_at?: string
@@ -766,13 +770,16 @@ export type Database = {
           phone?: string | null
           phone_type?: string | null
           record_types?: string[]
+          socials?: Json
           source_types?: string[]
           state?: string | null
           updated_at?: string
+          website?: string | null
           workspace_id: string
           zip?: string | null
         }
         Update: {
+          address?: string | null
           business_name?: string | null
           city?: string | null
           created_at?: string
@@ -790,9 +797,11 @@ export type Database = {
           phone?: string | null
           phone_type?: string | null
           record_types?: string[]
+          socials?: Json
           source_types?: string[]
           state?: string | null
           updated_at?: string
+          website?: string | null
           workspace_id?: string
           zip?: string | null
         }

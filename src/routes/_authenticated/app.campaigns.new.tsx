@@ -403,6 +403,18 @@ function NewCampaign() {
                   </div>
                   {preview && (
                     <div className="rounded-xl border border-border p-3">
+                      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span className="uppercase tracking-wider">Channel Eligibility</span>
+                        <Badge variant="secondary" className="font-normal">
+                          {(preview.eligibility?.sms ?? 0).toLocaleString()} SMS-Eligible
+                        </Badge>
+                        <Badge variant="secondary" className="font-normal">
+                          {(preview.eligibility?.email ?? 0).toLocaleString()} Email-Eligible
+                        </Badge>
+                        <Badge variant="secondary" className="font-normal">
+                          {(preview.eligibility?.mail ?? 0).toLocaleString()} Direct-Mail-Eligible
+                        </Badge>
+                      </div>
                       <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
                         {preview.drops.length} Drop{preview.drops.length === 1 ? "" : "s"} · {dropSize} Contacts Each ·{" "}
                         {preview.duplicates.toLocaleString()} Duplicates Removed

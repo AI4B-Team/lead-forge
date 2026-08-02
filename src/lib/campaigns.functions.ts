@@ -6,6 +6,7 @@ import { planDrops, estimateCost } from "@/lib/drops";
 import { canStartNewDrop } from "@/lib/tcpa";
 import { SCRUB_STALE_MESSAGE, isScrubStale, withStopFooter } from "@/lib/compliance-rules";
 import { emptyStats, type CampaignStats } from "@/lib/campaign-stats";
+import { channelEligibility } from "@/lib/contact-channels";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
 
@@ -305,18 +306,31 @@ export const previewCampaign = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: leads } = await context.supabase
       .from("leads")
-      .select("phone")
+      .select("phone, phone_type, email, address, scrub_status")
       .eq("job_id", data.jobId)
       .eq("scrub_status", "clean");
     const phones = (leads ?? []).map((l) => l.phone).filter((p): p is string => !!p);
     const unique = new Set(phones);
     const duplicates = phones.length - unique.size;
 
+    // Channel eligibility: which contacts each outreach channel can actually
+    // reach. SMS requires a mobile line; email and direct mail need their own
+    // channel present.
+    const eligibility = channelEligibility(
+      (leads ?? []).map((l) => ({
+        phone: l.phone,
+        phone_type: l.phone_type,
+        email: l.email,
+        address: l.address,
+        disposition: l.scrub_status,
+      })),
+    );
+
     const recipients = unique.size;
     const cost = estimateCost(recipients, data.bodies.map((b) => ({ message_variants: [b] })));
     const from = data.startAt ? new Date(data.startAt) : new Date();
     const drops = planDrops(recipients, data.dropSize, data.dropTimes, from, data.instant);
-    return { recipients, duplicates, cost, drops };
+    return { recipients, duplicates, cost, drops, eligibility };
   });
 
 // Materialize the drop schedule for a campaign.

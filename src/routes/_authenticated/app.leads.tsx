@@ -16,8 +16,8 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { formatLocation } from "@/lib/location";
 import { listLeadRecords, getLeadListMemberships } from "@/lib/monitoring.functions";
 import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
-import { PhoneLink } from "@/components/app/phone-link";
 import { LeadTagChips } from "@/components/app/lead-tag-picker";
+import { ChannelIcons } from "@/components/app/channel-icons";
 
 export const Route = createFileRoute("/_authenticated/app/leads")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -142,19 +142,21 @@ function LeadsPageInner() {
   const [q, setQ] = useState("");
   const [disposition, setDisposition] = useState<"all" | "clean" | "dnc" | "litigator">("all");
   const [sourceType, setSourceType] = useState("all");
+  const [channel, setChannel] = useState<"all" | "phone" | "email" | "address">("all");
   const [lineType, setLineType] = useState<"all" | "mobile" | "landline" | "voip" | "unknown">("all");
   const [onlyNew, setOnlyNew] = useState<boolean>(onlyNewParam === true);
   const [multiList, setMultiList] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["lead-records", workspaceId, q, disposition, sourceType, lineType, onlyNew, multiList],
+    queryKey: ["lead-records", workspaceId, q, disposition, sourceType, channel, lineType, onlyNew, multiList],
     queryFn: () =>
       fetchRecords({
         data: {
           workspaceId: workspaceId!,
           disposition,
           sourceType,
-          lineType,
+          channel,
+          lineType: channel === "phone" ? lineType : "all",
           onlyNew,
           multiList,
           ...(q.trim() ? { search: q.trim() } : {}),
@@ -169,21 +171,27 @@ function LeadsPageInner() {
   const bySource = Object.entries(data?.bySource ?? {});
 
   return (
+    <TooltipProvider>
     <div>
       <PageHeader
         title="Leads"
         description="Every Record You Own, De-Duplicated Across Every List."
       />
 
-      <TooltipProvider>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Stat icon={<Users className="h-4 w-4" />} label="Total Leads" value={(stats?.total ?? 0).toLocaleString()} help="The total number of unique lead records across every list in this workspace, after de-duplication." />
           <Stat icon={<ShieldCheck className="h-4 w-4" />} label="Clean / Textable" value={(stats?.clean ?? 0).toLocaleString()} tone="text-success" help="Leads that passed DNC, litigator, and line-type checks and are safe to message." />
           <Stat icon={<ShieldAlert className="h-4 w-4" />} label="DNC Suppressed" value={(stats?.dnc ?? 0).toLocaleString()} tone="text-warn" help="Leads suppressed because they matched the Do Not Call list or opted out." />
           <Stat icon={<Ban className="h-4 w-4" />} label="Litigators Blocked" value={(stats?.litigator ?? 0).toLocaleString()} tone="text-danger" help="Leads flagged as known litigators or serial TCPA plaintiffs and blocked from outreach." />
           <Stat icon={<Sparkles className="h-4 w-4" />} label="New This Week" value={(stats?.newThisWeek ?? 0).toLocaleString()} tone="text-primary" help="New lead records first seen in the last 7 days across any list." />
-        </div>
-      </TooltipProvider>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <span className="uppercase tracking-wide">Reachable By</span>
+        <Badge variant="secondary" className="font-normal">SMS · {(stats?.smsEligible ?? 0).toLocaleString()}</Badge>
+        <Badge variant="secondary" className="font-normal">Email · {(stats?.emailReachable ?? 0).toLocaleString()}</Badge>
+        <Badge variant="secondary" className="font-normal">Direct Mail · {(stats?.mailable ?? 0).toLocaleString()}</Badge>
+      </div>
 
       {(stats?.multiList ?? 0) > 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
@@ -232,16 +240,27 @@ function LeadsPageInner() {
               <SelectItem value="upload">Upload</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={lineType} onValueChange={(v) => setLineType(v as typeof lineType)}>
-            <SelectTrigger className="lg:w-[150px]"><SelectValue /></SelectTrigger>
+          <Select value={channel} onValueChange={(v) => setChannel(v as typeof channel)}>
+            <SelectTrigger className="lg:w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Line Types</SelectItem>
-              <SelectItem value="mobile">Mobile</SelectItem>
-              <SelectItem value="landline">Landline</SelectItem>
-              <SelectItem value="voip">VoIP</SelectItem>
-              <SelectItem value="unknown">Unknown</SelectItem>
+              <SelectItem value="all">All Channels</SelectItem>
+              <SelectItem value="phone">Has Phone</SelectItem>
+              <SelectItem value="email">Has Email</SelectItem>
+              <SelectItem value="address">Has Mailing Address</SelectItem>
             </SelectContent>
           </Select>
+          {channel === "phone" && (
+            <Select value={lineType} onValueChange={(v) => setLineType(v as typeof lineType)}>
+              <SelectTrigger className="lg:w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any Line Type</SelectItem>
+                <SelectItem value="mobile">Mobile Only</SelectItem>
+                <SelectItem value="landline">Landline</SelectItem>
+                <SelectItem value="voip">VoIP</SelectItem>
+                <SelectItem value="unknown">Unknown</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <div className="flex items-center gap-2">
             <Button
               type="button"
@@ -269,8 +288,7 @@ function LeadsPageInner() {
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="p-4">Name / Business</th>
-                <th className="p-4">Phone</th>
-                <th className="p-4">Line Type</th>
+                <th className="p-4">Channels</th>
                 <th className="p-4">Disposition</th>
                 <th className="p-4">Lists</th>
                 <th className="p-4">First / Last Seen</th>
@@ -278,10 +296,10 @@ function LeadsPageInner() {
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
+                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
               )}
               {!isLoading && rows.length === 0 && (
-                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">
+                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">
                   No Records Match These Filters Yet.
                 </td></tr>
               )}
@@ -316,8 +334,22 @@ function LeadsPageInner() {
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">{r.phone ? <PhoneLink phone={r.phone} /> : <span className="text-muted-foreground">—</span>}</td>
-                  <td className="p-4 text-muted-foreground capitalize">{r.phone_type ?? "unknown"}</td>
+                  <td className="p-4">
+                    <ChannelIcons
+                      contact={{
+                        phone: r.phone,
+                        phone_type: r.phone_type,
+                        email: r.email,
+                        address: r.address,
+                        city: r.city,
+                        state: r.state,
+                        zip: r.zip,
+                        website: r.website,
+                        socials: (r.socials ?? null) as Record<string, string> | null,
+                        disposition: r.disposition,
+                      }}
+                    />
+                  </td>
                   <td className="p-4">
                     <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${DISPOSITION_TONE[r.disposition] ?? "border-border text-muted-foreground"}`}>
                       {r.disposition}
@@ -337,5 +369,6 @@ function LeadsPageInner() {
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 }
