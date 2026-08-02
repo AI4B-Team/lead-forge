@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Settings, LogOut, Users, CreditCard, KeyRound, Palette, Shield } from "lucide-react";
+import { User, Settings, LogOut, Users, CreditCard, KeyRound, Sun, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/app/theme-toggle";
 import { useWorkspaceId } from "@/hooks/use-workspace";
