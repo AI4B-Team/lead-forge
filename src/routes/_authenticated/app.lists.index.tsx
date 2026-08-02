@@ -166,7 +166,11 @@ function Jobs() {
     return jobs.filter((j) => {
       if (source !== "all" && j.identity.key !== source) return false;
       if (status === "attention") {
-        if (!j.stalled) return false;
+        if (!j.stalled && j.status !== "failed") return false;
+      } else if (status === "running") {
+        if (!isRunningStatus(j.status) || j.stalled) return false;
+      } else if (status === "scheduled") {
+        if (!j.schedule || j.schedule === "one_time") return false;
       } else if (status !== "all" && j.status !== status) return false;
       if (needle) {
         // Match every populated spec field: name, template, niche/keyword,
@@ -182,7 +186,11 @@ function Jobs() {
     });
   }, [allRows, q, source, status, range]);
 
-  /** Only templates/sources this workspace has actually used, grouped. */
+  /**
+   * Only templates/sources this workspace has actually used. Grouping only
+   * earns its keep when a group nests 2+ used sources — otherwise the header
+   * and its single child render as duplicate rows, so we flatten.
+   */
   const sourceOptions = useMemo(() => {
     const byGroup = new Map<string, Map<string, string>>();
     for (const j of allRows) {
@@ -191,12 +199,14 @@ function Jobs() {
       bucket.set(key, label);
       byGroup.set(group, bucket);
     }
-    return GROUP_ORDER.filter((g) => byGroup.has(g)).map((g) => ({
+    const groups = GROUP_ORDER.filter((g) => byGroup.has(g)).map((g) => ({
       group: g,
       items: [...byGroup.get(g)!.entries()]
         .map(([key, label]) => ({ key, label }))
         .sort((a, b) => a.label.localeCompare(b.label)),
     }));
+    const grouped = groups.some((g) => g.items.length > 1);
+    return { grouped, groups, flat: groups.flatMap((g) => g.items) };
   }, [allRows]);
 
   const summary = useMemo(() => {
@@ -212,7 +222,7 @@ function Jobs() {
       if (j.status === "ready") smsReady += j.counts.clean;
       // Running counts only genuinely active jobs — stalled ones move to Needs Attention.
       if (isRunningStatus(j.status) && !j.stalled) running += 1;
-      if (j.stalled) attention += 1;
+      if (j.stalled || j.status === "failed") attention += 1;
       if (j.schedule && j.schedule !== "one_time") scheduled += 1;
     }
     return {
