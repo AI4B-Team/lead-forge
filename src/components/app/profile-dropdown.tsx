@@ -146,7 +146,7 @@ export function ProfileDropdown({ className }: { className?: string }) {
           <MenuItem icon={<Settings className="h-4 w-4" />} label="Account" onClick={() => go("/app/account")} />
           <MenuItem icon={<Users className="h-4 w-4" />} label="Team" onClick={() => go("/app/team")} />
           <MenuItem icon={<CreditCard className="h-4 w-4" />} label="Billing" onClick={() => go("/app/billing")} />
-          <MenuItem icon={<KeyRound className="h-4 w-4" />} label="API Keys" onClick={() => go("/app/api")} />
+          <MenuItem icon={<KeyRound className="h-4 w-4" />} label="API & Integrations" onClick={() => go("/app/integrations")} />
           <MenuItem
             icon={<Sun className="h-4 w-4" />}
             label="Theme"

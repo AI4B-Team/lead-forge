@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import {
   MonitorSmartphone,
   History,
   Mail,
+  KeyRound as KeyRoundIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -321,6 +322,22 @@ function AccountPage() {
                     · Account Created{" "}
                     {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base font-display">
+                    <KeyRoundIcon className="h-4 w-4 text-muted-foreground" /> API Keys
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-wrap items-center justify-between gap-4">
+                  <p className="max-w-xl text-sm text-muted-foreground">
+                    Workspace API Keys And Event Webhooks Are Managed On The Integrations Page.
+                  </p>
+                  <Button variant="outline" className="rounded-full" asChild>
+                    <Link to="/app/integrations" hash="developer">Open Integrations</Link>
+                  </Button>
                 </CardContent>
               </Card>
 
