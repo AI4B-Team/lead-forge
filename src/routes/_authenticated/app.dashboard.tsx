@@ -287,6 +287,9 @@ function Dashboard() {
         description="A live look at your leads, lists, campaigns, and deliverability."
       />
 
+      {/* Unfinished setup is pinned above everything: it's what blocks the next action. */}
+      <GettingStarted workspaceId={workspaceId ?? null} />
+
       {/* Hero metric */}
       <div className="mb-6 rounded-2xl border border-border bg-ink text-ink-foreground p-6 sm:flex sm:items-center sm:justify-between sm:gap-8">
         <div>
@@ -348,7 +351,6 @@ function Dashboard() {
       </TooltipProvider>
 
       <QuickRun />
-      <GettingStarted workspaceId={workspaceId ?? null} />
 
       <div className="grid md:grid-cols-3 gap-4 mt-6">
         <Card className="md:col-span-2">
