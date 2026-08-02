@@ -24,6 +24,7 @@ export const TAG_COLORS = [
   { value: "#f59e0b", label: "Needs Review" },
   { value: "#16a34a", label: "Winning" },
   { value: "#2563eb", label: "Testing" },
+  { value: "#7c3aed", label: "Custom Group" },
   { value: "#6b7280", label: "Default" },
 ] as const;
 

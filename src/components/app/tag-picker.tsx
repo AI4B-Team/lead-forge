@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -6,18 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pipette } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { listTags, createTag } from "@/lib/tags.functions";
-
-const SWATCHES = [
-  "#2563eb", "#3b82f6", "#0891b2", "#06b6d4", "#14b8a6", "#10b981",
-  "#16a34a", "#65a30d", "#eab308", "#f59e0b", "#f97316", "#dc2626",
-  "#e11d48", "#ec4899", "#a855f7", "#7c3aed", "#6366f1", "#64748b",
-];
-
-const CUSTOM_KEY = "lf-custom-tag-colors";
-const isHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
+import { TagColorPicker } from "@/components/app/tag-color-picker";
+import { TAG_SWATCHES } from "@/components/app/tag-badge";
 
 /** Tag dropdown with modal creation when the workspace has none to pick from. */
 export function TagPicker({
@@ -33,30 +26,9 @@ export function TagPicker({
   const fetchTags = useServerFn(listTags);
   const addTag = useServerFn(createTag);
   const [name, setName] = useState("");
-  const [color, setColor] = useState(SWATCHES[0]);
+  const [color, setColor] = useState<string>(TAG_SWATCHES[0]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [custom, setCustom] = useState<string[]>([]);
-  const [customDraft, setCustomDraft] = useState("#");
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(CUSTOM_KEY);
-      if (raw) setCustom((JSON.parse(raw) as string[]).filter(isHex).slice(0, 24));
-    } catch { /* ignore */ }
-  }, []);
-
-  const addCustom = (hex: string) => {
-    const v = hex.startsWith("#") ? hex.toLowerCase() : `#${hex.toLowerCase()}`;
-    if (!isHex(v)) return toast.error("Enter A Hex Color Like #1F2937");
-    setColor(v);
-    if (!SWATCHES.includes(v) && !custom.includes(v)) {
-      const next = [v, ...custom].slice(0, 24);
-      setCustom(next);
-      try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(next)); } catch { /* ignore */ }
-    }
-    setCustomDraft("#");
-  };
 
   const { data } = useQuery({
     queryKey: ["tags", workspaceId],
@@ -126,41 +98,11 @@ export function TagPicker({
               </div>
               <div>
                 <Label>Color</Label>
-                <div className="mt-1.5 grid grid-cols-9 gap-2">
-                  {[...SWATCHES, ...custom].map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      aria-label={`Color ${c}`}
-                      onClick={() => setColor(c)}
-                      className={`h-7 w-7 rounded-full border transition-transform hover:scale-110 ${color === c ? "ring-2 ring-offset-1 ring-primary" : ""}`}
-                      style={{ backgroundColor: c }}
-                    />
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center gap-2">
-                  <label className="relative h-8 w-8 shrink-0 cursor-pointer rounded-full border grid place-items-center" aria-label="Pick A Custom Color">
-                    <Pipette className="h-3.5 w-3.5 text-muted-foreground" />
-                    <input
-                      type="color"
-                      value={isHex(color) ? color : "#2563eb"}
-                      onChange={(e) => addCustom(e.target.value)}
-                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                    />
-                  </label>
-                  <Input
-                    value={customDraft}
-                    onChange={(e) => setCustomDraft(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(customDraft); } }}
-                    placeholder="#1F2937"
-                    className="h-8 flex-1 font-mono text-xs"
-                  />
-                  <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => addCustom(customDraft)}>
-                    Add Color
-                  </Button>
+                <div className="mt-1.5">
+                  <TagColorPicker value={color} onChange={setColor} size="sm" />
                 </div>
                 <p className="mt-1.5 text-[11px] text-muted-foreground">
-                  Selected <span className="font-mono">{color}</span> — Custom Colors Are Saved For Reuse.
+                  Selected <span className="font-mono">{color}</span> — You Can Change This Later.
                 </p>
               </div>
             </div>
