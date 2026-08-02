@@ -1,5 +1,13 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, Building2, Layers, LayoutDashboard, Radar, ShieldCheck, type LucideIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  Layers,
+  LayoutDashboard,
+  Radar,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminGate, useSuperAdminGate } from "@/components/app/admin-shared";
 import { BRAND_NAME } from "@/config/brand";
@@ -33,12 +41,15 @@ function PlatformLayout() {
           </span>
           <div className="min-w-0 leading-tight">
             <div className="truncate font-display text-sm font-bold">{BRAND_NAME}</div>
-            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Platform</div>
+            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+              Platform
+            </div>
           </div>
         </div>
         <nav aria-label="Platform" className="flex flex-1 flex-col gap-1 p-3">
           {NAV.map((item) => {
-            const active = item.to === "/platform" ? pathname === "/platform" : pathname.startsWith(item.to);
+            const active =
+              item.to === "/platform" ? pathname === "/platform" : pathname.startsWith(item.to);
             const Icon = item.icon;
             return (
               <Link
@@ -59,7 +70,12 @@ function PlatformLayout() {
           })}
         </nav>
         <div className="border-t border-border p-3">
-          <Button asChild size="sm" variant="ghost" className="w-full justify-start rounded-xl text-xs">
+          <Button
+            asChild
+            size="sm"
+            variant="ghost"
+            className="w-full justify-start rounded-xl text-xs"
+          >
             <Link to="/app/dashboard">
               <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back To My Workspace
             </Link>
