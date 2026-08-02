@@ -11,11 +11,14 @@ import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search, Eye, Pause, Play, Clock } from "lucide-react";
+import { Download, MessageSquare, Activity, ShieldCheck, Ban, AlertTriangle, Loader2, Users, Search, Eye, Pause, Play, Clock, Check, Copy, Smartphone, Scale, Rocket, Hourglass, Send, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs, pauseJob, resumeJob } from "@/lib/jobs.functions";
 import { RESCRUB_DAYS } from "@/lib/compliance-rules";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
+import { buildFunnel, funnelViolations } from "@/lib/funnel-math";
+import { launchEstimate, formatUsd, DEFAULT_SEQUENCE_STEPS } from "@/lib/launch-estimate";
+import { LOCAL_TZ } from "@/lib/local-tz";
 import { PhoneLink } from "@/components/app/phone-link";
 import { setOnboardingPref } from "@/lib/onboarding.functions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
@@ -71,7 +74,7 @@ function JobDetail() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["job-review", jobId],
-    queryFn: () => fetchReview({ data: { jobId } }),
+    queryFn: () => fetchReview({ data: { jobId, timeZone: LOCAL_TZ } }),
     refetchInterval: (q) => {
       const s = q.state.data?.job?.status;
       return s && s !== "ready" && s !== "failed" && s !== "paused" ? 2000 : false;
@@ -110,6 +113,24 @@ function JobDetail() {
   const perMin = Math.round(processed / (elapsedMs / 60000));
   const target = Math.max(processed, job.rows_in ?? 0);
   const etaMs = perMin > 0 && target > processed ? ((target - processed) / perMin) * 60000 : 0;
+
+  // Canonical funnel math — one computation feeds the bars, the KPI strip, and
+  // the arithmetic guard below.
+  const funnel = buildFunnel({
+    found: job.rows_in ?? 0,
+    deduped: job.rows_deduped ?? 0,
+    verified: job.rows_enriched ?? counts.total,
+    traced: job.rows_skiptraced ?? 0,
+    scrubbed: counts.total,
+    clean: counts.clean,
+  });
+  const traced = job.rows_skiptraced ?? 0;
+  const estimate = launchEstimate(counts.clean);
+  // Never ship a funnel whose arithmetic disagrees with the Ready To Send card.
+  if (import.meta.env.DEV) {
+    const bad = funnelViolations(funnel, { readyToSend: counts.clean });
+    if (bad.length) console.warn("[funnel] arithmetic mismatch:", bad);
+  }
 
   const toggleRun = async () => {
     try {
@@ -180,10 +201,14 @@ function JobDetail() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Stat label="Rows Processed" value={job.rows_in ?? 0} />
-        <Stat label="Deduped" value={job.rows_deduped ?? 0} />
-        <Stat label="Verified" value={job.rows_enriched ?? 0} />
-        <Stat label="Skip Traced" value={job.rows_skiptraced ?? 0} />
+        <Stat label="Records Found" value={funnel[0]!.remaining.toLocaleString()} />
+        <Stat label="Unique Records" value={funnel[1]!.remaining.toLocaleString()} />
+        <Stat label="Mobile Verified" value={funnel[2]!.remaining.toLocaleString()} />
+        <Stat
+          label="Skip Traced"
+          value={traced > 0 ? traced.toLocaleString() : "None Needed"}
+          muted={traced === 0}
+        />
       </div>
 
       {stalled && (
@@ -212,18 +237,20 @@ function JobDetail() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base font-display">Pipeline</CardTitle>
           {isReady && (
-            <div className="font-display text-2xl font-black text-primary">
-              {counts.clean.toLocaleString()} Clean, Textable Leads
-            </div>
+            <Badge className="gap-1.5 rounded-full px-3 py-1 text-sm font-semibold">
+              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+              {counts.clean.toLocaleString()} Ready To Launch
+            </Badge>
           )}
         </CardHeader>
         <CardContent className="space-y-5">
           <PipelineFunnel
+            traced={traced}
             stages={{
               found: job.rows_in ?? 0,
               deduped: job.rows_deduped ?? 0,
               verified: job.rows_enriched ?? counts.total,
-              skipTraced: job.rows_skiptraced ?? counts.mobile,
+              skipTraced: traced,
               scrubbed: counts.total,
               clean: counts.clean,
             }}
@@ -234,9 +261,12 @@ function JobDetail() {
             </div>
             <ul className="mt-3 space-y-2">
               {(eventData?.events ?? []).map((e) => (
-                <li key={e.id} className="flex gap-3 text-sm text-foreground">
+                <li key={e.id} className="flex items-start gap-3 text-sm text-foreground">
                   <span className="text-xs text-muted-foreground tabular-nums pt-0.5 shrink-0">
                     {new Date(e.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                  </span>
+                  <span className="mt-0.5 shrink-0">
+                    <EventIcon stage={e.stage} message={e.message} />
                   </span>
                   <span>{e.message}</span>
                 </li>
