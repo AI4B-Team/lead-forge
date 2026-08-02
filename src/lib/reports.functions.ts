@@ -110,6 +110,7 @@ export const getWorkspacePerformance = createServerFn({ method: "GET" })
       pipelineValue,
       projectedClosed,
       delta,
+      MIN_HISTORY_EVENTS,
       HOUR_BANDS,
       WEEKDAYS,
     } = await import("@/lib/performance-intel");
@@ -335,43 +336,78 @@ export const getWorkspacePerformance = createServerFn({ method: "GET" })
       deliverRate: current.sent ? current.delivered / current.sent : 0,
       optOutRate: current.sent ? current.optOuts / current.sent : 0,
     };
+    // Comparisons are only honest when the prior period actually has history.
+    const historyReady = previous.sent >= MIN_HISTORY_EVENTS;
+    const cmp = (c: number, p: number) => (historyReady ? delta(c, p) : null);
     const deltas = {
-      conversations: delta(current.conversations, previous.conversations),
-      qualified: delta(current.qualified, previous.qualified),
-      appointments: delta(current.appointments, previous.appointments),
-      pipeline: delta(pipelineValue(current.appointments), pipelineValue(previous.appointments)),
-      sent: delta(current.sent, previous.sent),
-      replyRate: delta(
+      conversations: cmp(current.conversations, previous.conversations),
+      qualified: cmp(current.qualified, previous.qualified),
+      appointments: cmp(current.appointments, previous.appointments),
+      pipeline: cmp(pipelineValue(current.appointments), pipelineValue(previous.appointments)),
+      sent: cmp(current.sent, previous.sent),
+      replyRate: cmp(
         current.sent ? current.replies / current.sent : 0,
         previous.sent ? previous.replies / previous.sent : 0,
       ),
-      deliverRate: delta(
+      deliverRate: cmp(
         current.sent ? current.delivered / current.sent : 0,
         previous.sent ? previous.delivered / previous.sent : 0,
       ),
-      optOutRate: delta(
+      optOutRate: cmp(
         current.sent ? current.optOuts / current.sent : 0,
         previous.sent ? previous.optOuts / previous.sent : 0,
       ),
     };
 
+    /**
+     * Funnel stages. Multiple touches per contact is legitimate, so the send
+     * stage carries a per-contact ratio instead of a ">100% of previous" read.
+     * Every later stage is a true subset and clamped to its parent.
+     */
+    const delivered = Math.min(current.delivered, current.sent);
+    const replies = Math.min(current.replies, Math.max(delivered, 0));
+    const qualified = Math.min(current.qualified, replies);
+    const appointments = Math.min(current.appointments, qualified);
+    const closed = Math.min(projectedClosed(appointments), appointments);
     const funnel = [
-      { label: "Contacts Messaged", value: contacts },
-      { label: "Messages Sent", value: current.sent },
-      { label: "Delivered", value: current.delivered },
-      { label: "Replies", value: current.replies },
-      { label: "Qualified", value: current.qualified },
-      { label: "Appointments", value: current.appointments },
-      { label: "Projected Closed", value: projectedClosed(current.appointments) },
+      { label: "Contacts Messaged", value: contacts, basis: "top" as const },
+      {
+        label: "Messages Sent",
+        value: current.sent,
+        basis: "perContact" as const,
+        note: contacts ? `${(current.sent / contacts).toFixed(1)} Msgs/Contact` : undefined,
+      },
+      { label: "Delivered", value: delivered, basis: "subset" as const },
+      { label: "Replies", value: replies, basis: "subset" as const },
+      { label: "Qualified", value: qualified, basis: "subset" as const },
+      {
+        label: "Appointments",
+        value: appointments,
+        basis: "subset" as const,
+        empty: "No Appointments Booked Yet — They Appear Here Once Leads Schedule.",
+      },
+      {
+        label: "Projected Closed",
+        value: closed,
+        basis: "subset" as const,
+        empty: "Projected Closes Build From Booked Appointments.",
+      },
     ];
 
     // AI insights derived from the same aggregates.
     const insights: Array<{ text: string; action?: string; campaignId?: string }> = [];
-    if (bestBand && bestBand.sent >= 3) {
-      insights.push({ text: `Replies Peak Between ${bestBand.label} — ${(rate(bestBand) * 100).toFixed(0)}% Reply Rate In That Window.` });
+    // Thin samples are labelled as early signals rather than stated as fact.
+    const thin = current.replies < 10;
+    const sampleNote = ` (Early Signal, ${current.replies} Repl${current.replies === 1 ? "y" : "ies"})`;
+    if (bestBand && bestBand.sent >= 3 && bestBand.replies > 0) {
+      insights.push({
+        text: `Replies Peak Between ${bestBand.label} — ${(rate(bestBand) * 100).toFixed(0)}% Reply Rate In That Window.${thin ? sampleNote : ""}`,
+      });
     }
-    if (bestDay && bestDay.sent >= 3) {
-      insights.push({ text: `${bestDay.label} Is Your Strongest Send Day At ${(rate(bestDay) * 100).toFixed(0)}% Reply Rate.` });
+    if (bestDay && bestDay.sent >= 3 && bestDay.replies > 0) {
+      insights.push({
+        text: `${bestDay.label} Is Your Strongest Send Day At ${(rate(bestDay) * 100).toFixed(0)}% Reply Rate.${thin ? sampleNote : ""}`,
+      });
     }
     const winner = campaigns[0];
     if (winner && winner.appointments > 0) {
@@ -390,7 +426,11 @@ export const getWorkspacePerformance = createServerFn({ method: "GET" })
       insights.push({ text: `"${hotOptOut.name}" Opt-Outs Are Above 5% — Cool The Pool Or Soften The Opener.`, action: "Review Campaign", campaignId: hotOptOut.id });
     }
     if (bestMessage && bestMessage.replyRate > 0) {
-      insights.push({ text: `Your Best Opener Replies At ${(bestMessage.replyRate * 100).toFixed(0)}% — Reuse It Across New Campaigns.` });
+      insights.push({
+        text: `Your Best Opener Replies At ${(bestMessage.replyRate * 100).toFixed(0)}% — Reuse It Across New Campaigns.${
+          bestMessage.sent < 10 ? ` (Early Signal, ${bestMessage.sent} Sent)` : ""
+        }`,
+      });
     }
     if (!insights.length) {
       insights.push({ text: "Not Enough Sending History Yet — Launch A Campaign And Insights Appear Within A Day." });
@@ -400,6 +440,7 @@ export const getWorkspacePerformance = createServerFn({ method: "GET" })
       days: data.days,
       kpis,
       deltas,
+      historyReady,
       daily: Array.from(dailyMap.values()),
       funnel,
       campaigns,
