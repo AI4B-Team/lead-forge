@@ -272,38 +272,49 @@ function LeadsPageInner() {
                 <th className="p-4">Phone</th>
                 <th className="p-4">Line Type</th>
                 <th className="p-4">Disposition</th>
-                <th className="p-4">Source</th>
                 <th className="p-4">Lists</th>
-                <th className="p-4">Location</th>
                 <th className="p-4">First / Last Seen</th>
               </tr>
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
+                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Loading Leads…</td></tr>
               )}
               {!isLoading && rows.length === 0 && (
-                <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">
                   No Records Match These Filters Yet.
                 </td></tr>
               )}
-              {rows.map((r) => (
+              {rows.map((r) => {
+                const primary = r.business_name || r.full_name;
+                const secondary = r.business_name && r.full_name ? r.full_name : null;
+                const location = formatLocation(r.city, r.state);
+                const sources = (r.source_types ?? []).map((s) => SOURCE_LABEL[s] ?? s).join(", ");
+                return (
                 <tr key={r.id} className="border-b border-border last:border-0 hover:bg-surface-muted">
                   <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="w-11 shrink-0">
-                        {r.is_new && <Badge className="bg-primary text-primary-foreground text-[10px]">NEW</Badge>}
+                    <div className="flex items-start gap-2">
+                      <span className="w-9 shrink-0 pt-0.5">
+                        {r.is_new && (
+                          <Badge className="bg-primary text-primary-foreground text-[9px] h-[1.05rem] px-1.5 py-0">NEW</Badge>
+                        )}
                       </span>
-                      <span className="font-medium text-foreground">{r.business_name || r.full_name || "—"}</span>
-                    </div>
-                    {r.business_name && r.full_name && (
-                      <div className="ml-[3.25rem] text-xs text-muted-foreground">{r.full_name}</div>
-                    )}
-                    {!!r.tags?.length && (
-                      <div className="ml-[3.25rem] mt-1">
-                        <LeadTagChips tags={r.tags} max={4} />
+                      <div className="min-w-0">
+                        <div className={primary ? "font-medium text-foreground" : "font-medium italic text-muted-foreground"}>
+                          {primary || "Unknown Owner"}
+                        </div>
+                        {secondary && <div className="text-xs text-muted-foreground">{secondary}</div>}
+                        <div className="mt-0.5 text-xs text-muted-foreground">
+                          {location || "Location Unknown"}
+                          {sources ? <span className="text-muted-foreground/70"> · {sources}</span> : null}
+                        </div>
+                        {!!r.tags?.length && (
+                          <div className="mt-1">
+                            <LeadTagChips tags={r.tags} max={4} />
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </td>
                   <td className="p-4">{r.phone ? <PhoneLink phone={r.phone} /> : <span className="text-muted-foreground">—</span>}</td>
                   <td className="p-4 text-muted-foreground capitalize">{r.phone_type ?? "unknown"}</td>
@@ -312,20 +323,15 @@ function LeadsPageInner() {
                       {r.disposition}
                     </span>
                   </td>
-                  <td className="p-4 text-muted-foreground">
-                    {(r.source_types ?? []).map((s) => SOURCE_LABEL[s] ?? s).join(", ") || "—"}
-                  </td>
                   <td className="p-4">
                     <ListMembershipCell leadId={r.id} count={r.list_count} />
-                  </td>
-                  <td className="p-4 text-muted-foreground">
-                    {formatLocation(r.city, r.state) || "—"}
                   </td>
                   <td className="p-4 text-muted-foreground whitespace-nowrap">
                     {new Date(r.first_seen_at).toLocaleDateString()} → {new Date(r.last_seen_at).toLocaleDateString()}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </CardContent>
