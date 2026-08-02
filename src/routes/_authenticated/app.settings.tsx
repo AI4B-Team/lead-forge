@@ -1,25 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  Building2, Home, Sun, Shield, Wrench, Briefcase, MoreHorizontal,
-  Webhook, KeyRound, Zap, Link2, Check, Users,
+  Building2, Home, Sun, Shield, Wrench, Briefcase, MoreHorizontal, Check, Plug,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsShell } from "@/components/app/settings-shell";
-import { SettingsSummary } from "@/components/app/settings-summary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { INDUSTRIES } from "@/lib/mock-data";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { WebhookEndpoints } from "@/components/app/webhook-endpoints";
-import { HubConnection } from "@/components/app/hub-connection";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   head: () => ({ meta: [{ title: "Workspace Settings — LeadTrace" }] }),
@@ -50,10 +45,9 @@ function Settings() {
   return (
     <div className="mx-auto max-w-[1400px]">
       <SettingsShell current="workspace">
-      <PageHeader title="Workspace Settings" description="General Details, Industry Preset, And Connected Apps." />
+      <PageHeader title="Workspace Settings" description="General Details And Industry Preset For This Workspace." />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-6">
+      <div className="max-w-3xl space-y-6">
           {/* General */}
           <Card>
             <CardHeader>
@@ -124,83 +118,23 @@ function Settings() {
             </CardContent>
           </Card>
 
-          {/* Integrations */}
-          <div>
-            <h2 className="font-display text-lg font-bold text-foreground">Integrations</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Connect LeadTrace To The Rest Of Your Stack.</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <IntegrationCard
-                icon={Webhook} title="Webhooks" connected
-                description="Push List, Lead, And Reply Events To Any Endpoint."
-                action="Manage Below"
-              />
-              <IntegrationCard
-                icon={Link2} title="Real Elite" connected={false}
-                description="Shared Login, Contacts, And Automations Across The Suite."
-                action="Connect Below"
-              />
-              <IntegrationCard
-                icon={Zap} title="Zapier" connected={false}
-                description="Route Leads Into 6,000+ Apps Without Code."
-                action="Coming Soon"
-              />
-              <IntegrationCard
-                icon={KeyRound} title="API Keys" connected={false}
-                description="Build Directly Against The LeadTrace API."
-                action="Coming Soon"
-              />
-            </div>
-          </div>
-
-          <WebhookEndpoints />
-          <HubConnection />
-        </div>
-
-        <div className="space-y-4">
-          <SettingsSummary ownerName={workspaceName ?? "Workspace"} />
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-display">
-                <Users className="h-4 w-4 text-primary" /> Team
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Invite Teammates, Assign Roles, And Track Seat Usage On The Team Tab.
-              </p>
-              <Button variant="outline" className="mt-3 w-full rounded-full" asChild>
-                <a href="/app/team">Manage Team</a>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base font-display">
+              <Plug className="h-4 w-4 text-primary" /> Integrations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Webhooks, API Access, And Suite Connections Now Live On Their Own Page.
+            </p>
+            <Button variant="outline" className="mt-3 rounded-full" asChild>
+              <Link to="/app/integrations">Open Integrations</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
       </SettingsShell>
-    </div>
-  );
-}
-
-function IntegrationCard({
-  icon: Icon, title, description, connected, action,
-}: {
-  icon: LucideIcon; title: string; description: string; connected: boolean; action: string;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-surface p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-foreground">
-          <Icon className="h-4 w-4" />
-        </div>
-        <Badge
-          variant="outline"
-          className={connected ? "border-success/30 text-success" : "text-muted-foreground"}
-        >
-          {connected ? "Connected" : "Not Connected"}
-        </Badge>
-      </div>
-      <div className="mt-3 text-sm font-semibold text-foreground">{title}</div>
-      <p className="mt-1 text-xs text-muted-foreground">{description}</p>
-      <div className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{action}</div>
     </div>
   );
 }
