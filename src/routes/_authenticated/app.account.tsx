@@ -188,6 +188,9 @@ function AccountPage() {
         </TabsContent>
 
         <TabsContent value="security" className="mt-0">
+          {null}
+        </TabsContent>
+      </Tabs>
           <div className="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
             <div className="space-y-6">
               <Card>
