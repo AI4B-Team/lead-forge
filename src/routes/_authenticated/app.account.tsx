@@ -187,10 +187,6 @@ function AccountPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="security" className="mt-0">
-          {null}
-        </TabsContent>
-
         <TabsContent value="notifications" className="mt-0">
           <div className="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
             <div className="space-y-6">
@@ -217,7 +213,7 @@ function AccountPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="securityx" className="mt-0">
+        <TabsContent value="security" className="mt-0">
           <div className="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
             <div className="space-y-6">
               <Card>
