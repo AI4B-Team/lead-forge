@@ -59,15 +59,17 @@ export function PipelineFunnel({
   const done = completedThrough ?? built.length - 1;
 
   return (
-    <div className={cn("flex items-stretch", className)}>
+    <div className={cn("flex items-start pt-10", className)}>
       {built.map((s, i) => {
         const isClean = s.key === "clean";
         const pct = stageFillPercent(s.remaining, found, small ? 12 : 8);
         return (
           <div key={s.key} className="flex min-w-0 flex-1 items-stretch">
-            <div className="min-w-0 flex-1">
+            <div className="relative min-w-0 flex-1">
               {isClean && readyPill && (
-                <div className="mb-2 flex justify-center">{readyPill}</div>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 -translate-y-full">
+                  {readyPill}
+                </div>
               )}
               <div
                 className={cn(
