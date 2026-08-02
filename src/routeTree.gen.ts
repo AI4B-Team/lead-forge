@@ -68,6 +68,7 @@ import { Route as AuthenticatedAppNewJobIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppListsIndexRouteImport } from './routes/_authenticated/app.lists.index'
 import { Route as AuthenticatedAppJobsIndexRouteImport } from './routes/_authenticated/app.jobs.index'
 import { Route as AuthenticatedAppCampaignsIndexRouteImport } from './routes/_authenticated/app.campaigns.index'
+import { Route as AuthenticatedAppAdminIndexRouteImport } from './routes/_authenticated/app.admin.index'
 import { Route as ApiPublicV1LeadsRouteImport } from './routes/api/public/v1/leads'
 import { Route as ApiPublicV1JobsRouteImport } from './routes/api/public/v1/jobs'
 import { Route as ApiPublicV1CampaignsRouteImport } from './routes/api/public/v1/campaigns'
@@ -392,6 +393,12 @@ const AuthenticatedAppCampaignsIndexRoute =
     path: '/campaigns/',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppAdminIndexRoute =
+  AuthenticatedAppAdminIndexRouteImport.update({
+    id: '/admin/',
+    path: '/admin/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const ApiPublicV1LeadsRoute = ApiPublicV1LeadsRouteImport.update({
   id: '/api/public/v1/leads',
   path: '/api/public/v1/leads',
@@ -558,6 +565,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
+  '/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
   '/app/jobs/': typeof AuthenticatedAppJobsIndexRoute
   '/app/lists/': typeof AuthenticatedAppListsIndexRoute
@@ -634,6 +642,7 @@ export interface FileRoutesByTo {
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
+  '/app/admin': typeof AuthenticatedAppAdminIndexRoute
   '/app/campaigns': typeof AuthenticatedAppCampaignsIndexRoute
   '/app/jobs': typeof AuthenticatedAppJobsIndexRoute
   '/app/lists': typeof AuthenticatedAppListsIndexRoute
@@ -713,6 +722,7 @@ export interface FileRoutesById {
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
+  '/_authenticated/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/_authenticated/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
   '/_authenticated/app/jobs/': typeof AuthenticatedAppJobsIndexRoute
   '/_authenticated/app/lists/': typeof AuthenticatedAppListsIndexRoute
@@ -792,6 +802,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
+    | '/app/admin/'
     | '/app/campaigns/'
     | '/app/jobs/'
     | '/app/lists/'
@@ -868,6 +879,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
+    | '/app/admin'
     | '/app/campaigns'
     | '/app/jobs'
     | '/app/lists'
@@ -946,6 +958,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
+    | '/_authenticated/app/admin/'
     | '/_authenticated/app/campaigns/'
     | '/_authenticated/app/jobs/'
     | '/_authenticated/app/lists/'
@@ -1416,6 +1429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCampaignsIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/admin/': {
+      id: '/_authenticated/app/admin/'
+      path: '/admin'
+      fullPath: '/app/admin/'
+      preLoaderRoute: typeof AuthenticatedAppAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/api/public/v1/leads': {
       id: '/api/public/v1/leads'
       path: '/api/public/v1/leads'
@@ -1563,6 +1583,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppListsListIdRoute: typeof AuthenticatedAppListsListIdRoute
   AuthenticatedAppNewJobSplatRoute: typeof AuthenticatedAppNewJobSplatRoute
   AuthenticatedAppNewListSplatRoute: typeof AuthenticatedAppNewListSplatRoute
+  AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
   AuthenticatedAppCampaignsIndexRoute: typeof AuthenticatedAppCampaignsIndexRoute
   AuthenticatedAppJobsIndexRoute: typeof AuthenticatedAppJobsIndexRoute
   AuthenticatedAppListsIndexRoute: typeof AuthenticatedAppListsIndexRoute
@@ -1596,6 +1617,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppListsListIdRoute: AuthenticatedAppListsListIdRoute,
   AuthenticatedAppNewJobSplatRoute: AuthenticatedAppNewJobSplatRoute,
   AuthenticatedAppNewListSplatRoute: AuthenticatedAppNewListSplatRoute,
+  AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
   AuthenticatedAppCampaignsIndexRoute: AuthenticatedAppCampaignsIndexRoute,
   AuthenticatedAppJobsIndexRoute: AuthenticatedAppJobsIndexRoute,
   AuthenticatedAppListsIndexRoute: AuthenticatedAppListsIndexRoute,
