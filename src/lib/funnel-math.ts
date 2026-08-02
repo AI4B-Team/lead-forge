@@ -25,8 +25,6 @@ export type FunnelStageKey =
 export type FunnelStage = {
   key: FunnelStageKey;
   label: string;
-  /** Single-word name for dense surfaces (e.g. the Lists table header). */
-  shortLabel: string;
   /** Records still in the pipeline after this stage. */
   remaining: number;
   /** Records this stage removed (always >= 0). */
@@ -50,17 +48,6 @@ export type FunnelInput = {
 const n = (v: number | null | undefined) => Math.max(0, Math.round(v ?? 0));
 
 export type FunnelVariant = "phone" | "creator" | "data";
-
-const SHORT_LABEL: Record<FunnelStageKey, string> = {
-  found: "Found",
-  deduped: "Deduped",
-  verified: "Verified",
-  emailFound: "Email",
-  skipTraced: "Traced",
-  scrubbed: "Scrubbed",
-  exported: "Exported",
-  clean: "Clean",
-};
 
 /**
  * Normalize raw job counters into a monotonically narrowing funnel. Each stage
@@ -92,7 +79,6 @@ export function buildFunnel(input: FunnelInput, opts?: { variant?: FunnelVariant
     return {
       key,
       label,
-      shortLabel: SHORT_LABEL[key],
       remaining,
       removed,
       delta:
