@@ -19,7 +19,7 @@ import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
 import { LeadTagChips } from "@/components/app/lead-tag-picker";
 import { PhoneCell, EmailCell } from "@/components/app/channel-icons";
 import { mailingAddress } from "@/lib/contact-channels";
-import { presentFieldKeys, LEAD_FIELDS, type LeadFieldKey } from "@/lib/lead-fields";
+import { presentFieldKeys, LEAD_FIELDS, AGGREGATE_CANDIDATE_KEYS, type LeadFieldKey } from "@/lib/lead-fields";
 
 export const Route = createFileRoute("/_authenticated/app/leads")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -173,7 +173,9 @@ function LeadsPageInner() {
   // Data-driven columns: the Leads master merges many list shapes, so its
   // columns follow what's present in the CURRENT filtered view — never one
   // list's criteria. Website is a display field, never a contact channel.
-  const candidates: LeadFieldKey[] = ["phone", "email", "address", "website"];
+  // Candidates come from the shared registry, so a creator run's handle /
+  // platform / followers surface here the same way the export file shows them.
+  const candidates = AGGREGATE_CANDIDATE_KEYS;
   const present = presentFieldKeys(rows as Array<Record<string, unknown>>, candidates);
   const dynamicCols: LeadFieldKey[] = rows.length === 0
     ? ["phone", "email"]
@@ -375,7 +377,8 @@ function LeadsPageInner() {
                         ) : (
                           <span className="text-muted-foreground/40">—</span>
                         )
-                      ) : r.website ? (
+                      ) : k === "website" ? (
+                        r.website ? (
                         <a
                           href={/^https?:/.test(r.website) ? r.website : `https://${r.website}`}
                           target="_blank"
@@ -385,8 +388,24 @@ function LeadsPageInner() {
                         >
                           {r.website.replace(/^https?:\/\//, "")}
                         </a>
+                        ) : (
+                          <span className="text-muted-foreground/40">—</span>
+                        )
                       ) : (
-                        <span className="text-muted-foreground/40">—</span>
+                        // Display/identity fields (handle, platform, followers,
+                        // engagement) — never reachability.
+                        (() => {
+                          const v = LEAD_FIELDS[k].value(r as unknown as Record<string, unknown>);
+                          if (!v) return <span className="text-muted-foreground/40">—</span>;
+                          return (
+                            <span
+                              className={`block max-w-[160px] truncate ${k === "handle" ? "font-medium text-foreground" : "text-muted-foreground"}`}
+                              title={v}
+                            >
+                              {k === "handle" && !v.startsWith("@") && !/^https?:/.test(v) ? `@${v}` : v}
+                            </span>
+                          );
+                        })()
                       )}
                     </td>
                   ))}

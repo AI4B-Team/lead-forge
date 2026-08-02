@@ -4,6 +4,7 @@
  * because the deliverable there is handle + email + engagement, not a dial.
  */
 import { enrichmentProfile, templateOutputType } from "@/lib/pipeline-options";
+import { LEAD_FIELDS } from "@/lib/lead-fields";
 
 export type ExportShape = "phone" | "creator" | "data";
 
@@ -51,12 +52,14 @@ export function shapeExportRows(rows: Row[], shape: ExportShape, templateId?: st
   const platform = CREATOR_PLATFORM[templateId ?? ""] ?? "Social";
   return rows.map((r) => {
     const m = meta(r);
+    // Same registry the on-screen tables read, so the download and the screen
+    // can never disagree about what a creator row contains.
     return {
-      handle: first(m.handle, m.username, r.full_name, r.business_name),
-      platform: first(m.platform, platform),
-      followers: first(m.followers, m.follower_count, ""),
-      engagement: first(m.engagement, m.engagement_rate, ""),
-      email: first(r.email, m.email),
+      handle: first(LEAD_FIELDS.handle.value(r), r.full_name, r.business_name),
+      platform: first(LEAD_FIELDS.platform.value(r), platform),
+      followers: first(LEAD_FIELDS.followers.value(r), ""),
+      engagement: first(LEAD_FIELDS.engagement.value(r), ""),
+      email: first(LEAD_FIELDS.email.value(r), ""),
       profile_url: first(m.profile_url, m.url, m.website),
     };
   });
