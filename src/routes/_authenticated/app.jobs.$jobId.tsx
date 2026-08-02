@@ -74,6 +74,8 @@ function JobDetail() {
   const [browserOpen, setBrowserOpen] = useState(false);
   const [browserBucket, setBrowserBucket] = useState<"clean" | "dnc" | "litigator" | "all">("clean");
   const [logOpen, setLogOpen] = useState(true);
+  // Nobody rereads the log once the run lands — collapse it on completion.
+  const [collapsedOnce, setCollapsedOnce] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["job-review", jobId],
@@ -140,6 +142,11 @@ function JobDetail() {
   if (import.meta.env.DEV) {
     const bad = funnelViolations(funnel, { readyToSend: counts.clean });
     if (bad.length) console.warn("[funnel] arithmetic mismatch:", bad);
+  }
+
+  if (job.status === "ready" && !collapsedOnce) {
+    setCollapsedOnce(true);
+    setLogOpen(false);
   }
 
   const toggleRun = async () => {
@@ -400,9 +407,7 @@ function JobDetail() {
         <Card className="mt-6 border-primary/40 bg-primary/5">
           <CardHeader className="flex flex-row items-center gap-2">
             <Rocket className="h-4 w-4 text-primary" />
-            <CardTitle className="text-base font-display">
-              {counts.clean.toLocaleString()} Launch-Ready Leads
-            </CardTitle>
+            <CardTitle className="text-base font-display">Launch Estimate</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <MoneyStat
