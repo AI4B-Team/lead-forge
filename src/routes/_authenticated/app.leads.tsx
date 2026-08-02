@@ -45,13 +45,27 @@ const DISPOSITION_TONE: Record<string, string> = {
   litigator: "bg-danger/10 text-danger border-danger/20",
 };
 
-function Stat({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone?: string }) {
+function Stat({ icon, label, value, tone, help }: { icon: React.ReactNode; label: string; value: string; tone?: string; help?: string }) {
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wide">
-          {icon}
-          <span>{label}</span>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wide">
+            {icon}
+            <span>{label}</span>
+          </div>
+          {help && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[220px] text-xs">
+                <p>{help}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
         <div className={`mt-2 font-display text-2xl font-bold ${tone ?? "text-foreground"}`}>{value}</div>
       </CardContent>
