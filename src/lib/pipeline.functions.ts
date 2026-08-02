@@ -132,7 +132,7 @@ export const runJob = createServerFn({ method: "POST" })
       .select("id, workspace_id, source_type, status, params")
       .eq("id", jobId)
       .single();
-    if (jobErr || !job) throw new Error("Job Not Found");
+    if (jobErr || !job) throw new Error("List Not Found");
     if (job.status !== "queued") return { ok: true, status: job.status };
 
     const workspaceId = job.workspace_id;
@@ -148,7 +148,7 @@ export const runJob = createServerFn({ method: "POST" })
         count: count ?? null,
       });
     };
-    await say("queued", "Job accepted — we'll keep working even if you close this tab.");
+    await say("queued", "Run accepted — we'll keep working even if you close this tab.");
 
     // 1) SOURCE ----------------------------------------------------------------
     await supabase.from("jobs").update({ status: "scraping" }).eq("id", jobId);

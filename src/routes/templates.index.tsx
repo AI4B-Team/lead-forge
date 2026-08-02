@@ -53,7 +53,7 @@ export const Route = createFileRoute("/templates/")({
   head: () => ({
     meta: [
       { title: "Template Library — LeadTrace" },
-      { name: "description", content: "Pick a source to start a job. Every LeadTrace template runs the same skip trace, scrub, and campaign pipeline." },
+      { name: "description", content: "Pick a source to start a list. Every LeadTrace template runs the same skip trace, scrub, and campaign pipeline." },
       { property: "og:title", content: "LeadTrace Template Library" },
       { property: "og:description", content: "Browse every scraper, records, and upload template LeadTrace ships." },
     ],

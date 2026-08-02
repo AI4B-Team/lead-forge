@@ -82,7 +82,7 @@ export function QuickRun() {
         </div>
 
         <Button className="rounded-full shrink-0" onClick={run}>
-          Start Job <ArrowRight className="ml-1 h-4 w-4" />
+          Start List <ArrowRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
     </div>

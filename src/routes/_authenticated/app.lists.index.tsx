@@ -39,7 +39,7 @@ import { isStalled, isRunningStatus, stallReason, STALL_HOURS } from "@/lib/job-
 import type { JobStatus } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/app/lists/")({
-  head: () => ({ meta: [{ title: "Jobs — LeadTrace" }] }),
+  head: () => ({ meta: [{ title: "Lists — LeadTrace" }] }),
   component: Jobs,
 });
 
@@ -135,17 +135,17 @@ function Jobs() {
   return (
     <div>
       <PageHeader
-        title="Jobs"
-        description="Every Pipeline You Have Run — Source, Scrub, Verification, And Results. Click A Row To Open The Job Overview."
+        title="Lists"
+        description="Every Pipeline You Have Run — Source, Scrub, Verification, And Results. Click A Row To Open The Latest Run."
         actions={
           <Button asChild className="rounded-full">
-            <Link to="/app/new-list"><Plus className="mr-1 h-4 w-4" /> New Job</Link>
+            <Link to="/app/new-list"><Plus className="mr-1 h-4 w-4" /> New List</Link>
           </Button>
         }
       />
 
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-6">
-        <StatTile label="Total Jobs" value={summary.total.toLocaleString()} icon={Layers} />
+        <StatTile label="Total Lists" value={summary.total.toLocaleString()} icon={Layers} />
         <StatTile label={ROWS_PROCESSED_LABEL} value={summary.rowsProcessed.toLocaleString()} icon={Users} />
         <StatTile label="Clean Rate" value={`${summary.cleanRate}%`} icon={ShieldCheck} hint="Clean Of All Scrubbed" />
         <StatTile label="Running" value={summary.running.toLocaleString()} icon={Activity} hint="Actively Progressing" />
@@ -165,7 +165,7 @@ function Jobs() {
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search Jobs By Name, County, Or Niche…"
+              placeholder="Search Lists By Name, County, Or Niche…"
               className="h-11 pl-9 text-base"
             />
           </div>
@@ -232,11 +232,11 @@ function Jobs() {
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading Jobs…</td></tr>
+                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading Lists…</td></tr>
               )}
               {!isLoading && rows.length === 0 && (
                 <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">
-                  No Jobs Match. <Link to="/app/new-list" className="text-primary underline">Start A New Job</Link>.
+                  No Lists Match. <Link to="/app/new-list" className="text-primary underline">Start A New List</Link>.
                 </td></tr>
               )}
               {rows.map((j) => {
@@ -310,7 +310,7 @@ function Jobs() {
                               toast.success("Retrying From The Last Completed Stage.");
                               qc.invalidateQueries({ queryKey: ["jobs-list", workspaceId] });
                             } catch (e) {
-                              toast.error(e instanceof Error ? e.message : "Could Not Retry This Job.");
+                              toast.error(e instanceof Error ? e.message : "Could Not Retry This Run.");
                             }
                           }}
                         >

@@ -182,7 +182,7 @@ function Wizard() {
         toast.info("This Search Was Already Queued — Opening That Run.");
         return;
       }
-      toast.success("Job Queued. Running Pipeline…");
+      toast.success("List Queued. Running Pipeline…");
       runJobFn({ data: { jobId: id } }).catch((e) =>
         toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
       );
@@ -203,8 +203,8 @@ function Wizard() {
           <div className="mt-1 text-foreground">{prompt}</div>
           <div className="mt-1 text-xs text-muted-foreground">
             {autoCounty
-              ? `We've prefilled niche, state, and ${autoCounty} County below — tweak anything and hit Run Job.`
-              : "We've prefilled niche and state below — tweak anything and hit Run Job."}
+              ? `We've prefilled niche, state, and ${autoCounty} County below — tweak anything and hit Run List.`
+              : "We've prefilled niche and state below — tweak anything and hit Run List."}
           </div>
         </div>
       )}
@@ -335,7 +335,7 @@ function Wizard() {
               disabled={busy || !workspaceId || picked.length === 0 || overdrawn}
               className="rounded-full"
             >
-              {busy ? "Queuing…" : "Run Job"}
+              {busy ? "Queuing…" : "Run List"}
             </Button>
           </div>
         </CardContent>

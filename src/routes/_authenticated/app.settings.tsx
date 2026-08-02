@@ -131,7 +131,7 @@ function Settings() {
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <IntegrationCard
                 icon={Webhook} title="Webhooks" connected
-                description="Push Job, Lead, And Reply Events To Any Endpoint."
+                description="Push List, Lead, And Reply Events To Any Endpoint."
                 action="Manage Below"
               />
               <IntegrationCard

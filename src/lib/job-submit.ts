@@ -82,5 +82,5 @@ export async function queueJob(
       .maybeSingle();
     if (existing) return { id: (existing as { id: string }).id, duplicate: true };
   }
-  throw error ?? new Error("Could Not Queue Job");
+  throw error ?? new Error("Could Not Queue List");
 }

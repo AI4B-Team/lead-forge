@@ -45,7 +45,7 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
   head: () => ({
     meta: [
       { title: "AI Lead Assistant — LeadTrace" },
-      { name: "description", content: "Describe the leads you want in plain English. The LeadTrace assistant assembles a compliant, runnable pipeline job you can review before running." },
+      { name: "description", content: "Describe the leads you want in plain English. The LeadTrace assistant assembles a compliant, runnable list you can review before running." },
       { property: "og:title", content: "AI Lead Assistant — LeadTrace" },
       { property: "og:description", content: "Watch the assistant interpret plain English into a structured, editable list of settings. You always click Generate List." },
       { property: "og:type", content: "website" },
@@ -576,7 +576,7 @@ function Assistant() {
           toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
         );
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Could Not Queue Job");
+        toast.error(e instanceof Error ? e.message : "Could Not Queue List");
       } finally {
         setRunning(false);
       }
@@ -597,7 +597,7 @@ function Assistant() {
         toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
       );
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could Not Queue Job");
+      toast.error(e instanceof Error ? e.message : "Could Not Queue List");
     } finally {
       setRunning(false);
     }
@@ -725,7 +725,7 @@ function Assistant() {
           disabled={busy || (!input.trim() && !selectedTemplate && !upload)}
           onClick={() => send(input)}
         >
-          <Sparkles className="mr-1 h-4 w-4" /> {started ? "Send" : "Generate Job"}
+          <Sparkles className="mr-1 h-4 w-4" /> {started ? "Send" : "Generate List"}
         </Button>
       </div>
     </div>
@@ -858,7 +858,7 @@ function Assistant() {
         <div className="shrink-0">
           <PageHeader
             title="AI Lead Assistant"
-            description="Describe The Leads You Want. The Assistant Interprets It, Assembles The Job, And Hands You The Controls To Review."
+            description="Describe The Leads You Want. The Assistant Interprets It, Assembles The List, And Hands You The Controls To Review."
             descriptionClassName="whitespace-nowrap !max-w-none"
             actions={
               <Button variant="outline" className="rounded-full" onClick={startOver}>

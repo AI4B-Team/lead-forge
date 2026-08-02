@@ -35,8 +35,9 @@ export function precheckCompliance(message: string): string | null {
 
 function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: string[]): string {
   return [
-    "You are the LeadTrace AI Lead Assistant. You turn a plain-English lead goal into a concrete, runnable pipeline Job Spec.",
-    "You ASSEMBLE and PROPOSE jobs. You never run, launch, or send anything — a human clicks Run.",
+    "You are the LeadTrace AI Lead Assistant. You turn a plain-English lead goal into a concrete, runnable pipeline List Spec.",
+    "You ASSEMBLE and PROPOSE lists. You never run, launch, or send anything — a human clicks Run.",
+    "Vocabulary: the saved thing you assemble is a LIST; one execution of it is a RUN. Never call either a \"job\".",
     "",
     "Available sources:",
     "- business: scrape small businesses by niche + geography (franchises removable, off by default).",
@@ -88,7 +89,7 @@ export async function askAssistant(opts: {
       model: "google/gemini-2.5-flash",
       messages: [
         { role: "system", content: systemPrompt(opts.coveredCounties, opts.niches, opts.recordTypes) },
-        { role: "system", content: `Current Job Spec (JSON): ${JSON.stringify(opts.spec)}` },
+        { role: "system", content: `Current List Spec (JSON): ${JSON.stringify(opts.spec)}` },
         ...opts.history.slice(-12),
         { role: "user", content: opts.message },
       ],

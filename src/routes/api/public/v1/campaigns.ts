@@ -50,7 +50,7 @@ export const Route = createFileRoute("/api/public/v1/campaigns")({
           .eq("id", body.job_id)
           .maybeSingle();
         if (!job || !caller.workspaceIds.includes(job.workspace_id)) {
-          return jsonResponse({ error: "Job not found" }, 404);
+          return jsonResponse({ error: "List not found" }, 404);
         }
 
         // Reuse the same server-enforced compliance gate the UI uses: only

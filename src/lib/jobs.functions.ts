@@ -153,7 +153,7 @@ export const getJobReview = createServerFn({ method: "GET" })
       .select("*")
       .eq("id", data.jobId)
       .maybeSingle();
-    if (error || !job) throw new Error("Job Not Found");
+    if (error || !job) throw new Error("List Not Found");
 
     const { data: scrub } = await supabase
       .from("scrub_runs")
@@ -258,7 +258,7 @@ export const pauseJob = createServerFn({ method: "POST" })
     await context.supabase.from("job_events").insert({
       job_id: data.jobId,
       stage: "paused",
-      message: "Job Paused. Nothing Is Discarded — Resume Any Time.",
+      message: "Run Paused. Nothing Is Discarded — Resume Any Time.",
     } as never);
     return { ok: true };
   });
@@ -276,7 +276,7 @@ export const resumeJob = createServerFn({ method: "POST" })
     await context.supabase.from("job_events").insert({
       job_id: data.jobId,
       stage: "queued",
-      message: "Job Resumed From The Last Completed Stage.",
+      message: "Run Resumed From The Last Completed Stage.",
     } as never);
     return { ok: true };
   });
@@ -318,8 +318,8 @@ export const launchCampaignFromJob = createServerFn({ method: "POST" })
       .select("id, workspace_id, status")
       .eq("id", data.jobId)
       .maybeSingle();
-    if (jerr || !job) throw new Error("Job Not Found");
-    if (job.status !== "ready") throw new Error("Job Is Not Ready. Scrub Must Complete First.");
+    if (jerr || !job) throw new Error("List Not Found");
+    if (job.status !== "ready") throw new Error("List Is Not Ready. Scrub Must Complete First.");
 
     // §6: a list older than 30 days must be re-scrubbed before it can send.
     const { data: lastScrub } = await supabase

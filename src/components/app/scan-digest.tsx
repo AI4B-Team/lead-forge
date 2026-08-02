@@ -69,7 +69,7 @@ export function ScanDigest({ workspaceId }: { workspaceId: string | null }) {
           <CardTitle className="text-base font-display">Since Your Last Visit</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
             {data.newRecords.toLocaleString()} New {data.newRecords === 1 ? "Record" : "Records"} Across{" "}
-            {data.recurring.length} Recurring {data.recurring.length === 1 ? "Job" : "Jobs"}.
+            {data.recurring.length} Recurring {data.recurring.length === 1 ? "List" : "Lists"}.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">

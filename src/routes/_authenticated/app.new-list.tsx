@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { Search, Landmark, Upload, ArrowRight, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/new-list")({
-  head: () => ({ meta: [{ title: "New Job — LeadTrace" }] }),
+  head: () => ({ meta: [{ title: "New List — LeadTrace" }] }),
   component: NewJob,
 });
 
@@ -70,7 +70,7 @@ function NewJob() {
   return (
     <div>
       <PageHeader
-        title="Start A New Job"
+        title="Start A New List"
         description="Three doors in. One compliant pipeline out. Pick a source to begin."
       />
       <div className="space-y-10">

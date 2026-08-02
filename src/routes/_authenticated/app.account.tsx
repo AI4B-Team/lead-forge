@@ -168,8 +168,8 @@ function AccountPage() {
                 </CardHeader>
                 <CardContent className="divide-y">
                   <PrefRow
-                    label="Job Complete"
-                    hint="Email Me When A Lead Job Finishes Cleaning."
+                    label="List Complete"
+                    hint="Email Me When A List Finishes Cleaning."
                     checked={prefs.jobComplete}
                     onChange={(v) => setPrefs((p) => ({ ...p, jobComplete: v }))}
                   />

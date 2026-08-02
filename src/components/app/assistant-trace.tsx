@@ -91,7 +91,7 @@ export function AssistantTrace({
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
         )}
         <span className="font-display text-sm font-bold text-foreground">
-          {done ? "Job Assembled" : complete ? "Building Your Job…" : "Assembling…"}
+          {done ? "List Assembled" : complete ? "Building Your List…" : "Assembling…"}
         </span>
       </div>
 

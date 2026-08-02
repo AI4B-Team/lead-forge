@@ -67,7 +67,7 @@ function Wizard() {
         toast.info("This Search Was Already Queued — Opening That Run.");
         return;
       }
-      toast.success("Job Queued. Running Pipeline…");
+      toast.success("List Queued. Running Pipeline…");
       runJobFn({ data: { jobId: id } }).catch((e) =>
         toast.error(e instanceof Error ? e.message : "Pipeline Failed"),
       );
@@ -141,7 +141,7 @@ function Wizard() {
               <Link to="/app/new-list">Back</Link>
             </Button>
             <Button className="rounded-full" onClick={run} disabled={busy || !workspaceId}>
-              {busy ? "Queuing…" : "Run Job"}
+              {busy ? "Queuing…" : "Run List"}
             </Button>
           </div>
         </CardContent>

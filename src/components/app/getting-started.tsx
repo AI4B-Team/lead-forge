@@ -49,7 +49,7 @@ export function GettingStarted({ workspaceId }: { workspaceId: string | null }) 
       body: "Pick a niche and a county, or bring a CSV you already own.",
       icon: <Search className="h-4 w-4" />,
       to: "/app/new-list",
-      cta: "Start A Job",
+      cta: "Build A List",
       done: data.hasJob,
     },
     {
