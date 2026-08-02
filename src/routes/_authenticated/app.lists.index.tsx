@@ -284,38 +284,47 @@ function Jobs() {
         }
       />
 
-      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-6">
-        <StatTile label="Total Lists" value={summary.total.toLocaleString()} icon={Layers} />
-        <StatTile
-          label="Clean Leads"
-          value={summary.clean.toLocaleString()}
-          icon={Users}
-          hint="Passed Every Scrub"
-        />
-        <StatTile
-          label="SMS Ready"
-          value={summary.smsReady.toLocaleString()}
-          icon={ShieldCheck}
-          hint="Clean On Ready Lists"
-        />
+      {/* Action-first strip: problems lead, vanity metrics trail. */}
+      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatTile
           label="Attention"
           value={summary.attention.toLocaleString()}
           icon={AlertTriangle}
-          hint={`No Progress For ${STALL_HOURS}h+`}
-        />
-        <StatTile
-          label="Scheduled"
-          value={summary.scheduled.toLocaleString()}
-          icon={CalendarClock}
-          hint="Recurring Rescans"
+          hint={
+            summary.attention > 0 ? `No Progress For ${STALL_HOURS}h+` : "Nothing Stalled Or Failed"
+          }
+          tone={summary.attention > 0 ? "alert" : "muted"}
+          onClick={summary.attention > 0 ? () => setStatus("attention") : undefined}
         />
         <StatTile
           label="Running"
           value={summary.running.toLocaleString()}
           icon={Activity}
           hint="Actively Progressing"
+          tone={summary.running > 0 ? "default" : "muted"}
+          onClick={summary.running > 0 ? () => setStatus("running") : undefined}
         />
+        <StatTile
+          label="Scheduled"
+          value={summary.scheduled.toLocaleString()}
+          icon={CalendarClock}
+          hint="Recurring Rescans"
+          tone={summary.scheduled > 0 ? "default" : "muted"}
+          onClick={summary.scheduled > 0 ? () => setStatus("scheduled") : undefined}
+        />
+        <StatTile
+          label="Clean Leads"
+          value={summary.clean.toLocaleString()}
+          icon={Users}
+          hint={
+            summary.clean === 0
+              ? "Passed Every Scrub"
+              : summary.smsReady >= summary.clean
+                ? "All SMS-Ready"
+                : `${summary.smsReady.toLocaleString()} SMS-Ready · ${(summary.clean - summary.smsReady).toLocaleString()} Email-Only`
+          }
+        />
+        <StatTile label="Total Lists" value={summary.total.toLocaleString()} icon={Layers} />
       </div>
 
       <Card className="mb-4">
