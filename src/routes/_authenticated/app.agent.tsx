@@ -16,12 +16,10 @@ import {
   KnowledgeHealth,
   KnowledgeOutcome,
   SampleQuestions,
-} from "@/components/app/brand-knowledge";
-import { KnowledgeSourceCards } from "@/components/app/knowledge-cards";
-import {
   bucketKnowledge,
   knowledgeScore,
 } from "@/components/app/brand-knowledge";
+import { KnowledgeSourceCards } from "@/components/app/knowledge-cards";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { useWorkspaceAgent } from "@/hooks/use-agent";
 import { createBrand } from "@/lib/brands.functions";
