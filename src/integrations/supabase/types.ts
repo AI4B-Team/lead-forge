@@ -138,6 +138,62 @@ export type Database = {
           },
         ]
       }
+      approval_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          detail: Json
+          id: string
+          kind: string
+          requested_by: string
+          status: string
+          summary: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          detail?: Json
+          id?: string
+          kind: string
+          requested_by: string
+          status?: string
+          summary: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          detail?: Json
+          id?: string
+          kind?: string
+          requested_by?: string
+          status?: string
+          summary?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_requests_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bot_knowledge: {
         Row: {
           brand_id: string | null
@@ -469,6 +525,7 @@ export type Database = {
       }
       credit_ledger: {
         Row: {
+          actor_user_id: string | null
           created_at: string
           delta: number
           id: string
@@ -478,6 +535,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          actor_user_id?: string | null
           created_at?: string
           delta: number
           id?: string
@@ -487,6 +545,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          actor_user_id?: string | null
           created_at?: string
           delta?: number
           id?: string
@@ -536,6 +595,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      export_events: {
+        Row: {
+          actor_user_id: string
+          created_at: string
+          file_type: string
+          id: string
+          ref_id: string | null
+          row_count: number
+          scope: string
+          watermark: string | null
+          workspace_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          created_at?: string
+          file_type?: string
+          id?: string
+          ref_id?: string | null
+          row_count?: number
+          scope: string
+          watermark?: string | null
+          workspace_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          created_at?: string
+          file_type?: string
+          id?: string
+          ref_id?: string | null
+          row_count?: number
+          scope?: string
+          watermark?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "export_events_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -990,6 +1093,50 @@ export type Database = {
           },
         ]
       }
+      member_limits: {
+        Row: {
+          approval_threshold_credits: number | null
+          created_at: string
+          export_approval_threshold_rows: number | null
+          monthly_credit_cap: number | null
+          monthly_export_row_cap: number | null
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          approval_threshold_credits?: number | null
+          created_at?: string
+          export_approval_threshold_rows?: number | null
+          monthly_credit_cap?: number | null
+          monthly_export_row_cap?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          approval_threshold_credits?: number | null
+          created_at?: string
+          export_approval_threshold_rows?: number | null
+          monthly_credit_cap?: number | null
+          monthly_export_row_cap?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_limits_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string | null
@@ -1315,6 +1462,38 @@ export type Database = {
           },
           {
             foreignKeyName: "scrub_runs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seat_revocations: {
+        Row: {
+          created_at: string
+          id: string
+          revoked_by: string | null
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          revoked_by?: string | null
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          revoked_by?: string | null
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seat_revocations_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -1697,7 +1876,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_workspace_admin: { Args: { _workspace_id: string }; Returns: boolean }
       is_workspace_member: { Args: { _workspace_id: string }; Returns: boolean }
+      workspace_role: { Args: { _workspace_id: string }; Returns: string }
     }
     Enums: {
       app_role: "super_admin" | "owner" | "admin" | "member"
