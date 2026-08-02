@@ -32,9 +32,9 @@ import { CADENCE_LABEL } from "@/lib/monitoring.shared";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { LOCAL_TZ } from "@/lib/local-tz";
 import { listJobs, resumeJob } from "@/lib/jobs.functions";
-import { JobStageFlow } from "@/components/app/job-stage-flow";
+import { JobStageFlow, JobStageFlowHeader } from "@/components/app/job-stage-flow";
 import { StatTile } from "@/components/app/stat-tile";
-import { buildPipelineStages, ROWS_PROCESSED_LABEL } from "@/lib/pipeline-stages";
+import { buildPipelineStages, ROWS_PROCESSED_LABEL, tracedCount } from "@/lib/pipeline-stages";
 import { isStalled, isRunningStatus, stallReason, STALL_HOURS } from "@/lib/job-watchdog";
 import type { JobStatus } from "@/lib/mock-data";
 
