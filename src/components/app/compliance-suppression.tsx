@@ -405,7 +405,9 @@ export function ContactLookup({ workspaceId }: { workspaceId: string | null | un
         <div>
           <CardTitle className="text-base font-display">Look Up A Contact</CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">
-            One Timeline For One Person — Suppression Status, Every Message, Every Refused Send.
+            One Timeline For One Person.
+            <br />
+            Suppression Status, Every Message, Every Refused Send.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
