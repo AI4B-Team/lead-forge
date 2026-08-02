@@ -11,6 +11,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RawLead } from "./data-providers";
 import { normalizeChannel, channelUsesPhonePipeline, type Channel } from "./channels";
+import type { LineType } from "./line-type";
 
 type AnyClient = SupabaseClient<any, any, any>;
 type JobParams = Record<string, unknown>;
@@ -257,7 +258,8 @@ export async function executePipeline(
   );
 
   // 2b) CHANNEL GATE --------------------------------------------------------
-  let verified: RawLead[] = deduped;
+  type EnrichedLead = RawLead & { line_type?: LineType };
+  let verified: EnrichedLead[] = deduped;
   let skiptraced = 0;
 
   if (!phonePipeline) {
@@ -362,7 +364,7 @@ export async function executePipeline(
     full_name: r.full_name ?? null,
     business_name: r.business_name ?? null,
     phone: r.phone ?? null,
-    phone_type: r.phone ? r.line_type : "unknown",
+    phone_type: r.phone ? (r.line_type ?? "unknown") : "unknown",
     email: r.email ?? null,
     address: r.address ?? null,
     city: r.city ?? null,
