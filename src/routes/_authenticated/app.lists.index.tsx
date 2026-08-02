@@ -44,7 +44,8 @@ import { JobStageFlow } from "@/components/app/job-stage-flow";
 import { StatTile } from "@/components/app/stat-tile";
 import { buildPipelineStages } from "@/lib/pipeline-stages";
 import { isStalled, isRunningStatus, stallReason, STALL_HOURS } from "@/lib/job-watchdog";
-import { getTemplate, CATEGORY_LABELS, type TemplateCategory } from "@/lib/templates";
+import { getTemplate, CATEGORY_LABELS, type Template, type TemplateCategory } from "@/lib/templates";
+import { TemplateLogo } from "@/components/marketing/template-logo";
 
 export const Route = createFileRoute("/_authenticated/app/lists/")({
   head: () => ({ meta: [{ title: "Lists — LeadTrace" }] }),
@@ -58,25 +59,39 @@ const SOURCE_META: Record<string, { label: string; icon: typeof Landmark }> = {
   assistant: { label: "AI Assistant", icon: Sparkles },
 };
 
-/** Top-level buckets for the template-aware source filter. */
-const TEMPLATE_GROUP: Record<TemplateCategory, string> = {
-  business: "Business",
-  directories: "Business",
-  search: "Business",
-  records: "Public Records",
-  realestate: "Real Estate",
-  social: "Social",
-  upload: "Upload",
-  ecommerce: "Other",
-  jobs: "Other",
-  reviews: "Other",
-  travel: "Other",
-  finance: "Other",
-  education: "Other",
-  news: "Other",
-  sports: "Other",
+/**
+ * Filter groups mirror the template catalog's own categories, so the menu
+ * grows automatically as the workspace branches into new sources. "other"
+ * catches legacy runs with no template mapping.
+ */
+type SourceGroup = TemplateCategory | "other";
+const GROUP_ORDER: SourceGroup[] = [
+  "business",
+  "directories",
+  "records",
+  "realestate",
+  "social",
+  "ecommerce",
+  "jobs",
+  "reviews",
+  "search",
+  "travel",
+  "finance",
+  "education",
+  "news",
+  "sports",
+  "upload",
+  "other",
+];
+const GROUP_LABEL = (g: SourceGroup) => (g === "other" ? "Other" : CATEGORY_LABELS[g]);
+
+/** Legacy source_type → catalog category, for runs predating template ids. */
+const LEGACY_GROUP: Record<string, SourceGroup> = {
+  business: "business",
+  records: "records",
+  upload: "upload",
+  assistant: "other",
 };
-const GROUP_ORDER = ["Business", "Public Records", "Real Estate", "Social", "Upload", "Other"];
 
 /** Label + filter key for a run: its template when known, else its source. */
 function sourceIdentity(job: { template_id?: string | null; source_type: string }) {
@@ -85,23 +100,18 @@ function sourceIdentity(job: { template_id?: string | null; source_type: string 
     return {
       key: `tpl:${tpl.id}`,
       label: tpl.title,
-      group: TEMPLATE_GROUP[tpl.category] ?? "Other",
+      group: tpl.category as SourceGroup,
       categoryLabel: CATEGORY_LABELS[tpl.category],
+      template: tpl as Template | undefined,
     };
   const meta = SOURCE_META[job.source_type];
-  const group =
-    job.source_type === "records"
-      ? "Public Records"
-      : job.source_type === "upload"
-        ? "Upload"
-        : job.source_type === "business"
-          ? "Business"
-          : "Other";
+  const group = LEGACY_GROUP[job.source_type] ?? "other";
   return {
     key: `src:${job.source_type}`,
     label: meta?.label ?? job.source_type,
     group,
-    categoryLabel: undefined,
+    categoryLabel: GROUP_LABEL(group),
+    template: undefined as Template | undefined,
   };
 }
 
@@ -164,7 +174,12 @@ function Jobs() {
     const needle = q.trim().toLowerCase();
     const cutoff = range === "all" ? 0 : Date.now() - Number(range) * 86400000;
     return jobs.filter((j) => {
-      if (source !== "all" && j.identity.key !== source) return false;
+      if (source !== "all") {
+        // "cat:<category>" filters a whole group; anything else is one template.
+        if (source.startsWith("cat:")) {
+          if (j.identity.group !== source.slice(4)) return false;
+        } else if (j.identity.key !== source) return false;
+      }
       if (status === "attention") {
         if (!j.stalled && j.status !== "failed") return false;
       } else if (status === "running") {
@@ -196,21 +211,24 @@ function Jobs() {
    * and its single child render as duplicate rows, so we flatten.
    */
   const sourceOptions = useMemo(() => {
-    const byGroup = new Map<string, Map<string, string>>();
+    const byGroup = new Map<SourceGroup, Map<string, { label: string; count: number }>>();
+    const groupCounts = new Map<SourceGroup, number>();
     for (const j of allRows) {
       const { group, key, label } = j.identity;
-      const bucket = byGroup.get(group) ?? new Map<string, string>();
-      bucket.set(key, label);
+      const bucket = byGroup.get(group) ?? new Map<string, { label: string; count: number }>();
+      const prev = bucket.get(key);
+      bucket.set(key, { label, count: (prev?.count ?? 0) + 1 });
       byGroup.set(group, bucket);
+      groupCounts.set(group, (groupCounts.get(group) ?? 0) + 1);
     }
-    const groups = GROUP_ORDER.filter((g) => byGroup.has(g)).map((g) => ({
+    return GROUP_ORDER.filter((g) => byGroup.has(g)).map((g) => ({
       group: g,
+      label: GROUP_LABEL(g),
+      count: groupCounts.get(g) ?? 0,
       items: [...byGroup.get(g)!.entries()]
-        .map(([key, label]) => ({ key, label }))
+        .map(([key, v]) => ({ key, label: v.label, count: v.count }))
         .sort((a, b) => a.label.localeCompare(b.label)),
     }));
-    const grouped = groups.some((g) => g.items.length > 1);
-    return { grouped, groups, flat: groups.flatMap((g) => g.items) };
   }, [allRows]);
 
   const summary = useMemo(() => {
@@ -386,32 +404,29 @@ function Jobs() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sources</SelectItem>
-                {sourceOptions.grouped
-                  ? sourceOptions.groups.map((g) =>
-                      g.items.length > 1 ? (
-                        <SelectGroup key={g.group}>
-                          <SelectLabel>{g.group}</SelectLabel>
-                          {g.items.map((it) => (
-                            <SelectItem key={it.key} value={it.key}>
-                              {it.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      ) : (
-                        // Single-child group: the header would duplicate its
-                        // only child, so render the source on its own.
-                        g.items.map((it) => (
-                          <SelectItem key={it.key} value={it.key}>
-                            {it.label}
-                          </SelectItem>
-                        ))
-                      ),
-                    )
-                  : sourceOptions.flat.map((it) => (
-                      <SelectItem key={it.key} value={it.key}>
-                        {it.label}
+                {sourceOptions.map((g) =>
+                  g.items.length > 1 ? (
+                    <SelectGroup key={g.group}>
+                      {/* The header itself filters to the whole category. */}
+                      <SelectItem value={`cat:${g.group}`} className="font-semibold">
+                        {g.label} · {g.count}
                       </SelectItem>
-                    ))}
+                      {g.items.map((it) => (
+                        <SelectItem key={it.key} value={it.key} className="pl-8">
+                          {it.label} · {it.count}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ) : (
+                    // Single-child group: the header would duplicate its only
+                    // child, so render the template as one flat row.
+                    g.items.map((it) => (
+                      <SelectItem key={it.key} value={it.key}>
+                        {it.label} · {it.count}
+                      </SelectItem>
+                    ))
+                  ),
+                )}
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
@@ -560,7 +575,17 @@ function Jobs() {
                       </td>
                       <td className="p-4">
                         <span className="inline-flex items-center gap-2 whitespace-nowrap text-muted-foreground">
-                          <src.icon className="h-4 w-4 shrink-0" /> {j.identity.label}
+                          {j.identity.template ? (
+                            <TemplateLogo
+                              template={j.identity.template}
+                              className="h-6 w-6 rounded-md"
+                              imgClassName="h-4 w-4"
+                              iconClassName="h-3.5 w-3.5"
+                            />
+                          ) : (
+                            <src.icon className="h-4 w-4 shrink-0" />
+                          )}
+                          <span className="text-foreground">{j.identity.label}</span>
                         </span>
                       </td>
                       <td className="p-4">
