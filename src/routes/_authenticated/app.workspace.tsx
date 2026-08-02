@@ -183,7 +183,7 @@ function WorkspaceAdmin() {
                   ok={(data?.hooks ?? 0) > 0}
                   label={(data?.hooks ?? 0) > 0 ? "API Connected" : "API Not Connected"}
                   hint="Webhooks And Keys For Your CRM Or Automations."
-                  to="/app/api"
+                  to="/app/integrations"
                 />
               </CardContent>
             </Card>
