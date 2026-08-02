@@ -1,0 +1,285 @@
+import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertTriangle, BellPlus, Check, Loader2, ShieldCheck } from "lucide-react";
+import { requestCoverage } from "@/lib/assistant.functions";
+import {
+  DESIRED_FIELD_OPTIONS, FREQUENCY_OPTIONS, screenSourceRequest,
+  type SourceRequestFrequency,
+} from "@/lib/source-request.shared";
+
+export type SourceRequestType = "county" | "record_type" | "template_adapter";
+
+/**
+ * Enriched intake for sources LeadTrace can't run yet. Collects enough detail to
+ * scope the adapter build, screens the ask for compliance before it's queued,
+ * and confirms what happens next.
+ */
+export function SourceRequestDialog({
+  open,
+  onOpenChange,
+  workspaceId,
+  type,
+  templateId = null,
+  presetLabel = "",
+  presetGeo = "",
+  presetUrl = "",
+  onQueued,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  workspaceId: string | null;
+  type: SourceRequestType;
+  templateId?: string | null;
+  presetLabel?: string;
+  presetGeo?: string;
+  presetUrl?: string;
+  onQueued?: (info: { email: string | null }) => void;
+}) {
+  const submit = useServerFn(requestCoverage);
+  const [label, setLabel] = useState(presetLabel);
+  const [url, setUrl] = useState(presetUrl);
+  const [geo, setGeo] = useState(presetGeo);
+  const [fields, setFields] = useState<string[]>(["Name", "Phone"]);
+  const [frequency, setFrequency] = useState<SourceRequestFrequency>("one_time");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState<{ email: string | null } | null>(null);
+  const [blocked, setBlocked] = useState<string | null>(null);
+
+  // Re-seed whenever the dialog is reopened for a different source.
+  useEffect(() => {
+    if (!open) return;
+    setLabel(presetLabel);
+    setUrl(presetUrl);
+    setGeo(presetGeo);
+    setFields(["Name", "Phone"]);
+    setFrequency("one_time");
+    setNotes("");
+    setDone(null);
+    setBlocked(null);
+    setBusy(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, presetLabel, presetGeo, presetUrl]);
+
+  const payload = useMemo(
+    () => ({
+      sourceLabel: label.trim(),
+      targetUrl: url.trim() || null,
+      desiredFields: fields,
+      geo: geo.trim() || null,
+      frequency,
+      notes: notes.trim() || null,
+    }),
+    [label, url, fields, geo, frequency, notes],
+  );
+
+  // Live preview of the same screen the server enforces.
+  const preview = useMemo(() => screenSourceRequest(payload), [payload]);
+  const previewReason = label.trim().length > 2 && !preview.ok ? preview.reason : null;
+
+  const toggleField = (f: string) =>
+    setFields((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]));
+
+  const send = async () => {
+    if (!workspaceId || !label.trim()) return;
+    setBusy(true);
+    setBlocked(null);
+    try {
+      const res = await submit({
+        data: {
+          workspaceId,
+          county: type === "county" ? label.trim() : null,
+          recordType: type === "record_type" ? label.trim() : type === "template_adapter" ? label.trim() : null,
+          templateId,
+          type,
+          ...payload,
+        },
+      });
+      if (res?.screened) {
+        setBlocked(res.reason ?? "We Can't Build This Source Compliantly.");
+        return;
+      }
+      setDone({ email: res?.email ?? null });
+      onQueued?.({ email: res?.email ?? null });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Submit Request");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+        {done ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Check className="h-5 w-5 text-emerald-500" /> Request Received
+              </DialogTitle>
+              <DialogDescription>
+                {label.trim()} Is On The Build Backlog. Requests From Multiple Workspaces Get Prioritized First.
+              </DialogDescription>
+            </DialogHeader>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>• We Scope The Adapter Against The Fields And Cadence You Asked For.</li>
+              <li>• You'll Get An Email At {done.email ?? "Your Account Address"} The Day It Goes Live.</li>
+              <li>• Nothing Was Charged — Requests Never Spend Credits.</li>
+            </ul>
+            <div className="flex justify-end">
+              <Button onClick={() => onOpenChange(false)}>Done</Button>
+            </div>
+          </>
+        ) : blocked ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-warning" /> We Can't Build This One
+              </DialogTitle>
+              <DialogDescription>{blocked}</DialogDescription>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              We Logged It So You Have A Record, But It Won't Be Queued For Build. Reword The Request Around Publicly
+              Available Contact Data And Submit Again.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setBlocked(null)}>Edit Request</Button>
+              <Button onClick={() => onOpenChange(false)}>Close</Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><BellPlus className="h-5 w-5 text-primary" /> Request A Source</DialogTitle>
+              <DialogDescription>
+                Tell Us What You Need And We'll Scope The Adapter. The More Detail, The Faster It Ships.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="src-label">Source Name</Label>
+                <Input
+                  id="src-label"
+                  autoFocus
+                  className="mt-1"
+                  value={label}
+                  placeholder="e.g. Miami-Dade Code Violations, New LLC Filings"
+                  onChange={(e) => setLabel(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="src-url">Source URL <span className="text-muted-foreground">(Optional)</span></Label>
+                <Input
+                  id="src-url"
+                  className="mt-1"
+                  value={url}
+                  placeholder="https://county.gov/records/search"
+                  onChange={(e) => setUrl(e.target.value)}
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Must Be Publicly Reachable — No Logins, Paywalls, Or Member Portals.
+                </p>
+              </div>
+
+              <div>
+                <Label>Fields You Need</Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {DESIRED_FIELD_OPTIONS.map((f) => {
+                    const on = fields.includes(f);
+                    return (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => toggleField(f)}
+                        className={`rounded-full border px-3 py-1 text-xs transition ${
+                          on
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        {f}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="src-geo">Geography</Label>
+                  <Input
+                    id="src-geo"
+                    className="mt-1"
+                    value={geo}
+                    placeholder="e.g. Florida — Miami-Dade, Broward"
+                    onChange={(e) => setGeo(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>Refresh Frequency</Label>
+                  <Select value={frequency} onValueChange={(v) => setFrequency(v as SourceRequestFrequency)}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {FREQUENCY_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label} — {o.hint}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="src-notes">Anything Else <span className="text-muted-foreground">(Optional)</span></Label>
+                <Textarea
+                  id="src-notes"
+                  className="mt-1"
+                  rows={3}
+                  value={notes}
+                  placeholder="Filters That Matter, Volume You Expect, How You'll Use The List"
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+
+              {previewReason ? (
+                <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/5 p-3 text-xs text-warning">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{previewReason}</span>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 rounded-xl border border-border bg-surface p-3 text-xs text-muted-foreground">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                  <span>
+                    We Only Build Sources We Can Collect Publicly And Within The Site's Terms. Data Behind Logins Or
+                    Paywalls, And Credit, Medical, Or Screening Data, Can't Be Accepted.
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <Badge variant="outline" className="text-[10px] uppercase">No Credits Spent</Badge>
+              <div className="flex gap-2">
+                <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+                <Button disabled={busy || label.trim().length < 3 || Boolean(previewReason)} onClick={() => void send()}>
+                  {busy ? (<><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Submitting…</>) : "Submit Request"}
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

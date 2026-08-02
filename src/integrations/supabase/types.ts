@@ -62,8 +62,18 @@ export type Database = {
         Row: {
           county: string | null
           created_at: string
+          desired_fields: string[]
+          frequency: string
+          geo: string | null
           id: string
+          notes: string | null
+          notified_at: string | null
           record_type: string | null
+          requested_by: string | null
+          screening_reason: string | null
+          source_label: string | null
+          status: string
+          target_url: string | null
           template_id: string | null
           type: string
           workspace_id: string
@@ -71,8 +81,18 @@ export type Database = {
         Insert: {
           county?: string | null
           created_at?: string
+          desired_fields?: string[]
+          frequency?: string
+          geo?: string | null
           id?: string
+          notes?: string | null
+          notified_at?: string | null
           record_type?: string | null
+          requested_by?: string | null
+          screening_reason?: string | null
+          source_label?: string | null
+          status?: string
+          target_url?: string | null
           template_id?: string | null
           type?: string
           workspace_id: string
@@ -80,8 +100,18 @@ export type Database = {
         Update: {
           county?: string | null
           created_at?: string
+          desired_fields?: string[]
+          frequency?: string
+          geo?: string | null
           id?: string
+          notes?: string | null
+          notified_at?: string | null
           record_type?: string | null
+          requested_by?: string | null
+          screening_reason?: string | null
+          source_label?: string | null
+          status?: string
+          target_url?: string | null
           template_id?: string | null
           type?: string
           workspace_id?: string
@@ -1603,6 +1633,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adapter_demand: {
+        Args: never
+        Returns: {
+          desired_fields: string[]
+          display_label: string
+          first_requested_at: string
+          frequencies: string[]
+          last_requested_at: string
+          queued: number
+          requests: number
+          sample_url: string
+          screened_out: number
+          source_key: string
+          workspaces: number
+        }[]
+      }
+      adapter_request_notify_list: {
+        Args: { _source_key: string }
+        Returns: {
+          email: string
+          frequency: string
+          notified_at: string
+          request_id: string
+          requested_at: string
+          workspace_id: string
+          workspace_name: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

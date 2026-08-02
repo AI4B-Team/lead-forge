@@ -14,13 +14,14 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  ShieldAlert, Loader2, Trash2, Gift, Gauge, Search, Building2, Users, MessageSquare, Activity,
+  ShieldAlert, Loader2, Trash2, Gift, Gauge, Search, Building2, Users, MessageSquare, Activity, Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   listAllWorkspaces, setBillingPlan, listSuperAdmins, revokeSuperAdmin,
-  meIsSuperAdmin, setMonthlySmsCap, grantCredits,
+  meIsSuperAdmin, setMonthlySmsCap, grantCredits, listSourceDemand, listSourceRequesters,
 } from "@/lib/admin.functions";
+import { FREQUENCY_LABEL } from "@/lib/source-request.shared";
 
 export const Route = createFileRoute("/_authenticated/app/admin")({
   head: () => ({ meta: [{ title: "Super Admin — LeadTrace" }] }),
@@ -326,6 +327,8 @@ function AdminPage() {
         </CardContent>
       </Card>
 
+      <SourceDemandCard enabled={gate.data?.isSuperAdmin === true} />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-display flex items-center gap-2">
@@ -466,5 +469,132 @@ function HealthRow({ label, value, tone }: { label: string; value: string; tone?
         {value}
       </span>
     </div>
+  );
+}
+
+/**
+ * Aggregated "Request A Source" backlog. Groups overlapping asks so the roadmap
+ * can be ordered by real demand, and separates screened-out requests that were
+ * recorded for the audit trail but are not buildable.
+ */
+function SourceDemandCard({ enabled }: { enabled: boolean }) {
+  const fetchDemand = useServerFn(listSourceDemand);
+  const fetchRequesters = useServerFn(listSourceRequesters);
+  const [openKey, setOpenKey] = useState<string | null>(null);
+
+  const demandQ = useQuery({
+    queryKey: ["admin-source-demand"],
+    queryFn: () => fetchDemand(),
+    enabled,
+  });
+  const requestersQ = useQuery({
+    queryKey: ["admin-source-requesters", openKey],
+    queryFn: () => fetchRequesters({ data: { sourceKey: openKey as string } }),
+    enabled: Boolean(openKey),
+  });
+
+  const rows = demandQ.data?.demand ?? [];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base font-display flex items-center gap-2">
+          <Layers className="h-4 w-4 text-primary" /> Source Requests
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="mb-3 text-xs text-muted-foreground">
+          Grouped By Requested Source. Order The Adapter Roadmap By Workspaces, Not Raw Request Count.
+        </div>
+        {demandQ.isLoading ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">
+            <Loader2 className="mr-1 inline h-4 w-4 animate-spin" /> Loading…
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">No Source Requests Yet.</div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Source</TableHead>
+                <TableHead className="w-[90px]">Workspaces</TableHead>
+                <TableHead className="w-[80px]">Queued</TableHead>
+                <TableHead>Fields</TableHead>
+                <TableHead className="w-[130px]">Cadence</TableHead>
+                <TableHead className="w-[110px]">Last Ask</TableHead>
+                <TableHead className="w-[110px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((d) => (
+                <TableRow key={d.source_key}>
+                  <TableCell>
+                    <div className="font-medium">{d.display_label}</div>
+                    {d.sample_url && (
+                      <div className="max-w-[260px] truncate text-[11px] text-muted-foreground">{d.sample_url}</div>
+                    )}
+                    {Number(d.screened_out) > 0 && (
+                      <Badge variant="outline" className="mt-1 border-warning/40 text-[10px] text-warning">
+                        {Number(d.screened_out)} Screened Out
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="tabular-nums">{Number(d.workspaces).toLocaleString()}</TableCell>
+                  <TableCell className="tabular-nums">{Number(d.queued).toLocaleString()}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {(d.desired_fields ?? []).slice(0, 4).join(", ") || "—"}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {(d.frequencies ?? []).map((f: string) => FREQUENCY_LABEL[f] ?? f).join(", ") || "—"}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {d.last_requested_at ? new Date(d.last_requested_at).toLocaleDateString() : "—"}
+                  </TableCell>
+                  <TableCell>
+                    <Button size="sm" variant="ghost" onClick={() => setOpenKey(d.source_key)}>
+                      Notify List
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+
+      <Dialog open={Boolean(openKey)} onOpenChange={(o) => !o && setOpenKey(null)}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Notify When Live</DialogTitle>
+          </DialogHeader>
+          {requestersQ.isLoading ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              <Loader2 className="mr-1 inline h-4 w-4 animate-spin" /> Loading…
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Workspace</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="w-[110px]">Cadence</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(requestersQ.data?.requesters ?? []).map((r) => (
+                  <TableRow key={r.request_id}>
+                    <TableCell className="font-medium">{r.workspace_name ?? "—"}</TableCell>
+                    <TableCell className="text-xs">{r.email ?? "—"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {FREQUENCY_LABEL[r.frequency] ?? r.frequency}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 }

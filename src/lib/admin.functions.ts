@@ -194,3 +194,26 @@ export const revokeSuperAdmin = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+// Roadmap view of the source-request backlog, grouped so overlapping demand is
+// obvious. The RPC re-checks super_admin server-side.
+export const listSourceDemand = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { data, error } = await context.supabase.rpc("adapter_demand");
+    if (error) throw error;
+    return { demand: data ?? [] };
+  });
+
+// Who to email when a requested source ships.
+export const listSourceRequesters = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ sourceKey: z.string().min(1).max(200) }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { data: rows, error } = await context.supabase.rpc("adapter_request_notify_list", {
+      _source_key: data.sourceKey,
+    });
+    if (error) throw error;
+    return { requesters: rows ?? [] };
+  });
