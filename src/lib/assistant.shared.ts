@@ -73,7 +73,12 @@ export type AssistantReply = {
 export function describeSpec(spec: JobSpec): string {
   if (!spec.sourceType) return "No Source Chosen Yet";
   if (spec.sourceType === "upload") return "Upload Your Own List";
-  const geo = spec.counties.join(", ") || specStates(spec).join(", ") || "No Geography";
+  const geo =
+    spec.counties.join(", ") ||
+    spec.city ||
+    specStates(spec).join(", ") ||
+    spec.country ||
+    "No Geography";
   if (spec.sourceType === "records") {
     return [spec.recordType ?? "Public Records", geo]
       .join(" · ");
