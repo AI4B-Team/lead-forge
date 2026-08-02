@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Bot, Inbox as InboxIcon, Loader2, PhoneOff, Plus, Send, Sparkles, X } from "lucide-react";
+import { Bot, ChevronDown, Inbox as InboxIcon, Loader2, PhoneOff, Plus, Send, Sparkles, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import {
