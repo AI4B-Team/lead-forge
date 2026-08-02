@@ -101,7 +101,7 @@ export async function assertSpendAllowed(
     limits: ctx.limits,
     enforced: ctx.enforced,
   });
-  if (verdict.outcome === "allowed") return;
+  if (verdict.outcome === "allow") return;
   if (verdict.outcome === "needs_approval") {
     // Record the request so the admin queue has it, then stop the action.
     await supabase.from("approval_requests").insert({
@@ -113,7 +113,7 @@ export async function assertSpendAllowed(
       detail: { action: input.action },
     } as never);
   }
-  throw new Error(verdict.reason);
+  throw new Error("reason" in verdict ? verdict.reason : "Spend Blocked");
 }
 
 export { evaluateExport, evaluateSpend };
