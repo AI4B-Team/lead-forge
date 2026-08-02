@@ -39,9 +39,16 @@ export function projectedClosed(appointments: number): number {
   return Math.round(appointments * CLOSE_RATE);
 }
 
-/** Signed percentage change between two periods. */
+/**
+ * Minimum outbound volume the PRIOR period needs before a period-over-period
+ * comparison means anything. Below this, growth from ~nothing reads as +100%
+ * on every metric, which flatters the numbers instead of reporting them.
+ */
+export const MIN_HISTORY_EVENTS = 5;
+
+/** Signed percentage change, or null when there is no honest baseline. */
 export function delta(current: number, previous: number): number | null {
-  if (!previous) return current > 0 ? 100 : null;
+  if (!previous) return null;
   return Math.round(((current - previous) / previous) * 1000) / 10;
 }
 
