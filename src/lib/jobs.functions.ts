@@ -185,6 +185,26 @@ export const getJobReview = createServerFn({ method: "GET" })
     );
 
     const t = total ?? 0;
+
+    // Real message templates for this list, so the Launch Estimate can bill
+    // actual SMS segments instead of assuming one segment per message.
+    const { data: jobCampaigns } = await supabase
+      .from("campaigns")
+      .select("id")
+      .eq("list_job_id", data.jobId);
+    let messageTemplates: string[] = [];
+    if (jobCampaigns?.length) {
+      const { data: steps } = await supabase
+        .from("campaign_steps")
+        .select("step_order, message_variants, campaign_id, active")
+        .in("campaign_id", jobCampaigns.map((c) => c.id))
+        .order("step_order", { ascending: true });
+      messageTemplates = (steps ?? [])
+        .filter((s) => s.active !== false)
+        .map((s) => (s.message_variants ?? []).find((v) => typeof v === "string" && v.trim()) ?? "")
+        .filter((v) => v.length > 0);
+    }
+
     const cleanRate = t ? (clean ?? 0) / t : 0;
     const mobileRate = t ? (mobile ?? 0) / t : 0;
     const reachability = t ? Math.min(1, ((clean ?? 0) + (mobile ?? 0)) / (2 * t)) : 0;
@@ -215,6 +235,7 @@ export const getJobReview = createServerFn({ method: "GET" })
       counts: { total: t, clean: clean ?? 0, dnc: dnc ?? 0, litigator: litigator ?? 0, mobile: mobile ?? 0 },
       quality,
       creditsUsed,
+      messageTemplates,
       scrubFreshness: {
         scrubbedAt: scrub?.created_at ?? null,
         ageDays: scrubAgeDays(scrub?.created_at ?? null),

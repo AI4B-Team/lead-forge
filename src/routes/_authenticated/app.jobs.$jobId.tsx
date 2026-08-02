@@ -17,7 +17,7 @@ import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, l
 import { RESCRUB_DAYS } from "@/lib/compliance-rules";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { buildFunnel, funnelViolations } from "@/lib/funnel-math";
-import { launchEstimate, formatUsd, DEFAULT_SEQUENCE_STEPS } from "@/lib/launch-estimate";
+import { launchEstimate, formatUsd } from "@/lib/launch-estimate";
 import { LOCAL_TZ } from "@/lib/local-tz";
 import { PhoneLink } from "@/components/app/phone-link";
 import { setOnboardingPref } from "@/lib/onboarding.functions";
@@ -122,13 +122,14 @@ function JobDetail() {
       : job.source_type === "records"
         ? "Public Records"
         : "Business Directories";
-  const estimate = launchEstimate(counts.clean);
+  const messageTemplates = (data as { messageTemplates?: string[] }).messageTemplates ?? [];
+  const estimate = launchEstimate(counts.clean, { templates: messageTemplates });
   const grade = qualityGrade(quality);
   // Never ship a funnel whose arithmetic disagrees with the Ready To Send card.
-  if (import.meta.env.DEV) {
-    const bad = funnelViolations(funnel, { readyToSend: counts.clean });
-    if (bad.length) console.warn("[funnel] arithmetic mismatch:", bad);
-  }
+  // This runs in production too: on mismatch we surface a reconciling badge
+  // rather than silently rendering numbers that don't add up.
+  const funnelIssues = funnelViolations(funnel, { readyToSend: counts.clean });
+  if (funnelIssues.length) console.warn("[funnel] arithmetic mismatch:", funnelIssues);
 
   if (job.status === "ready" && !collapsedOnce) {
     setCollapsedOnce(true);
@@ -240,6 +241,15 @@ function JobDetail() {
       <Card className="mt-6">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base font-display">Lead Processing</CardTitle>
+          {funnelIssues.length > 0 && (
+            <Badge
+              variant="outline"
+              className="border-warn/50 bg-warn/10 text-warn"
+              title={funnelIssues.join(" · ")}
+            >
+              <AlertTriangle className="mr-1 h-3 w-3" /> Counts Are Being Reconciled
+            </Badge>
+          )}
         </CardHeader>
         <CardContent className="space-y-5">
           <PipelineFunnel
@@ -407,13 +417,17 @@ function JobDetail() {
               icon={<Send className="h-3.5 w-3.5" />}
               value={estimate.messages.toLocaleString()}
               label="Messages"
-              note={`${DEFAULT_SEQUENCE_STEPS}-Step Drip`}
+              note={`${estimate.steps}-Step Drip · ${estimate.segments.toLocaleString()} Segments`}
             />
             <MoneyStat
               icon={<DollarSign className="h-3.5 w-3.5" />}
-              value={`≈ ${formatUsd(estimate.cost)}`}
+              value={`${estimate.assumed ? "From ≈ " : "≈ "}${formatUsd(estimate.cost)}`}
               label="Estimated Cost"
-              note="Flat Rate Per Segment"
+              note={
+                estimate.assumed
+                  ? "Assumes 1 Segment Per Message"
+                  : "Flat Rate Per Segment · Measured From Your Templates"
+              }
             />
           </CardContent>
         </Card>
