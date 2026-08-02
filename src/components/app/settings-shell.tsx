@@ -15,6 +15,8 @@ import {
   Settings2,
   Plug,
   KeyRound,
+  LayoutDashboard,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 import { meIsSuperAdmin } from "@/lib/admin.functions";
@@ -35,7 +37,10 @@ type NavDef = {
     | "/app/numbers"
     | "/app/integrations"
     | "/app/api"
-    | "/app/admin";
+    | "/app/admin"
+    | "/app/admin/workspaces"
+    | "/app/admin/sources"
+    | "/app/admin/access";
   search?: { tab: "profile" | "security" | "notifications" };
 };
 
@@ -91,7 +96,12 @@ export function SettingsShell({
         ...GROUPS,
         {
           label: "Platform",
-          items: [{ key: "admin" as const, label: "Admin", icon: Settings2, to: "/app/admin" as const }],
+          items: [
+            { key: "admin" as const, label: "Dashboard", icon: LayoutDashboard, to: "/app/admin" as const },
+            { key: "admin-workspaces" as const, label: "Workspaces", icon: Building2, to: "/app/admin/workspaces" as const },
+            { key: "admin-sources" as const, label: "Source Requests", icon: Layers, to: "/app/admin/sources" as const },
+            { key: "admin-access" as const, label: "Admin Access", icon: Settings2, to: "/app/admin/access" as const },
+          ],
         },
       ]
     : GROUPS;
