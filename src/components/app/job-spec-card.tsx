@@ -590,7 +590,7 @@ export function JobSpecCard({
 
         {hasGeo && (
           <>
-            <div className={isRecords ? "grid grid-cols-2 gap-3" : ""}>
+            <div className={has("recency") ? "grid grid-cols-2 gap-3" : ""}>
               <div>
                 <FieldLabel
                   confidence={95}
@@ -615,7 +615,7 @@ export function JobSpecCard({
                   }}
                 />
               </div>
-              {isRecords && (
+              {has("recency") && (
                 <div>
                   <FieldLabel hint="How far back to look. 90 means only records filed in the last 90 days — fresher records usually respond better.">
                     Recency (Days)
@@ -627,12 +627,13 @@ export function JobSpecCard({
                       const n = Number(v.replace(/\D/g, ""));
                       set("recencyDays", n ? n : null);
                     }}
-                    placeholder="90"
+                    placeholder={dedupesByCompany(spec.templateId) ? "30" : "90"}
                   />
                 </div>
               )}
             </div>
 
+            {has("counties") && (
             <div>
               <FieldLabel
                 confidence={98}
@@ -656,9 +657,18 @@ export function JobSpecCard({
                 </p>
               )}
             </div>
+            )}
           </>
         )}
 
+        {dedupesByCompany(spec.templateId) && (
+          <p className="rounded-xl border border-border bg-surface p-3 text-[11px] text-muted-foreground">
+            The Lead Here Is The Employer, Not The Posting — We Dedupe By Company So One Company Appears Once,
+            However Many Roles It Has Open.
+          </p>
+        )}
+
+        {!dataOnly && (
         <div>
           <FieldLabel hint="Sets the tone and compliance defaults for messaging — real estate, home services, insurance, and so on. The assistant suggests one from your request.">
             Industry Preset
@@ -670,7 +680,9 @@ export function JobSpecCard({
             </SelectContent>
           </Select>
         </div>
+        )}
 
+        {!dataOnly && (
         <div>
           <FieldLabel hint="How the first text should come across, in your words. It shapes the opening message your AI agent sends — nothing sends without your approval.">
             First-Touch Angle
@@ -683,6 +695,7 @@ export function JobSpecCard({
             placeholder="Empathetic, low-pressure opener…"
           />
         </div>
+        )}
 
         <div className="space-y-3">
           {toggles.map((option) => (
