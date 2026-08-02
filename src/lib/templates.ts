@@ -34,6 +34,9 @@ export type Template = {
   tint: string;
   /** Marks the template as Beta in the UI. */
   beta?: boolean;
+  /** Two-line scannable label used in compact grids (title / subtitle). */
+  shortTitle?: string;
+  shortSubtitle?: string;
   /** Domain used to fetch the real company logo (favicon). */
   logoDomain?: string;
   /**
