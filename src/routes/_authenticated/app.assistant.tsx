@@ -79,6 +79,7 @@ const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   dedupe: PIPELINE_OPTION_LABELS.dedupe,
   mobileOnly: PIPELINE_OPTION_LABELS.mobileOnly,
   skipTrace: PIPELINE_OPTION_LABELS.skipTrace,
+  emailRequired: PIPELINE_OPTION_LABELS.emailRequired,
   industry: "Industry Preset",
   messageAngle: "First-Touch Angle",
 };
