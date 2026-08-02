@@ -1142,6 +1142,10 @@ function Assistant() {
   return (
     <div className={started ? "assistant-shell flex flex-col" : "flex flex-col"}>
       <div className={started ? "mx-auto w-[90%] flex-1 flex flex-col" : "mx-auto w-[90%]"}>
+        {/* Per-workspace first run: building is never gated, but the send-side
+            prerequisites (10DLC, number, agent) stay visible until they're done. */}
+        <FirstRunSetup workspaceId={workspaceId ?? null} />
+
         {started && (
           <div className="shrink-0">
             <PageHeader
