@@ -581,6 +581,25 @@ function Assistant() {
 
   const uncovered = coverage.filter((c) => c.coverage === "requested" || c.coverage === "unknown");
 
+  // Confirmed waitlist state must survive a reload, so it comes from the table.
+  useEffect(() => {
+    if (!workspaceId) return;
+    let alive = true;
+    fetchAdapterRequests({ data: { workspaceId } })
+      .then((res) => {
+        if (!alive) return;
+        setRequestedAdapters(new Set(res.templateIds));
+        setNotifyEmail(res.email);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId]);
+
+  const adapterRequested = Boolean(selectedTemplate && requestedAdapters.has(selectedTemplate.id));
+
   const request = async (county: string) => {
     if (!workspaceId) return;
     try {
@@ -605,8 +624,11 @@ function Assistant() {
   /** Waitlist click for a source whose adapter isn't wired yet (roadmap signal). */
   const requestTemplateAdapter = async () => {
     if (!workspaceId || !selectedTemplate) return;
+    if (requestedAdapters.has(selectedTemplate.id)) return;
+    setRequesting(true);
+    setRequestError(null);
     try {
-      await logRequest({
+      const res = await logRequest({
         data: {
           workspaceId,
           county: null,
@@ -615,9 +637,14 @@ function Assistant() {
           type: "template_adapter",
         },
       });
+      setRequestedAdapters((prev) => new Set(prev).add(selectedTemplate.id));
+      if (res?.email) setNotifyEmail(res.email);
       toast.success(`Logged — We'll Email You When ${selectedTemplate.title} Goes Live.`);
     } catch (e) {
+      setRequestError("Couldn't log your request — try again");
       toast.error(e instanceof Error ? e.message : "Could Not Log Request");
+    } finally {
+      setRequesting(false);
     }
   };
 
