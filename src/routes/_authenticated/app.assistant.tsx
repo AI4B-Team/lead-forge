@@ -312,7 +312,7 @@ function Assistant() {
   useEffect(() => {
     if (!workspaceId || restored.current) return;
     restored.current = true;
-    if (search.prompt?.trim()) return;
+    if (search.prompt?.trim() || search.source) return;
     const draft = loadDraft(workspaceId);
     if (!draft) return;
     if (!draft.thread.length) return;
@@ -326,7 +326,7 @@ function Assistant() {
     }
     setInferred(new Set((draft.inferred ?? []) as Array<keyof JobSpec>));
     setRevealed(buildTraceSteps(draft.spec).length);
-  }, [workspaceId, search.prompt]);
+  }, [workspaceId, search.prompt, search.source]);
 
   useEffect(() => {
     if (!workspaceId || !thread.length) return;
@@ -503,6 +503,19 @@ function Assistant() {
       });
     }
   };
+
+  // Deep-link: the marketing handoff carries the typed text in ?prompt= and the
+  // selected template in ?template=, with a short-lived stash as the fallback.
+  useEffect(() => {
+    if (appliedSource.current || !workspaceId) return;
+    const source = search.source;
+    if (source !== "business" && source !== "records" && source !== "upload") return;
+    appliedSource.current = true;
+    sentPrompt.current = true;
+    openPanelWithSource(source, search.niche?.trim() || undefined);
+    navigate({ to: "/app/assistant", search: {}, replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId, search.source, search.niche]);
 
   // Deep-link: the marketing handoff carries the typed text in ?prompt= and the
   // selected template in ?template=, with a short-lived stash as the fallback.
