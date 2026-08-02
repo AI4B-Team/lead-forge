@@ -9,16 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { SampleQuestions, knowledgeScore } from "@/components/app/brand-knowledge";
+import { SampleQuestions } from "@/components/app/brand-knowledge";
 import { KnowledgeSourceList } from "@/components/app/knowledge-cards";
 import { AgentComposer, RecentTraining } from "@/components/app/agent-training";
-import { KNOWLEDGE_CARDS } from "@/lib/knowledge-cards.shared";
+import { agentReadiness, formatChars, openKnowledgeSource } from "@/lib/agent-readiness";
 import { AgentQuestionTester } from "@/components/app/agent-questions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { useWorkspaceAgent } from "@/hooks/use-agent";
 import { createBrand } from "@/lib/brands.functions";
 import { listBotKnowledge } from "@/lib/bot-training.functions";
-import { Bot, CheckCircle2, Globe, MessageSquareQuote, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle2, Globe, MessageSquareQuote, RefreshCw, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/agent")({
   head: () => ({
