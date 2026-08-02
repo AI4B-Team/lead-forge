@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   User,
   Lock,
+  Bell,
   CreditCard,
   Users,
   Building2,
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 export type AccountTabKey =
   | "profile"
   | "security"
+  | "notifications"
   | "billing"
   | "team"
   | "workspace"
@@ -32,12 +34,13 @@ type TabDef = {
   label: string;
   icon: LucideIcon;
   to: "/app/account" | "/app/billing" | "/app/team" | "/app/settings" | "/app/registration" | "/app/compliance" | "/app/numbers" | "/app/admin";
-  search?: { tab: "profile" | "security" };
+  search?: { tab: "profile" | "security" | "notifications" };
 };
 
 const TABS: TabDef[] = [
   { key: "profile", label: "Profile", icon: User, to: "/app/account", search: { tab: "profile" } },
   { key: "security", label: "Security", icon: Lock, to: "/app/account", search: { tab: "security" } },
+  { key: "notifications", label: "Notifications", icon: Bell, to: "/app/account", search: { tab: "notifications" } },
   { key: "billing", label: "Billing", icon: CreditCard, to: "/app/billing" },
   { key: "workspace", label: "Workspace", icon: Building2, to: "/app/settings" },
   { key: "numbers", label: "Numbers", icon: Smartphone, to: "/app/numbers" },
