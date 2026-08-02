@@ -235,6 +235,12 @@ function Jobs() {
       if (j.stalled || j.status === "failed") attention += 1;
       if (j.schedule && j.schedule !== "one_time") scheduled += 1;
     }
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sunday, 1 = Monday
+    const daysToMonday = day === 0 ? -6 : 1 - day;
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToMonday, 0, 0, 0, 0);
+    const weekStartMs = weekStart.getTime();
+    const builtThisWeek = jobs.filter((j) => new Date(j.created_at).getTime() >= weekStartMs).length;
     return {
       total: jobs.length,
       clean,
@@ -244,6 +250,7 @@ function Jobs() {
       attention,
       launched,
       neverLaunched,
+      builtThisWeek,
     };
   }, [allRows]);
 
@@ -303,6 +310,7 @@ function Jobs() {
           value={summary.total.toLocaleString()}
           icon={Layers}
           help="Every list you've built in this workspace."
+          hint={`${summary.builtThisWeek} built this week`}
         />
         <StatTile
           label="Clean Leads"
