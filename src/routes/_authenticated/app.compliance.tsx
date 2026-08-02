@@ -24,6 +24,9 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { getComplianceState, importSuppression } from "@/lib/compliance.functions";
 import { computeCompliance, removedCount } from "@/lib/compliance.shared";
 import { parseCsv } from "@/lib/csv";
+import {
+  SuppressionTable, ContactLookup, BlockedAttemptsLog, BlacklistDialog,
+} from "@/components/app/compliance-suppression";
 
 export const Route = createFileRoute("/_authenticated/app/compliance")({
   head: () => ({ meta: [{ title: "Compliance Center — LeadTrace" }] }),
@@ -235,9 +238,19 @@ function Compliance() {
               <SupChip label="DNC" value={data?.suppression.dnc ?? 0} tone="warn" />
               <SupChip label="Manual" value={data?.suppression.manual ?? 0} tone="muted" />
             </div>
+            <div className="mt-5">
+              <BlacklistDialog workspaceId={workspaceId} variant="prominent" />
+              <p className="mt-2 text-xs text-muted-foreground">
+                Add A Single Number Or A Bulk List Yourself — Saved With Reason "Manual".
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      <ContactLookup workspaceId={workspaceId} />
+      <SuppressionTable workspaceId={workspaceId} />
+      <BlockedAttemptsLog workspaceId={workspaceId} />
 
       <Card className="mt-6">
         <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">

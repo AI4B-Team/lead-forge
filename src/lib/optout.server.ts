@@ -29,6 +29,19 @@ export type GateTarget = {
   actorId?: string | null;
 };
 
+/** Which send path attempted the blocked message — used by the compliance log. */
+export type SendPath = "manual" | "campaign" | "bot" | "cadence" | "unknown";
+
+/** Normalizes free-form `source` strings ("bot:<id>", "campaign:x") into a path. */
+export function sendPathFromSource(source?: string | null): SendPath {
+  const s = (source ?? "").toLowerCase();
+  if (s.startsWith("bot")) return "bot";
+  if (s.startsWith("campaign") || s.startsWith("runner") || s.startsWith("tick")) return "campaign";
+  if (s.startsWith("cadence") || s.startsWith("recurring")) return "cadence";
+  if (s.startsWith("inbox") || s.startsWith("manual") || s.startsWith("composer")) return "manual";
+  return "unknown";
+}
+
 /** All plausible stored spellings of a US phone, for exact-match lookups. */
 export function phoneVariants(phone: string): string[] {
   const digits = phone.replace(/\D/g, "");
@@ -103,6 +116,21 @@ export async function logBlockedSend(
   t: GateTarget,
   gate: Extract<SendGate, { ok: false }>,
 ): Promise<void> {
+  const blockedAt = new Date().toISOString();
+  try {
+    // Queryable, evidence-grade log: "we refused to text this person on these dates".
+    await db.from("compliance_events").insert({
+      workspace_id: t.workspaceId,
+      phone: gate.phone,
+      lead_id: t.leadId ?? null,
+      thread_key: t.threadKey ?? null,
+      path: sendPathFromSource(t.source),
+      reason: gate.reason,
+      detail: { source: t.source ?? "unknown", actor_id: t.actorId ?? null, message: gate.message },
+    });
+  } catch {
+    /* never break the refusal itself */
+  }
   try {
     await db.from("events").insert({
       workspace_id: t.workspaceId,
@@ -114,7 +142,7 @@ export async function logBlockedSend(
         thread_key: t.threadKey ?? null,
         source: t.source ?? "unknown",
         actor_id: t.actorId ?? null,
-        blocked_at: new Date().toISOString(),
+        blocked_at: blockedAt,
       },
     });
   } catch {

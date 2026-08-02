@@ -475,7 +475,12 @@ export const blacklistThread = createServerFn({ method: "POST" })
     if (!lead?.phone) throw new Error("No phone on this lead");
     const { error } = await context.supabase
       .from("suppression")
-      .upsert({ workspace_id: data.workspaceId, phone: lead.phone, reason: "manual_blacklist" } as never);
+      .upsert({
+        workspace_id: data.workspaceId,
+        phone: lead.phone,
+        reason: "manual",
+        source: "inbox",
+      } as never);
     if (error) throw error;
     return { ok: true, phone: lead.phone };
   });

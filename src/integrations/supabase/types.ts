@@ -305,6 +305,50 @@ export type Database = {
           },
         ]
       }
+      compliance_events: {
+        Row: {
+          created_at: string
+          detail: Json
+          id: string
+          lead_id: string | null
+          path: string
+          phone: string | null
+          reason: string
+          thread_key: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          id?: string
+          lead_id?: string | null
+          path?: string
+          phone?: string | null
+          reason: string
+          thread_key?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          id?: string
+          lead_id?: string | null
+          path?: string
+          phone?: string | null
+          reason?: string
+          thread_key?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_balances: {
         Row: {
           balance: number
@@ -1181,20 +1225,26 @@ export type Database = {
       suppression: {
         Row: {
           created_at: string
+          note: string | null
           phone: string
           reason: string | null
+          source: string | null
           workspace_id: string
         }
         Insert: {
           created_at?: string
+          note?: string | null
           phone: string
           reason?: string | null
+          source?: string | null
           workspace_id: string
         }
         Update: {
           created_at?: string
+          note?: string | null
           phone?: string
           reason?: string | null
+          source?: string | null
           workspace_id?: string
         }
         Relationships: [
