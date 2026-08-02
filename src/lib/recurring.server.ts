@@ -7,7 +7,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { nextRunFrom, normalizeCadence, type Cadence } from "./schedule.shared";
-import { normalizeChannel, automatedActionLabel } from "./channels";
+import { normalizeChannel } from "./channels";
 import { executePipeline } from "./pipeline.server";
 import { planDrops } from "./drops";
 
@@ -39,15 +39,14 @@ export async function runIdsForList(supabase: AnyClient, rootId: string): Promis
 async function notify(
   supabase: AnyClient,
   workspaceId: string,
-  input: { type: string; title: string; body: string; jobId?: string; campaignId?: string },
+  input: { kind: string; title: string; body: string; jobId?: string },
 ) {
   await supabase.from("notifications").insert({
     workspace_id: workspaceId,
-    type: input.type,
+    kind: input.kind,
     title: input.title,
     body: input.body,
     job_id: input.jobId ?? null,
-    campaign_id: input.campaignId ?? null,
   });
 }
 
@@ -183,7 +182,7 @@ export async function runListNow(
   const nextRunAt =
     cadence === "one_time"
       ? null
-      : nextRunFrom(cadence, now, list.custom_interval_minutes ?? undefined);
+      : nextRunFrom(cadence, list.custom_interval_minutes, now);
   await supabase
     .from("jobs")
     .update({ last_run_at: now.toISOString(), next_run_at: nextRunAt })
@@ -207,22 +206,21 @@ export async function runListNow(
     const label = list.name ?? "Your List";
     if (netNew === 0) {
       await notify(supabase, list.workspace_id, {
-        type: "run.no_new",
+        kind: "run_no_new",
         title: `No New Records — ${label}`,
         body: `${opts.manual ? "This run" : "The scheduled rescan"} found nothing that earlier runs had not already delivered. Nothing was charged.`,
         jobId: run.id as string,
       });
     } else if (campaignId) {
       await notify(supabase, list.workspace_id, {
-        type: "run.auto_launched",
+        kind: "run_auto_launched",
         title: `${clean.toLocaleString()} New Leads — Outreach Started`,
-        body: `${label} found ${netNew.toLocaleString()} net-new records and ${automatedActionLabel(channel).toLowerCase()} for the ${clean.toLocaleString()} that came back clean.`,
+        body: `${label} found ${netNew.toLocaleString()} net-new records and started outreach for the ${clean.toLocaleString()} that came back clean.`,
         jobId: run.id as string,
-        campaignId,
       });
     } else {
       await notify(supabase, list.workspace_id, {
-        type: "run.completed",
+        kind: "run_complete",
         title: `${netNew.toLocaleString()} New Records — ${label}`,
         body:
           channel === "sms"
@@ -237,7 +235,7 @@ export async function runListNow(
     const message = err instanceof Error ? err.message : "Run Failed";
     await supabase.from("jobs").update({ status: "failed", error: message }).eq("id", run.id as string);
     await notify(supabase, list.workspace_id, {
-      type: "run.failed",
+      kind: "run_failed",
       title: `Run Failed — ${list.name ?? "Your List"}`,
       body: message,
       jobId: run.id as string,
@@ -283,6 +281,6 @@ export function scheduleFieldsFor(
     schedule: cadence,
     custom_interval_minutes: cadence === "custom" ? (customMinutes ?? 60) : null,
     schedule_active: cadence !== "one_time",
-    next_run_at: cadence === "one_time" ? null : nextRunFrom(cadence, from, customMinutes ?? undefined),
+    next_run_at: cadence === "one_time" ? null : nextRunFrom(cadence, customMinutes, from),
   };
 }
