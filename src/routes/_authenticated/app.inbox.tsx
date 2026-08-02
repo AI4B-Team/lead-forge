@@ -277,32 +277,79 @@ function ConversationsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_288px] gap-4 flex-1 min-h-0">
         {/* Conversation list */}
         <Card className="flex flex-col min-h-0">
-          <div className="p-2 border-b flex gap-1 flex-wrap">
-            {FILTERS.map((f) => (
-              <Button
-                key={f.key}
-                size="sm"
-                variant={filter === f.key && !showArchived ? "default" : "ghost"}
-                className="rounded-full text-xs h-7 px-2.5"
-                onClick={() => {
-                  setFilter(f.key);
-                  setShowArchived(false);
-                }}
-              >
-                {f.label}
-                {counts && counts[f.key] > 0 && (
-                  <span className="ml-1 opacity-70">{counts[f.key]}</span>
-                )}
-              </Button>
-            ))}
-            <Button
-              size="sm"
-              variant={showArchived ? "default" : "ghost"}
-              className="rounded-full text-xs h-7 px-2.5"
-              onClick={() => setShowArchived((v) => !v)}
-            >
-              Archive
-            </Button>
+          <div className="p-2 border-b flex items-center gap-0.5 flex-nowrap overflow-hidden">
+            {PRIMARY_FILTERS.map((f) => {
+              const active = filter === f.key && !showArchived;
+              const count = counts ? counts[f.key] : 0;
+              return (
+                <Button
+                  key={f.key}
+                  size="sm"
+                  variant={active ? "default" : "ghost"}
+                  className="rounded-full text-xs h-7 px-2 shrink-0 min-w-0"
+                  onClick={() => {
+                    setFilter(f.key);
+                    setShowArchived(false);
+                  }}
+                >
+                  <span className="truncate">
+                    <span className="hidden 2xl:inline">{f.label}</span>
+                    <span className="2xl:hidden">{f.short}</span>
+                  </span>
+                  {count > 0 && (
+                    <span
+                      className={cn(
+                        "ml-1 rounded-full px-1 text-[10px] leading-4 tabular-nums",
+                        active ? "bg-primary-foreground/20" : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </Button>
+              );
+            })}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant={
+                    showArchived || !PRIMARY_FILTERS.some((f) => f.key === filter) ? "default" : "ghost"
+                  }
+                  className="rounded-full text-xs h-7 px-2 shrink-0 ml-auto"
+                >
+                  More <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {OVERFLOW_FILTERS.map((f) => {
+                  const isArchive = f.key === "archive";
+                  const count = !isArchive && counts ? counts[f.key as Filter] : 0;
+                  const active = isArchive ? showArchived : filter === f.key && !showArchived;
+                  return (
+                    <DropdownMenuItem
+                      key={f.key}
+                      onClick={() => {
+                        if (isArchive) {
+                          setShowArchived(true);
+                        } else {
+                          setFilter(f.key as Filter);
+                          setShowArchived(false);
+                        }
+                      }}
+                      className={cn("text-xs justify-between", active && "font-semibold")}
+                    >
+                      <span>{f.label}</span>
+                      {count > 0 && (
+                        <span className="rounded-full bg-muted px-1 text-[10px] leading-4 text-muted-foreground tabular-nums">
+                          {count}
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <div className="flex-1 overflow-y-auto">
             {threadsQ.isLoading ? (
