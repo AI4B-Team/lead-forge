@@ -26,15 +26,20 @@ export type SourceDepth = {
   unit: string;
   count: number;
   chars: number;
-  /** Human depth string, e.g. "1 Set · 72 Chars" or "None". */
+  /** Plain-language depth, e.g. "1 FAQ · Thin" or "None Yet". */
   detail: string;
+  /** Thin / Good / Strong — never a character number. */
+  depthWord: "Thin" | "Good" | "Strong" | null;
   covered: boolean;
   thin: boolean;
 };
 
-export function formatChars(chars: number) {
-  if (chars >= 1000) return `${(chars / 1000).toFixed(chars >= 10000 ? 0 : 1).replace(/\.0$/, "")}k Chars`;
-  return `${chars} Chars`;
+/** Internal length becomes a human depth word; the number is never shown. */
+export function depthLabel(chars: number): "Thin" | "Good" | "Strong" | null {
+  if (chars <= 0) return null;
+  if (chars < THIN_CHARS) return "Thin";
+  if (chars < 4000) return "Good";
+  return "Strong";
 }
 
 export function sourceDepths(sources: KnowledgeItem[]): SourceDepth[] {
@@ -43,13 +48,18 @@ export function sourceDepths(sources: KnowledgeItem[]): SourceDepth[] {
     const chars = items.reduce((a, s) => a + s.chars, 0);
     const covered = items.length > 0 && chars >= MIN_REAL_CHARS;
     const unitPlural = items.length === 1 ? spec.unit : `${spec.unit}s`;
+    const word = depthLabel(chars);
     return {
       key: spec.key,
       label: spec.title,
       unit: spec.unit,
       count: items.length,
       chars,
-      detail: items.length === 0 ? "None" : `${items.length} ${unitPlural} · ${formatChars(chars)}`,
+      depthWord: word,
+      detail:
+        items.length === 0
+          ? "None Yet"
+          : `${items.length} ${unitPlural}${word ? ` · ${word}` : ""}`,
       covered,
       thin: items.length > 0 && !covered,
     };

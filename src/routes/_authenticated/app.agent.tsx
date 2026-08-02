@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SampleQuestions } from "@/components/app/brand-knowledge";
 import { KnowledgeSourceList } from "@/components/app/knowledge-cards";
 import { AgentComposer, RecentTraining } from "@/components/app/agent-training";
-import { agentReadiness, formatChars, openKnowledgeSource } from "@/lib/agent-readiness";
+import { agentReadiness, openKnowledgeSource } from "@/lib/agent-readiness";
 import { AgentQuestionTester } from "@/components/app/agent-questions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { useWorkspaceAgent } from "@/hooks/use-agent";
@@ -164,7 +164,6 @@ function AgentPage() {
   const sources = knowledge ?? [];
   const readiness = agentReadiness(sources);
   const score = readiness.score;
-  const totalChars = sources.reduce((a, s) => a + s.chars, 0);
   const lastTrained = sources[0]?.created_at;
 
   return (
@@ -284,7 +283,7 @@ function AgentPage() {
                     Knowledge
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {formatChars(totalChars)} Indexed
+                    {readiness.coveredCount} Of 8 Sources Added
                   </div>
                 </div>
                 <div className="mt-3 divide-y divide-border">
@@ -306,7 +305,6 @@ function AgentPage() {
                         }`}
                       >
                         {d.detail}
-                        {d.thin ? " · Thin" : ""}
                       </span>
                     </button>
                   ))}

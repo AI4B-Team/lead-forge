@@ -54,7 +54,7 @@ import {
   type KnowledgeCardSpec,
   type KnowledgeItem,
 } from "@/lib/knowledge-cards.shared";
-import { OPEN_KNOWLEDGE_EVENT, sourceDepths } from "@/lib/agent-readiness";
+import { OPEN_KNOWLEDGE_EVENT, depthLabel, sourceDepths } from "@/lib/agent-readiness";
 
 const ICONS: Record<string, LucideIcon> = {
   website: Globe,
@@ -434,7 +434,7 @@ function AddSourceDialog({
                       <div className="truncate text-sm font-semibold text-foreground">{s.title}</div>
                       <div className="line-clamp-2 text-xs text-muted-foreground">{s.excerpt}</div>
                       <div className="mt-1 text-[11px] text-muted-foreground">
-                        {s.chars.toLocaleString()} Chars · {new Date(s.created_at).toLocaleString()}
+                        {new Date(s.created_at).toLocaleString()}
                       </div>
                     </div>
                     <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => del(s.id)}>
@@ -469,6 +469,7 @@ export function KnowledgeSourceCards({
         const Icon = ICONS[spec.key] ?? FileText;
         const items = sources.filter((s) => s.category === spec.key);
         const chars = items.reduce((a, s) => a + s.chars, 0);
+        const word = depthLabel(chars);
         return (
           <Card
             key={spec.key}
@@ -498,10 +499,7 @@ export function KnowledgeSourceCards({
                 ) : (
                   <span className="font-medium text-foreground">
                     {items.length} {items.length === 1 ? spec.unit : `${spec.unit}s`}
-                    <span className="font-normal text-muted-foreground">
-                      {" · "}
-                      {chars >= 1000 ? `${Math.round(chars / 1000)}k Chars` : `${chars} Chars`}
-                    </span>
+                    {word && <span className="font-normal text-muted-foreground">{` · ${word}`}</span>}
                   </span>
                 )}
               </div>
@@ -570,10 +568,7 @@ export function KnowledgeSourceList({
               </div>
               <div className="truncate text-[11px] text-muted-foreground">
                 {depth && depth.count > 0 ? (
-                  <>
-                    {depth.detail}
-                    {isThin && <span className="text-warn"> · Thin</span>}
-                  </>
+                  isThin ? <span className="text-warn">{depth.detail}</span> : <>{depth.detail}</>
                 ) : (
                   <>None Yet · {spec.action}</>
                 )}

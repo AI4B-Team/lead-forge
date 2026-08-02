@@ -144,7 +144,7 @@ export function DripEditor({
                 </div>
               )}
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span>{s.body.length} Chars · {segmentsFor(s.body)} Segment{segmentsFor(s.body) === 1 ? "" : "s"}</span>
+                <span>{s.body.length} Characters · {segmentsFor(s.body)} Segment{segmentsFor(s.body) === 1 ? "" : "s"}</span>
                 <span>Tokens: <code>{`{{first_name}}`}</code> <code>{`{{city}}`}</code> <code>{`{{state}}`}</code> <code>{`{{address}}`}</code></span>
                 <span>Spintax: <code>{`{Hi|Hello|Hey}`}</code> rotates automatically.</span>
               </div>

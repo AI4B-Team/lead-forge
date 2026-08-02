@@ -187,8 +187,6 @@ export function BotTrainer({
     }
   };
 
-  const totalChars = (sources ?? []).reduce((a, s) => a + s.chars, 0);
-
   return (
     <Card className="mt-6">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -196,7 +194,7 @@ export function BotTrainer({
           <BrainCircuit className="h-4 w-4 text-primary" /> {heading}
         </CardTitle>
         <Badge variant="outline" className="text-[10px] uppercase">
-          {(sources ?? []).length} Source{(sources ?? []).length === 1 ? "" : "s"} · {totalChars.toLocaleString()} Chars
+          {(sources ?? []).length} Source{(sources ?? []).length === 1 ? "" : "s"} Added
         </Badge>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -319,7 +317,7 @@ export function BotTrainer({
                     <div className="text-sm font-semibold text-foreground truncate">{s.title}</div>
                     <div className="text-xs text-muted-foreground line-clamp-2">{s.excerpt}</div>
                     <div className="text-[11px] text-muted-foreground mt-1">
-                      {s.chars.toLocaleString()} Chars · {new Date(s.created_at).toLocaleString()}
+                      {new Date(s.created_at).toLocaleString()}
                     </div>
                   </div>
                   <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => del(s.id)}>
