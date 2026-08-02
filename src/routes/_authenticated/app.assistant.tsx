@@ -212,7 +212,9 @@ function Assistant() {
     lastTemplateId.current = t.id;
     if (hasChat) {
       // Mid-conversation: the template only informs the source, never wipes context.
-      setSpec((s) => ({ ...s, sourceType: templateSourceType(t), templateId: t.id }));
+      setSpec((s) =>
+        withEnrichmentDefaults({ ...s, sourceType: templateSourceType(t), templateId: t.id }, t.id),
+      );
       setInferred((prev) => {
         const next = new Set(prev);
         next.delete("sourceType");
@@ -230,7 +232,9 @@ function Assistant() {
       setConfirmed(false);
       setRevealed(0);
       setInferred(new Set());
-      setSpec({ ...EMPTY_SPEC, sourceType: templateSourceType(t), templateId: t.id });
+      setSpec(
+        withEnrichmentDefaults({ ...EMPTY_SPEC, sourceType: templateSourceType(t), templateId: t.id }, t.id),
+      );
       setUpload(null);
     }
     if (workspaceId) setRecents(touchRecentTemplate(workspaceId, t.id));
