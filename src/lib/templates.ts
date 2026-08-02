@@ -62,6 +62,8 @@ export const TEMPLATES: Template[] = [
   // ---------- Business & Local ----------
   {
     id: "gmaps",
+    shortTitle: "Google Maps",
+    shortSubtitle: "Business Listings",
     title: "Google Maps Businesses",
     subtitle: "Businesses By Trade + Location. Franchises Removed.",
     category: "business",
@@ -73,6 +75,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "gserp",
+    shortTitle: "Google Search",
+    shortSubtitle: "Sites + Emails",
     title: "Google Search Scraper",
     subtitle: "Websites, Emails, And Socials From Google Results By Keyword.",
     category: "business",
@@ -84,6 +88,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "glocal",
+    shortTitle: "Google Local",
+    shortSubtitle: "Service Providers",
     title: "Google Local Services",
     subtitle: "Local Service Providers With Name, Phone, Website, And Address.",
     category: "business",
@@ -95,6 +101,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "contact-details",
+    shortTitle: "Contact Details",
+    shortSubtitle: "Any Website",
     title: "Contact Details Scraper (Any Site)",
     subtitle: "Pull Emails, Phones, And Social Profiles From Any Webpage.",
     category: "business",
@@ -105,6 +113,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "universal-crawl",
+    shortTitle: "Site Crawler",
+    shortSubtitle: "Every Subpage",
     title: "Universal Site + Subpage Scraper",
     subtitle: "Crawl A Site And Its Subpages For All Contact Details.",
     category: "business",
@@ -115,6 +125,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "yelp",
+    shortTitle: "Yelp",
+    shortSubtitle: "Local Businesses",
     title: "Yelp Businesses",
     subtitle: "Local Businesses With Reviews + Contact Info.",
     category: "directories",
@@ -394,6 +406,8 @@ export const TEMPLATES: Template[] = [
   // ---------- Public Records ----------
   {
     id: "probate",
+    shortTitle: "Probate",
+    shortSubtitle: "New Filings",
     title: "Probate Records",
     subtitle: "New Probate Filings, Heirs Auto Skip Traced.",
     category: "records",
@@ -404,6 +418,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "code",
+    shortTitle: "Code Violations",
+    shortSubtitle: "Distressed Owners",
     title: "Code Violations",
     subtitle: "Distressed Properties With Open Violations.",
     category: "records",
@@ -434,6 +450,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "vacancy",
+    shortTitle: "Vacant Homes",
+    shortSubtitle: "Vacancy + Demo",
     title: "Vacancy / Demolition",
     subtitle: "Uninhabitable + Demolition-Notice Homes.",
     category: "records",
