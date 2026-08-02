@@ -153,7 +153,6 @@ export function ProfileDropdown({ className }: { className?: string }) {
           />
         </div>
 
-
         <div className="border-t border-border py-1.5">
           {admin?.isSuperAdmin && (
             <MenuItem
