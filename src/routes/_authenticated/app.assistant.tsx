@@ -57,9 +57,11 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
 
 /** Default grid order mirrors the homepage template teaser (first 6 non-upload templates). */
 const DEFAULT_GRID_IDS = [
-  "gmaps", "gserp", "glocal", "contact-details", "universal-crawl", "yelp",
+  "gmaps", "probate", "contact-details",
+  "yelp", "vacancy", "universal-crawl",
+  "glocal", "code", "gserp",
 ];
-const GRID_SLOTS = 6;
+const GRID_SLOTS = 9;
 
 const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   sourceType: "Source",
@@ -767,7 +769,7 @@ function Assistant() {
         )}
         <Textarea
           ref={composer}
-          rows={10}
+          rows={6}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -778,7 +780,7 @@ function Assistant() {
           }}
           aria-label="Tell Me Who You Want To Reach"
           style={input.trim() ? undefined : { textIndent: "1.375rem" }}
-          className="min-h-[220px] resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
+          className="min-h-[150px] resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
         />
         <div className="mt-4 flex items-center justify-between gap-3">
           <label className="inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
@@ -817,14 +819,14 @@ function Assistant() {
       <div>
         <div className="flex items-baseline justify-between gap-4">
           <h2 className="font-display text-lg font-bold text-foreground">
-            {recents.length ? "Your Templates" : "Not Sure Where To Start? Try One Of These…"}
+            {recents.length ? "Your Recent Templates" : "Popular Templates"}
           </h2>
           <button
             type="button"
             onClick={() => setAllOpen(true)}
             className="text-sm font-medium text-primary hover:underline"
           >
-            View All Templates →
+            View All →
           </button>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -833,6 +835,7 @@ function Assistant() {
               key={t.id}
               template={t}
               variant="insert"
+              compact
               selected={selectedTemplate?.id === t.id}
               onSelect={selectTemplate}
             />
