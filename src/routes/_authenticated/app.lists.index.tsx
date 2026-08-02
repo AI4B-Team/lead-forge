@@ -575,7 +575,17 @@ function Jobs() {
                       </td>
                       <td className="p-4">
                         <span className="inline-flex items-center gap-2 whitespace-nowrap text-muted-foreground">
-                          <src.icon className="h-4 w-4 shrink-0" /> {j.identity.label}
+                          {j.identity.template ? (
+                            <TemplateLogo
+                              template={j.identity.template}
+                              className="h-6 w-6 rounded-md"
+                              imgClassName="h-4 w-4"
+                              iconClassName="h-3.5 w-3.5"
+                            />
+                          ) : (
+                            <src.icon className="h-4 w-4 shrink-0" />
+                          )}
+                          <span className="text-foreground">{j.identity.label}</span>
                         </span>
                       </td>
                       <td className="p-4">
