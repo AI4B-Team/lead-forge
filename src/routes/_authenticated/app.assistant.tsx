@@ -769,7 +769,7 @@ function Assistant() {
           >
             {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {ctaLabel}
           </Button>
-          <div className="text-center text-[11px] text-muted-foreground">
+          <div className="text-center text-[11px] text-muted-foreground pb-4">
             The Assistant Assembles. You Run. Nothing Sends Without You.
           </div>
         </>
@@ -845,7 +845,7 @@ function Assistant() {
   );
 
   const composerBox = (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm focus-within:border-primary">
+    <div className="rounded-2xl border border-border bg-card p-4 pb-3 shadow-sm focus-within:border-primary">
       <Textarea
         ref={composer}
         rows={started ? 2 : 4}
@@ -861,26 +861,15 @@ function Assistant() {
         className="resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
       />
       <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-          <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap font-medium text-foreground hover:text-primary">
-            <Paperclip className="h-3.5 w-3.5" /> Attach File
-            <input
-              type="file"
-              className="hidden"
-              accept=".csv,.xlsx"
-              onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
-            />
-          </label>
-        </div>
-        <div className="hidden flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground lg:flex">
-          <span className="flex items-center gap-1.5">
-            <CornerDownLeft className="h-3 w-3" /> Enter To Send · Shift + Enter For A New Line
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Badge variant="outline" className="text-[10px] uppercase">Beta</Badge>
-            AI May Make Mistakes. You Review Everything Before Anything Runs.
-          </span>
-        </div>
+        <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-[11px] font-medium text-foreground hover:text-primary">
+          <Paperclip className="h-3.5 w-3.5" /> Attach File
+          <input
+            type="file"
+            className="hidden"
+            accept=".csv,.xlsx"
+            onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
+          />
+        </label>
         <Button
           className="rounded-full px-5"
           disabled={busy || (!input.trim() && !selectedTemplate && !upload)}
@@ -1120,7 +1109,16 @@ function Assistant() {
                   </div>
                 )}
 
-                <div className="mt-4 shrink-0">{composerBox}</div>
+                <div className="mt-3 shrink-0">{composerBox}</div>
+                <div className="mt-2 shrink-0 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <CornerDownLeft className="h-3 w-3" /> Enter To Send · Shift + Enter For A New Line
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="text-[10px] uppercase">Beta</Badge>
+                    AI May Make Mistakes. You Review Everything Before Anything Runs.
+                  </span>
+                </div>
 
                 {started && (
                   <div className="mt-4 shrink-0 lg:hidden">
