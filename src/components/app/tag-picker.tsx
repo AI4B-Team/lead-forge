@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -6,18 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pipette } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { listTags, createTag } from "@/lib/tags.functions";
-
-const SWATCHES = [
-  "#2563eb", "#3b82f6", "#0891b2", "#06b6d4", "#14b8a6", "#10b981",
-  "#16a34a", "#65a30d", "#eab308", "#f59e0b", "#f97316", "#dc2626",
-  "#e11d48", "#ec4899", "#a855f7", "#7c3aed", "#6366f1", "#64748b",
-];
-
-const CUSTOM_KEY = "lf-custom-tag-colors";
-const isHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
+import { TagColorPicker } from "@/components/app/tag-color-picker";
+import { TAG_SWATCHES } from "@/components/app/tag-badge";
 
 /** Tag dropdown with modal creation when the workspace has none to pick from. */
 export function TagPicker({
@@ -33,30 +26,9 @@ export function TagPicker({
   const fetchTags = useServerFn(listTags);
   const addTag = useServerFn(createTag);
   const [name, setName] = useState("");
-  const [color, setColor] = useState(SWATCHES[0]);
+  const [color, setColor] = useState(TAG_SWATCHES[0]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [custom, setCustom] = useState<string[]>([]);
-  const [customDraft, setCustomDraft] = useState("#");
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(CUSTOM_KEY);
-      if (raw) setCustom((JSON.parse(raw) as string[]).filter(isHex).slice(0, 24));
-    } catch { /* ignore */ }
-  }, []);
-
-  const addCustom = (hex: string) => {
-    const v = hex.startsWith("#") ? hex.toLowerCase() : `#${hex.toLowerCase()}`;
-    if (!isHex(v)) return toast.error("Enter A Hex Color Like #1F2937");
-    setColor(v);
-    if (!SWATCHES.includes(v) && !custom.includes(v)) {
-      const next = [v, ...custom].slice(0, 24);
-      setCustom(next);
-      try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(next)); } catch { /* ignore */ }
-    }
-    setCustomDraft("#");
-  };
 
   const { data } = useQuery({
     queryKey: ["tags", workspaceId],
