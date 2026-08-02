@@ -42,6 +42,16 @@ export const jobSpecSchema = z.object({
   channel: z.enum(["sms", "email", "direct_mail"]).nullable().default(null),
   /** Free-text filter a template's schema exposes (followers, listing status). */
   filters: z.string().max(200).nullable().default(null),
+  /**
+   * Why an uploaded file is here: "import" runs it as leads, "enrich" is the
+   * same pipeline framed as gap-filling. Null for scraped sources.
+   */
+  uploadIntent: z.enum(["import", "enrich"]).nullable().default(null),
+  /** Parameter file: the scrape fans out once per value instead of using it as leads. */
+  scrapeTargets: z.array(z.string().max(120)).max(500).default([]),
+  scrapeTargetKind: z.enum(["keywords", "areas", "urls"]).nullable().default(null),
+  /** Workspace suppression file applied to this run (informational). */
+  suppressionFile: z.string().max(160).nullable().default(null),
 });
 
 export type JobSpec = z.infer<typeof jobSpecSchema>;
