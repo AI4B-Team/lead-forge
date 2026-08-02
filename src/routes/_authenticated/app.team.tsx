@@ -124,8 +124,8 @@ function TeamPage() {
         </TabsList>
 
         <TabsContent value="members">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-display flex items-center gap-2">
@@ -133,35 +133,41 @@ function TeamPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-[1fr_180px_auto] gap-3 items-end">
-            <div>
-              <Label htmlFor="invite-email">Email</Label>
-              <Input
-                id="invite-email"
-                type="email"
-                placeholder="teammate@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1"
-              />
+          <div className="grid gap-2">
+            <div className="grid md:grid-cols-[1fr_180px_auto] gap-3 items-end">
+              <div>
+                <Label htmlFor="invite-email">Email</Label>
+                <Input
+                  id="invite-email"
+                  type="email"
+                  placeholder="teammate@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="invite-role">Role</Label>
+                <Select value={role} onValueChange={(v) => setRole(v as WorkspaceRole)}>
+                  <SelectTrigger id="invite-role" className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {WORKSPACE_ROLES.filter((r) => r !== "owner").map((r) => (
+                      <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button className="rounded-full" onClick={submitInvite} disabled={busy || !email}>
+                {busy ? "Sending..." : "Send Invite"}
+              </Button>
             </div>
-            <div>
-              <Label>Role</Label>
-              <Select value={role} onValueChange={(v) => setRole(v as WorkspaceRole)}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {WORKSPACE_ROLES.filter((r) => r !== "owner").map((r) => (
-                    <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="mt-1 text-xs text-muted-foreground">{ROLE_BLURB[role]}</p>
+            <div className="grid md:grid-cols-[1fr_180px_auto] gap-3">
+              <div />
+              <p className="text-xs text-muted-foreground">{ROLE_BLURB[role]}</p>
+              <div />
             </div>
-            <Button className="rounded-full" onClick={submitInvite} disabled={busy || !email}>
-              {busy ? "Sending..." : "Send Invite"}
-            </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">
+          <p className="text-xs text-muted-foreground mt-4">
             An invite link will be generated and copied to your clipboard. Share it with your teammate.
           </p>
         </CardContent>
