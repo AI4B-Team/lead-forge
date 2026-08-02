@@ -316,7 +316,7 @@ function Jobs() {
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search Lists By Name, County, Or Niche…"
+              placeholder="Search By Name, Source, Niche, Or Location…"
               className="h-11 pl-9 text-base"
             />
           </div>
@@ -327,9 +327,16 @@ function Jobs() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sources</SelectItem>
-                <SelectItem value="business">Business Search</SelectItem>
-                <SelectItem value="records">Public Records</SelectItem>
-                <SelectItem value="upload">Upload</SelectItem>
+                {sourceOptions.map((g) => (
+                  <SelectGroup key={g.group}>
+                    <SelectLabel>{g.group}</SelectLabel>
+                    {g.items.map((it) => (
+                      <SelectItem key={it.key} value={it.key}>
+                        {it.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
