@@ -642,15 +642,20 @@ export function BlockedAttemptsLog({ workspaceId }: { workspaceId: string | null
               <SelectItem value="365">Last 12 Months</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 rounded-full"
-            onClick={exportLog}
-            disabled={rows.length === 0}
-          >
-            <Download className="mr-1 h-3.5 w-3.5" /> Export
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-full"
+                onClick={exportLog}
+                disabled={rows.length === 0}
+              >
+                <Download className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export</TooltipContent>
+          </Tooltip>
         </div>
       </CardHeader>
       <CardContent className="p-0">
