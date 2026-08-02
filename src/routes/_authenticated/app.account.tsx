@@ -9,7 +9,6 @@ import {
   MonitorSmartphone,
   History,
   Terminal,
-  Bell,
   Mail,
 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
