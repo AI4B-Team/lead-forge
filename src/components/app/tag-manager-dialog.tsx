@@ -1,16 +1,98 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Tags, Tag as TagIcon } from "lucide-react";
+import { Trash2, Tags, Tag as TagIcon, MoreHorizontal, Pencil, Palette } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { listTags, createTag, updateTag, deleteTag } from "@/lib/tags.functions";
-import { TAG_COLORS, TagBadge, nextTagColor } from "@/components/app/tag-badge";
+import { TagBadge, nextTagColor } from "@/components/app/tag-badge";
+import { TagColorPicker } from "@/components/app/tag-color-picker";
 
 /** Optional glyphs make tags scannable at a glance; stored as a name prefix. */
 const TAG_EMOJI = ["🔥", "⭐", "📞", "💰", "🏠", "🧊"];
+
+/** A single tag row: color dot opens the picker, the menu handles the rest. */
+function TagRow({
+  tag,
+  busy,
+  onColor,
+  onRename,
+  onDelete,
+}: {
+  tag: { id: string; name: string; color: string };
+  busy: boolean;
+  onColor: (color: string) => void;
+  onRename: (name: string) => void;
+  onDelete: () => void;
+}) {
+  const [colorOpen, setColorOpen] = useState(false);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="flex items-center gap-2">
+      <Popover open={colorOpen} onOpenChange={setColorOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            aria-label={`Change Color For ${tag.name}`}
+            title="Change Color"
+            className="h-7 w-7 shrink-0 rounded-full ring-1 ring-inset ring-black/10 transition-transform hover:scale-110"
+            style={{ backgroundColor: tag.color }}
+          />
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-auto">
+          <p className="mb-2 text-sm font-semibold">Change Color</p>
+          <TagColorPicker
+            value={tag.color}
+            size="sm"
+            onChange={(c) => {
+              onColor(c);
+              setColorOpen(false);
+            }}
+          />
+        </PopoverContent>
+      </Popover>
+
+      <Input
+        ref={nameRef}
+        defaultValue={tag.name}
+        className="h-8 flex-1"
+        onBlur={(e) => {
+          const v = e.target.value.trim();
+          if (v && v !== tag.name) onRename(v);
+        }}
+      />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Options For ${tag.name}`} disabled={busy}>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setTimeout(() => nameRef.current?.select(), 0)}>
+            <Pencil className="mr-2 h-3.5 w-3.5" /> Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTimeout(() => setColorOpen(true), 0)}>
+            <Palette className="mr-2 h-3.5 w-3.5" /> Change Color
+          </DropdownMenuItem>
+          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={onDelete}>
+            <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
 
 /** Workspace tag library — rename, recolor, delete, or add tags. */
 export function TagManagerDialog({ workspaceId }: { workspaceId: string }) {
@@ -79,32 +161,14 @@ export function TagManagerDialog({ workspaceId }: { workspaceId: string }) {
 
         <div className="space-y-2 max-h-56 overflow-auto">
           {tags.map((t) => (
-            <div key={t.id} className="flex items-center gap-2">
-              <input
-                type="color"
-                value={t.color}
-                aria-label={`Color For ${t.name}`}
-                onChange={(e) => run(() => edit({ data: { id: t.id, color: e.target.value } }))}
-                className="h-8 w-8 rounded-full border border-border bg-transparent p-0.5 cursor-pointer"
-              />
-              <Input
-                defaultValue={t.name}
-                className="h-8 flex-1"
-                onBlur={(e) => {
-                  const v = e.target.value.trim();
-                  if (v && v !== t.name) run(() => edit({ data: { id: t.id, name: v } }), "Tag Renamed");
-                }}
-              />
-              <Button
-                size="icon"
-                variant="ghost"
-                aria-label={`Delete ${t.name}`}
-                disabled={busy}
-                onClick={() => run(() => remove({ data: { id: t.id } }), "Tag Deleted")}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
+            <TagRow
+              key={t.id}
+              tag={t}
+              busy={busy}
+              onColor={(color) => run(() => edit({ data: { id: t.id, color } }), "Color Updated")}
+              onRename={(name) => run(() => edit({ data: { id: t.id, name } }), "Tag Renamed")}
+              onDelete={() => run(() => remove({ data: { id: t.id } }), "Tag Deleted")}
+            />
           ))}
           {!tags.length && (
             <p className="text-sm text-muted-foreground">
@@ -129,22 +193,8 @@ export function TagManagerDialog({ workspaceId }: { workspaceId: string }) {
 
           <div className="space-y-1.5">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Color</span>
-            <div className="flex items-center gap-3">
-              {TAG_COLORS.map((c) => (
-                <button
-                  key={c.value}
-                  type="button"
-                  title={c.label}
-                  aria-label={c.label}
-                  aria-pressed={activeColor === c.value}
-                  onClick={() => setNewColor(c.value)}
-                  className={`h-8 w-8 rounded-full transition-transform hover:scale-110 ${
-                    activeColor === c.value ? "ring-2 ring-offset-2 ring-offset-background ring-foreground/70" : ""
-                  }`}
-                  style={{ backgroundColor: c.value }}
-                />
-              ))}
-            </div>
+            <TagColorPicker value={activeColor} onChange={setNewColor} />
+            <p className="text-xs text-muted-foreground">You Can Change This Later From The Tag Itself.</p>
           </div>
 
           <div className="space-y-1.5">
