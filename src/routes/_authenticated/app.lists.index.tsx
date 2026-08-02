@@ -7,7 +7,13 @@ import { StatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Plus,
   Search,
@@ -62,7 +68,11 @@ function formatCreated(iso: string) {
   const day = (a: Date) => new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime();
   const diffDays = Math.round((day(now) - day(d)) / 86400000);
   const date =
-    diffDays === 0 ? "Today" : diffDays === 1 ? "Yesterday" : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    diffDays === 0
+      ? "Today"
+      : diffDays === 1
+        ? "Yesterday"
+        : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   return { date, time };
 }
@@ -91,7 +101,11 @@ function Jobs() {
     // Stuck-job watchdog (§23): running with no progress events for 2h.
     return jobs.map((j) => ({
       ...j,
-      stalled: isStalled({ status: j.status, lastEventAt: j.last_event_at, createdAt: j.created_at }),
+      stalled: isStalled({
+        status: j.status,
+        lastEventAt: j.last_event_at,
+        createdAt: j.created_at,
+      }),
     }));
   }, [data]);
 
@@ -162,7 +176,8 @@ function Jobs() {
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
       const recurring = ordered.some((r) => r.schedule && r.schedule !== "one_time");
-      if (recurring && ordered.length > 1) out.push({ latest: ordered[0]!, prior: ordered.slice(1) });
+      if (recurring && ordered.length > 1)
+        out.push({ latest: ordered[0]!, prior: ordered.slice(1) });
       else for (const r of ordered) out.push({ latest: r, prior: [] });
     }
     return out.sort(
@@ -178,23 +193,44 @@ function Jobs() {
         descriptionClassName="whitespace-nowrap max-w-none"
         actions={
           <Button asChild className="rounded-full">
-            <Link to="/app/assistant"><Plus className="mr-1 h-4 w-4" /> New List</Link>
+            <Link to="/app/assistant">
+              <Plus className="mr-1 h-4 w-4" /> New List
+            </Link>
           </Button>
         }
       />
 
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-6">
         <StatTile label="Total Lists" value={summary.total.toLocaleString()} icon={Layers} />
-        <StatTile label={ROWS_PROCESSED_LABEL} value={summary.rowsProcessed.toLocaleString()} icon={Users} />
-        <StatTile label="Clean Rate" value={`${summary.cleanRate}%`} icon={ShieldCheck} hint="Clean Of All Scrubbed" />
-        <StatTile label="Running" value={summary.running.toLocaleString()} icon={Activity} hint="Actively Progressing" />
+        <StatTile
+          label={ROWS_PROCESSED_LABEL}
+          value={summary.rowsProcessed.toLocaleString()}
+          icon={Users}
+        />
+        <StatTile
+          label="Clean Rate"
+          value={`${summary.cleanRate}%`}
+          icon={ShieldCheck}
+          hint="Clean Of All Scrubbed"
+        />
+        <StatTile
+          label="Running"
+          value={summary.running.toLocaleString()}
+          icon={Activity}
+          hint="Actively Progressing"
+        />
         <StatTile
           label="Needs Attention"
           value={summary.attention.toLocaleString()}
           icon={AlertTriangle}
           hint={`No Progress For ${STALL_HOURS}h+`}
         />
-        <StatTile label="Scheduled" value={summary.scheduled.toLocaleString()} icon={CalendarClock} hint="Recurring Rescans" />
+        <StatTile
+          label="Scheduled"
+          value={summary.scheduled.toLocaleString()}
+          icon={CalendarClock}
+          hint="Recurring Rescans"
+        />
       </div>
 
       <Card className="mb-4">
@@ -209,48 +245,54 @@ function Jobs() {
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-          <Select value={source} onValueChange={setSource}>
-            <SelectTrigger className="h-11 w-[170px]"><SelectValue placeholder="Source" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Sources</SelectItem>
-              <SelectItem value="business">Business Search</SelectItem>
-              <SelectItem value="records">Public Records</SelectItem>
-              <SelectItem value="upload">Upload</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-11 w-[170px]"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="queued">Queued</SelectItem>
-              <SelectItem value="scraping">Scraping</SelectItem>
-              <SelectItem value="scrubbing">Scrubbing</SelectItem>
-              <SelectItem value="ready">Ready</SelectItem>
-              <SelectItem value="attention">Needs Attention</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={range} onValueChange={setRange}>
-            <SelectTrigger className="h-11 w-[150px]"><SelectValue placeholder="Date" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Any Date</SelectItem>
-              <SelectItem value="1">Last 24 Hours</SelectItem>
-              <SelectItem value="7">Last 7 Days</SelectItem>
-              <SelectItem value="30">Last 30 Days</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            variant="outline"
-            className="h-11 rounded-full"
-            onClick={() => {
-              setQ("");
-              setSource("all");
-              setStatus("all");
-              setRange("all");
-            }}
-          >
-            <SlidersHorizontal className="mr-1 h-4 w-4" /> Reset
-          </Button>
+            <Select value={source} onValueChange={setSource}>
+              <SelectTrigger className="h-11 w-[170px]">
+                <SelectValue placeholder="Source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                <SelectItem value="business">Business Search</SelectItem>
+                <SelectItem value="records">Public Records</SelectItem>
+                <SelectItem value="upload">Upload</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="h-11 w-[170px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="queued">Queued</SelectItem>
+                <SelectItem value="scraping">Scraping</SelectItem>
+                <SelectItem value="scrubbing">Scrubbing</SelectItem>
+                <SelectItem value="ready">Ready</SelectItem>
+                <SelectItem value="attention">Needs Attention</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={range} onValueChange={setRange}>
+              <SelectTrigger className="h-11 w-[150px]">
+                <SelectValue placeholder="Date" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any Date</SelectItem>
+                <SelectItem value="1">Last 24 Hours</SelectItem>
+                <SelectItem value="7">Last 7 Days</SelectItem>
+                <SelectItem value="30">Last 30 Days</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              className="h-11 rounded-full"
+              onClick={() => {
+                setQ("");
+                setSource("all");
+                setStatus("all");
+                setRange("all");
+              }}
+            >
+              <SlidersHorizontal className="mr-1 h-4 w-4" /> Reset
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -271,131 +313,162 @@ function Jobs() {
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading Lists…</td></tr>
+                <tr>
+                  <td colSpan={7} className="p-6 text-center text-muted-foreground">
+                    Loading Lists…
+                  </td>
+                </tr>
               )}
               {!isLoading && rows.length === 0 && (
-                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">
-                  No Lists Match. <Link to="/app/assistant" className="text-primary underline">Start A New List</Link>.
-                </td></tr>
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    No Lists Match.{" "}
+                    <Link to="/app/assistant" className="text-primary underline">
+                      Start A New List
+                    </Link>
+                    .
+                  </td>
+                </tr>
               )}
               {entries.flatMap(({ latest, prior }) => {
                 const open = expanded.has(latest.group_key);
                 const shown = open ? [latest, ...prior] : [latest];
                 return shown.map((j, idx) => {
-                const isChild = idx > 0;
-                const isParent = prior.length > 0 && idx === 0;
-                const src = SOURCE_META[j.source_type] ?? { label: j.source_type, icon: Layers };
-                const created = formatCreated(j.created_at);
-                return (
-                <tr
-                  key={j.id}
-                  onClick={() => navigate({ to: "/app/lists/$listId", params: { listId: j.id } })}
-                  className={`group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-muted ${
-                    isChild ? "bg-surface-muted/40" : ""
-                  }`}
-                >
-                  <td className={`p-4 ${isChild ? "pl-10" : ""}`}>
-                    <div className="flex items-center gap-2">
-                      {isParent && (
-                        <button
-                          type="button"
-                          aria-label={open ? "Hide Prior Runs" : "Show Prior Runs"}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleGroup(latest.group_key);
-                          }}
-                          className="grid h-5 w-5 shrink-0 place-items-center rounded border border-border text-muted-foreground hover:text-foreground"
-                        >
-                          <ChevronRight className={`h-3 w-3 transition-transform ${open ? "rotate-90" : ""}`} />
-                        </button>
-                      )}
-                      <span className="whitespace-nowrap font-medium text-foreground group-hover:text-primary">
-                        {isChild ? `Run #${j.run_index}` : listBaseName(j.name)}
-                      </span>
-                      {isParent && (
-                        <span className="whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                          {prior.length + 1} Runs
+                  const isChild = idx > 0;
+                  const isParent = prior.length > 0 && idx === 0;
+                  const src = SOURCE_META[j.source_type] ?? { label: j.source_type, icon: Layers };
+                  const created = formatCreated(j.created_at);
+                  return (
+                    <tr
+                      key={j.id}
+                      onClick={() =>
+                        navigate({ to: "/app/lists/$listId", params: { listId: j.id } })
+                      }
+                      className={`group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-muted ${
+                        isChild ? "bg-surface-muted/40" : ""
+                      }`}
+                    >
+                      <td className={`p-4 ${isChild ? "pl-10" : ""}`}>
+                        <div className="flex items-center gap-2">
+                          {isParent && (
+                            <button
+                              type="button"
+                              aria-label={open ? "Hide Prior Runs" : "Show Prior Runs"}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleGroup(latest.group_key);
+                              }}
+                              className="grid h-5 w-5 shrink-0 place-items-center rounded border border-border text-muted-foreground hover:text-foreground"
+                            >
+                              <ChevronRight
+                                className={`h-3 w-3 transition-transform ${open ? "rotate-90" : ""}`}
+                              />
+                            </button>
+                          )}
+                          <span className="whitespace-nowrap font-medium text-foreground group-hover:text-primary">
+                            {isChild ? `Run #${j.run_index}` : listBaseName(j.name)}
+                          </span>
+                          {isParent && (
+                            <span className="whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                              {prior.length + 1} Runs
+                            </span>
+                          )}
+                          {j.cadence_badge && (
+                            <span className="whitespace-nowrap rounded-full border border-border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                              {j.cadence_badge}
+                            </span>
+                          )}
+                          {j.new_since_last_run > 0 && (
+                            <span className="whitespace-nowrap rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                              +{j.new_since_last_run.toLocaleString()} New
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-0.5 whitespace-nowrap text-xs text-muted-foreground">
+                          <span className="text-success">
+                            {j.counts.clean.toLocaleString()} Clean
+                          </span>
+                          {" · "}
+                          <span className="text-warn">{j.counts.dnc.toLocaleString()} DNC</span>
+                          {" · "}
+                          <span className="text-danger">
+                            {j.counts.litigator.toLocaleString()} Litigator
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className="inline-flex items-center gap-2 whitespace-nowrap text-muted-foreground">
+                          <src.icon className="h-4 w-4 shrink-0" /> {src.label}
                         </span>
-                      )}
-                      {j.cadence_badge && (
-                        <span className="whitespace-nowrap rounded-full border border-border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                          {j.cadence_badge}
-                        </span>
-                      )}
-                      {j.new_since_last_run > 0 && (
-                        <span className="whitespace-nowrap rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
-                          +{j.new_since_last_run.toLocaleString()} New
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-0.5 whitespace-nowrap text-xs text-muted-foreground">
-                      <span className="text-success">{j.counts.clean.toLocaleString()} Clean</span>
-                      {" · "}
-                      <span className="text-warn">{j.counts.dnc.toLocaleString()} DNC</span>
-                      {" · "}
-                      <span className="text-danger">{j.counts.litigator.toLocaleString()} Litigator</span>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span className="inline-flex items-center gap-2 whitespace-nowrap text-muted-foreground">
-                      <src.icon className="h-4 w-4 shrink-0" /> {src.label}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <JobStageFlow stages={buildPipelineStages(j)} />
-                  </td>
-                  <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                    <CadenceSelect
-                      value={j.schedule}
-                      nextRunAt={j.next_run_at}
-                      onChange={async (schedule) => {
-                        try {
-                          await saveSchedule({ data: { jobId: j.id, schedule } });
-                          toast.success(schedule === "one_time" ? "Rescanning Turned Off." : `Rescanning ${CADENCE_LABEL[schedule]}.`);
-                          qc.invalidateQueries({ queryKey: ["jobs-list", workspaceId] });
-                        } catch (e) {
-                          toast.error(e instanceof Error ? e.message : "Could Not Save Cadence.");
-                        }
-                      }}
-                    />
-                  </td>
-                  <td className="p-4">
-                    {j.stalled ? (
-                      <div className="flex flex-col items-start gap-1.5" onClick={(e) => e.stopPropagation()}>
-                        <StatusBadge status="attention" />
-                        <span className="max-w-[220px] text-[11px] leading-snug text-muted-foreground">
-                          {stallReason(j.status)}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 rounded-full px-2 text-[11px]"
-                          onClick={async () => {
+                      </td>
+                      <td className="p-4">
+                        <JobStageFlow stages={buildPipelineStages(j)} />
+                      </td>
+                      <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                        <CadenceSelect
+                          value={j.schedule}
+                          nextRunAt={j.next_run_at}
+                          onChange={async (schedule) => {
                             try {
-                              await retryJob({ data: { jobId: j.id } });
-                              toast.success("Retrying From The Last Completed Stage.");
+                              await saveSchedule({ data: { jobId: j.id, schedule } });
+                              toast.success(
+                                schedule === "one_time"
+                                  ? "Rescanning Turned Off."
+                                  : `Rescanning ${CADENCE_LABEL[schedule]}.`,
+                              );
                               qc.invalidateQueries({ queryKey: ["jobs-list", workspaceId] });
                             } catch (e) {
-                              toast.error(e instanceof Error ? e.message : "Could Not Retry This Run.");
+                              toast.error(
+                                e instanceof Error ? e.message : "Could Not Save Cadence.",
+                              );
                             }
                           }}
-                        >
-                          <RotateCw className="mr-1 h-3 w-3" /> Retry
-                        </Button>
-                      </div>
-                    ) : (
-                      <StatusBadge status={(j.status ?? "queued") as JobStatus} />
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <div className="whitespace-nowrap text-foreground">{created.date}</div>
-                    <div className="whitespace-nowrap text-xs text-muted-foreground">{created.time}</div>
-                  </td>
-                  <td className="p-4">
-                    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                  </td>
-                </tr>
-                );
+                        />
+                      </td>
+                      <td className="p-4">
+                        {j.stalled ? (
+                          <div
+                            className="flex flex-col items-start gap-1.5"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <StatusBadge status="attention" />
+                            <span className="max-w-[220px] text-[11px] leading-snug text-muted-foreground">
+                              {stallReason(j.status)}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-full px-2 text-[11px]"
+                              onClick={async () => {
+                                try {
+                                  await retryJob({ data: { jobId: j.id } });
+                                  toast.success("Retrying From The Last Completed Stage.");
+                                  qc.invalidateQueries({ queryKey: ["jobs-list", workspaceId] });
+                                } catch (e) {
+                                  toast.error(
+                                    e instanceof Error ? e.message : "Could Not Retry This Run.",
+                                  );
+                                }
+                              }}
+                            >
+                              <RotateCw className="mr-1 h-3 w-3" /> Retry
+                            </Button>
+                          </div>
+                        ) : (
+                          <StatusBadge status={(j.status ?? "queued") as JobStatus} />
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="whitespace-nowrap text-foreground">{created.date}</div>
+                        <div className="whitespace-nowrap text-xs text-muted-foreground">
+                          {created.time}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                      </td>
+                    </tr>
+                  );
                 });
               })}
             </tbody>
@@ -420,7 +493,10 @@ function CadenceSelect({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <Select value={value} onValueChange={(v) => onChange(v as "one_time" | "12h" | "daily" | "weekly")}>
+      <Select
+        value={value}
+        onValueChange={(v) => onChange(v as "one_time" | "12h" | "daily" | "weekly")}
+      >
         <SelectTrigger className="h-8 w-[150px] text-xs">
           <SelectValue />
         </SelectTrigger>
