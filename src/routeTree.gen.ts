@@ -53,6 +53,7 @@ import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppRegistrationRouteImport } from './routes/_authenticated/app.registration'
 import { Route as AuthenticatedAppNumbersRouteImport } from './routes/_authenticated/app.numbers'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
+import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
 import { Route as AuthenticatedAppComplianceRouteImport } from './routes/_authenticated/app.compliance'
@@ -306,6 +307,12 @@ const AuthenticatedAppLeadsRoute = AuthenticatedAppLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppIntegrationsRoute =
+  AuthenticatedAppIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppInboxRoute = AuthenticatedAppInboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
@@ -519,6 +526,7 @@ export interface FileRoutesByFullPath {
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
+  '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
@@ -593,6 +601,7 @@ export interface FileRoutesByTo {
   '/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
+  '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
@@ -670,6 +679,7 @@ export interface FileRoutesById {
   '/_authenticated/app/compliance': typeof AuthenticatedAppComplianceRoute
   '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
+  '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
   '/_authenticated/app/numbers': typeof AuthenticatedAppNumbersRoute
   '/_authenticated/app/registration': typeof AuthenticatedAppRegistrationRoute
@@ -747,6 +757,7 @@ export interface FileRouteTypes {
     | '/app/compliance'
     | '/app/dashboard'
     | '/app/inbox'
+    | '/app/integrations'
     | '/app/leads'
     | '/app/numbers'
     | '/app/registration'
@@ -821,6 +832,7 @@ export interface FileRouteTypes {
     | '/app/compliance'
     | '/app/dashboard'
     | '/app/inbox'
+    | '/app/integrations'
     | '/app/leads'
     | '/app/numbers'
     | '/app/registration'
@@ -897,6 +909,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/compliance'
     | '/_authenticated/app/dashboard'
     | '/_authenticated/app/inbox'
+    | '/_authenticated/app/integrations'
     | '/_authenticated/app/leads'
     | '/_authenticated/app/numbers'
     | '/_authenticated/app/registration'
@@ -1284,6 +1297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppLeadsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/integrations': {
+      id: '/_authenticated/app/integrations'
+      path: '/integrations'
+      fullPath: '/app/integrations'
+      preLoaderRoute: typeof AuthenticatedAppIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/inbox': {
       id: '/_authenticated/app/inbox'
       path: '/inbox'
@@ -1507,6 +1527,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppComplianceRoute: typeof AuthenticatedAppComplianceRoute
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
+  AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
   AuthenticatedAppNumbersRoute: typeof AuthenticatedAppNumbersRoute
   AuthenticatedAppRegistrationRoute: typeof AuthenticatedAppRegistrationRoute
@@ -1538,6 +1559,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppComplianceRoute: AuthenticatedAppComplianceRoute,
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
+  AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
   AuthenticatedAppNumbersRoute: AuthenticatedAppNumbersRoute,
   AuthenticatedAppRegistrationRoute: AuthenticatedAppRegistrationRoute,
@@ -1644,3 +1666,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
