@@ -16,7 +16,9 @@ import {
   KnowledgeHealth,
   KnowledgeOutcome,
   SampleQuestions,
-  TrainableSources,
+} from "@/components/app/brand-knowledge";
+import { KnowledgeSourceCards } from "@/components/app/knowledge-cards";
+import {
   bucketKnowledge,
   knowledgeScore,
 } from "@/components/app/brand-knowledge";
