@@ -9,23 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { StatTile } from "@/components/app/stat-tile";
-import { BotTrainer } from "@/components/app/bot-trainer";
-import {
-  KnowledgeFlow,
-  KnowledgeHealth,
-  KnowledgeOutcome,
-  SampleQuestions,
-  bucketKnowledge,
-  knowledgeScore,
-} from "@/components/app/brand-knowledge";
-import { KnowledgeSourceCards } from "@/components/app/knowledge-cards";
+import { SampleQuestions, knowledgeScore } from "@/components/app/brand-knowledge";
+import { KnowledgeSourceList } from "@/components/app/knowledge-cards";
+import { AgentComposer, RecentTraining } from "@/components/app/agent-training";
+import { KNOWLEDGE_CARDS } from "@/lib/knowledge-cards.shared";
 import { AgentQuestionTester } from "@/components/app/agent-questions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { useWorkspaceAgent } from "@/hooks/use-agent";
 import { createBrand } from "@/lib/brands.functions";
 import { listBotKnowledge } from "@/lib/bot-training.functions";
-import { Bot, Brain, CheckCircle2, FileStack, FileText, Globe, MessageSquareQuote, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
+import { Bot, CheckCircle2, Globe, MessageSquareQuote, RefreshCw, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/agent")({
   head: () => ({
