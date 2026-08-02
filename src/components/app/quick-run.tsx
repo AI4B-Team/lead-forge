@@ -25,12 +25,18 @@ export function QuickRun() {
   const run = () => {
     if (type === "upload") return void navigate({ to: "/app/assistant", search: { source: "upload" } });
     if (type === "records") return void navigate({ to: "/app/assistant", search: { source: "records" } });
+    // A typed location needs interpreting, so hand it to the assistant as a prompt.
+    if (location.trim()) {
+      return void navigate({
+        to: "/app/assistant",
+        search: { prompt: `${niche.trim() || "Businesses"} in ${location.trim()}` },
+      });
+    }
     void navigate({
       to: "/app/assistant",
       search: {
         source: "business",
         ...(niche.trim() ? { niche: niche.trim() } : {}),
-        ...(location.trim() ? { location: location.trim() } : {}),
       },
     });
   };
