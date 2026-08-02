@@ -23,7 +23,7 @@ import {
 import { MarketingNav, ComplianceStrip, MarketingFooter } from "@/components/marketing/marketing-layout";
 import { PromptHero } from "@/components/marketing/prompt-hero";
 import { TemplateCard } from "@/components/marketing/template-card";
-import { TEMPLATES } from "@/lib/templates";
+import { TEMPLATES, getTemplate, type Template } from "@/lib/templates";
 import { IndustryPreview } from "@/components/marketing/industry-preview";
 
 export const Route = createFileRoute("/")({
@@ -35,17 +35,31 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "One platform replaces your scraper, skip tracer, DNC service, and texting tool." },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { prompt?: string } =>
-    typeof search.prompt === "string" ? { prompt: search.prompt } : {},
+  validateSearch: (search: Record<string, unknown>): { prompt?: string; template?: string } => ({
+    ...(typeof search.prompt === "string" ? { prompt: search.prompt } : {}),
+    ...(typeof search.template === "string" ? { template: search.template } : {}),
+  }),
   component: Home,
 });
 
 function Home() {
+  const search = Route.useSearch();
+  // Template selection is context, never composer text: the hero only swaps its
+  // placeholder hint and carries the id through the auth handoff.
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
+    () => (search.template ? getTemplate(search.template) ?? null : null),
+  );
+  const toggleTemplate = (t: Template) => {
+    setSelectedTemplate((cur) => (cur?.id === t.id ? null : t));
+    document
+      .getElementById("prompt-hero-box")
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <MarketingNav />
-      <PromptHero />
-      <TemplateTeaser />
+      <PromptHero selectedTemplate={selectedTemplate} />
+      <TemplateTeaser selectedId={selectedTemplate?.id ?? null} onSelect={toggleTemplate} />
       <ConsolidationBand />
       <HowItWorksSection />
       <FeaturesSection />
@@ -57,7 +71,13 @@ function Home() {
   );
 }
 
-function TemplateTeaser() {
+function TemplateTeaser({
+  selectedId,
+  onSelect,
+}: {
+  selectedId: string | null;
+  onSelect: (t: Template) => void;
+}) {
   const [offset, setOffset] = useState(0);
   const displayTemplates = useMemo(() => TEMPLATES.filter((t) => t.category !== "upload"), []);
   const [order, setOrder] = useState(() => displayTemplates.map((_, i) => i));
@@ -121,7 +141,13 @@ function TemplateTeaser() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {visible.map((t, i) => (
-            <TemplateCard key={`${t.id}-${i}`} template={t} variant="prompt" />
+            <TemplateCard
+              key={`${t.id}-${i}`}
+              template={t}
+              variant="prompt"
+              selected={selectedId === t.id}
+              onSelect={onSelect}
+            />
           ))}
         </div>
       </div>
