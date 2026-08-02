@@ -5,15 +5,16 @@ import { useState } from "react";
 import { Loader2, ShieldAlert, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
-import { SettingsShell } from "@/components/app/settings-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AdminGate, useSuperAdminGate } from "@/components/app/admin-shared";
+import {
+  ,
+} from "@/components/app/admin-shared";
 import { listSuperAdmins, revokeSuperAdmin } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/_authenticated/app/admin/access")({
+export const Route = createFileRoute("/_authenticated/platform/access")({
   head: () => ({
     meta: [
       { title: "Admin Access — LeadTrace Platform" },
@@ -25,7 +26,6 @@ export const Route = createFileRoute("/_authenticated/app/admin/access")({
 
 function AdminAccessPage() {
   const qc = useQueryClient();
-  const gate = useSuperAdminGate();
   const fetchAdmins = useServerFn(listSuperAdmins);
   const revoke = useServerFn(revokeSuperAdmin);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -33,7 +33,6 @@ function AdminAccessPage() {
   const adminsQ = useQuery({
     queryKey: ["admin-super-admins"],
     queryFn: () => fetchAdmins(),
-    enabled: gate.data?.isSuperAdmin === true,
   });
 
   const revokeAdmin = async (userId: string) => {
@@ -51,8 +50,6 @@ function AdminAccessPage() {
 
   return (
     <div className="mx-auto max-w-[1400px]">
-      <SettingsShell current="admin-access">
-        <AdminGate gate={gate}>
           <PageHeader
             title="Admin Access"
             description="Who Can Comp Accounts, Grant Credits, And See Every Workspace."
@@ -111,8 +108,6 @@ function AdminAccessPage() {
               </Table>
             </CardContent>
           </Card>
-        </AdminGate>
-      </SettingsShell>
     </div>
   );
 }

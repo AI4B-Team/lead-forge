@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { Gauge, Gift, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
-import { SettingsShell } from "@/components/app/settings-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,12 +14,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-  AdminGate, PLANS, planTone, useSuperAdminGate,
-  type CreditKind, type Plan, type WsRow,
+  PLANS,
+  planTone,
+  type CreditKind,
+  type Plan,
+  type WsRow,
 } from "@/components/app/admin-shared";
 import { grantCredits, listAllWorkspaces, setBillingPlan, setMonthlySmsCap } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/_authenticated/app/admin/workspaces")({
+export const Route = createFileRoute("/_authenticated/platform/workspaces")({
   head: () => ({
     meta: [
       { title: "Workspaces — LeadTrace Platform" },
@@ -32,7 +34,6 @@ export const Route = createFileRoute("/_authenticated/app/admin/workspaces")({
 
 function WorkspaceManagement() {
   const qc = useQueryClient();
-  const gate = useSuperAdminGate();
   const fetchAll = useServerFn(listAllWorkspaces);
   const changePlan = useServerFn(setBillingPlan);
   const setCap = useServerFn(setMonthlySmsCap);
@@ -41,7 +42,6 @@ function WorkspaceManagement() {
   const wsQ = useQuery({
     queryKey: ["admin-workspaces"],
     queryFn: () => fetchAll(),
-    enabled: gate.data?.isSuperAdmin === true,
   });
 
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -148,8 +148,6 @@ function WorkspaceManagement() {
 
   return (
     <div className="mx-auto max-w-[1400px]">
-      <SettingsShell current="admin-workspaces">
-        <AdminGate gate={gate}>
           <PageHeader
             title="Workspaces"
             description="Every Customer Workspace. Change Plans, Cap Monthly Usage, Grant Credits."
@@ -330,8 +328,6 @@ function WorkspaceManagement() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </AdminGate>
-      </SettingsShell>
     </div>
   );
 }

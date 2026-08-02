@@ -6,15 +6,18 @@ import {
   Activity, ArrowRight, Building2, MessageSquare, TrendingUp, Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
-import { SettingsShell } from "@/components/app/settings-shell";
 import { StatTile } from "@/components/app/stat-tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AdminGate, HealthRow, planTone, useSuperAdminGate, type WsRow } from "@/components/app/admin-shared";
+import {
+  HealthRow,
+  planTone,
+  type WsRow,
+} from "@/components/app/admin-shared";
 import { listAllWorkspaces } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/_authenticated/app/admin/")({
+export const Route = createFileRoute("/_authenticated/platform/")({
   head: () => ({
     meta: [
       { title: "Platform Dashboard — LeadTrace" },
@@ -25,12 +28,10 @@ export const Route = createFileRoute("/_authenticated/app/admin/")({
 });
 
 function PlatformDashboard() {
-  const gate = useSuperAdminGate();
   const fetchAll = useServerFn(listAllWorkspaces);
   const wsQ = useQuery({
     queryKey: ["admin-workspaces"],
     queryFn: () => fetchAll(),
-    enabled: gate.data?.isSuperAdmin === true,
   });
 
   const all = (wsQ.data?.workspaces ?? []) as WsRow[];
@@ -65,8 +66,6 @@ function PlatformDashboard() {
 
   return (
     <div className="mx-auto max-w-[1400px]">
-      <SettingsShell current="admin">
-        <AdminGate gate={gate}>
           <PageHeader
             title="Platform Dashboard"
             description="Is The Platform Healthy? Growth, Usage, And Billing At A Glance."
@@ -103,7 +102,7 @@ function PlatformDashboard() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base font-display">Usage Leaders</CardTitle>
                 <Button asChild size="sm" variant="ghost" className="rounded-full text-xs">
-                  <Link to="/app/admin/workspaces">
+                  <Link to="/platform/workspaces">
                     All Workspaces <ArrowRight className="ml-1 h-3 w-3" />
                   </Link>
                 </Button>
@@ -156,8 +155,6 @@ function PlatformDashboard() {
               </CardContent>
             </Card>
           </div>
-        </AdminGate>
-      </SettingsShell>
     </div>
   );
 }

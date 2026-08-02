@@ -44,6 +44,7 @@ import { Route as ToolsDncCheckerRouteImport } from './routes/tools.dnc-checker'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as LeadsSlugRouteImport } from './routes/leads.$slug'
 import { Route as AuthHubRouteImport } from './routes/auth.hub'
+import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppTemplatesRouteImport } from './routes/_authenticated/app.templates'
@@ -263,6 +264,11 @@ const AuthHubRoute = AuthHubRouteImport.update({
   id: '/hub',
   path: '/hub',
   getParentRoute: () => AuthRoute,
+} as any)
+const AuthenticatedPlatformRoute = AuthenticatedPlatformRouteImport.update({
+  id: '/platform',
+  path: '/platform',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
@@ -544,6 +550,7 @@ export interface FileRoutesByFullPath {
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/platform': typeof AuthenticatedPlatformRoute
   '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -624,6 +631,7 @@ export interface FileRoutesByTo {
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
+  '/platform': typeof AuthenticatedPlatformRoute
   '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -707,6 +715,7 @@ export interface FileRoutesById {
   '/start': typeof StartRoute
   '/tutorials': typeof TutorialsRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/platform': typeof AuthenticatedPlatformRoute
   '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -790,6 +799,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/tutorials'
     | '/app'
+    | '/platform'
     | '/auth/hub'
     | '/leads/$slug'
     | '/templates/$templateId'
@@ -870,6 +880,7 @@ export interface FileRouteTypes {
     | '/solar'
     | '/start'
     | '/tutorials'
+    | '/platform'
     | '/auth/hub'
     | '/leads/$slug'
     | '/templates/$templateId'
@@ -952,6 +963,7 @@ export interface FileRouteTypes {
     | '/start'
     | '/tutorials'
     | '/_authenticated/app'
+    | '/_authenticated/platform'
     | '/auth/hub'
     | '/leads/$slug'
     | '/templates/$templateId'
@@ -1299,6 +1311,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/hub'
       preLoaderRoute: typeof AuthHubRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_authenticated/platform': {
+      id: '/_authenticated/platform'
+      path: '/platform'
+      fullPath: '/platform'
+      preLoaderRoute: typeof AuthenticatedPlatformRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/app': {
       id: '/_authenticated/app'
@@ -1696,10 +1715,12 @@ const AuthenticatedAppRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
+  AuthenticatedPlatformRoute: typeof AuthenticatedPlatformRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
+  AuthenticatedPlatformRoute: AuthenticatedPlatformRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -1776,3 +1797,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

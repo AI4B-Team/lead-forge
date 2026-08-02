@@ -4,17 +4,18 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Layers, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
-import { SettingsShell } from "@/components/app/settings-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AdminGate, useSuperAdminGate } from "@/components/app/admin-shared";
+import {
+  ,
+} from "@/components/app/admin-shared";
 import { listSourceDemand, listSourceRequesters } from "@/lib/admin.functions";
 import { FREQUENCY_LABEL, LOGIN_LABEL } from "@/lib/source-request.shared";
 
-export const Route = createFileRoute("/_authenticated/app/admin/sources")({
+export const Route = createFileRoute("/_authenticated/platform/sources")({
   head: () => ({
     meta: [
       { title: "Source Requests — LeadTrace Platform" },
@@ -25,7 +26,6 @@ export const Route = createFileRoute("/_authenticated/app/admin/sources")({
 });
 
 function SourceRequestsPage() {
-  const gate = useSuperAdminGate();
   const fetchDemand = useServerFn(listSourceDemand);
   const fetchRequesters = useServerFn(listSourceRequesters);
   const [openKey, setOpenKey] = useState<string | null>(null);
@@ -33,20 +33,16 @@ function SourceRequestsPage() {
   const demandQ = useQuery({
     queryKey: ["admin-source-demand"],
     queryFn: () => fetchDemand(),
-    enabled: gate.data?.isSuperAdmin === true,
   });
   const requestersQ = useQuery({
     queryKey: ["admin-source-requesters", openKey],
     queryFn: () => fetchRequesters({ data: { sourceKey: openKey as string } }),
-    enabled: Boolean(openKey),
   });
 
   const rows = demandQ.data?.demand ?? [];
 
   return (
     <div className="mx-auto max-w-[1400px]">
-      <SettingsShell current="admin-sources">
-        <AdminGate gate={gate}>
           <PageHeader
             title="Source Requests"
             description="Grouped By Requested Source. Order The Adapter Roadmap By Workspaces, Not Raw Request Count."
@@ -162,8 +158,6 @@ function SourceRequestsPage() {
               )}
             </DialogContent>
           </Dialog>
-        </AdminGate>
-      </SettingsShell>
     </div>
   );
 }
