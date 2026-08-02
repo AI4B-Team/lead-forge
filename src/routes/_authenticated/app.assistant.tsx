@@ -147,6 +147,7 @@ function Assistant() {
   /** Handoff text waiting for its template selection to land before sending. */
   const pendingHandoff = useRef<{ templateId: string; text: string } | null>(null);
   const restored = useRef(false);
+  const appliedSource = useRef(false);
   const composer = useRef<HTMLTextAreaElement>(null);
   const specScroll = useOverflow<HTMLDivElement>();
 
