@@ -133,13 +133,15 @@ function TeamPage() {
             </div>
             <div>
               <Label>Role</Label>
-              <Select value={role} onValueChange={(v) => setRole(v as "admin" | "member")}>
+              <Select value={role} onValueChange={(v) => setRole(v as WorkspaceRole)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  {WORKSPACE_ROLES.filter((r) => r !== "owner").map((r) => (
+                    <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              <p className="mt-1 text-xs text-muted-foreground">{ROLE_BLURB[role]}</p>
             </div>
             <Button className="rounded-full" onClick={submitInvite} disabled={busy || !email}>
               {busy ? "Sending..." : "Send Invite"}
@@ -173,24 +175,42 @@ function TeamPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="capitalize">{m.role}</Badge>
-                {!m.is_me && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={async () => {
-                      if (!confirm(`Remove ${m.email}?`)) return;
+                {m.role === "owner" || m.is_me || !team.can("manage_members") ? (
+                  <Badge variant="secondary">{ROLE_LABEL[(m.role as WorkspaceRole) ?? "member"] ?? m.role}</Badge>
+                ) : (
+                  <Select
+                    value={m.role}
+                    onValueChange={async (v) => {
                       try {
-                        await doRemove({ data: { workspaceId: workspaceId!, userId: m.user_id } });
-                        toast.success("Member removed");
+                        await doSetRole({ data: { workspaceId: workspaceId!, userId: m.user_id, role: v as "admin" | "member" | "viewer" } });
+                        toast.success(`Role Changed To ${ROLE_LABEL[v as WorkspaceRole]}`);
                         invalidate();
                       } catch (e: any) {
-                        toast.error(e?.message ?? "Failed");
+                        toast.error(e?.message ?? "Could Not Change Role");
                       }
                     }}
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                    <SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {(["admin", "member", "viewer"] as const).map((r) => (
+                        <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {!m.is_me && m.role !== "owner" && team.can("manage_members") && (
+                  <RevokeSeatButton
+                    email={m.email || m.user_id.slice(0, 8)}
+                    onRevoke={async () => {
+                      try {
+                        await doRevokeSeat({ data: { workspaceId: workspaceId!, userId: m.user_id } });
+                        toast.success("Seat Revoked — Sessions Invalidated");
+                        invalidate();
+                      } catch (e: any) {
+                        toast.error(e?.message ?? "Could Not Revoke Seat");
+                      }
+                    }}
+                  />
                 )}
               </div>
             </div>
