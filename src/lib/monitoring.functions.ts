@@ -19,6 +19,7 @@ export const listLeadRecords = createServerFn({ method: "GET" })
         disposition: z.enum(["all", "clean", "dnc", "litigator"]).default("all"),
         sourceType: z.string().max(40).default("all"),
         lineType: z.enum(["all", "mobile", "landline", "voip", "unknown"]).default("all"),
+        channel: z.enum(["all", "phone", "email", "address"]).default("all"),
         onlyNew: z.boolean().default(false),
         multiList: z.boolean().default(false),
         search: z.string().max(120).optional(),
@@ -32,7 +33,7 @@ export const listLeadRecords = createServerFn({ method: "GET" })
     let q = supabase
       .from("lead_records")
       .select(
-        "id, full_name, business_name, phone, phone_type, email, city, state, disposition, source_types, record_types, list_count, first_seen_at, last_seen_at, is_new",
+        "id, full_name, business_name, phone, phone_type, email, address, website, socials, city, state, zip, disposition, source_types, record_types, list_count, first_seen_at, last_seen_at, is_new",
       )
       .eq("workspace_id", data.workspaceId)
       .order("last_seen_at", { ascending: false })
@@ -40,6 +41,9 @@ export const listLeadRecords = createServerFn({ method: "GET" })
 
     if (data.disposition !== "all") q = q.eq("disposition", data.disposition);
     if (data.lineType !== "all") q = q.eq("phone_type", data.lineType);
+    if (data.channel === "phone") q = q.not("phone", "is", null);
+    if (data.channel === "email") q = q.not("email", "is", null);
+    if (data.channel === "address") q = q.not("address", "is", null);
     if (data.sourceType !== "all") q = q.contains("source_types", [data.sourceType]);
     if (data.onlyNew) q = q.eq("is_new", true);
     if (data.multiList) q = q.gt("list_count", 1);
