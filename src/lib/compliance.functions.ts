@@ -112,6 +112,15 @@ export const importSuppression = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    // Suppression is a compliance control surface — Admin/Owner only.
+    {
+      const { memberContext } = await import("./accountability.server");
+      const { can, denialMessage } = await import("./team-roles.shared");
+      const ctx = await memberContext(context.supabase, data.workspaceId, context.userId);
+      if (!can(ctx.role, "edit_suppression")) {
+        throw new Error(denialMessage(ctx.role, "edit_suppression"));
+      }
+    }
     const normalized = Array.from(
       new Set(
         data.phones
@@ -134,6 +143,14 @@ export const importSuppression = createServerFn({ method: "POST" })
       { onConflict: "workspace_id,phone", ignoreDuplicates: true },
     );
     if (error) throw error;
+    const { logActivity } = await import("./activity.server");
+    await logActivity(context.supabase, data.workspaceId, {
+      type: "compliance_digest",
+      summary: `${normalized.length.toLocaleString()} Numbers Added To Suppression`,
+      detail: data.note ?? data.reason,
+      refType: "compliance",
+      actorId: context.userId,
+    });
     return { imported: normalized.length, skipped: data.phones.length - normalized.length };
   });
 
