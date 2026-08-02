@@ -1029,7 +1029,7 @@ function Assistant() {
       <div>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">AI Lead Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Describe the leads you want — or build it yourself in the List Builder. Nothing runs until you approve.
+          Describe who you want to reach, upload a list to clean, or build it yourself in the List Builder — nothing runs until you approve.
         </p>
       </div>
 
@@ -1038,8 +1038,10 @@ function Assistant() {
         {!input.trim() && (
           <div className="pointer-events-none absolute inset-x-5 top-5 flex items-center gap-2 pl-0.5 text-base text-muted-foreground">
             <Sparkles className="h-5 w-5 shrink-0 text-primary" />
-            <span className="truncate">
-              {selectedTemplate?.placeholderHint ?? "Tell Me Who You Want To Reach"}
+            <span
+              className={`truncate transition-opacity duration-300 ${example.visible ? "opacity-100" : "opacity-0"}`}
+            >
+              {selectedTemplate?.placeholderHint ?? example.text}
             </span>
           </div>
         )}
