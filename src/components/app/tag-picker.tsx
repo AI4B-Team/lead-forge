@@ -26,7 +26,7 @@ export function TagPicker({
   const fetchTags = useServerFn(listTags);
   const addTag = useServerFn(createTag);
   const [name, setName] = useState("");
-  const [color, setColor] = useState(TAG_SWATCHES[0]);
+  const [color, setColor] = useState<string>(TAG_SWATCHES[0]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
