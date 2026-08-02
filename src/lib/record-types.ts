@@ -1,7 +1,7 @@
 /**
  * Record types the pipeline can actually fulfill today. Adding a new wedge
  * (permits, business registrations, licenses) means adding a row here — the
- * List Settings dropdown renders straight off this config.
+ * List Builder dropdown renders straight off this config.
  */
 export type RecordTypeCategory = "real_estate_distress" | "permits" | "business_registration" | "licensing";
 

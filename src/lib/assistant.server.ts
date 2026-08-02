@@ -33,7 +33,7 @@ export function precheckCompliance(message: string): string | null {
   return null;
 }
 
-function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: string[]): string {
+function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: string[], templates: string): string {
   return [
     "You are the LeadTrace AI Lead Assistant. You turn a plain-English lead goal into a concrete, runnable pipeline List Spec.",
     "You ASSEMBLE and PROPOSE lists. You never run, launch, or send anything — a human clicks Run.",
@@ -45,6 +45,11 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "- upload: the operator already has a CSV list.",
     "Common business niches: " + niches.join(", "),
     "Counties with adapter coverage: " + (coveredCounties.join(", ") || "none configured"),
+    "",
+    "Source templates (id — name — availability):",
+    templates,
+    "When the operator names a specific source (\"Zillow listings in Tampa\", \"LinkedIn founders in fintech\", \"scrape contact details from this site\"), set templateId to the matching template id and fill the fields that template needs: business/local -> niches + state + counties; records -> recordType + state + counties; real estate -> state + counties (+ filters); social -> niches as keywords (+ filters, no counties); site scrapers -> targetUrl.",
+    "If the matched template is BETA, say plainly that this source is not wired yet and that they can join the waitlist. Never silently substitute a different source for it.",
     "",
     "HARD RULES:",
     "- Never propose messaging DNC, litigator, suppressed, or opted-out leads. Only Clean-file leads are campaignable.",
@@ -58,7 +63,7 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "STYLE: Short, plain, confident. Title Case for headings. No em-dashes. Ask at most two clarifying questions per turn. Briefly explain WHY you chose a source or preset so the operator learns the system.",
     "",
     "Respond with STRICT JSON only, no markdown fence:",
-    '{"reply": string, "specPatch": { any of: sourceType("business"|"records"|"upload"), name, niches[], recordType, state(2-letter), states(array of 2-letter codes when several states are wanted), counties[], recencyDays, removeFranchises, dedupe, mobileOnly, skipTrace, industry, messageAngle }, "suggestedTemplates": string[] }',
+    '{"reply": string, "specPatch": { any of: sourceType("business"|"records"|"upload"), templateId, name, niches[], recordType, state(2-letter), states(array of 2-letter codes when several states are wanted), counties[], recencyDays, targetUrl, filters, removeFranchises, dedupe, mobileOnly, skipTrace, industry, messageAngle }, "suggestedTemplates": string[] }',
     "Only include specPatch keys you actually resolved this turn. Leave the rest out.",
   ].join("\n");
 }
@@ -72,11 +77,13 @@ export async function askAssistant(opts: {
   coveredCounties: string[];
   niches: string[];
   recordTypes: string[];
+  /** "id — Title — live|beta" lines so the model can match a named source. */
+  templateCatalog?: string;
 }): Promise<{ reply: string; spec: JobSpec; suggestedTemplates: string[] }> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) {
     return {
-      reply: "The Assistant Is Temporarily Unavailable. You Can Still Edit The List Settings On The Right And Generate It.",
+      reply: "The Assistant Is Temporarily Unavailable. You Can Still Build It Yourself In The List Builder On The Right.",
       spec: opts.spec,
       suggestedTemplates: [],
     };
@@ -88,7 +95,7 @@ export async function askAssistant(opts: {
     body: JSON.stringify({
       model: "google/gemini-2.5-flash",
       messages: [
-        { role: "system", content: systemPrompt(opts.coveredCounties, opts.niches, opts.recordTypes) },
+        { role: "system", content: systemPrompt(opts.coveredCounties, opts.niches, opts.recordTypes, opts.templateCatalog ?? "none") },
         { role: "system", content: `Current List Spec (JSON): ${JSON.stringify(opts.spec)}` },
         ...opts.history.slice(-12),
         { role: "user", content: opts.message },
@@ -124,7 +131,7 @@ export async function askAssistant(opts: {
       })()
     : opts.spec;
   return {
-    reply: out.reply?.trim() || "Updated The List Settings On The Right.",
+    reply: out.reply?.trim() || "Updated The List Builder On The Right.",
     spec,
     suggestedTemplates: (out.suggestedTemplates ?? []).slice(0, 4),
   };

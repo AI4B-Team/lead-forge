@@ -19,6 +19,9 @@ import {
   attachmentMappedCount, isSpreadsheet, type UploadAttachment,
 } from "@/lib/upload-attachment";
 import { optionsForSource } from "@/lib/pipeline-options";
+import { TemplateLogo } from "@/components/marketing/template-logo";
+import type { Template } from "@/lib/templates";
+import { templateAdapterStatus, templateFieldSchema, fieldsForSourceType, type BuilderField } from "@/lib/template-schema";
 
 /**
  * Inline dropzone + mapping summary. Uploads never leave the assistant page.
@@ -108,6 +111,13 @@ const COVERAGE_LABEL: Record<Coverage, string> = {
   beta: "Beta",
   requested: "Requested",
   unknown: "Not Covered",
+};
+
+/** Panel opened via ?source= with no template selected yet. */
+const SOURCE_FALLBACK_LABEL: Record<string, string> = {
+  business: "Business Search",
+  records: "Public Records",
+  upload: "Upload My List",
 };
 
 /** Small inline confidence badge shown next to fields the assistant filled in. */
@@ -201,8 +211,8 @@ function CommitTextarea({
 }
 
 /**
- * The single editable List Settings panel (§22). It is schema-aware: fields that
- * don't apply to the chosen source type never render.
+ * The List Builder panel. It renders from the selected template's field schema,
+ * so each source asks only for what it actually needs.
  */
 export function JobSpecCard({
   spec,
@@ -214,6 +224,8 @@ export function JobSpecCard({
   onRemoveUpload,
   onEditMapping,
   onRequestRecordType,
+  template = null,
+  onChangeTemplate,
 }: {
   spec: JobSpec;
   onChange: (next: JobSpec) => void;
@@ -226,16 +238,22 @@ export function JobSpecCard({
   onEditMapping?: () => void;
   /** Logs a record type the pipeline does not support yet. */
   onRequestRecordType?: (request: string) => Promise<void> | void;
+  /** The selected source template — the panel's Source row and field schema. */
+  template?: Template | null;
+  /** Opens the shared All Templates modal (the one source browser). */
+  onChangeTemplate?: () => void;
 }) {
   const set = <K extends keyof JobSpec>(key: K, value: JobSpec[K]) => onChange({ ...spec, [key]: value });
   const inf = (key: keyof JobSpec) => Boolean(inferred?.has(key));
   const covFor = (county: string): Coverage =>
     coverage.find((c) => c.county.toLowerCase() === county.toLowerCase())?.coverage ?? "unknown";
 
-  const isRecords = spec.sourceType === "records";
-  const isBusiness = spec.sourceType === "business";
-  const isUpload = spec.sourceType === "upload";
-  const hasGeo = isRecords || isBusiness;
+  const fields: BuilderField[] = template ? templateFieldSchema(template) : fieldsForSourceType(spec.sourceType);
+  const has = (f: BuilderField) => fields.includes(f);
+  const isUpload = has("upload");
+  const isRecords = has("recordType");
+  const hasGeo = has("state") || has("counties");
+  const status = template ? templateAdapterStatus(template) : "live";
   const states = specStates(spec);
   const [requestOpen, setRequestOpen] = useState(false);
   const [requestText, setRequestText] = useState("");
@@ -260,32 +278,37 @@ export function JobSpecCard({
   return (
     <Card>
       <CardContent className="pt-6 space-y-5">
-        <div className="flex items-center justify-between">
-          <div className="font-display font-bold text-foreground">List Settings</div>
-          <Badge variant="outline" className="text-[10px] uppercase">Editable</Badge>
-        </div>
+        <div className="font-display font-bold text-foreground">List Builder</div>
 
+        {/* Source is a template picker row — the same selection as a template card. */}
         <div>
           <FieldLabel confidence={99} show={Boolean(spec.sourceType) && inf("sourceType")}>Source</FieldLabel>
-          <Select
-            value={spec.sourceType ?? ""}
-            onValueChange={(v) => {
-              const sourceType = v as JobSpec["sourceType"];
-              // Franchise removal only exists for business sources — drop it on switch.
-              onChange({
-                ...spec,
-                sourceType,
-                removeFranchises: sourceType === "business" ? spec.removeFranchises : false,
-              });
-            }}
-          >
-            <SelectTrigger className="mt-1"><SelectValue placeholder="Not Chosen Yet" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="business">Business Scrape</SelectItem>
-              <SelectItem value="records">Public Records</SelectItem>
-              <SelectItem value="upload">Upload My List</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="mt-1 flex items-center gap-3 rounded-xl border border-border bg-surface p-3">
+            {template ? (
+              <TemplateLogo template={template} className="h-9 w-9 rounded-lg" imgClassName="h-5 w-5" iconClassName="h-4 w-4" />
+            ) : (
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-dashed border-border text-muted-foreground">
+                <UploadCloud className="h-4 w-4" />
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-foreground">
+                {template?.title ?? SOURCE_FALLBACK_LABEL[spec.sourceType ?? ""] ?? "Pick A Source"}
+              </div>
+              <div className="truncate text-[11px] text-muted-foreground">
+                {template?.subtitle ?? "Choose From Every Source Template"}
+              </div>
+            </div>
+            <Button type="button" size="sm" variant="outline" className="rounded-full" onClick={() => onChangeTemplate?.()}>
+              {template || spec.sourceType ? "Change" : "Browse"}
+            </Button>
+          </div>
+          {template && status !== "live" && (
+            <div className="mt-2 flex items-center gap-2 text-[11px] text-warning">
+              <Badge variant="outline" className="border-warning/40 text-[10px] uppercase text-warning">Beta</Badge>
+              This Source Isn't Wired Yet — Join The Waitlist Below.
+            </div>
+          )}
         </div>
 
         {isRecords && (
@@ -346,16 +369,42 @@ export function JobSpecCard({
           </div>
         )}
 
-        {isBusiness && (
+        {(has("niche") || has("keyword")) && (
           <div>
-            <FieldLabel confidence={97} show={spec.niches.length > 0 && inf("niches")}>Niches</FieldLabel>
+            <FieldLabel confidence={97} show={spec.niches.length > 0 && inf("niches")}>
+              {has("niche") ? "Niches" : "Keywords"}
+            </FieldLabel>
             <CommitInput
               className="mt-1"
               value={spec.niches.join(", ")}
               onCommit={(v) =>
                 set("niches", v.split(",").map((s) => s.trim()).filter(Boolean))
               }
-              placeholder="e.g. HVAC, Roofer"
+              placeholder={has("niche") ? "e.g. HVAC, Roofer" : "e.g. Fintech Founders, #realtor"}
+            />
+          </div>
+        )}
+
+        {has("url") && (
+          <div>
+            <Label>Website Or Page URL</Label>
+            <CommitInput
+              className="mt-1"
+              value={spec.targetUrl ?? ""}
+              onCommit={(v) => set("targetUrl", v.trim() || null)}
+              placeholder="e.g. https://example.com/contact"
+            />
+          </div>
+        )}
+
+        {(has("audienceFilter") || has("listingFilter")) && (
+          <div>
+            <Label>{has("listingFilter") ? "Listing Filters (Optional)" : "Audience Filters (Optional)"}</Label>
+            <CommitInput
+              className="mt-1"
+              value={spec.filters ?? ""}
+              onCommit={(v) => set("filters", v.trim() || null)}
+              placeholder={has("listingFilter") ? "e.g. For Sale By Owner, 90+ Days On Market" : "e.g. 5k–50k Followers"}
             />
           </div>
         )}

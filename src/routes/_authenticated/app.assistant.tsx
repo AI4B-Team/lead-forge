@@ -31,6 +31,7 @@ import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assista
 import { TEMPLATES, templateSourceType, type Template } from "@/lib/templates";
 import { TemplateCard } from "@/components/marketing/template-card";
 import { TemplatePickerDialog } from "@/components/app/template-picker-dialog";
+import { templateAdapterStatus } from "@/lib/template-schema";
 import { useOverflow } from "@/hooks/use-overflow";
 import { US_STATES } from "@/lib/us-geo";
 import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@/lib/recent-templates";
@@ -41,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
     prompt: z.string().optional(),
     fill: z.string().optional(),
     template: z.string().optional(),
-    /** Pre-set the List Settings source (business | records | upload). */
+    /** Pre-set the List Builder source (business | records | upload). */
     source: z.string().optional(),
     niche: z.string().optional(),
   }),
@@ -134,7 +135,7 @@ function Assistant() {
   /** Keys the assistant inferred this conversation (drives the % badges). */
   const [inferred, setInferred] = useState<Set<keyof JobSpec>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
-  /** Panel-only mode: List Settings is open with no chat message yet. */
+  /** Panel-only mode: the List Builder is open with no chat message yet. */
   const [panelOpen, setPanelOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
@@ -156,7 +157,10 @@ function Assistant() {
   const hasChat = thread.length > 0;
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
   const uploadReady = attachmentReady(upload);
-  const missing = useMemo(() => openSlots(spec, uploadReady), [spec, uploadReady]);
+  const missing = useMemo(() => openSlots(spec, uploadReady, selectedTemplate), [spec, uploadReady, selectedTemplate]);
+  /** Honest availability: a non-live adapter can never reach the pipeline. */
+  const adapterStatus = selectedTemplate ? templateAdapterStatus(selectedTemplate) : "live";
+  const adapterLive = adapterStatus === "live";
   const traceComplete =
     revealed >= traceSteps.length && !busy && traceSteps.length > 0 && missing.length === 0;
   const lastAssistantIndex = useMemo(() => {
@@ -258,8 +262,8 @@ function Assistant() {
           {
             role: "assistant",
             content: next.parseable && next.mapped
-              ? `Got ${next.name} — ${next.rowCount.toLocaleString()} rows. Review the mapping and settings on the right, then generate the list.`
-              : `Got ${next.name}. Map your columns on the right and I'll clean, verify, and scrub it.`,
+              ? `Got ${next.name} — ${next.rowCount.toLocaleString()} rows. Review the mapping and settings in the List Builder, then generate the list.`
+              : `Got ${next.name}. Map your columns in the List Builder and I'll clean, verify, and scrub it.`,
             spec: { ...spec, sourceType: "upload" },
           },
         ]);
@@ -352,8 +356,8 @@ function Assistant() {
         {
           role: "assistant",
           content: upload
-            ? "Map your columns in the panel on the right and I'll take it from there."
-            : "Drop your file in the panel on the right, or attach it below.",
+            ? "Map your columns in the List Builder on the right and I'll take it from there."
+            : "Drop your file in the List Builder on the right, or attach it below.",
           spec,
         },
       ]);
@@ -420,6 +424,14 @@ function Assistant() {
         return next;
       });
       setSpec(res.spec);
+      // The interpreter may match a named source ("Zillow listings") to a template.
+      if (res.spec.templateId && res.spec.templateId !== selectedTemplate?.id) {
+        const matched = TEMPLATES.find((t) => t.id === res.spec.templateId);
+        if (matched) {
+          setSelectedTemplate(matched);
+          lastTemplateId.current = matched.id;
+        }
+      }
       setCoverage(res.coverage);
       setEstimate(res.estimate);
       setSuggested(res.suggestedTemplates);
@@ -584,8 +596,31 @@ function Assistant() {
     }
   };
 
+  /** Waitlist click for a source whose adapter isn't wired yet (roadmap signal). */
+  const requestTemplateAdapter = async () => {
+    if (!workspaceId || !selectedTemplate) return;
+    try {
+      await logRequest({
+        data: {
+          workspaceId,
+          county: null,
+          recordType: selectedTemplate.title,
+          templateId: selectedTemplate.id,
+          type: "template_adapter",
+        },
+      });
+      toast.success(`Logged — We'll Email You When ${selectedTemplate.title} Goes Live.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Log Request");
+    }
+  };
+
   const reviewAndRun = async () => {
     if (!workspaceId) return;
+    if (!adapterLive) {
+      void requestTemplateAdapter();
+      return;
+    }
     if (!confirmed) {
       setConfirmed(true);
       return;
@@ -680,23 +715,36 @@ function Assistant() {
         </div>
       )}
 
-      {estimate && spec.sourceType && geoResolved && (
+      {estimate && adapterLive && spec.sourceType && geoResolved && (
         <div className="text-center text-xs text-muted-foreground">
           ≈ {estimate.rows.toLocaleString()} Rows · ~{estimate.scrapeCredits.toLocaleString()} Lead Credits
           {estimate.skipTraceCredits ? ` · ~${estimate.skipTraceCredits.toLocaleString()} Skip-Trace Credits` : ""}
         </div>
       )}
 
-      <Button
-        className="w-full rounded-full"
-        disabled={running || !spec.sourceType || !traceComplete}
-        onClick={reviewAndRun}
-      >
-        {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {ctaLabel}
-      </Button>
-      <div className="text-center text-[11px] text-muted-foreground">
-        The Assistant Assembles. You Run. Nothing Sends Without You.
-      </div>
+      {adapterLive ? (
+        <>
+          <Button
+            className="w-full rounded-full"
+            disabled={running || !spec.sourceType || !traceComplete}
+            onClick={reviewAndRun}
+          >
+            {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {ctaLabel}
+          </Button>
+          <div className="text-center text-[11px] text-muted-foreground">
+            The Assistant Assembles. You Run. Nothing Sends Without You.
+          </div>
+        </>
+      ) : (
+        <>
+          <Button className="w-full rounded-full" variant="outline" onClick={() => void requestTemplateAdapter()}>
+            <Sparkles className="mr-1 h-4 w-4" /> This Source Is Coming — Request Early Access
+          </Button>
+          <div className="text-center text-[11px] text-muted-foreground">
+            {selectedTemplate?.title} Is In Beta. We'll Email You The Day Its Adapter Goes Live.
+          </div>
+        </>
+      )}
     </div>
   );
 
@@ -713,6 +761,8 @@ function Assistant() {
             coverage={coverage}
             inferred={inferred}
             upload={upload}
+            template={selectedTemplate}
+            onChangeTemplate={() => setAllOpen(true)}
             onPickFile={(f) => void attachFile(f)}
             onRemoveUpload={() => { setUpload(null); setConfirmed(false); }}
             onEditMapping={() => setMapOpen(true)}
@@ -797,7 +847,7 @@ function Assistant() {
       <div>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">AI Lead Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Describe the leads you want — or set it up yourself in List Settings. Nothing runs until you approve.
+          Describe the leads you want — or build it yourself in the List Builder. Nothing runs until you approve.
         </p>
       </div>
 
@@ -837,13 +887,13 @@ function Assistant() {
                 onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
               />
             </label>
-            {/* Panel-only path: no chat needed, straight into List Settings. */}
+            {/* Panel-only path: no chat needed, straight into the List Builder. */}
             <button
               type="button"
               onClick={() => openPanelWithSource("business")}
               className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
             >
-              <SlidersHorizontal className="mr-1.5 h-4 w-4" /> Set It Up Yourself
+              <SlidersHorizontal className="mr-1.5 h-4 w-4" /> Build It Yourself
             </button>
           </div>
           <div className="flex items-center gap-2">
@@ -897,12 +947,6 @@ function Assistant() {
         </div>
       </div>
 
-      <TemplatePickerDialog
-        open={allOpen}
-        onOpenChange={setAllOpen}
-        selectedId={selectedTemplate?.id ?? null}
-        onSelect={selectTemplate}
-      />
     </div>
   );
 
@@ -912,7 +956,7 @@ function Assistant() {
         <div className="shrink-0">
           <PageHeader
             title="AI Lead Assistant"
-            description="Describe The Leads You Want — Or Set It Up Yourself In List Settings. Nothing Runs Until You Approve."
+            description="Describe The Leads You Want — Or Build It Yourself In The List Builder. Nothing Runs Until You Approve."
             descriptionClassName="whitespace-nowrap !max-w-none"
             actions={
               <Button variant="outline" className="rounded-full" onClick={startOver}>
@@ -938,7 +982,7 @@ function Assistant() {
                     LeadTrace
                   </div>
                   <div className="mt-1.5 text-sm text-foreground">
-                    Set it up in List Settings on the right, or type below and I'll fill it in for you.
+                    Build it in the List Builder on the right, or type below and I'll fill it in for you.
                   </div>
                   <div className="mt-3">
                     <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
@@ -1024,7 +1068,7 @@ function Assistant() {
           </CardContent>
         </Card>
 
-        {/* One consolidated List Settings rail, sticky Generate at its bottom. */}
+        {/* One consolidated List Builder rail, sticky Generate at its bottom. */}
         <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>
       </div>
       )}
@@ -1039,6 +1083,14 @@ function Assistant() {
           onConfirm={saveMapping}
         />
       )}
+
+      {/* One source browser, mounted once: hero grid, panel row, and View All all use it. */}
+      <TemplatePickerDialog
+        open={allOpen}
+        onOpenChange={setAllOpen}
+        selectedId={selectedTemplate?.id ?? null}
+        onSelect={selectTemplate}
+      />
     </div>
   );
 }

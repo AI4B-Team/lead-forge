@@ -11,7 +11,7 @@ export type PipelineOption = {
 };
 
 /**
- * Single source of truth for the four pipeline toggles. The List Settings
+ * Single source of truth for the four pipeline toggles. The List Builder
  * panel, the assembly checklist, the "You Edited" chips, and any toast all
  * read their wording from here, so the panel and the checklist can be
  * compared word-for-word, top to bottom.

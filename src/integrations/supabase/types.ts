@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           id: string
           record_type: string | null
+          template_id: string | null
           type: string
           workspace_id: string
         }
@@ -28,6 +29,7 @@ export type Database = {
           created_at?: string
           id?: string
           record_type?: string | null
+          template_id?: string | null
           type?: string
           workspace_id: string
         }
@@ -36,6 +38,7 @@ export type Database = {
           created_at?: string
           id?: string
           record_type?: string | null
+          template_id?: string | null
           type?: string
           workspace_id?: string
         }
