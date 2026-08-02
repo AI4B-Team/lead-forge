@@ -34,7 +34,7 @@ import { TemplatePickerDialog } from "@/components/app/template-picker-dialog";
 import { useOverflow } from "@/hooks/use-overflow";
 import { US_STATES } from "@/lib/us-geo";
 import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@/lib/recent-templates";
-import { takeStashedPrompt, clearStashedPrompt } from "@/lib/prompt-handoff";
+import { takeStashedHandoff, clearStashedPrompt } from "@/lib/prompt-handoff";
 
 export const Route = createFileRoute("/_authenticated/app/assistant")({
   validateSearch: z.object({
@@ -137,6 +137,8 @@ function Assistant() {
   const lastTemplateId = useRef<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const sentPrompt = useRef(false);
+  /** Handoff text waiting for its template selection to land before sending. */
+  const pendingHandoff = useRef<{ templateId: string; text: string } | null>(null);
   const restored = useRef(false);
   const composer = useRef<HTMLTextAreaElement>(null);
   const specScroll = useOverflow<HTMLDivElement>();
@@ -469,25 +471,33 @@ function Assistant() {
     }
   };
 
-  // Deep-link: the homepage prompt box carries its text in ?prompt=, with a
-  // short-lived sessionStorage stash as the only fallback.
+  // Deep-link: the marketing handoff carries the typed text in ?prompt= and the
+  // selected template in ?template=, with a short-lived stash as the fallback.
   useEffect(() => {
     if (sentPrompt.current || !workspaceId) return;
-    // In-app template pick: select it as context (no composer text).
-    if (search.template) {
-      const picked = TEMPLATES.find((t) => t.id === search.template);
-      sentPrompt.current = true;
-      navigate({ to: "/app/assistant", search: {}, replace: true });
-      if (picked) selectTemplate(picked);
+    const fromUrl = search.prompt?.trim();
+    const urlTemplate = search.template;
+    const stashed = fromUrl || urlTemplate ? null : takeStashedHandoff();
+    const templateId = urlTemplate ?? stashed?.templateId ?? null;
+    const initial = (fromUrl || stashed?.text || "").trim();
+    if (!templateId && !initial) return;
+    sentPrompt.current = true;
+    if (fromUrl || urlTemplate) navigate({ to: "/app/assistant", search: {}, replace: true });
+
+    const picked = templateId ? TEMPLATES.find((t) => t.id === templateId) : undefined;
+    if (picked) {
+      selectTemplate(picked);
+      // fill=1 (in-app template pick) prefills the composer instead of sending.
+      if (initial && search.fill) {
+        setInput(initial);
+        return;
+      }
+      // Send once inside the template context — even with no typed text, so the
+      // assistant opens with its own slot-filling question.
+      pendingHandoff.current = { templateId: picked.id, text: initial };
       return;
     }
-    const fromUrl = search.prompt?.trim();
-    const stashed = takeStashedPrompt();
-    const initial = fromUrl || stashed;
     if (!initial) return;
-    sentPrompt.current = true;
-    if (fromUrl) navigate({ to: "/app/assistant", search: {}, replace: true });
-    // fill=1 (in-app template pick) prefills the composer instead of auto-sending.
     if (search.fill) {
       setInput(initial);
       return;
@@ -495,6 +505,15 @@ function Assistant() {
     void send(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, search.prompt, search.template]);
+
+  // The template's spec reset must land before the handoff text is sent.
+  useEffect(() => {
+    const pending = pendingHandoff.current;
+    if (!pending || !selectedTemplate || selectedTemplate.id !== pending.templateId) return;
+    pendingHandoff.current = null;
+    void send(pending.text);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTemplate]);
 
   const uncovered = coverage.filter((c) => c.coverage === "requested" || c.coverage === "unknown");
 

@@ -92,7 +92,7 @@ function TemplateDetailPage() {
 
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link to="/" search={{ prompt: template.prompt }}>
+              <Link to="/" search={{ template: template.id }}>
                 Run This Template <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>

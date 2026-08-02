@@ -6,7 +6,8 @@ import { TemplateLogo } from "@/components/marketing/template-logo";
 export function TemplateCard({
   template,
   /**
-   * "detail" opens the template's page; "prompt" prefills the homepage prompt;
+   * "detail" opens the template's page; "prompt" selects the template as
+   * context for the homepage prompt hero (never inserting its text);
    * "insert" is an in-app button that hands the template back via onSelect.
    */
   variant = "detail",
@@ -16,7 +17,7 @@ export function TemplateCard({
   template: Template;
   variant?: "detail" | "prompt" | "insert";
   onSelect?: (template: Template) => void;
-  /** Persistent selected state for the in-app "insert" variant. */
+  /** Persistent selected state for the "insert" and "prompt" variants. */
   selected?: boolean;
 }) {
   const className =
@@ -45,7 +46,7 @@ export function TemplateCard({
     </>
   );
 
-  if (variant === "insert") {
+  if (variant === "insert" || variant === "prompt") {
     return (
       <button
         type="button"
@@ -58,10 +59,10 @@ export function TemplateCard({
     );
   }
 
-  const linkProps =
-    variant === "prompt"
-      ? ({ to: "/", search: { prompt: template.prompt } } as const)
-      : ({ to: "/templates/$templateId", params: { templateId: template.id } } as const);
+  const linkProps = {
+    to: "/templates/$templateId",
+    params: { templateId: template.id },
+  } as const;
   return (
     <Link {...linkProps} className={className}>
       {body}
