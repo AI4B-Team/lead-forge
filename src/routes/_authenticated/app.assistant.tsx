@@ -1297,6 +1297,22 @@ function Assistant() {
         onCancel={clearPending}
         onConfirm={confirmIntent}
       />
+
+      {/* Sources we can't run yet go through a scoping intake, not a bare waitlist click. */}
+      <SourceRequestDialog
+        open={Boolean(sourceRequest)}
+        onOpenChange={(o) => { if (!o) setSourceRequest(null); }}
+        workspaceId={workspaceId ?? null}
+        type={sourceRequest?.type ?? "template_adapter"}
+        templateId={sourceRequest?.templateId ?? null}
+        presetLabel={sourceRequest?.label ?? ""}
+        presetGeo={sourceRequest?.geo ?? ""}
+        onQueued={({ email }) => {
+          const id = sourceRequest?.templateId;
+          if (id) setRequestedAdapters((prev) => new Set(prev).add(id));
+          if (email) setNotifyEmail(email);
+        }}
+      />
     </div>
   );
 }
