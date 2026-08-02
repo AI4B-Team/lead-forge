@@ -62,7 +62,6 @@ import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppAssistantRouteImport } from './routes/_authenticated/app.assistant'
 import { Route as AuthenticatedAppApiRouteImport } from './routes/_authenticated/app.api'
 import { Route as AuthenticatedAppAgentRouteImport } from './routes/_authenticated/app.agent'
-import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
 import { Route as AuthenticatedAppAccountRouteImport } from './routes/_authenticated/app.account'
 import { Route as AuthenticatedAppNewListIndexRouteImport } from './routes/_authenticated/app.new-list.index'
 import { Route as AuthenticatedAppNewJobIndexRouteImport } from './routes/_authenticated/app.new-job.index'
@@ -358,11 +357,6 @@ const AuthenticatedAppAgentRoute = AuthenticatedAppAgentRouteImport.update({
   path: '/agent',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAppAdminRoute = AuthenticatedAppAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
 const AuthenticatedAppAccountRoute = AuthenticatedAppAccountRouteImport.update({
   id: '/account',
   path: '/account',
@@ -531,7 +525,6 @@ export interface FileRoutesByFullPath {
   '/templates/': typeof TemplatesIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/app/account': typeof AuthenticatedAppAccountRoute
-  '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/agent': typeof AuthenticatedAppAgentRoute
   '/app/api': typeof AuthenticatedAppApiRoute
   '/app/assistant': typeof AuthenticatedAppAssistantRoute
@@ -608,7 +601,6 @@ export interface FileRoutesByTo {
   '/templates': typeof TemplatesIndexRoute
   '/tools': typeof ToolsIndexRoute
   '/app/account': typeof AuthenticatedAppAccountRoute
-  '/app/admin': typeof AuthenticatedAppAdminRoute
   '/app/agent': typeof AuthenticatedAppAgentRoute
   '/app/api': typeof AuthenticatedAppApiRoute
   '/app/assistant': typeof AuthenticatedAppAssistantRoute
@@ -688,7 +680,6 @@ export interface FileRoutesById {
   '/templates/': typeof TemplatesIndexRoute
   '/tools/': typeof ToolsIndexRoute
   '/_authenticated/app/account': typeof AuthenticatedAppAccountRoute
-  '/_authenticated/app/admin': typeof AuthenticatedAppAdminRoute
   '/_authenticated/app/agent': typeof AuthenticatedAppAgentRoute
   '/_authenticated/app/api': typeof AuthenticatedAppApiRoute
   '/_authenticated/app/assistant': typeof AuthenticatedAppAssistantRoute
@@ -768,7 +759,6 @@ export interface FileRouteTypes {
     | '/templates/'
     | '/tools/'
     | '/app/account'
-    | '/app/admin'
     | '/app/agent'
     | '/app/api'
     | '/app/assistant'
@@ -845,7 +835,6 @@ export interface FileRouteTypes {
     | '/templates'
     | '/tools'
     | '/app/account'
-    | '/app/admin'
     | '/app/agent'
     | '/app/api'
     | '/app/assistant'
@@ -924,7 +913,6 @@ export interface FileRouteTypes {
     | '/templates/'
     | '/tools/'
     | '/_authenticated/app/account'
-    | '/_authenticated/app/admin'
     | '/_authenticated/app/agent'
     | '/_authenticated/app/api'
     | '/_authenticated/app/assistant'
@@ -1386,13 +1374,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAgentRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/admin': {
-      id: '/_authenticated/app/admin'
-      path: '/admin'
-      fullPath: '/app/admin'
-      preLoaderRoute: typeof AuthenticatedAppAdminRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
     '/_authenticated/app/account': {
       id: '/_authenticated/app/account'
       path: '/account'
@@ -1559,7 +1540,6 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAccountRoute: typeof AuthenticatedAppAccountRoute
-  AuthenticatedAppAdminRoute: typeof AuthenticatedAppAdminRoute
   AuthenticatedAppAgentRoute: typeof AuthenticatedAppAgentRoute
   AuthenticatedAppApiRoute: typeof AuthenticatedAppApiRoute
   AuthenticatedAppAssistantRoute: typeof AuthenticatedAppAssistantRoute
@@ -1592,7 +1572,6 @@ interface AuthenticatedAppRouteChildren {
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAccountRoute: AuthenticatedAppAccountRoute,
-  AuthenticatedAppAdminRoute: AuthenticatedAppAdminRoute,
   AuthenticatedAppAgentRoute: AuthenticatedAppAgentRoute,
   AuthenticatedAppApiRoute: AuthenticatedAppApiRoute,
   AuthenticatedAppAssistantRoute: AuthenticatedAppAssistantRoute,
@@ -1709,3 +1688,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
