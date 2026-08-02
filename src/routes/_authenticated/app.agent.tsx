@@ -286,9 +286,7 @@ function AgentPage() {
           {/* 2 — Train Your Agent */}
           <div className="mt-8">
             <h2 className="font-display text-xl font-bold text-foreground">Train Your Agent</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Paste, Attach, Or Dictate Anything About Your Business — We Sort It Into The Right Place.
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">Paste, Attach, Or Dictate Anything About Your Business.</p>
             <div className="mt-3">
               <AgentComposer key={agent.id} brandId={agent.id} />
             </div>
