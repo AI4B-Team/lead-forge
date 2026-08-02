@@ -18,10 +18,13 @@ import { Button } from "@/components/ui/button";
 import {
   attachmentMappedCount, isSpreadsheet, type UploadAttachment,
 } from "@/lib/upload-attachment";
-import { optionsForSource } from "@/lib/pipeline-options";
+import { optionsForSource, specOptionContext, defaultCountryFor, isDataSource, isNonUsRun } from "@/lib/pipeline-options";
 import { TemplateLogo } from "@/components/marketing/template-logo";
 import type { Template } from "@/lib/templates";
-import { templateAdapterStatus, templateFieldSchema, fieldsForSourceType, type BuilderField } from "@/lib/template-schema";
+import {
+  templateAdapterStatus, templateFieldSchema, fieldsForSourceType, filterFieldLabel,
+  dedupesByCompany, type BuilderField,
+} from "@/lib/template-schema";
 
 /**
  * Inline dropzone + mapping summary. Uploads never leave the assistant page.
@@ -290,6 +293,9 @@ export function JobSpecCard({
   const isUpload = has("upload");
   const isRecords = has("recordType");
   const hasGeo = has("state") || has("counties");
+  const dataOnly = isDataSource(spec.templateId);
+  const nonUs = isNonUsRun({ templateId: spec.templateId, country: spec.country });
+  const filterLabel = filterFieldLabel(spec.templateId);
   const status = template ? templateAdapterStatus(template) : "live";
   const states = specStates(spec);
   const [requestOpen, setRequestOpen] = useState(false);
@@ -310,7 +316,7 @@ export function JobSpecCard({
   };
 
   // Labels and ordering come from the shared config the checklist also uses.
-  const toggles = optionsForSource(spec.sourceType, spec.templateId);
+  const toggles = optionsForSource(spec.sourceType, spec.templateId, specOptionContext(spec));
 
   return (
     <Card>
@@ -351,6 +357,16 @@ export function JobSpecCard({
               <Badge variant="outline" className="border-warning/40 text-[10px] uppercase text-warning">Beta</Badge>
               This Source Isn't Wired Yet — Join The Waitlist Below.
             </div>
+          )}
+          {dataOnly && (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              This Source Produces A Research Dataset, Not Contactable Leads. No Skip Trace, No Scrub, No Campaign.
+            </p>
+          )}
+          {!dataOnly && nonUs && (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              SMS Launch Is US-Only — This List Is Delivered Email-Ready.
+            </p>
           )}
         </div>
 
@@ -418,6 +434,28 @@ export function JobSpecCard({
           </div>
         )}
 
+        {has("contactTarget") && (
+          <div>
+            <FieldLabel
+              confidence={94}
+              show={Boolean(spec.contactTarget) && inf("contactTarget")}
+              hint="Whose contact details you want. Listing Agents publish their phone numbers. For Sale By Owner reaches the homeowner directly — the one every wholesaler wants — and those records get skip traced."
+            >
+              Contact Target
+            </FieldLabel>
+            <Select
+              value={spec.contactTarget ?? ""}
+              onValueChange={(v) => set("contactTarget", v as "agents" | "fsbo")}
+            >
+              <SelectTrigger className="mt-1"><SelectValue placeholder="Agents Or Owners?" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="agents">Listing Agents</SelectItem>
+                <SelectItem value="fsbo">For Sale By Owner</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         {(has("niche") || has("keyword")) && (
           <div>
             <FieldLabel
@@ -457,23 +495,71 @@ export function JobSpecCard({
           </div>
         )}
 
+        {has("city") && (
+          <div>
+            <FieldLabel
+              confidence={95}
+              show={Boolean(spec.city) && inf("city")}
+              hint="This source is organized by city, not county — rentals, commercial listings, hosts and venues are all searched by metro."
+            >
+              City
+            </FieldLabel>
+            <CommitInput
+              className="mt-1"
+              value={spec.city ?? ""}
+              onCommit={(v) => set("city", v.trim() || null)}
+              placeholder="e.g. Miami, FL"
+            />
+          </div>
+        )}
+
+        {has("country") && (
+          <div>
+            <FieldLabel
+              confidence={95}
+              show={Boolean(spec.country) && inf("country")}
+              hint="This source covers a country or marketplace region rather than US counties. We pre-fill the country the source implies."
+            >
+              Country / Region
+            </FieldLabel>
+            <CommitInput
+              className="mt-1"
+              value={spec.country ?? defaultCountryFor(spec.templateId) ?? ""}
+              onCommit={(v) => set("country", v.trim() || null)}
+              placeholder={defaultCountryFor(spec.templateId) ?? "e.g. United Kingdom"}
+            />
+          </div>
+        )}
+
         {(has("audienceFilter") || has("listingFilter")) && (
           <div>
             <FieldLabel
-              hintTitle={has("listingFilter") ? "Listing Filters" : "Audience Filters"}
+              hintTitle={filterLabel ?? (has("listingFilter") ? "Listing Filters" : "Audience Filters")}
               hint={
-                has("listingFilter")
+                filterLabel
+                  ? "Narrow the results by the traits that matter for this source — funding stage, company size, star rating, or review count."
+                  : has("listingFilter")
                   ? "Narrow the results by listing traits — price band, days on market, for-sale-by-owner, and similar."
                   : "Narrow the results by audience traits — follower range, location, bio keywords, and similar."
               }
             >
-              {has("listingFilter") ? "Listing Filters (Optional)" : "Audience Filters (Optional)"}
+              {filterLabel
+                ? `${filterLabel} (Optional)`
+                : has("listingFilter")
+                  ? "Listing Filters (Optional)"
+                  : "Audience Filters (Optional)"}
             </FieldLabel>
             <CommitInput
               className="mt-1"
               value={spec.filters ?? ""}
               onCommit={(v) => set("filters", v.trim() || null)}
-              placeholder={has("listingFilter") ? "e.g. For Sale By Owner, 90+ Days On Market" : "e.g. 5k–50k Followers"}
+              placeholder={
+                filterLabel
+                  ? "e.g. Series A+, 4.5★ And 50+ Reviews"
+                  : has("listingFilter")
+                    ? "e.g. Price Band, 90+ Days On Market"
+                    : "e.g. 5k–50k Followers"
+              }
             />
           </div>
         )}
@@ -504,7 +590,7 @@ export function JobSpecCard({
 
         {hasGeo && (
           <>
-            <div className={isRecords ? "grid grid-cols-2 gap-3" : ""}>
+            <div className={has("recency") ? "grid grid-cols-2 gap-3" : ""}>
               <div>
                 <FieldLabel
                   confidence={95}
@@ -529,7 +615,7 @@ export function JobSpecCard({
                   }}
                 />
               </div>
-              {isRecords && (
+              {has("recency") && (
                 <div>
                   <FieldLabel hint="How far back to look. 90 means only records filed in the last 90 days — fresher records usually respond better.">
                     Recency (Days)
@@ -541,12 +627,13 @@ export function JobSpecCard({
                       const n = Number(v.replace(/\D/g, ""));
                       set("recencyDays", n ? n : null);
                     }}
-                    placeholder="90"
+                    placeholder={dedupesByCompany(spec.templateId) ? "30" : "90"}
                   />
                 </div>
               )}
             </div>
 
+            {has("counties") && (
             <div>
               <FieldLabel
                 confidence={98}
@@ -570,9 +657,18 @@ export function JobSpecCard({
                 </p>
               )}
             </div>
+            )}
           </>
         )}
 
+        {dedupesByCompany(spec.templateId) && (
+          <p className="rounded-xl border border-border bg-surface p-3 text-[11px] text-muted-foreground">
+            The Lead Here Is The Employer, Not The Posting — We Dedupe By Company So One Company Appears Once,
+            However Many Roles It Has Open.
+          </p>
+        )}
+
+        {!dataOnly && (
         <div>
           <FieldLabel hint="Sets the tone and compliance defaults for messaging — real estate, home services, insurance, and so on. The assistant suggests one from your request.">
             Industry Preset
@@ -584,7 +680,9 @@ export function JobSpecCard({
             </SelectContent>
           </Select>
         </div>
+        )}
 
+        {!dataOnly && (
         <div>
           <FieldLabel hint="How the first text should come across, in your words. It shapes the opening message your AI agent sends — nothing sends without your approval.">
             First-Touch Angle
@@ -597,6 +695,7 @@ export function JobSpecCard({
             placeholder="Empathetic, low-pressure opener…"
           />
         </div>
+        )}
 
         <div className="space-y-3">
           {toggles.map((option) => (

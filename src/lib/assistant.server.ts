@@ -6,7 +6,7 @@
 // suppressed leads, and never launches anything. A human clicks Run.
 
 import { jobSpecSchema, withStates, specStates, type JobSpec, type AssistantMessage } from "./assistant.shared";
-import { enrichmentProfile } from "./pipeline-options";
+import { enrichmentProfile, isNonUsRun, templateOutputType } from "./pipeline-options";
 import { countiesForState, formatCounty, parseCounty } from "./us-geo";
 
 /** Snap model-provided county names onto real counties in the spec's state. */
@@ -68,10 +68,26 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "- Business and public records sources: unchanged — phone numbers are the product, skipTrace and mobileOnly default ON.",
     "- Dedupe is universal for every source.",
     "",
+    "OUTPUT TYPE (leads vs data) — never blur these:",
+    "- Some sources produce a RESEARCH DATASET, not contactable leads: product catalogs (Amazon/Target/Best Buy/Home Depot/Wayfair/Newegg/Costco/SHEIN/Temu/AliExpress products), flight and hotel prices (Kayak, Skyscanner), sports scores (ESPN, SofaScore, FlashScore), news (Google News, Bing News, Reuters), finance (Yahoo Finance, Google Finance, SEC EDGAR), course catalogs (Coursera, Udemy, edX, Google Scholar), author-based social (Reddit, Pinterest, Quora, Threads), app reviews (App Store, Play Store), and Google Reviews.",
+    "- When one of those is selected, say plainly: \"This source produces a research dataset, not contactable leads.\" Never promise phone or text outreach, never mention skip trace, DNC scrubbing, mobile verification, or launching a campaign from it. Never set skipTrace, mobileOnly, emailRequired or removeFranchises for them.",
+    "",
+    "LEAD SHAPE BY CATEGORY:",
+    "- Job boards (Indeed, LinkedIn Jobs, Glassdoor, ZipRecruiter, Monster, SimplyHired, Dice, Google Jobs): the lead is the EMPLOYER, not the posting. Say so: \"I'll build a list of the companies hiring, not the postings.\" Always set recencyDays (default 30) because a fresh posting is the buying trigger, and dedupe by company.",
+    "- US real-estate portals (Zillow, Redfin, Realtor.com, Trulia): ALWAYS offer the choice of contact target before building — listing agents or For Sale By Owner. Set contactTarget to \"agents\" or \"fsbo\". Only the FSBO target gets skip trace (owners rarely publish a number); agents publish theirs.",
+    "- Marketplace sellers (Amazon, eBay, Etsy, Walmart, Shopify, Alibaba sellers): the merchant is the lead and the field is email. Set emailRequired true, never skipTrace. A natural follow-up is crawling their stores for contact details (the Contact Details template).",
+    "- Vendor review sites (G2, Capterra, Trustpilot, TrustRadius): the lead is the VENDOR company. Use a category keyword plus an optional rating / review-count filter. No counties.",
+    "- Crunchbase: keyword plus a funding-stage or company-size filter — that filter is the point.",
+    "- Rentals, commercial listings and travel hosts (Apartments.com, LoopNet, Airbnb, Booking, Foursquare): property managers, brokers, hosts and hotels are legitimate business leads, and their geography is a CITY, not a county. Set city.",
+    "",
+    "GEOGRAPHY + US-ONLY SMS:",
+    "- Non-US sources (Rightmove and Zoopla = United Kingdom, Idealista = Spain, Cylex, Hotfrog, Alibaba = China, Mercado Libre = Mexico, Flipkart = India, Agoda) take a COUNTRY, never a US state or county. Set country and leave state/counties empty.",
+    "- SMS launches are US-only. For any non-US run, say plainly that the deliverable is an email-ready file and that texting is not offered outside the US. Never quote SMS cost or promise a campaign launch for those runs.",
+    "",
     "STYLE: Short, plain, confident. Title Case for headings. No em-dashes. Ask at most two clarifying questions per turn. Briefly explain WHY you chose a source or preset so the operator learns the system.",
     "",
     "Respond with STRICT JSON only, no markdown fence:",
-'{"reply": string, "specPatch": { any of: sourceType("business"|"records"|"upload"), templateId, name, niches[], recordType, state(2-letter), states(array of 2-letter codes when several states are wanted), counties[], recencyDays, targetUrl, filters, removeFranchises, dedupe, mobileOnly, skipTrace, emailRequired, industry, messageAngle }, "suggestedTemplates": string[] }',
+'{"reply": string, "specPatch": { any of: sourceType("business"|"records"|"upload"), templateId, name, niches[], recordType, state(2-letter), states(array of 2-letter codes when several states are wanted), counties[], city, country, contactTarget("agents"|"fsbo"), recencyDays, targetUrl, filters, removeFranchises, dedupe, mobileOnly, skipTrace, emailRequired, industry, messageAngle }, "suggestedTemplates": string[] }',
     "Only include specPatch keys you actually resolved this turn. Leave the rest out.",
   ].join("\n");
 }
@@ -148,8 +164,15 @@ export async function askAssistant(opts: {
 /** Rough, honest pre-run estimate. Never presented as an exact bill. */
 export function estimate(spec: JobSpec): { rows: number; skipTraceCredits: number; scrapeCredits: number } | null {
   if (!spec.sourceType || spec.sourceType === "upload") return null;
-  // Creator sources never skip trace, so they never quote skip-trace credits.
-  const creator = enrichmentProfile(spec.templateId) === "creator";
+  // Sources that never skip trace never quote skip-trace credits: creators and
+  // marketplace sellers are email-first, datasets have no enrichment at all,
+  // and non-US runs are email-only because SMS is US-only.
+  const profile = enrichmentProfile(spec.templateId);
+  const noPhoneWork =
+    profile === "creator" ||
+    profile === "seller" ||
+    templateOutputType(spec.templateId) === "data" ||
+    isNonUsRun({ templateId: spec.templateId, country: spec.country });
   const geo = Math.max(1, spec.counties.length || 1);
   const rows =
     spec.sourceType === "records"
@@ -158,7 +181,7 @@ export function estimate(spec: JobSpec): { rows: number; skipTraceCredits: numbe
   return {
     rows,
     skipTraceCredits:
-      spec.skipTrace && !creator ? Math.round(rows * (spec.sourceType === "records" ? 0.8 : 0.25)) : 0,
+      spec.skipTrace && !noPhoneWork ? Math.round(rows * (spec.sourceType === "records" ? 0.8 : 0.25)) : 0,
     scrapeCredits: Math.round(rows / 10),
   };
 }

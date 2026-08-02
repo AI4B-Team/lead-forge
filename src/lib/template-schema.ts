@@ -10,6 +10,10 @@
 
 import { templateSourceType, type Template, type TemplateCategory } from "@/lib/templates";
 import type { JobSpec } from "@/lib/assistant.shared";
+import {
+  INTERNATIONAL_TEMPLATE_COUNTRY, JOB_BOARD_TEMPLATE_IDS, US_REALESTATE_PORTAL_IDS,
+  templateOutputType, type OutputType,
+} from "@/lib/pipeline-options";
 
 /** Every field the builder knows how to render. */
 export type BuilderField =
@@ -18,6 +22,9 @@ export type BuilderField =
   | "recordType"
   | "state"
   | "counties"
+  | "city"
+  | "country"
+  | "contactTarget"
   | "recency"
   | "url"
   | "audienceFilter"
@@ -29,10 +36,63 @@ export type AdapterStatus = "live" | "beta" | "requested";
 /** Site scrapers take a URL, not a geography. */
 const URL_TEMPLATES = new Set(["contact-details", "universal-crawl", "web-scraper", "site-crawler"]);
 
+/** City-shaped geography: nobody searches apartments or hotels by county. */
+const CITY_TEMPLATES = ["apartments", "foursquare", "booking", "airbnb", "hotels", "loopnet"] as const;
+
+/** Software / vendor review sources. The lead is the vendor company. */
+const VENDOR_REVIEW_TEMPLATES = ["g2", "capterra", "trustpilot", "trustradius"] as const;
+
 /** Templates whose fields don't follow their catalog category. */
 const SCHEMA_BY_ID: Record<string, BuilderField[]> = {
   linkedin: ["keyword", "audienceFilter"],
+  crunchbase: ["keyword", "audienceFilter"],
+  // Marketplace sellers: keyword + the marketplace's country.
+  amazon: ["keyword", "country"],
+  ebay: ["keyword", "country"],
+  etsy: ["keyword", "country"],
+  walmart: ["keyword", "country"],
+  shopify: ["keyword", "country"],
+  ...Object.fromEntries(CITY_TEMPLATES.map((id) => [id, ["niche", "city"] as BuilderField[]])),
+  ...Object.fromEntries(VENDOR_REVIEW_TEMPLATES.map((id) => [id, ["keyword", "audienceFilter"] as BuilderField[]])),
+  // Non-US portals and marketplaces take a country, never a US state/county.
+  ...Object.fromEntries(
+    Object.keys(INTERNATIONAL_TEMPLATE_COUNTRY).map((id) => [id, ["keyword", "country"] as BuilderField[]]),
+  ),
+  // US real-estate portals: whose details are we after, and where.
+  ...Object.fromEntries(
+    US_REALESTATE_PORTAL_IDS.map((id) => [
+      id,
+      ["contactTarget", "state", "counties", "listingFilter"] as BuilderField[],
+    ]),
+  ),
+  // Job boards: the employer is the lead, and freshness is the buying trigger.
+  ...Object.fromEntries(
+    JOB_BOARD_TEMPLATE_IDS.map((id) => [id, ["keyword", "state", "recency"] as BuilderField[]]),
+  ),
 };
+
+/** Per-template label overrides for the generic filter fields. */
+const FILTER_LABEL_BY_ID: Record<string, string> = {
+  crunchbase: "Funding / Size Filter",
+  g2: "Rating / Review-Count Filter",
+  capterra: "Rating / Review-Count Filter",
+  trustpilot: "Rating / Review-Count Filter",
+  trustradius: "Rating / Review-Count Filter",
+};
+
+export function filterFieldLabel(templateId?: string | null): string | null {
+  return (templateId && FILTER_LABEL_BY_ID[templateId]) || null;
+}
+
+/** Job-board runs dedupe by company, because the employer is the lead. */
+export function dedupesByCompany(templateId?: string | null): boolean {
+  return Boolean(templateId && JOB_BOARD_TEMPLATE_IDS.includes(templateId));
+}
+
+/** Output type for a template, re-exported so the builder has one import. */
+export function templateOutput(t?: Template | null): OutputType {
+  return templateOutputType(t?.id ?? null);
+}
 
 const BY_CATEGORY: Record<TemplateCategory, BuilderField[]> = {
   upload: ["upload"],
@@ -98,6 +158,9 @@ export const FIELD_SLOT_LABEL: Record<BuilderField, string> = {
   recordType: "Record Type",
   state: "Location",
   counties: "Location",
+  city: "City",
+  country: "Country",
+  contactTarget: "Contact Target",
   recency: "Recency",
   url: "URL",
   audienceFilter: "Audience Filter",
@@ -118,6 +181,12 @@ export function fieldFilled(f: BuilderField, spec: JobSpec, uploadReady: boolean
     case "state":
     case "counties":
       return (spec.states.length > 0 || Boolean(spec.state)) || spec.counties.length > 0;
+    case "city":
+      return Boolean(spec.city && spec.city.trim());
+    case "country":
+      return Boolean(spec.country && spec.country.trim());
+    case "contactTarget":
+      return Boolean(spec.contactTarget);
     case "url":
       return Boolean(spec.targetUrl && /\./.test(spec.targetUrl));
     default:

@@ -13,6 +13,12 @@ export const jobSpecSchema = z.object({
   /** Multiple states can be worked at once; `state` mirrors the first one. */
   states: z.array(z.string().length(2)).max(10).default([]),
   counties: z.array(z.string().max(80)).max(20).default([]),
+  /** City-shaped geography (Apartments, Foursquare, travel sources). */
+  city: z.string().max(80).nullable().default(null),
+  /** Country for non-US portals and marketplaces. */
+  country: z.string().max(60).nullable().default(null),
+  /** US real-estate portals: whose contact details the run targets. */
+  contactTarget: z.enum(["agents", "fsbo"]).nullable().default(null),
   recencyDays: z.number().int().min(1).max(3650).nullable().default(null),
   /** Opt-in only: business sources start with franchises included. */
   removeFranchises: z.boolean().default(false),
@@ -67,7 +73,12 @@ export type AssistantReply = {
 export function describeSpec(spec: JobSpec): string {
   if (!spec.sourceType) return "No Source Chosen Yet";
   if (spec.sourceType === "upload") return "Upload Your Own List";
-  const geo = spec.counties.join(", ") || specStates(spec).join(", ") || "No Geography";
+  const geo =
+    spec.counties.join(", ") ||
+    spec.city ||
+    specStates(spec).join(", ") ||
+    spec.country ||
+    "No Geography";
   if (spec.sourceType === "records") {
     return [spec.recordType ?? "Public Records", geo]
       .join(" · ");

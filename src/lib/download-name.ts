@@ -7,7 +7,7 @@
  */
 export const BRAND_PREFIX = "LeadTrace";
 
-export type DownloadFileType = "Clean" | "DNC" | "Litigators" | "Scrub Audit" | "All Leads";
+export type DownloadFileType = "Clean" | "DNC" | "Litigators" | "Scrub Audit" | "All Leads" | "Dataset";
 
 /** Characters invalid in filenames become "-"; en-dashes and commas stay. */
 export function sanitizeFileName(name: string): string {
