@@ -1,6 +1,6 @@
 import { ChevronRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { buildFunnel, stageFillPercent } from "@/lib/funnel-math";
+import { buildFunnel, stageFillPercent, type FunnelVariant } from "@/lib/funnel-math";
 import { useCountUp } from "@/hooks/use-count-up";
 import type { ReactNode } from "react";
 
@@ -31,6 +31,7 @@ export function PipelineFunnel({
   animate = false,
   completedThrough,
   readyPill,
+  variant = "phone",
   className,
 }: {
   stages: FunnelStages;
@@ -43,18 +44,23 @@ export function PipelineFunnel({
   completedThrough?: number;
   /** Pill centered above the Clean card (e.g. "✓ 8 Ready To Launch"). */
   readyPill?: ReactNode;
+  /** "creator" swaps Mobile Verified / Skip Traced for a single Email Found stage. */
+  variant?: FunnelVariant;
   className?: string;
 }) {
   const small = size === "sm";
   const verified = stages.verified ?? stages.textable ?? stages.deduped;
-  const built = buildFunnel({
-    found: stages.found,
-    deduped: stages.deduped,
-    verified,
-    traced: traced ?? stages.skipTraced ?? 0,
-    scrubbed: stages.scrubbed,
-    clean: stages.clean,
-  });
+  const built = buildFunnel(
+    {
+      found: stages.found,
+      deduped: stages.deduped,
+      verified,
+      traced: traced ?? stages.skipTraced ?? 0,
+      scrubbed: stages.scrubbed,
+      clean: stages.clean,
+    },
+    { variant },
+  );
   const found = built[0]!.remaining;
   const done = completedThrough ?? built.length - 1;
 
