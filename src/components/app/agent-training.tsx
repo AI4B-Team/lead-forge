@@ -7,11 +7,12 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Mic, MicOff, Paperclip, Loader2, Trash2, Sparkles, Link2 } from "lucide-react";
+import { Mic, MicOff, Paperclip, Loader2, Trash2, Sparkles, Link2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { addBotKnowledge, deleteBotKnowledge } from "@/lib/bot-training.functions";
 import { TEXTUAL_FILE, type KnowledgeItem } from "@/lib/knowledge-cards.shared";
+
 
 type SpeechRecognitionLike = {
   continuous: boolean;
