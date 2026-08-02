@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs, pauseJob, resumeJob } from "@/lib/jobs.functions";
 import { RESCRUB_DAYS } from "@/lib/compliance-rules";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
+import { normalizeChannel, channelPrimaryAction, CHANNEL_LEAD_NOUN } from "@/lib/channels";
 import { buildFunnel, funnelViolations } from "@/lib/funnel-math";
 import { enrichmentProfile, isDataSource, isNonUsRun } from "@/lib/pipeline-options";
 import { exportShapeFor, shapeExportRows, cleanFileType } from "@/lib/export-columns";
@@ -120,9 +121,17 @@ function JobDetail() {
     templateId: runTemplateId,
     country: typeof params.country === "string" ? params.country : null,
   });
+  // The list's outreach channel decides what the run can do at the end. SMS is
+  // the only channel with a sending engine; email and direct mail are exports.
+  const channel = normalizeChannel((job as { channel?: string | null }).channel ?? null);
   // SMS is US-only, and a dataset isn't contactable — neither can launch.
-  const campaignable = !isDataRun && !nonUsRun;
-  const funnelVariant = isDataRun ? "data" : isCreatorRun ? "creator" : "phone";
+  const campaignable = !isDataRun && !nonUsRun && channel === "sms";
+  const funnelVariant =
+    isDataRun || channel === "direct_mail"
+      ? "data"
+      : isCreatorRun || channel === "email"
+        ? "creator"
+        : "phone";
   const funnel = buildFunnel(
     {
       found: job.rows_in ?? 0,
