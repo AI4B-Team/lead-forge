@@ -305,7 +305,7 @@ function Dashboard() {
             <HeroStat
               label="Deliverability"
               value={metrics.deliverability ? `${metrics.deliverability}%` : "—"}
-              info={metrics.deliverability ? undefined : "Starts tracking with your first campaign"}
+              info={metrics.deliverability ? undefined : "Starts Tracking With Your First Campaign"}
             />
             <HeroStat label="Credits" value={totalCredits.toLocaleString()} />
           </TooltipProvider>
