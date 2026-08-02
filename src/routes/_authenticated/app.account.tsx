@@ -170,34 +170,6 @@ function AccountPage() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base font-display">
-                    <Bell className="h-4 w-4 text-muted-foreground" /> Notifications
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="divide-y">
-                  <PrefRow
-                    label="List Complete"
-                    hint="Email Me When A List Finishes Cleaning."
-                    checked={prefs.jobComplete}
-                    onChange={(v) => setPrefs((p) => ({ ...p, jobComplete: v }))}
-                  />
-                  <PrefRow
-                    label="Campaign Alerts"
-                    hint="Replies, Opt-Outs, And Number Health Warnings."
-                    checked={prefs.campaignAlerts}
-                    onChange={(v) => setPrefs((p) => ({ ...p, campaignAlerts: v }))}
-                  />
-                  <PrefRow
-                    label="Billing Emails"
-                    hint="Receipts, Credit Top-Ups, And Low-Balance Warnings."
-                    checked={prefs.billingEmails}
-                    onChange={(v) => setPrefs((p) => ({ ...p, billingEmails: v }))}
-                  />
-                </CardContent>
-              </Card>
-
               <Button className="rounded-full" onClick={saveProfile} disabled={savingProfile}>
                 {savingProfile ? "Saving..." : "Save Changes"}
               </Button>
