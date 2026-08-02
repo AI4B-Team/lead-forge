@@ -31,7 +31,10 @@ export type AccountTabKey =
   | "integrations"
   | "api"
   | "compliance"
-  | "admin";
+  | "admin"
+  | "admin-workspaces"
+  | "admin-sources"
+  | "admin-access";
 
 type TabDef = {
   key: AccountTabKey;
