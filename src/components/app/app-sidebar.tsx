@@ -56,7 +56,8 @@ export function AppSidebar() {
     (async () => {
       const [lists, leads, campaigns] = await Promise.all([
         supabase.from("jobs").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
-        supabase.from("leads").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+        // Distinct, de-duplicated leads — must match the Leads page header total.
+        supabase.from("lead_records").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
         supabase.from("campaigns").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
       ]);
       setCounts({ lists: lists.count ?? 0, leads: leads.count ?? 0, campaigns: campaigns.count ?? 0 });
