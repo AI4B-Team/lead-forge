@@ -41,6 +41,8 @@ export function KpiCard({
   invert,
   icon: Icon,
   emphasis,
+  emptyHint,
+  isEmpty,
 }: {
   label: string;
   value: string;
@@ -49,6 +51,8 @@ export function KpiCard({
   invert?: boolean;
   icon?: typeof Trophy;
   emphasis?: boolean;
+  emptyHint?: string;
+  isEmpty?: boolean;
 }) {
   const good = deltaPct == null ? null : invert ? deltaPct <= 0 : deltaPct >= 0;
   return (
@@ -58,28 +62,40 @@ export function KpiCard({
           {Icon && <Icon className="h-3.5 w-3.5" />} {label}
         </div>
         <div className="mt-2 font-display text-3xl font-black text-foreground">{value}</div>
-        <div className="mt-1 flex items-center gap-2 text-xs">
-          {deltaPct != null && (
+        {isEmpty && emptyHint ? (
+          <div className="mt-1 text-xs leading-snug text-muted-foreground">{emptyHint}</div>
+        ) : deltaPct == null ? (
+          <div className="mt-1 text-xs text-muted-foreground">{sub ?? "Not Enough History Yet"}</div>
+        ) : (
+          <div className="mt-1 flex items-center gap-2 text-xs">
             <span className={`flex items-center gap-0.5 font-semibold ${good ? "text-success" : "text-danger"}`}>
               {deltaPct >= 0 ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
               {Math.abs(deltaPct)}%
             </span>
-          )}
-          <span className="text-muted-foreground">{sub ?? "vs Previous Period"}</span>
-        </div>
+            <span className="text-muted-foreground">{sub ?? "vs Previous Period"}</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 }
 
 /** Revenue funnel — the hero answer to "is my outreach making money?". */
-export function RevenueFunnel({ steps }: { steps: Array<{ label: string; value: number }> }) {
+export function RevenueFunnel({
+  steps,
+}: {
+  steps: Array<{ label: string; value: number; basis?: string; note?: string; empty?: string }>;
+}) {
   const top = Math.max(steps[0]?.value ?? 0, 1);
   return (
     <div className="mx-auto w-full max-w-3xl space-y-5">
       {steps.map((s, i) => {
         const prev = steps[i - 1]?.value;
-        const conv = prev ? Math.round((s.value / Math.max(prev, 1)) * 100) : null;
+        // Only genuine subsets get a "% of previous" read; sends get msgs/contact.
+        const conv =
+          s.basis === "subset" && prev
+            ? Math.min(Math.round((s.value / Math.max(prev, 1)) * 100), 100)
+            : null;
         return (
           <div key={s.label}>
             <div className="flex items-baseline justify-between">
@@ -91,6 +107,9 @@ export function RevenueFunnel({ steps }: { steps: Array<{ label: string; value: 
                 {conv != null && (
                   <span className="ml-2 align-middle text-xs font-semibold text-muted-foreground">{conv}%</span>
                 )}
+                {s.note && (
+                  <span className="ml-2 align-middle text-xs font-semibold text-muted-foreground">{s.note}</span>
+                )}
               </span>
             </div>
             <div className="mt-2 h-5 overflow-hidden rounded-full bg-surface-muted">
@@ -99,6 +118,9 @@ export function RevenueFunnel({ steps }: { steps: Array<{ label: string; value: 
                 style={{ width: `${Math.max((s.value / top) * 100, s.value ? 3 : 0)}%` }}
               />
             </div>
+            {!s.value && s.empty && (
+              <div className="mt-1.5 text-xs text-muted-foreground">{s.empty}</div>
+            )}
           </div>
         );
       })}
@@ -214,6 +236,7 @@ export function PerformanceChart({
 }) {
   const [series, setSeries] = useState<SeriesId>("replies");
   const active = SERIES.find((s) => s.id === series)!;
+  const activeDays = daily.filter((d) => d.sent > 0 || d.replies > 0).length;
   return (
     <Card>
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 pb-3">
@@ -233,6 +256,16 @@ export function PerformanceChart({
         </div>
       </CardHeader>
       <CardContent>
+        {activeDays > 0 && activeDays < 4 && (
+          <div className="mb-2 text-xs text-muted-foreground">
+            Early Days — Only {activeDays} Day{activeDays === 1 ? "" : "s"} Of Activity So Far. The Trend Fills In As You Keep Sending.
+          </div>
+        )}
+        {activeDays === 0 && (
+          <div className="mb-2 text-xs text-muted-foreground">
+            No Sending Activity In This Window Yet — Launch A Campaign To Start The Trend.
+          </div>
+        )}
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={daily} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
