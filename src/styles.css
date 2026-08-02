@@ -323,10 +323,12 @@
   }
 }
 
-/* Full-height Conversations/inbox layout — scoped to the inbox only. Height math
-   accounts for the 56px top bar, the content padding, and the 0.8 content zoom. */
+/* Full-height Conversations/inbox panel area — scoped to the inbox only. It
+   mirrors the working assistant-shell math: remove the unscaled top bar first,
+   convert the remaining viewport into the 0.8-zoomed layout space, then remove
+   the content padding and the page title/subheadline block. */
 .inbox-shell {
-  height: calc((100vh - 3.5rem) / 0.8 - 4rem);
+  height: calc((100vh - 3.5rem) / 0.8 - 4rem - 5.5rem);
 }
 
 /* Full-height AI Assistant shell — scoped to the assistant page only, kept
