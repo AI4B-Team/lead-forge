@@ -115,6 +115,13 @@ function JobDetail() {
   // Creator sources deliver emails, not dials — their funnel, KPI strip and
   // export columns all follow the creator layout.
   const runTemplateId = typeof params.templateId === "string" ? params.templateId : null;
+  // A custom/requested adapter can declare its own output fields on the run;
+  // when it hasn't, columns are inferred from the rows themselves.
+  const runOutputFields = (Array.isArray(params.output_fields)
+    ? params.output_fields
+    : Array.isArray(params.outputFields)
+      ? params.outputFields
+      : null) as CustomFieldSchema | null;
   const isCreatorRun = enrichmentProfile(runTemplateId) === "creator";
   // Research datasets have no compliance pipeline: Found -> Deduped -> Exported.
   const isDataRun = isDataSource(runTemplateId);
