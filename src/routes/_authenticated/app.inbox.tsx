@@ -43,7 +43,7 @@ import {
 import { SLASH_COMMANDS, classifyIntent, dayLabel } from "@/lib/conversation-intel";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { filter?: string; thread?: string } => ({
     filter: typeof search.filter === "string" ? (search.filter as string) : undefined,
     thread: typeof search.thread === "string" ? (search.thread as string) : undefined,
   }),
