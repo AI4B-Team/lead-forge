@@ -15,7 +15,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { assignJobNames, cadenceBadge } from "@/lib/job-naming";
 import {
   Users, ListChecks, MessageSquare, CreditCard, Plus, ArrowUpRight, Landmark, MapPin,
-  Upload, TrendingUp, Info, Activity, Zap, CheckCircle2,
+  Upload, TrendingUp, Info, Activity, Zap, CheckCircle2, HelpCircle,
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { ActivityList, useActivity } from "@/components/app/activity-feed";
