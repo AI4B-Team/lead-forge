@@ -34,6 +34,12 @@ function getRecognition(): SpeechRecognitionLike | null {
   return Ctor ? new Ctor() : null;
 }
 
+// Collapses a doubled URL scheme (e.g. "https://https://site.com" or
+// "https://http://site.com") down to the pasted URL's own scheme.
+export function dedupeScheme(value: string): string {
+  return value.replace(/\bhttps?:\/\/(?=https?:\/\/)/gi, "");
+}
+
 const EXAMPLES = [
   "Explain Your Services",
   "Paste Your FAQs",
