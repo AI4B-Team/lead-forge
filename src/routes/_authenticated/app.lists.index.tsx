@@ -822,7 +822,7 @@ function RescanControl({
         <div className="flex items-center gap-1">
           <Popover
             open={customOpen}
-            onOpenChange={(o) => {
+            onOpenChange={(o: boolean) => {
               setCustomOpen(o);
               if (!o && cadence !== "custom") {
                 setCustomValue(
