@@ -262,7 +262,12 @@ function Jobs() {
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="p-4">Name</th>
                 <th className="p-4">Source</th>
-                <th className="p-4">Pipeline</th>
+                <th className="p-4 align-bottom">
+                  <div className="space-y-1.5">
+                    <div>Pipeline</div>
+                    <JobStageFlowHeader className="normal-case tracking-wider" />
+                  </div>
+                </th>
                 <th className="p-4">Rescan</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Created</th>
@@ -342,7 +347,7 @@ function Jobs() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <JobStageFlow stages={buildPipelineStages(j)} />
+                    <JobStageFlow stages={buildPipelineStages(j)} traced={tracedCount(j)} />
                   </td>
                   <td className="p-4" onClick={(e) => e.stopPropagation()}>
                     <CadenceSelect
