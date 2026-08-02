@@ -873,7 +873,7 @@ function Assistant() {
             upload={upload}
             template={selectedTemplate}
             onChangeTemplate={() => setAllOpen(true)}
-            onPickFile={(f) => void attachFile(f)}
+            onPickFile={(f) => requestAttach(f)}
             onRemoveUpload={() => { setUpload(null); setConfirmed(false); }}
             onEditMapping={() => setMapOpen(true)}
             onRequestRecordType={requestRecordType}
