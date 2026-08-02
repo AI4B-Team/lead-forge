@@ -49,7 +49,7 @@ export const inviteTeamMember = createServerFn({ method: "POST" })
     z.object({
       workspaceId: z.string().uuid(),
       email: z.string().email(),
-      role: z.enum(["admin", "member"]).default("member"),
+      role: z.enum(["admin", "member", "viewer"]).default("member"),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {

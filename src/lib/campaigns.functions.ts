@@ -209,6 +209,12 @@ export const updateCampaignStatus = createServerFn({ method: "POST" })
       if (reg?.campaign_status !== "approved") {
         throw new Error("10DLC Registration Must Be Approved Before Sending.");
       }
+      const { assertSpendAllowed } = await import("./accountability.server");
+      await assertSpendAllowed(context.supabase, c.workspace_id, context.userId, {
+        amount: 0,
+        action: "launch_campaign",
+        summary: "Launch Campaign",
+      });
       launchedWorkspaceId = c.workspace_id;
     }
     const { error } = await context.supabase
@@ -236,6 +242,7 @@ export const updateCampaignStatus = createServerFn({ method: "POST" })
           summary: `Campaign ${label} — ${c.name ?? "Untitled"}`,
           refId: data.campaignId,
           refType: "campaign",
+          actorId: context.userId,
         });
       }
     }

@@ -46,6 +46,7 @@ export const topUpCredits = createServerFn({ method: "POST" })
       kind: data.kind,
       delta: data.amount,
       reason: "top_up",
+      actor_user_id: context.userId,
     });
     const { logActivity } = await import("./activity.server");
     const KIND_LABEL: Record<string, string> = {

@@ -30,7 +30,10 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { isStalled, stallReason } from "@/lib/job-watchdog";
 import { qualityGrade } from "@/lib/quality-grade";
 import { brandedFileName, brandedJobTitle, BUCKET_FILE_TYPE } from "@/lib/download-name";
-import { downloadRows, toCsv, downloadCsv, type ExportFormat } from "@/lib/export-file";
+import { type ExportFormat } from "@/lib/export-file";
+import { guardedExport } from "@/lib/guarded-export";
+import { useTeamContext } from "@/hooks/use-team-context";
+import { denialMessage } from "@/lib/team-roles.shared";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FileSpreadsheet, FileText, Files } from "lucide-react";
 import { ChevronDown, Database, Coins } from "lucide-react";
@@ -56,6 +59,7 @@ function fmtDuration(ms: number) {
 
 function JobDetail() {
   const { listId: jobId } = Route.useParams();
+  const team = useTeamContext();
   const navigate = useNavigate();
   const fetchReview = useServerFn(getJobReview);
   const fetchBucket = useServerFn(getLeadsByBucket);
@@ -188,21 +192,37 @@ function JobDetail() {
   };
 
   const onDownload = async (bucket: "clean" | "dnc" | "litigator", format: ExportFormat) => {
+    if (!team.can("export_list")) {
+      return toast.error("Export Blocked", { description: denialMessage(team.role, "export_list") });
+    }
     const res = await fetchBucket({ data: { jobId, bucket } });
     if (!res.rows.length) return toast.info("No Rows In This Bucket.");
     const type = BUCKET_FILE_TYPE[bucket];
     const label = bucket === "clean" ? cleanFileType(runTemplateId) : type;
     const rows = shapeExportRows(res.rows as Array<Record<string, unknown>>, exportShapeFor(runTemplateId), runTemplateId);
-    await downloadRows(rows, format, (ext) => brandedFileName(jobName, label, ext), label);
+    // Attributed, capped and watermarked before a single byte is written.
+    await guardedExport({
+      workspaceId: team.workspaceId,
+      rows,
+      format,
+      scope: `${label} · ${jobName}`,
+      refId: jobId,
+      fileName: (ext) => brandedFileName(jobName, label, ext),
+      sheetName: label,
+    });
   };
 
   // Scrub audit trail: provider, timestamp and per-bucket outcome, exportable.
-  const onExportAudit = () => {
+  const onExportAudit = async () => {
     const s = data.scrub as Record<string, unknown> | null;
     if (!s) return toast.info("No Scrub Run Recorded Yet.");
-    downloadCsv(
-      brandedFileName(jobName, "Scrub Audit"),
-      toCsv([{
+    await guardedExport({
+      workspaceId: team.workspaceId,
+      format: "csv",
+      scope: `Scrub Audit · ${jobName}`,
+      refId: jobId,
+      fileName: (ext) => brandedFileName(jobName, "Scrub Audit", ext),
+      rows: [{
         job: jobName,
         provider: s.provider ?? "internal",
         scrubbed_at: s.created_at,
@@ -210,8 +230,8 @@ function JobDetail() {
         clean: s.clean_count ?? counts.clean,
         dnc: s.dnc_count ?? counts.dnc,
         litigator: s.litigator_count ?? counts.litigator,
-      }]),
-    );
+      }],
+    });
   };
 
   return (

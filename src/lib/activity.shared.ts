@@ -20,6 +20,13 @@ export const ACTIVITY_TYPES = [
   "cadence_set",
   "adapter_requested",
   "compliance_digest",
+  // Internal accountability (who spent, who exported, who changed access).
+  // Distinct from the compliance record, which stays a single-purpose legal log.
+  "list_exported",
+  "member_invited",
+  "member_removed",
+  "member_role_changed",
+  "member_limits_set",
 ] as const;
 
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
@@ -42,6 +49,11 @@ export const ACTIVITY_GROUPS: Array<{ key: string; label: string; types: Activit
   { key: "credits", label: "Credits", types: ["credits_purchased", "credits_low"] },
   { key: "numbers", label: "Numbers", types: ["number_added", "number_cooled", "brand_status"] },
   { key: "compliance", label: "Compliance", types: ["compliance_digest"] },
+  {
+    key: "team",
+    label: "Team",
+    types: ["list_exported", "member_invited", "member_removed", "member_role_changed", "member_limits_set"],
+  },
 ];
 
 export const ACTIVITY_ICON: Record<string, string> = {
@@ -58,6 +70,11 @@ export const ACTIVITY_ICON: Record<string, string> = {
   cadence_set: "clock",
   adapter_requested: "sparkles",
   compliance_digest: "shield",
+  list_exported: "download",
+  member_invited: "user-plus",
+  member_removed: "user-minus",
+  member_role_changed: "shield-check",
+  member_limits_set: "gauge",
 };
 
 /** Where a row navigates when clicked. Returns null when there's no detail view. */
@@ -79,6 +96,9 @@ export function activityLink(
       return "/app/compliance";
     case "template":
       return "/app/assistant";
+    case "member":
+    case "export":
+      return "/app/team";
     default:
       return null;
   }

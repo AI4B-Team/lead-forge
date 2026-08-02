@@ -11,6 +11,7 @@ import { ActivityPanel } from "@/components/app/activity-panel";
 import { HelpMenu } from "@/components/app/help-menu";
 import { ProductTour, useProductTour } from "@/components/app/product-tour";
 import { CreditMenu } from "@/components/app/credit-menu";
+import { SeatGuard } from "@/components/app/seat-guard";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -22,6 +23,7 @@ function AppLayout() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-surface-muted">
+        <SeatGuard />
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center justify-between border-b border-border bg-background px-4">

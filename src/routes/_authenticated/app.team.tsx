@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Trash2, UserPlus, Mail, Users, Clock, Armchair } from "lucide-react";
+import { Copy, Trash2, UserPlus, Mail, Users, Clock, Armchair, Coins } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsShell } from "@/components/app/settings-shell";
 import { StatTile } from "@/components/app/stat-tile";
@@ -14,7 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { listTeam, inviteTeamMember, revokeInvite, removeMember } from "@/lib/team.functions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { listTeam, inviteTeamMember, revokeInvite } from "@/lib/team.functions";
+import { revokeSeat, setMemberRole } from "@/lib/accountability.functions";
+import { ROLE_BLURB, ROLE_LABEL, WORKSPACE_ROLES, type WorkspaceRole } from "@/lib/team-roles.shared";
+import { useTeamContext } from "@/hooks/use-team-context";
+import {
+  ApprovalsQueue, AttributionLog, MemberCostDashboard, RevokeSeatButton,
+} from "@/components/app/team-accountability";
 
 export const Route = createFileRoute("/_authenticated/app/team")({
   head: () => ({ meta: [{ title: "Team — LeadTrace" }] }),
@@ -27,10 +34,12 @@ function TeamPage() {
   const fetchList = useServerFn(listTeam);
   const doInvite = useServerFn(inviteTeamMember);
   const doRevoke = useServerFn(revokeInvite);
-  const doRemove = useServerFn(removeMember);
+  const doRevokeSeat = useServerFn(revokeSeat);
+  const doSetRole = useServerFn(setMemberRole);
+  const team = useTeamContext();
 
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "member">("member");
+  const [role, setRole] = useState<WorkspaceRole>("member");
   const [busy, setBusy] = useState(false);
 
   const { data } = useQuery({
@@ -39,7 +48,11 @@ function TeamPage() {
     enabled: !!workspaceId,
   });
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["team", workspaceId] });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["team", workspaceId] });
+    qc.invalidateQueries({ queryKey: ["member-costs", workspaceId] });
+    qc.invalidateQueries({ queryKey: ["attribution-log", workspaceId] });
+  };
 
   const members = data?.members ?? [];
   const invites = (data?.invites ?? []) as any[];
@@ -86,9 +99,15 @@ function TeamPage() {
       <SettingsShell current="team">
       <PageHeader title="Team" description="Invite Teammates To Collaborate In This Workspace." />
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Members" value={members.length} icon={Users} hint="Active In This Workspace" />
         <StatTile label="Pending" value={invites.length} icon={Mail} hint="Invites Awaiting Acceptance" />
+        <StatTile
+          label="My Credits"
+          value={team.used.credits.toLocaleString()}
+          icon={Coins}
+          hint={team.limits.monthly_credit_cap ? `Of ${team.limits.monthly_credit_cap.toLocaleString()} Cap This Month` : "Spent This Month"}
+        />
         <StatTile
           label="Seats"
           value={`${members.length} / ${SEATS}`}
@@ -97,6 +116,14 @@ function TeamPage() {
         />
       </div>
 
+      <Tabs defaultValue="members">
+        <TabsList className="mb-4">
+          <TabsTrigger value="members">Members</TabsTrigger>
+          {team.isAdmin && <TabsTrigger value="accountability">Accountability</TabsTrigger>}
+          <TabsTrigger value="approvals">Approvals</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="members">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
       <Card>
@@ -120,13 +147,15 @@ function TeamPage() {
             </div>
             <div>
               <Label>Role</Label>
-              <Select value={role} onValueChange={(v) => setRole(v as "admin" | "member")}>
+              <Select value={role} onValueChange={(v) => setRole(v as WorkspaceRole)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  {WORKSPACE_ROLES.filter((r) => r !== "owner").map((r) => (
+                    <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              <p className="mt-1 text-xs text-muted-foreground">{ROLE_BLURB[role]}</p>
             </div>
             <Button className="rounded-full" onClick={submitInvite} disabled={busy || !email}>
               {busy ? "Sending..." : "Send Invite"}
@@ -160,24 +189,42 @@ function TeamPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="capitalize">{m.role}</Badge>
-                {!m.is_me && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={async () => {
-                      if (!confirm(`Remove ${m.email}?`)) return;
+                {m.role === "owner" || m.is_me || !team.can("manage_members") ? (
+                  <Badge variant="secondary">{ROLE_LABEL[(m.role as WorkspaceRole) ?? "member"] ?? m.role}</Badge>
+                ) : (
+                  <Select
+                    value={m.role}
+                    onValueChange={async (v) => {
                       try {
-                        await doRemove({ data: { workspaceId: workspaceId!, userId: m.user_id } });
-                        toast.success("Member removed");
+                        await doSetRole({ data: { workspaceId: workspaceId!, userId: m.user_id, role: v as "admin" | "member" | "viewer" } });
+                        toast.success(`Role Changed To ${ROLE_LABEL[v as WorkspaceRole]}`);
                         invalidate();
                       } catch (e: any) {
-                        toast.error(e?.message ?? "Failed");
+                        toast.error(e?.message ?? "Could Not Change Role");
                       }
                     }}
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                    <SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {(["admin", "member", "viewer"] as const).map((r) => (
+                        <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {!m.is_me && m.role !== "owner" && team.can("manage_members") && (
+                  <RevokeSeatButton
+                    email={m.email || m.user_id.slice(0, 8)}
+                    onRevoke={async () => {
+                      try {
+                        await doRevokeSeat({ data: { workspaceId: workspaceId!, userId: m.user_id } });
+                        toast.success("Seat Revoked — Sessions Invalidated");
+                        invalidate();
+                      } catch (e: any) {
+                        toast.error(e?.message ?? "Could Not Revoke Seat");
+                      }
+                    }}
+                  />
                 )}
               </div>
             </div>
@@ -254,6 +301,24 @@ function TeamPage() {
           </Card>
         </div>
       </div>
+        </TabsContent>
+
+        {team.isAdmin && workspaceId && (
+          <TabsContent value="accountability" className="space-y-4">
+            {/* Management reporting: cost and data movement per member. The
+                compliance record stays where it is — different audience. */}
+            <MemberCostDashboard workspaceId={workspaceId} />
+            <AttributionLog
+              workspaceId={workspaceId}
+              members={members.map((m) => ({ user_id: m.user_id, email: m.email }))}
+            />
+          </TabsContent>
+        )}
+
+        <TabsContent value="approvals">
+          {workspaceId && <ApprovalsQueue workspaceId={workspaceId} enforced={team.teamControls} />}
+        </TabsContent>
+      </Tabs>
       </SettingsShell>
     </div>
   );
