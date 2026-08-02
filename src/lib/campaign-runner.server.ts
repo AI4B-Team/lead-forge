@@ -126,9 +126,10 @@ async function tickOne(campaign: {
     });
   }
 
-  const { data: sup } = await supabaseAdmin
-    .from("suppression").select("phone").eq("workspace_id", campaign.workspace_id);
-  const suppressed = new Set((sup ?? []).map((r) => r.phone));
+  // Single source of truth for opt-out / suppression (see optout.server.ts).
+  const { loadSuppressionSet, loadOptedOutLeadIds, logBlockedSend } = await import("@/lib/optout.server");
+  const suppressed = await loadSuppressionSet(supabaseAdmin, campaign.workspace_id);
+  const optedOut = await loadOptedOutLeadIds(supabaseAdmin, campaign.workspace_id);
 
   const { data: prevMsgs } = await supabaseAdmin
     .from("messages").select("lead_id").eq("campaign_id", campaign.id).eq("direction", "outbound");
@@ -167,8 +168,20 @@ async function tickOne(campaign: {
     return { dispatched: 0, reason: "list_exhausted" };
   }
 
+  const blocked: Array<{ id: string; phone: string; reason: "opted_out" | "suppressed" }> = [];
   const toSend = leads
-    .filter((l) => l.phone && !suppressed.has(l.phone) && !messaged.has(l.id))
+    .filter((l) => {
+      if (!l.phone) return false;
+      if (optedOut.has(l.id)) {
+        blocked.push({ id: l.id, phone: l.phone, reason: "opted_out" });
+        return false;
+      }
+      if (suppressed.has(l.phone) || suppressed.has(l.phone.replace(/\D/g, ""))) {
+        blocked.push({ id: l.id, phone: l.phone, reason: "suppressed" });
+        return false;
+      }
+      return !messaged.has(l.id);
+    })
     // TCPA: skip any recipient currently outside their local 8am–9pm window.
     // They'll be picked up on a later tick when their local time is legal.
     .filter((l) => isWithinTcpaWindow(l.phone as string))
@@ -176,10 +189,30 @@ async function tickOne(campaign: {
     .filter((l) => canStartNewDrop(l.phone as string))
     .slice(0, take);
 
+  for (const b of blocked.slice(0, 50)) {
+    await logBlockedSend(
+      supabaseAdmin,
+      { workspaceId: campaign.workspace_id, leadId: b.id, source: `campaign_runner:${campaign.id}` },
+      { ok: false, reason: b.reason, message: "blocked", phone: b.phone },
+    );
+  }
+
   const provider = isProviderConfigured() ? getProvider() : null;
   let dispatched = 0;
 
   for (const lead of toSend) {
+    // Final per-recipient re-check: an inbound STOP can land mid-batch.
+    const { assertCanText } = await import("@/lib/optout.server");
+    try {
+      await assertCanText(supabaseAdmin, {
+        workspaceId: campaign.workspace_id,
+        leadId: lead.id,
+        phone: lead.phone,
+        source: `campaign_runner:${campaign.id}`,
+      });
+    } catch {
+      continue;
+    }
     // Pick the healthiest number that still has warmup headroom.
     const num = numbers.find((n) => {
       const s = numberState.get(n.id)!;

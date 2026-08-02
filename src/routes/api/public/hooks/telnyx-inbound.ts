@@ -121,7 +121,27 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
             .eq("id", campaignId)
             .maybeSingle();
 
-          if (campaign?.bot_enabled) {
+          // Never let the bot text a suppressed / previously opted-out number.
+          let botAllowed = !!campaign?.bot_enabled;
+          if (botAllowed) {
+            const { checkCanText, logBlockedSend } = await import("@/lib/optout.server");
+            const gate = await checkCanText(admin, {
+              workspaceId: num.workspace_id,
+              leadId: lead?.id ?? null,
+              phone: inbound.from,
+              source: `bot:${campaignId}`,
+            });
+            if (!gate.ok) {
+              botAllowed = false;
+              await logBlockedSend(
+                admin,
+                { workspaceId: num.workspace_id, leadId: lead?.id ?? null, phone: inbound.from, source: `bot:${campaignId}` },
+                gate,
+              );
+            }
+          }
+
+          if (botAllowed && campaign) {
             const { generateBotReply } = await import("@/lib/bot.server");
             const { buildKnowledgeBrief } = await import("@/lib/bot-training.server");
             const { data: knowledgeRows } = await admin
