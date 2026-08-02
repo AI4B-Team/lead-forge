@@ -165,6 +165,9 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
       sourceType: spec.sourceType,
       params: {
         name,
+        // The source template drives creator vs phone funnel wording and the
+        // clean-file column layout on the results page.
+        templateId: spec.templateId,
         niches: spec.niches,
         record_type: spec.recordType,
         state: specStates(spec)[0] ?? null,
@@ -176,6 +179,7 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
         dedupe: spec.dedupe,
         mobile_only: spec.mobileOnly,
         skip_trace: spec.skipTrace,
+        email_required: spec.emailRequired,
         industry: spec.industry,
         message_angle: spec.messageAngle,
         assembled_by: "ai_assistant",

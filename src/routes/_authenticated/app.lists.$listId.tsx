@@ -17,6 +17,8 @@ import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, l
 import { RESCRUB_DAYS } from "@/lib/compliance-rules";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { buildFunnel, funnelViolations } from "@/lib/funnel-math";
+import { enrichmentProfile } from "@/lib/pipeline-options";
+import { exportShapeFor, shapeExportRows } from "@/lib/export-columns";
 import { launchEstimate, formatUsd } from "@/lib/launch-estimate";
 import { LOCAL_TZ } from "@/lib/local-tz";
 import { PhoneLink } from "@/components/app/phone-link";
@@ -107,14 +109,22 @@ function JobDetail() {
 
   // Canonical funnel math — one computation feeds the bars, the KPI strip, and
   // the arithmetic guard below.
-  const funnel = buildFunnel({
-    found: job.rows_in ?? 0,
-    deduped: job.rows_deduped ?? 0,
-    verified: job.rows_enriched ?? counts.total,
-    traced: job.rows_skiptraced ?? 0,
-    scrubbed: counts.total,
-    clean: counts.clean,
-  });
+  // Creator sources deliver emails, not dials — their funnel, KPI strip and
+  // export columns all follow the creator layout.
+  const runTemplateId = typeof params.templateId === "string" ? params.templateId : null;
+  const isCreatorRun = enrichmentProfile(runTemplateId) === "creator";
+  const funnelVariant = isCreatorRun ? "creator" : "phone";
+  const funnel = buildFunnel(
+    {
+      found: job.rows_in ?? 0,
+      deduped: job.rows_deduped ?? 0,
+      verified: job.rows_enriched ?? counts.total,
+      traced: job.rows_skiptraced ?? 0,
+      scrubbed: counts.total,
+      clean: counts.clean,
+    },
+    { variant: funnelVariant },
+  );
   const traced = job.rows_skiptraced ?? 0;
   const sourceLabel =
     job.source_type === "upload"
@@ -154,7 +164,8 @@ function JobDetail() {
     const res = await fetchBucket({ data: { jobId, bucket } });
     if (!res.rows.length) return toast.info("No Rows In This Bucket.");
     const type = BUCKET_FILE_TYPE[bucket];
-    await downloadRows(res.rows, format, (ext) => brandedFileName(jobName, type, ext), type);
+    const rows = shapeExportRows(res.rows as Array<Record<string, unknown>>, exportShapeFor(runTemplateId), runTemplateId);
+    await downloadRows(rows, format, (ext) => brandedFileName(jobName, type, ext), type);
   };
 
   // Scrub audit trail: provider, timestamp and per-bucket outcome, exportable.
@@ -208,12 +219,16 @@ function JobDetail() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Stat label="Records Found" value={funnel[0]!.remaining.toLocaleString()} />
         <Stat label="Unique Records" value={funnel[1]!.remaining.toLocaleString()} />
-        <Stat label="Mobile Verified" value={funnel[2]!.remaining.toLocaleString()} />
-        <Stat
-          label="Skip Traced"
-          value={traced > 0 ? traced.toLocaleString() : "None Needed"}
-          muted={traced === 0}
-        />
+        <Stat label={isCreatorRun ? "Email Found" : "Mobile Verified"} value={funnel[2]!.remaining.toLocaleString()} />
+        {isCreatorRun ? (
+          <Stat label="Contact Emails" value={counts.clean.toLocaleString()} />
+        ) : (
+          <Stat
+            label="Skip Traced"
+            value={traced > 0 ? traced.toLocaleString() : "None Needed"}
+            muted={traced === 0}
+          />
+        )}
       </div>
 
       {stalled && (
@@ -255,6 +270,7 @@ function JobDetail() {
           <PipelineFunnel
             animate={isReady}
             traced={traced}
+            variant={funnelVariant}
             stages={{
               found: job.rows_in ?? 0,
               deduped: job.rows_deduped ?? 0,
@@ -411,7 +427,7 @@ function JobDetail() {
               icon={<Smartphone className="h-3.5 w-3.5" />}
               value={estimate.reach.toLocaleString()}
               label="Launch-Ready Leads"
-              note="Mobile Phones"
+              note={isCreatorRun ? "Contact Emails" : "Mobile Phones"}
             />
             <MoneyStat
               icon={<Send className="h-3.5 w-3.5" />}
@@ -452,7 +468,7 @@ function JobDetail() {
               </div>
               <div className="text-xs text-muted-foreground">
                 {isReady && counts.clean > 0
-                  ? `${counts.clean.toLocaleString()} Mobile Verified Leads`
+                  ? `${counts.clean.toLocaleString()} ${isCreatorRun ? "Creators With Contact Emails" : "Mobile Verified Leads"}`
                   : isReady
                     ? "Try A Wider Area Or Another Niche."
                     : "You Can Close This Tab — We Keep Working."}

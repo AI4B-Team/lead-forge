@@ -26,7 +26,7 @@ import type { ColumnMap } from "@/lib/csv";
 import { assistantChat, createJobFromSpec, requestCoverage, listAdapterRequests } from "@/lib/assistant.functions";
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, specStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
-import { PIPELINE_OPTION_LABELS } from "@/lib/pipeline-options";
+import { PIPELINE_OPTION_LABELS, withEnrichmentDefaults } from "@/lib/pipeline-options";
 import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
 import { TEMPLATES, templateSourceType, type Template } from "@/lib/templates";
 import { TemplateCard } from "@/components/marketing/template-card";
@@ -79,6 +79,7 @@ const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   dedupe: PIPELINE_OPTION_LABELS.dedupe,
   mobileOnly: PIPELINE_OPTION_LABELS.mobileOnly,
   skipTrace: PIPELINE_OPTION_LABELS.skipTrace,
+  emailRequired: PIPELINE_OPTION_LABELS.emailRequired,
   industry: "Industry Preset",
   messageAngle: "First-Touch Angle",
 };
@@ -212,7 +213,9 @@ function Assistant() {
     lastTemplateId.current = t.id;
     if (hasChat) {
       // Mid-conversation: the template only informs the source, never wipes context.
-      setSpec((s) => ({ ...s, sourceType: templateSourceType(t), templateId: t.id }));
+      setSpec((s) =>
+        withEnrichmentDefaults({ ...s, sourceType: templateSourceType(t), templateId: t.id }, t.id),
+      );
       setInferred((prev) => {
         const next = new Set(prev);
         next.delete("sourceType");
@@ -230,7 +233,9 @@ function Assistant() {
       setConfirmed(false);
       setRevealed(0);
       setInferred(new Set());
-      setSpec({ ...EMPTY_SPEC, sourceType: templateSourceType(t), templateId: t.id });
+      setSpec(
+        withEnrichmentDefaults({ ...EMPTY_SPEC, sourceType: templateSourceType(t), templateId: t.id }, t.id),
+      );
       setUpload(null);
     }
     if (workspaceId) setRecents(touchRecentTemplate(workspaceId, t.id));
