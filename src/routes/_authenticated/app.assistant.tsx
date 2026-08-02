@@ -45,6 +45,8 @@ import { useOverflow } from "@/hooks/use-overflow";
 import { US_STATES } from "@/lib/us-geo";
 import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@/lib/recent-templates";
 import { takeStashedHandoff, clearStashedPrompt } from "@/lib/prompt-handoff";
+import { useTeamContext } from "@/hooks/use-team-context";
+import { denialMessage } from "@/lib/team-roles.shared";
 
 export const Route = createFileRoute("/_authenticated/app/assistant")({
   validateSearch: z.object({
@@ -144,6 +146,7 @@ function Assistant() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const { workspaceId } = useWorkspaceId();
+  const team = useTeamContext();
   const chat = useServerFn(assistantChat);
   const createJob = useServerFn(createJobFromSpec);
   const logRequest = useServerFn(requestCoverage);
