@@ -323,14 +323,6 @@
   }
 }
 
-/* §22 — full-height assistant chat. Height math accounts for the 56px top bar,
-   the content padding, and the 0.8 content zoom (§20). */
-@media (min-width: 1024px) {
-  .assistant-shell {
-    height: calc((100vh - 3.5rem) / 0.8 - 4rem);
-  }
-}
-
 /* Thin overflow scrollbar — applied only when content actually overflows, so a
    panel that fits reserves no gutter at all. */
 .thin-scroll {
