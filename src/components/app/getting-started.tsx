@@ -225,8 +225,11 @@ export function FirstRunSetup({ workspaceId }: { workspaceId: string | null }) {
   });
 
   const dismiss = useMutation({
-    mutationFn: () => save({ data: { firstRunDismissed: true } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["onboarding", workspaceId] }),
+    mutationFn: () => save({ data: { firstRunDismissed: true, workspaceId: workspaceId! } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["onboarding", workspaceId] });
+      qc.invalidateQueries({ queryKey: ["landing-target", workspaceId] });
+    },
   });
 
   if (!data || data.firstRunDismissed) return null;
