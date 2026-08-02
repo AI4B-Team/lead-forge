@@ -76,6 +76,7 @@ import { Route as ApiPublicHooksTickJobsRouteImport } from './routes/api/public/
 import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
 import { Route as ApiPublicHooksTelnyxInboundRouteImport } from './routes/api/public/hooks/telnyx-inbound'
 import { Route as ApiPublicHooksTelnyxDlrRouteImport } from './routes/api/public/hooks/telnyx-dlr'
+import { Route as ApiPublicHooksTelnyxCallRouteImport } from './routes/api/public/hooks/telnyx-call'
 import { Route as ApiPublicHooksInboundSmsRouteImport } from './routes/api/public/hooks/inbound-sms'
 import { Route as AuthenticatedAppNewListSplatRouteImport } from './routes/_authenticated/app.new-list.$'
 import { Route as AuthenticatedAppNewJobSplatRouteImport } from './routes/_authenticated/app.new-job.$'
@@ -433,6 +434,12 @@ const ApiPublicHooksTelnyxDlrRoute = ApiPublicHooksTelnyxDlrRouteImport.update({
   path: '/api/public/hooks/telnyx-dlr',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksTelnyxCallRoute =
+  ApiPublicHooksTelnyxCallRouteImport.update({
+    id: '/api/public/hooks/telnyx-call',
+    path: '/api/public/hooks/telnyx-call',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksInboundSmsRoute =
   ApiPublicHooksInboundSmsRouteImport.update({
     id: '/api/public/hooks/inbound-sms',
@@ -542,6 +549,7 @@ export interface FileRoutesByFullPath {
   '/app/new-job/$': typeof AuthenticatedAppNewJobSplatRoute
   '/app/new-list/$': typeof AuthenticatedAppNewListSplatRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
+  '/api/public/hooks/telnyx-call': typeof ApiPublicHooksTelnyxCallRoute
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
@@ -617,6 +625,7 @@ export interface FileRoutesByTo {
   '/app/new-job/$': typeof AuthenticatedAppNewJobSplatRoute
   '/app/new-list/$': typeof AuthenticatedAppNewListSplatRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
+  '/api/public/hooks/telnyx-call': typeof ApiPublicHooksTelnyxCallRoute
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
@@ -695,6 +704,7 @@ export interface FileRoutesById {
   '/_authenticated/app/new-job/$': typeof AuthenticatedAppNewJobSplatRoute
   '/_authenticated/app/new-list/$': typeof AuthenticatedAppNewListSplatRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
+  '/api/public/hooks/telnyx-call': typeof ApiPublicHooksTelnyxCallRoute
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
@@ -773,6 +783,7 @@ export interface FileRouteTypes {
     | '/app/new-job/$'
     | '/app/new-list/$'
     | '/api/public/hooks/inbound-sms'
+    | '/api/public/hooks/telnyx-call'
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
@@ -848,6 +859,7 @@ export interface FileRouteTypes {
     | '/app/new-job/$'
     | '/app/new-list/$'
     | '/api/public/hooks/inbound-sms'
+    | '/api/public/hooks/telnyx-call'
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
@@ -925,6 +937,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/new-job/$'
     | '/_authenticated/app/new-list/$'
     | '/api/public/hooks/inbound-sms'
+    | '/api/public/hooks/telnyx-call'
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
@@ -977,6 +990,7 @@ export interface RootRouteChildren {
   TemplatesIndexRoute: typeof TemplatesIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   ApiPublicHooksInboundSmsRoute: typeof ApiPublicHooksInboundSmsRoute
+  ApiPublicHooksTelnyxCallRoute: typeof ApiPublicHooksTelnyxCallRoute
   ApiPublicHooksTelnyxDlrRoute: typeof ApiPublicHooksTelnyxDlrRoute
   ApiPublicHooksTelnyxInboundRoute: typeof ApiPublicHooksTelnyxInboundRoute
   ApiPublicHooksTickCampaignsRoute: typeof ApiPublicHooksTickCampaignsRoute
@@ -1458,6 +1472,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksTelnyxDlrRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/telnyx-call': {
+      id: '/api/public/hooks/telnyx-call'
+      path: '/api/public/hooks/telnyx-call'
+      fullPath: '/api/public/hooks/telnyx-call'
+      preLoaderRoute: typeof ApiPublicHooksTelnyxCallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/inbound-sms': {
       id: '/api/public/hooks/inbound-sms'
       path: '/api/public/hooks/inbound-sms'
@@ -1654,6 +1675,7 @@ const rootRouteChildren: RootRouteChildren = {
   TemplatesIndexRoute: TemplatesIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   ApiPublicHooksInboundSmsRoute: ApiPublicHooksInboundSmsRoute,
+  ApiPublicHooksTelnyxCallRoute: ApiPublicHooksTelnyxCallRoute,
   ApiPublicHooksTelnyxDlrRoute: ApiPublicHooksTelnyxDlrRoute,
   ApiPublicHooksTelnyxInboundRoute: ApiPublicHooksTelnyxInboundRoute,
   ApiPublicHooksTickCampaignsRoute: ApiPublicHooksTickCampaignsRoute,

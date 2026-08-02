@@ -19,10 +19,11 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-call")({
         }
 
         let payload: Record<string, unknown> = {};
+        let eventType = "";
         try {
           const parsed = JSON.parse(raw) as { data?: { event_type?: string; payload?: Record<string, unknown> } };
           payload = parsed.data?.payload ?? {};
-          var eventType = parsed.data?.event_type ?? "";
+          eventType = parsed.data?.event_type ?? "";
         } catch {
           return new Response("Bad payload", { status: 400 });
         }
