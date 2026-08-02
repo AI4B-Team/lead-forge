@@ -32,6 +32,7 @@ import {
 } from "@/lib/upload-attachment";
 import type { ColumnMap } from "@/lib/csv";
 import { assistantChat, createJobFromSpec, requestCoverage, listAdapterRequests } from "@/lib/assistant.functions";
+import { SourceRequestDialog, type SourceRequestType } from "@/components/app/source-request-dialog";
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, specStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { PIPELINE_OPTION_LABELS, withEnrichmentDefaults } from "@/lib/pipeline-options";
@@ -178,6 +179,12 @@ function Assistant() {
   const [pendingDetection, setPendingDetection] = useState<IntentDetection | null>(null);
   /** Beta waitlist: template ids already requested + the notify address. */
   const [requestedAdapters, setRequestedAdapters] = useState<Set<string>>(new Set());
+  const [sourceRequest, setSourceRequest] = useState<{
+    type: SourceRequestType;
+    templateId: string | null;
+    label: string;
+    geo: string;
+  } | null>(null);
   const [notifyEmail, setNotifyEmail] = useState<string | null>(null);
   const [requesting, setRequesting] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
@@ -727,39 +734,25 @@ function Assistant() {
   /** Record types we can't fulfill yet land in the same backlog as county requests. */
   const requestRecordType = async (requested: string) => {
     if (!workspaceId) return;
-    try {
-      await logRequest({ data: { workspaceId, county: null, recordType: requested, type: "record_type" } });
-      toast.success("Logged — We'll Notify You When It's Available.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could Not Log Request");
-    }
+    setSourceRequest({
+      type: "record_type",
+      templateId: null,
+      label: requested,
+      geo: specStates(spec).join(", "),
+    });
   };
 
-  /** Waitlist click for a source whose adapter isn't wired yet (roadmap signal). */
+  /** Waitlist click for a source whose adapter isn't wired yet — opens the intake. */
   const requestTemplateAdapter = async () => {
     if (!workspaceId || !selectedTemplate) return;
     if (requestedAdapters.has(selectedTemplate.id)) return;
-    setRequesting(true);
     setRequestError(null);
-    try {
-      const res = await logRequest({
-        data: {
-          workspaceId,
-          county: null,
-          recordType: selectedTemplate.title,
-          templateId: selectedTemplate.id,
-          type: "template_adapter",
-        },
-      });
-      setRequestedAdapters((prev) => new Set(prev).add(selectedTemplate.id));
-      if (res?.email) setNotifyEmail(res.email);
-      toast.success(`Logged — We'll Email You When ${selectedTemplate.title} Goes Live.`);
-    } catch (e) {
-      setRequestError("Couldn't log your request — try again");
-      toast.error(e instanceof Error ? e.message : "Could Not Log Request");
-    } finally {
-      setRequesting(false);
-    }
+    setSourceRequest({
+      type: "template_adapter",
+      templateId: selectedTemplate.id,
+      label: selectedTemplate.title,
+      geo: specStates(spec).join(", "),
+    });
   };
 
   const reviewAndRun = async () => {
