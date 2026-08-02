@@ -41,6 +41,9 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
     prompt: z.string().optional(),
     fill: z.string().optional(),
     template: z.string().optional(),
+    /** Pre-set the List Settings source (business | records | upload). */
+    source: z.string().optional(),
+    niche: z.string().optional(),
   }),
   head: () => ({
     meta: [
@@ -131,6 +134,8 @@ function Assistant() {
   /** Keys the assistant inferred this conversation (drives the % badges). */
   const [inferred, setInferred] = useState<Set<keyof JobSpec>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
+  /** Panel-only mode: List Settings is open with no chat message yet. */
+  const [panelOpen, setPanelOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
   /** Inline upload state — survives a source switch so it can be restored. */
@@ -142,10 +147,13 @@ function Assistant() {
   /** Handoff text waiting for its template selection to land before sending. */
   const pendingHandoff = useRef<{ templateId: string; text: string } | null>(null);
   const restored = useRef(false);
+  const appliedSource = useRef(false);
   const composer = useRef<HTMLTextAreaElement>(null);
   const specScroll = useOverflow<HTMLDivElement>();
 
-  const started = thread.length > 0;
+  const started = thread.length > 0 || panelOpen;
+  /** True only once a message exists in the thread (panel-only mode has none). */
+  const hasChat = thread.length > 0;
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
   const uploadReady = attachmentReady(upload);
   const missing = useMemo(() => openSlots(spec, uploadReady), [spec, uploadReady]);
@@ -183,7 +191,7 @@ function Assistant() {
     if (selectedTemplate?.id === t.id) {
       setSelectedTemplate(null);
       lastTemplateId.current = null;
-      if (!started) {
+      if (!hasChat) {
         setSpec(EMPTY_SPEC);
         setInferred(new Set());
       }
@@ -192,7 +200,7 @@ function Assistant() {
     }
     setSelectedTemplate(t);
     lastTemplateId.current = t.id;
-    if (started) {
+    if (hasChat) {
       // Mid-conversation: the template only informs the source, never wipes context.
       setSpec((s) => ({ ...s, sourceType: templateSourceType(t), templateId: t.id }));
       setInferred((prev) => {
@@ -241,7 +249,7 @@ function Assistant() {
         toast.info(`${selectedTemplate.title} Deselected — Using Your Uploaded File Instead.`);
       }
       setConfirmed(false);
-      if (started) {
+      if (hasChat) {
         setThread((m) => [...m, { role: "system", content: `You Attached: ${next.name}` }]);
       } else {
         // Attaching from the hero opens the working view so the panel is visible.
@@ -304,7 +312,7 @@ function Assistant() {
   useEffect(() => {
     if (!workspaceId || restored.current) return;
     restored.current = true;
-    if (search.prompt?.trim()) return;
+    if (search.prompt?.trim() || search.source) return;
     const draft = loadDraft(workspaceId);
     if (!draft) return;
     if (!draft.thread.length) return;
@@ -318,7 +326,7 @@ function Assistant() {
     }
     setInferred(new Set((draft.inferred ?? []) as Array<keyof JobSpec>));
     setRevealed(buildTraceSteps(draft.spec).length);
-  }, [workspaceId, search.prompt]);
+  }, [workspaceId, search.prompt, search.source]);
 
   useEffect(() => {
     if (!workspaceId || !thread.length) return;
@@ -439,6 +447,29 @@ function Assistant() {
     setInferred(new Set());
     setUpload(null);
     setConvId(`c${Date.now()}`);
+    setPanelOpen(false);
+  };
+
+  /**
+   * Panel-only entry (?source=, and the "set it up yourself" affordance): reset,
+   * then apply just the source — the same reset-then-apply as a template pick.
+   */
+  const openPanelWithSource = (source: "business" | "records" | "upload", niche?: string) => {
+    if (workspaceId) clearDraft(workspaceId);
+    setConvId(`c${Date.now()}`);
+    setThread([]);
+    setSelectedTemplate(null);
+    lastTemplateId.current = null;
+    setFirstPrompt("");
+    setCoverage([]);
+    setEstimate(null);
+    setSuggested([]);
+    setConfirmed(false);
+    setRevealed(0);
+    setInferred(new Set());
+    setUpload(null);
+    setSpec({ ...EMPTY_SPEC, sourceType: source, niches: niche ? [niche] : [] });
+    setPanelOpen(true);
   };
 
   // Two-way sync: a manual panel edit is announced in the thread so the next
@@ -472,6 +503,19 @@ function Assistant() {
       });
     }
   };
+
+  // Deep-link: the marketing handoff carries the typed text in ?prompt= and the
+  // selected template in ?template=, with a short-lived stash as the fallback.
+  useEffect(() => {
+    if (appliedSource.current || !workspaceId) return;
+    const source = search.source;
+    if (source !== "business" && source !== "records" && source !== "upload") return;
+    appliedSource.current = true;
+    sentPrompt.current = true;
+    openPanelWithSource(source, search.niche?.trim() || undefined);
+    navigate({ to: "/app/assistant", search: {}, replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId, search.source, search.niche]);
 
   // Deep-link: the marketing handoff carries the typed text in ?prompt= and the
   // selected template in ?template=, with a short-lived stash as the fallback.
@@ -753,7 +797,7 @@ function Assistant() {
       <div>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">AI Lead Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Describe the leads you want. The assistant interprets it, assembles your list, and hands you the controls to review.
+          Describe the leads you want — or set it up yourself in List Settings. Nothing runs until you approve.
         </p>
       </div>
 
@@ -783,15 +827,25 @@ function Assistant() {
           className="min-h-[150px] resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
         />
         <div className="mt-4 flex items-center justify-between gap-3">
-          <label className="inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
-            <Paperclip className="mr-1.5 h-4 w-4" /> Attach Files
-            <input
-              type="file"
-              className="hidden"
-              accept=".csv,.xlsx"
-              onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
-            />
-          </label>
+          <div className="flex flex-wrap items-center gap-1">
+            <label className="inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
+              <Paperclip className="mr-1.5 h-4 w-4" /> Attach Files
+              <input
+                type="file"
+                className="hidden"
+                accept=".csv,.xlsx"
+                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
+              />
+            </label>
+            {/* Panel-only path: no chat needed, straight into List Settings. */}
+            <button
+              type="button"
+              onClick={() => openPanelWithSource("business")}
+              className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <SlidersHorizontal className="mr-1.5 h-4 w-4" /> Set It Up Yourself
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             {micSupported && (
               <Button
@@ -858,7 +912,7 @@ function Assistant() {
         <div className="shrink-0">
           <PageHeader
             title="AI Lead Assistant"
-            description="Describe The Leads You Want. The Assistant Interprets It, Assembles The List, And Hands You The Controls To Review."
+            description="Describe The Leads You Want — Or Set It Up Yourself In List Settings. Nothing Runs Until You Approve."
             descriptionClassName="whitespace-nowrap !max-w-none"
             actions={
               <Button variant="outline" className="rounded-full" onClick={startOver}>
@@ -877,6 +931,20 @@ function Assistant() {
         <Card className="flex min-h-0 flex-col lg:h-full">
           <CardContent className="flex min-h-0 flex-1 flex-col p-4 md:p-5">
             <div ref={scroller} className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
+              {!hasChat && (
+                // Panel-only mode: the assembly checklist still leads, with no chat turn.
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    LeadTrace
+                  </div>
+                  <div className="mt-1.5 text-sm text-foreground">
+                    Set it up in List Settings on the right, or type below and I'll fill it in for you.
+                  </div>
+                  <div className="mt-3">
+                    <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
+                  </div>
+                </div>
+              )}
               {thread.map((m, i) => (
                   <div key={i}>
                     {m.role === "system" ? (

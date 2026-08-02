@@ -283,7 +283,7 @@ function Dashboard() {
         description="A live look at your leads, lists, campaigns, and deliverability."
         actions={
           <Button asChild className="rounded-full">
-            <Link to="/app/new-list"><Plus className="mr-1 h-4 w-4" /> Build List</Link>
+            <Link to="/app/assistant"><Plus className="mr-1 h-4 w-4" /> Build List</Link>
           </Button>
         }
       />
@@ -405,7 +405,7 @@ function Dashboard() {
               <div className="py-10 text-center">
                 <div className="text-sm text-muted-foreground">No Lists Yet.</div>
                 <Button asChild className="mt-4 rounded-full">
-                  <Link to="/app/new-list"><Plus className="mr-1 h-4 w-4" /> Build Your First List</Link>
+                  <Link to="/app/assistant"><Plus className="mr-1 h-4 w-4" /> Build Your First List</Link>
                 </Button>
               </div>
             )}

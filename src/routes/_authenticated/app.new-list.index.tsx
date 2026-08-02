@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-/** Legacy path: /app/new-job → the assistant. */
-export const Route = createFileRoute("/_authenticated/app/new-job/")({
+/** The doors page is gone: the assistant is the single entry point for new lists. */
+export const Route = createFileRoute("/_authenticated/app/new-list/")({
   beforeLoad: () => {
     throw redirect({ to: "/app/assistant", search: {} });
   },

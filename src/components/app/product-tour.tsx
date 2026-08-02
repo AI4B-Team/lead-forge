@@ -14,12 +14,12 @@ export type TourStep = { anchor: string; title: string; body: string };
 
 export const TOUR_STEPS: TourStep[] = [
   {
-    anchor: "nav-new-list",
+    anchor: "nav-assistant",
     title: "Generate Leads",
     body: "Describe what you're after and where. We pull matching records from multiple sources — no downloads, no setup.",
   },
   {
-    anchor: "nav-new-list",
+    anchor: "nav-assistant",
     title: "Upload Your List",
     body: "Already have a list? Import your CSV and it runs the same pipeline minus the sourcing.",
   },
@@ -200,7 +200,7 @@ export function ProductTour({ open, onClose }: { open: boolean; onClose: () => v
             )}
             {last ? (
               <Button asChild size="sm" className="rounded-full" onClick={() => finish("completed")}>
-                <Link to="/app/new-list">Run Your First List</Link>
+                <Link to="/app/assistant">Run Your First List</Link>
               </Button>
             ) : (
               <Button size="sm" className="rounded-full" onClick={() => setI((n) => n + 1)}>
