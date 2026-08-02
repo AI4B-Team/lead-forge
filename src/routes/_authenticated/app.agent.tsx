@@ -294,7 +294,14 @@ function AgentPage() {
             </div>
           </div>
 
-          {/* 3 — Improve Your Agent */}
+          {/* 3 — Try Your Agent */}
+          <Card className="mt-8">
+            <CardContent className="pt-6">
+              <AgentQuestionTester brandId={agent.id} sources={sources} />
+            </CardContent>
+          </Card>
+
+          {/* 4 — Improve Your Agent */}
           <div className="mt-8">
             <h2 className="font-display text-xl font-bold text-foreground">Improve Your Agent</h2>
             <p className="mt-1 text-sm text-muted-foreground">Add Training From Any Of These Sources.</p>
@@ -303,19 +310,13 @@ function AgentPage() {
             </div>
           </div>
 
-          {/* 4 — Recent Training */}
+          {/* 5 — Recent Training */}
           <div className="mt-8">
             <h2 className="font-display text-xl font-bold text-foreground">Recent Training</h2>
             <div className="mt-2">
               <RecentTraining brandId={agent.id} sources={sources} />
             </div>
           </div>
-
-          <Card className="mt-8">
-            <CardContent className="pt-6">
-              <AgentQuestionTester brandId={agent.id} sources={sources} />
-            </CardContent>
-          </Card>
         </>
       )}
     </div>
