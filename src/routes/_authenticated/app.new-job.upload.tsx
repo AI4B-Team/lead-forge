@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app/page-header";
+import { PIPELINE_OPTION_LABELS } from "@/lib/pipeline-options";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -130,7 +131,7 @@ function Wizard() {
 
           <div className="space-y-3 rounded-lg border border-border p-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Skip Trace Missing Fields</span>
+              <span className="text-sm">{PIPELINE_OPTION_LABELS.skipTrace}</span>
               <Switch checked={skipTrace} onCheckedChange={setSkipTrace} />
             </div>
             <div className="flex items-center justify-between">

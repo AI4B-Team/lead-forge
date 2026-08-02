@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { PageHeader } from "@/components/app/page-header";
 import { ProviderStatusBanner } from "@/components/app/provider-status-banner";
+import { PIPELINE_OPTION_LABELS } from "@/lib/pipeline-options";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -285,9 +286,9 @@ function Wizard() {
             </div>
           )}
           <div className="space-y-3 rounded-lg border border-border p-4">
-            <ToggleRow label="Remove Franchises And Chains" checked={removeFranchises} onChange={setRemoveFranchises} />
-            <ToggleRow label="Remove Duplicates (Phone, Email, Name + Address)" checked={dedupe} onChange={setDedupe} />
-            <ToggleRow label="Require Mobile-Reachable" checked={mobileOnly} onChange={setMobileOnly} />
+            <ToggleRow label={PIPELINE_OPTION_LABELS.removeFranchises} checked={removeFranchises} onChange={setRemoveFranchises} />
+            <ToggleRow label={PIPELINE_OPTION_LABELS.dedupe} checked={dedupe} onChange={setDedupe} />
+            <ToggleRow label={PIPELINE_OPTION_LABELS.mobileOnly} checked={mobileOnly} onChange={setMobileOnly} />
             <ToggleRow label="Focus On Smaller Counties" checked={avoidMetros} onChange={setAvoidMetros} />
           </div>
           <div className="grid gap-4 md:grid-cols-2">

@@ -1,6 +1,7 @@
 import { Check, Loader2 } from "lucide-react";
 import { specStates, type JobSpec } from "@/lib/assistant.shared";
 import { US_STATES } from "@/lib/us-geo";
+import { enabledOptions } from "@/lib/pipeline-options";
 
 export type TraceStep = { label: string; value: string };
 
@@ -50,13 +51,11 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
     steps.push({ label: "Location", value: stateNames.join(", ") });
   }
   if (spec.recencyDays) steps.push({ label: "Recency Window", value: `Last ${spec.recencyDays} Days` });
-  if (spec.mobileOnly) steps.push({ label: "Filtering For Mobile Numbers", value: "Enabled" });
-  if (spec.skipTrace) steps.push({ label: "Skip Tracing Missing Numbers", value: "Enabled" });
-  // Franchise removal only applies to scraped business data.
-  if (spec.removeFranchises && spec.sourceType === "business") {
-    steps.push({ label: "Removing Franchises", value: "Enabled" });
+  // Toggle lines use the exact List Settings labels, in panel order, so the two
+  // lists can be checked off against each other.
+  for (const option of enabledOptions(spec)) {
+    steps.push({ label: option.label, value: "Enabled" });
   }
-  if (spec.dedupe) steps.push({ label: "Deduping Against Past Lists", value: "Enabled" });
   if (spec.industry) steps.push({ label: "Recommended Playbook", value: spec.industry });
   return steps;
 }
