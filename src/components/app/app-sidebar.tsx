@@ -104,7 +104,7 @@ export function AppSidebar() {
               <TooltipTrigger asChild>
                 <SidebarTrigger className={cn("h-7 w-7 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "absolute right-1")} />
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white text-foreground border-border">
+              <TooltipContent side="right" className="bg-white text-foreground border-border shadow-md">
                 {collapsed ? "Expand" : "Collapse"} Menu
               </TooltipContent>
             </Tooltip>
