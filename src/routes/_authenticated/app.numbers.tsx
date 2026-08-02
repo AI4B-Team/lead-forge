@@ -3,6 +3,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
+import {
+  ALL_PARTY_CONSENT_STATES,
+  FORWARD_SCOPES,
+  RECORDING_CONSENT_NOTICE,
+  RECORDING_DISCLOSURE_LINE,
+  withDisclosure,
+  type ForwardScope,
+} from "@/lib/call-events.shared";
 import { SettingsShell } from "@/components/app/settings-shell";
 import { StatTile } from "@/components/app/stat-tile";
 import { Button } from "@/components/ui/button";
