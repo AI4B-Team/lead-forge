@@ -927,6 +927,10 @@ function Assistant() {
             onChangeTemplate={() => setAllOpen(true)}
             onPickFile={(f) => void requestAttach(f)}
             onRemoveUpload={() => { setUpload(null); setConfirmed(false); }}
+            onClearTargets={() => {
+              setSpec((s) => ({ ...s, scrapeTargets: undefined, scrapeTargetKind: undefined }));
+              setConfirmed(false);
+            }}
             onEditMapping={() => setMapOpen(true)}
             onRequestRecordType={requestRecordType}
           />
