@@ -528,7 +528,6 @@ export function KnowledgeSourceList({
       {KNOWLEDGE_CARDS.map((spec) => {
         const Icon = ICONS[spec.key] ?? FileText;
         const items = sources.filter((s) => s.category === spec.key);
-        const chars = items.reduce((a, s) => a + s.chars, 0);
         const isAdded = items.length > 0;
         const progress = isAdded ? 100 : 0;
         return (
