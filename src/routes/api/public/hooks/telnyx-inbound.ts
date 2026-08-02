@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { getProvider } from "@/lib/sms";
-import { OPTOUT_RE, HELP_RE, OPTOUT_CONFIRMATION, HELP_RESPONSE } from "@/lib/sms";
 
 // Telnyx inbound-message webhook. Verifies signature, records the reply,
 // halts the drip, and enforces STOP/HELP compliance. See Section 6 of the
@@ -63,8 +62,8 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
           campaignId = last?.campaign_id ?? null;
         }
 
-        const isOptOut = OPTOUT_RE.test(inbound.body);
-        const isHelp = HELP_RE.test(inbound.body);
+        const { classifyInbound, processInbound } = await import("@/lib/inbound.server");
+        const { isOptOut } = classifyInbound(inbound.body);
 
         const { data: inboundRow } = await admin.from("messages").insert({
           workspace_id: num.workspace_id,
@@ -78,117 +77,21 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
           provider_sid: inbound.providerSid,
         }).select("id").single();
 
-        if (isOptOut) {
-          // Suppress the phone across ALL future campaigns for this workspace.
-          await admin
-            .from("suppression")
-            .upsert({ workspace_id: num.workspace_id, phone: inbound.from, reason: "optout" });
-          try {
-            const send = await provider.send(inbound.to, inbound.from, OPTOUT_CONFIRMATION);
-            await admin.from("messages").insert({
-              workspace_id: num.workspace_id,
-              lead_id: lead?.id ?? null,
-              sending_number_id: num.id,
-              direction: "outbound",
-              body: OPTOUT_CONFIRMATION,
-              status: send.status,
-              provider_sid: send.providerSid,
-            });
-          } catch {
-            /* delivery is best-effort; suppression is already recorded */
-          }
-        } else if (isHelp) {
-          try {
-            const send = await provider.send(inbound.to, inbound.from, HELP_RESPONSE);
-            await admin.from("messages").insert({
-              workspace_id: num.workspace_id,
-              lead_id: lead?.id ?? null,
-              sending_number_id: num.id,
-              direction: "outbound",
-              body: HELP_RESPONSE,
-              status: send.status,
-              provider_sid: send.providerSid,
-            });
-          } catch {
-            /* best-effort */
-          }
-        } else if (campaignId) {
-          // AI Warm-Up Bot — runs ONLY after opt-out and HELP are handled, so it
-          // can never talk past a compliance keyword.
-          const { data: campaign } = await admin
-            .from("campaigns")
-            .select("bot_enabled, bot_config, regulated_vertical, brand_id")
-            .eq("id", campaignId)
-            .maybeSingle();
+        // Shared pipeline: STOP/HELP first, bot only after the compliance gate.
+        const outcome = await processInbound({
+          db: admin,
+          send: (from, to, body) => provider.send(from, to, body),
+          workspaceId: num.workspace_id,
+          toPhone: inbound.to,
+          sendingNumberId: num.id,
+          fromPhone: inbound.from,
+          body: inbound.body,
+          leadId: lead?.id ?? null,
+          campaignId,
+          inboundMessageId: inboundRow?.id ?? null,
+        });
 
-          // Never let the bot text a suppressed / previously opted-out number.
-          let botAllowed = !!campaign?.bot_enabled;
-          if (botAllowed) {
-            const { checkCanText, logBlockedSend } = await import("@/lib/optout.server");
-            const gate = await checkCanText(admin, {
-              workspaceId: num.workspace_id,
-              leadId: lead?.id ?? null,
-              phone: inbound.from,
-              source: `bot:${campaignId}`,
-            });
-            if (!gate.ok) {
-              botAllowed = false;
-              await logBlockedSend(
-                admin,
-                { workspaceId: num.workspace_id, leadId: lead?.id ?? null, phone: inbound.from, source: `bot:${campaignId}` },
-                gate,
-              );
-            }
-          }
-
-          if (botAllowed && campaign) {
-            const { generateBotReply } = await import("@/lib/bot.server");
-            const { buildKnowledgeBrief } = await import("@/lib/bot-training.server");
-            const { data: knowledgeRows } = await admin
-              .from("bot_knowledge")
-              .select("title, content, source_type, source_url")
-              .or(
-                campaign.brand_id
-                  ? `campaign_id.eq.${campaignId},brand_id.eq.${campaign.brand_id}`
-                  : `campaign_id.eq.${campaignId}`,
-              )
-              .order("created_at", { ascending: false })
-              .limit(25);
-            const outcome = await generateBotReply({
-              message: inbound.body,
-              config: (campaign.bot_config ?? {}) as Record<string, never>,
-              regulated: !!campaign.regulated_vertical,
-              knowledge: buildKnowledgeBrief(knowledgeRows ?? []),
-            });
-
-            if (outcome.action === "reply") {
-              try {
-                const send = await provider.send(inbound.to, inbound.from, outcome.body);
-                await admin.from("messages").insert({
-                  workspace_id: num.workspace_id,
-                  campaign_id: campaignId,
-                  lead_id: lead?.id ?? null,
-                  sending_number_id: num.id,
-                  direction: "outbound",
-                  body: outcome.body,
-                  is_bot: true,
-                  status: send.status,
-                  provider_sid: send.providerSid,
-                });
-              } catch {
-                /* best-effort; thread stays in the inbox for a human */
-              }
-            } else if (inboundRow) {
-              // Hand the thread to a human and record why the bot stepped back.
-              await admin
-                .from("messages")
-                .update({ handoff_reason: outcome.reason })
-                .eq("id", inboundRow.id);
-            }
-          }
-        }
-
-        return Response.json({ ok: true, optOut: isOptOut, help: isHelp });
+        return Response.json({ ok: true, optOut: outcome.optOut, help: outcome.help, bot: outcome.bot });
       },
     },
   },
