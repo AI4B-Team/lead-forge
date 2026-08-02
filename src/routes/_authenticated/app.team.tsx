@@ -99,9 +99,15 @@ function TeamPage() {
       <SettingsShell current="team">
       <PageHeader title="Team" description="Invite Teammates To Collaborate In This Workspace." />
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Members" value={members.length} icon={Users} hint="Active In This Workspace" />
         <StatTile label="Pending" value={invites.length} icon={Mail} hint="Invites Awaiting Acceptance" />
+        <StatTile
+          label="My Credits"
+          value={team.used.credits.toLocaleString()}
+          icon={Coins}
+          hint={team.limits.monthly_credit_cap ? `Of ${team.limits.monthly_credit_cap.toLocaleString()} Cap This Month` : "Spent This Month"}
+        />
         <StatTile
           label="Seats"
           value={`${members.length} / ${SEATS}`}
@@ -110,6 +116,14 @@ function TeamPage() {
         />
       </div>
 
+      <Tabs defaultValue="members">
+        <TabsList className="mb-4">
+          <TabsTrigger value="members">Members</TabsTrigger>
+          {team.isAdmin && <TabsTrigger value="accountability">Accountability</TabsTrigger>}
+          <TabsTrigger value="approvals">Approvals</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="members">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
       <Card>
@@ -287,6 +301,24 @@ function TeamPage() {
           </Card>
         </div>
       </div>
+        </TabsContent>
+
+        {team.isAdmin && workspaceId && (
+          <TabsContent value="accountability" className="space-y-4">
+            {/* Management reporting: cost and data movement per member. The
+                compliance record stays where it is — different audience. */}
+            <MemberCostDashboard workspaceId={workspaceId} />
+            <AttributionLog
+              workspaceId={workspaceId}
+              members={members.map((m) => ({ user_id: m.user_id, email: m.email }))}
+            />
+          </TabsContent>
+        )}
+
+        <TabsContent value="approvals">
+          {workspaceId && <ApprovalsQueue workspaceId={workspaceId} enforced={team.teamControls} />}
+        </TabsContent>
+      </Tabs>
       </SettingsShell>
     </div>
   );
