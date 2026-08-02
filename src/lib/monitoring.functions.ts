@@ -33,7 +33,7 @@ export const listLeadRecords = createServerFn({ method: "GET" })
     let q = supabase
       .from("lead_records")
       .select(
-        "id, full_name, business_name, phone, phone_type, email, address, website, socials, city, state, zip, disposition, source_types, record_types, list_count, first_seen_at, last_seen_at, is_new",
+        "id, full_name, business_name, phone, phone_type, email, address, website, socials, handle, platform, followers, engagement, city, state, zip, disposition, source_types, record_types, list_count, first_seen_at, last_seen_at, is_new",
       )
       .eq("workspace_id", data.workspaceId)
       .order("last_seen_at", { ascending: false })
