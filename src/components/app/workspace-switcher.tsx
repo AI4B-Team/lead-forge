@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Check, ChevronsUpDown, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ import { useWorkspaceId, useCreateWorkspace } from "@/hooks/use-workspace";
 export function WorkspaceSwitcher() {
   const { workspaceId, workspaceName, workspaces, switchWorkspace } = useWorkspaceId();
   const { create, creating } = useCreateWorkspace();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
 
@@ -27,6 +29,9 @@ export function WorkspaceSwitcher() {
       toast.success(`Switched To ${trimmed}`);
       setOpen(false);
       setName("");
+      // A brand-new workspace is empty regardless of how long the account has
+      // existed, so land on Build — the reason the workspace was created.
+      navigate({ to: "/app/assistant" });
     } catch {
       toast.error("Could Not Create Workspace");
     }
@@ -50,7 +55,17 @@ export function WorkspaceSwitcher() {
             Workspaces
           </DropdownMenuLabel>
           {workspaces.map((w) => (
-            <DropdownMenuItem key={w.id} onSelect={() => switchWorkspace(w.id)} className="gap-2">
+            <DropdownMenuItem
+              key={w.id}
+              onSelect={() => {
+                if (w.id === workspaceId) return;
+                switchWorkspace(w.id);
+                // Re-resolve the landing surface for the workspace we switch into:
+                // empty ones go to Build, established ones to the Dashboard.
+                navigate({ to: "/app" });
+              }}
+              className="gap-2"
+            >
               <Check className={`h-3.5 w-3.5 ${w.id === workspaceId ? "opacity-100" : "opacity-0"}`} />
               <span className="truncate">{w.name}</span>
             </DropdownMenuItem>
