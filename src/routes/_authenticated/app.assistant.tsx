@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
     prompt: z.string().optional(),
     fill: z.string().optional(),
     template: z.string().optional(),
-    /** Pre-set the List Settings source (business | records | upload). */
+    /** Pre-set the List Builder source (business | records | upload). */
     source: z.string().optional(),
     niche: z.string().optional(),
   }),
@@ -135,7 +135,7 @@ function Assistant() {
   /** Keys the assistant inferred this conversation (drives the % badges). */
   const [inferred, setInferred] = useState<Set<keyof JobSpec>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
-  /** Panel-only mode: List Settings is open with no chat message yet. */
+  /** Panel-only mode: the List Builder is open with no chat message yet. */
   const [panelOpen, setPanelOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
@@ -262,8 +262,8 @@ function Assistant() {
           {
             role: "assistant",
             content: next.parseable && next.mapped
-              ? `Got ${next.name} — ${next.rowCount.toLocaleString()} rows. Review the mapping and settings on the right, then generate the list.`
-              : `Got ${next.name}. Map your columns on the right and I'll clean, verify, and scrub it.`,
+              ? `Got ${next.name} — ${next.rowCount.toLocaleString()} rows. Review the mapping and settings in the List Builder, then generate the list.`
+              : `Got ${next.name}. Map your columns in the List Builder and I'll clean, verify, and scrub it.`,
             spec: { ...spec, sourceType: "upload" },
           },
         ]);
@@ -356,8 +356,8 @@ function Assistant() {
         {
           role: "assistant",
           content: upload
-            ? "Map your columns in the panel on the right and I'll take it from there."
-            : "Drop your file in the panel on the right, or attach it below.",
+            ? "Map your columns in the List Builder on the right and I'll take it from there."
+            : "Drop your file in the List Builder on the right, or attach it below.",
           spec,
         },
       ]);
@@ -839,7 +839,7 @@ function Assistant() {
       <div>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">AI Lead Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Describe the leads you want — or set it up yourself in List Settings. Nothing runs until you approve.
+          Describe the leads you want — or build it yourself in the List Builder. Nothing runs until you approve.
         </p>
       </div>
 
@@ -879,13 +879,13 @@ function Assistant() {
                 onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
               />
             </label>
-            {/* Panel-only path: no chat needed, straight into List Settings. */}
+            {/* Panel-only path: no chat needed, straight into the List Builder. */}
             <button
               type="button"
               onClick={() => openPanelWithSource("business")}
               className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
             >
-              <SlidersHorizontal className="mr-1.5 h-4 w-4" /> Set It Up Yourself
+              <SlidersHorizontal className="mr-1.5 h-4 w-4" /> Build It Yourself
             </button>
           </div>
           <div className="flex items-center gap-2">
@@ -948,7 +948,7 @@ function Assistant() {
         <div className="shrink-0">
           <PageHeader
             title="AI Lead Assistant"
-            description="Describe The Leads You Want — Or Set It Up Yourself In List Settings. Nothing Runs Until You Approve."
+            description="Describe The Leads You Want — Or Build It Yourself In The List Builder. Nothing Runs Until You Approve."
             descriptionClassName="whitespace-nowrap !max-w-none"
             actions={
               <Button variant="outline" className="rounded-full" onClick={startOver}>
@@ -974,7 +974,7 @@ function Assistant() {
                     LeadTrace
                   </div>
                   <div className="mt-1.5 text-sm text-foreground">
-                    Set it up in List Settings on the right, or type below and I'll fill it in for you.
+                    Build it in the List Builder on the right, or type below and I'll fill it in for you.
                   </div>
                   <div className="mt-3">
                     <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
@@ -1060,7 +1060,7 @@ function Assistant() {
           </CardContent>
         </Card>
 
-        {/* One consolidated List Settings rail, sticky Generate at its bottom. */}
+        {/* One consolidated List Builder rail, sticky Generate at its bottom. */}
         <div className="spec-slide-in hidden min-h-0 lg:block lg:h-full">{specPanel}</div>
       </div>
       )}

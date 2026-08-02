@@ -56,7 +56,7 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
     steps.push({ label: "Location", value: stateNames.join(", ") });
   }
   if (spec.recencyDays) steps.push({ label: "Recency Window", value: `Last ${spec.recencyDays} Days` });
-  // Toggle lines use the exact List Settings labels, in panel order, so the two
+  // Toggle lines use the exact List Builder labels, in panel order, so the two
   // lists can be checked off against each other.
   for (const option of enabledOptions(spec)) {
     steps.push({ label: option.label, value: "Enabled" });

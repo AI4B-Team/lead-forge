@@ -76,7 +76,7 @@ export async function askAssistant(opts: {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) {
     return {
-      reply: "The Assistant Is Temporarily Unavailable. You Can Still Edit The List Settings On The Right And Generate It.",
+      reply: "The Assistant Is Temporarily Unavailable. You Can Still Build It Yourself In The List Builder On The Right.",
       spec: opts.spec,
       suggestedTemplates: [],
     };
@@ -124,7 +124,7 @@ export async function askAssistant(opts: {
       })()
     : opts.spec;
   return {
-    reply: out.reply?.trim() || "Updated The List Settings On The Right.",
+    reply: out.reply?.trim() || "Updated The List Builder On The Right.",
     spec,
     suggestedTemplates: (out.suggestedTemplates ?? []).slice(0, 4),
   };
