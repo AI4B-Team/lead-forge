@@ -35,7 +35,7 @@ function AppLayout() {
                   <Button
                     size="sm"
                     className="rounded-full"
-                    onClick={() => navigate({ to: "/app/new-list" })}
+                    onClick={() => navigate({ to: "/app/assistant" })}
                   >
                     <Plus className="mr-1 h-3.5 w-3.5" /> Build List
                   </Button>
