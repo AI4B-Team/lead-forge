@@ -17,7 +17,7 @@ export function exportShapeFor(templateId?: string | null): ExportShape {
  * File-type word used in the download name and menu. Research datasets are a
  * "Dataset", never a "Clean" list of leads.
  */
-export function cleanFileType(templateId?: string | null): string {
+export function cleanFileType(templateId?: string | null): "Clean" | "Dataset" {
   return templateOutputType(templateId) === "data" ? "Dataset" : "Clean";
 }
 
