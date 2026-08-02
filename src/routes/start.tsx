@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/start")({
   validateSearch: z.object({
     prompt: z.string().optional(),
+    template: z.string().optional(),
     upload: z.boolean().optional(),
   }),
   component: StartRedirect,
@@ -18,9 +19,13 @@ function StartRedirect() {
   useEffect(() => {
     (async () => {
       // Where the visitor should land once they have a session.
+      const params = new URLSearchParams();
+      if (search.template) params.set("template", search.template);
+      if (search.prompt) params.set("prompt", search.prompt);
+      const query = params.toString();
       const destination = search.upload
         ? "/app/new-job/upload?reattach=1"
-        : `/app/assistant${search.prompt ? `?prompt=${encodeURIComponent(search.prompt)}` : ""}`;
+        : `/app/assistant${query ? `?${query}` : ""}`;
 
       const { data } = await supabase.auth.getSession();
       if (data.session) {
@@ -42,7 +47,7 @@ function StartRedirect() {
       });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, search.prompt, search.upload]);
+  }, [navigate, search.prompt, search.template, search.upload]);
 
   return (
     <div className="min-h-screen grid place-items-center bg-background text-sm text-muted-foreground">
