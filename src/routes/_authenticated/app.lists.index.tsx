@@ -336,16 +336,32 @@ function Jobs() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sources</SelectItem>
-                {sourceOptions.map((g) => (
-                  <SelectGroup key={g.group}>
-                    <SelectLabel>{g.group}</SelectLabel>
-                    {g.items.map((it) => (
+                {sourceOptions.grouped
+                  ? sourceOptions.groups.map((g) =>
+                      g.items.length > 1 ? (
+                        <SelectGroup key={g.group}>
+                          <SelectLabel>{g.group}</SelectLabel>
+                          {g.items.map((it) => (
+                            <SelectItem key={it.key} value={it.key}>
+                              {it.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      ) : (
+                        // Single-child group: the header would duplicate its
+                        // only child, so render the source on its own.
+                        g.items.map((it) => (
+                          <SelectItem key={it.key} value={it.key}>
+                            {it.label}
+                          </SelectItem>
+                        ))
+                      ),
+                    )
+                  : sourceOptions.flat.map((it) => (
                       <SelectItem key={it.key} value={it.key}>
                         {it.label}
                       </SelectItem>
                     ))}
-                  </SelectGroup>
-                ))}
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
@@ -358,6 +374,8 @@ function Jobs() {
                 <SelectItem value="scraping">Scraping</SelectItem>
                 <SelectItem value="scrubbing">Scrubbing</SelectItem>
                 <SelectItem value="ready">Ready</SelectItem>
+                <SelectItem value="running">Running</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
                 <SelectItem value="attention">Needs Attention</SelectItem>
                 <SelectItem value="failed">Failed</SelectItem>
               </SelectContent>
