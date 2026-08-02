@@ -324,21 +324,6 @@ function AccountPage() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base font-display">
-                    <Terminal className="h-4 w-4 text-muted-foreground" /> API Keys
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center justify-between gap-4">
-                  <p className="text-sm text-muted-foreground">
-                    Push Leads And Campaign Events Into Your Own Stack. Manage Keys On The API Page.
-                  </p>
-                  <Button variant="outline" className="rounded-full" asChild>
-                    <a href="/app/api#keys">Open</a>
-                  </Button>
-                </CardContent>
-              </Card>
             </div>
 
             <div className="space-y-6">
