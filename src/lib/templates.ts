@@ -34,6 +34,13 @@ export type Template = {
   tint: string;
   /** Marks the template as Beta in the UI. */
   beta?: boolean;
+  /**
+   * Overrides for the List Builder. `adapterStatus` says whether the pipeline
+   * can actually run this source today; `fieldSchema` names the builder fields
+   * it needs (defaults come from the category — see lib/template-schema.ts).
+   */
+  adapterStatus?: "live" | "beta" | "requested";
+  fieldSchema?: string[];
   /** Two-line scannable label used in compact grids (title / subtitle). */
   shortTitle?: string;
   shortSubtitle?: string;

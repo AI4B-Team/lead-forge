@@ -51,11 +51,13 @@ const BY_CATEGORY: Record<TemplateCategory, BuilderField[]> = {
 const LIVE_CATEGORIES = new Set<TemplateCategory>(["business", "records", "upload"]);
 
 export function templateAdapterStatus(t: Template): AdapterStatus {
+  if (t.adapterStatus) return t.adapterStatus;
   if (LIVE_CATEGORIES.has(t.category)) return "live";
   return "beta";
 }
 
 export function templateFieldSchema(t: Template): BuilderField[] {
+  if (t.fieldSchema?.length) return t.fieldSchema as BuilderField[];
   if (URL_TEMPLATES.has(t.id)) return ["url"];
   return BY_CATEGORY[t.category] ?? ["keyword", "state", "counties"];
 }
