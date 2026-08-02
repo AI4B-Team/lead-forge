@@ -281,6 +281,11 @@ function LeadsPageInner() {
                     {r.business_name && r.full_name && (
                       <div className="ml-[3.25rem] text-xs text-muted-foreground">{r.full_name}</div>
                     )}
+                    {!!r.tags?.length && (
+                      <div className="ml-[3.25rem] mt-1">
+                        <LeadTagChips tags={r.tags} max={4} />
+                      </div>
+                    )}
                   </td>
                   <td className="p-4">{r.phone ? <PhoneLink phone={r.phone} /> : <span className="text-muted-foreground">—</span>}</td>
                   <td className="p-4 text-muted-foreground capitalize">{r.phone_type ?? "unknown"}</td>
