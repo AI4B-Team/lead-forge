@@ -281,11 +281,6 @@ function Dashboard() {
       <PageHeader
         title="Dashboard"
         description="A live look at your leads, lists, campaigns, and deliverability."
-        actions={
-          <Button asChild className="rounded-full">
-            <Link to="/app/assistant"><Plus className="mr-1 h-4 w-4" /> Build List</Link>
-          </Button>
-        }
       />
 
       {/* Hero metric */}
