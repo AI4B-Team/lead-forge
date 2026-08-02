@@ -51,6 +51,8 @@ export async function queueJob(
     params: Record<string, unknown>;
     recordType?: string | null;
     schedule?: string | null;
+    /** Outreach channel for the finished list — drives pipeline gating. */
+    channel?: "sms" | "email" | "direct_mail" | null;
   },
 ): Promise<QueuedJob> {
   const key = await buildIdempotencyKey({ sourceType: input.sourceType, params: input.params });
@@ -62,6 +64,7 @@ export async function queueJob(
     idempotency_key: key,
   };
   if (input.recordType) row.record_type = input.recordType;
+  if (input.channel) row.channel = input.channel;
   if (input.schedule) row.schedule = input.schedule;
 
   const { data, error } = await client

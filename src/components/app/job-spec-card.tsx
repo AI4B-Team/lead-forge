@@ -21,6 +21,9 @@ import {
 } from "@/lib/upload-attachment";
 import { optionsForSource, specOptionContext, defaultCountryFor, isDataSource, isNonUsRun } from "@/lib/pipeline-options";
 import { TemplateLogo } from "@/components/marketing/template-logo";
+import {
+  channelOptions, inferChannel, CHANNEL_LABEL, CHANNEL_HINT, type Channel,
+} from "@/lib/channels";
 import type { Template } from "@/lib/templates";
 import {
   templateAdapterStatus, templateFieldSchema, fieldsForSourceType, filterFieldLabel,
@@ -673,6 +676,48 @@ export function JobSpecCard({
           />
         </div>
         )}
+
+        <div>
+          <FieldLabel
+            hintTitle="Outreach Channel"
+            hint="How you'll work this list. SMS is the only channel LeadTrace sends on — email and direct mail deliver a file you export. The channel also decides which pipeline stages run."
+          >
+            Outreach Channel
+          </FieldLabel>
+          {(() => {
+            const options = channelOptions({
+              templateId: spec.templateId,
+              sourceType: spec.sourceType,
+              recordType: spec.recordType,
+              country: spec.country,
+            });
+            const inferred = inferChannel({
+              templateId: spec.templateId,
+              sourceType: spec.sourceType,
+              recordType: spec.recordType,
+              country: spec.country,
+            });
+            const current: Channel = spec.channel ?? inferred;
+            return (
+              <>
+                <Select value={current} onValueChange={(v) => set("channel", v as Channel)}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {options.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {CHANNEL_LABEL[c]}
+                        {c === inferred ? " (Recommended)" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">
+                  {CHANNEL_HINT[current]}
+                </p>
+              </>
+            );
+          })()}
+        </div>
 
         <div className="space-y-3">
           {toggles.map((option) => (

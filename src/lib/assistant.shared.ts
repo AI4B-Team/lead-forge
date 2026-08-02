@@ -35,6 +35,11 @@ export const jobSpecSchema = z.object({
   templateId: z.string().max(60).nullable().default(null),
   /** Site-scraper templates (Contact Details, Universal Crawl) target a URL. */
   targetUrl: z.string().max(300).nullable().default(null),
+  /**
+   * How the finished list gets worked. Inferred from the source; the List
+   * Builder can override it. SMS is the only channel LeadTrace sends on.
+   */
+  channel: z.enum(["sms", "email", "direct_mail"]).nullable().default(null),
   /** Free-text filter a template's schema exposes (followers, listing status). */
   filters: z.string().max(200).nullable().default(null),
 });
