@@ -1272,8 +1272,8 @@ function Assistant() {
               </CardContent>
             </Card>
 
-            {/* One consolidated List Builder rail, sticky Generate at its bottom. */}
-            <div className="spec-slide-in hidden lg:block">{specPanel}</div>
+            {/* One consolidated List Builder rail, Generate pinned at its bottom. */}
+            <div className="spec-slide-in hidden min-h-0 lg:block">{specPanel}</div>
           </div>
         )}
       </div>
