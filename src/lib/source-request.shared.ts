@@ -34,6 +34,31 @@ export const DESIRED_FIELD_OPTIONS = [
   "Filing Date",
 ] as const;
 
+/** Does the source need an account, and what kind? Drives the risk tier. */
+export type LoginRequirement = "none" | "free_public_records" | "restricted_platform" | "unsure";
+
+export const LOGIN_OPTIONS: { value: LoginRequirement; label: string; hint: string }[] = [
+  { value: "none", label: "No Login Needed", hint: "Fully Public Pages Or Records" },
+  {
+    value: "free_public_records",
+    label: "Free Account — Public Records Portal",
+    hint: "County / Court / Municipal Portal That Asks For A Free Signup",
+  },
+  {
+    value: "restricted_platform",
+    label: "Paid Or Terms-Restricted Platform",
+    hint: "MLS, Social Network, Data Vendor, Subscription Site",
+  },
+  { value: "unsure", label: "Not Sure", hint: "We'll Check The Terms During Review" },
+];
+
+export const LOGIN_LABEL: Record<string, string> = {
+  none: "No Login",
+  free_public_records: "Free Public-Records Login",
+  restricted_platform: "Terms-Restricted Login",
+  unsure: "Login Unknown",
+};
+
 export type SourceRequestInput = {
   sourceLabel: string;
   targetUrl?: string | null;
@@ -41,14 +66,38 @@ export type SourceRequestInput = {
   geo?: string | null;
   frequency: SourceRequestFrequency;
   notes?: string | null;
+  loginRequired?: LoginRequirement;
 };
 
-export type ScreenResult =
-  | { ok: true }
-  | { ok: false; category: "login_walled" | "impermissible_data"; reason: string };
+/** Acquisition risk tier — separate from whether the data can be cold-contacted. */
+export type RiskTier = "standard" | "review" | "rejected";
 
-/** Sites whose useful data sits behind an account/ToS wall. */
-const LOGIN_WALLED = [
+export type OutreachNote = { level: "ok" | "caution" | "restricted"; text: string };
+
+export type ScreenResult = {
+  /** Recorded and moves forward (queued or human review). */
+  ok: boolean;
+  tier: RiskTier;
+  /** Why it needs review, or why it can't be built at all. */
+  reason: string | null;
+  /** Independent read on using the data for SMS / email / mail. */
+  outreach: OutreachNote;
+};
+
+export const TIER_LABEL: Record<RiskTier, string> = {
+  standard: "Standard",
+  review: "Needs Review",
+  rejected: "Can't Build",
+};
+
+export const TIER_STATUS: Record<RiskTier, string> = {
+  standard: "queued",
+  review: "needs_review",
+  rejected: "screened_out",
+};
+
+/** Platforms whose terms explicitly prohibit automated collection. */
+const RESTRICTED_PLATFORMS = [
   "linkedin",
   "facebook",
   "instagram",
@@ -61,34 +110,63 @@ const LOGIN_WALLED = [
   "bumble",
   "onlyfans",
   "ancestry",
+  "zillow",
+  "mls",
+  "crunchbase",
+  "yelp api",
+  "truepeoplesearch",
 ];
 
-/** Phrases that describe getting past an authentication or access control. */
-const LOGIN_PHRASES = [
-  "behind a login",
-  "behind the login",
-  "behind login",
-  "behind a paywall",
-  "behind the paywall",
-  "behind paywall",
-  "logged in",
-  "log in with",
-  "login with my",
+/**
+ * Phrases that signal terms-restricted automated access, or reaching a third
+ * party's private/proprietary data. These flag for human review — not rejection.
+ */
+const REVIEW_PHRASES = [
+  "prohibits automated",
+  "no scraping",
+  "terms prohibit",
+  "against their terms",
+  "bypass",
+  "captcha",
   "use my account",
   "my credentials",
   "my password",
+  "shared login",
   "members only",
   "member area",
-  "member portal",
-  "bypass",
-  "captcha",
+  "paid subscription",
   "private profile",
   "private message",
   "scrape dms",
   "direct messages",
-  "gated portal",
   "mls login",
-  "paid subscription login",
+  "behind a paywall",
+  "behind the paywall",
+  "behind paywall",
+];
+
+/** Language that marks the source as public records / public listings. */
+const PUBLIC_RECORD_PHRASES = [
+  "public record",
+  "county",
+  "clerk",
+  "recorder",
+  "assessor",
+  "tax collector",
+  "probate",
+  "foreclosure",
+  "code violation",
+  "code enforcement",
+  "permit",
+  "court",
+  "docket",
+  "eviction",
+  "lien",
+  "business license",
+  "llc filing",
+  "secretary of state",
+  "municipal",
+  ".gov",
 ];
 
 /** Data classes that can't be used compliantly for outreach. */
@@ -122,8 +200,10 @@ const IMPERMISSIBLE = [
   "religion",
   "sexual orientation",
   "dating profile",
-  "password",
 ];
+
+/** Consumer-distress record types where cold outreach carries extra rules. */
+const SENSITIVE_RECORDS = ["probate", "eviction", "foreclosure", "divorce", "bankruptcy", "tax delinquen"];
 
 function haystack(input: SourceRequestInput): string {
   return [input.sourceLabel, input.targetUrl ?? "", input.geo ?? "", input.notes ?? "", input.desiredFields.join(" ")]
@@ -132,44 +212,100 @@ function haystack(input: SourceRequestInput): string {
 }
 
 /**
- * LeadTrace only builds sources it can run compliantly. Anything that requires
- * defeating an access control, or that asks for data outside permissible
- * outreach use, is recorded but never queued as buildable.
+ * Outreach use is judged independently of acquisition: plenty of data is fine to
+ * collect but not fine to cold-contact.
+ */
+export function outreachNote(input: SourceRequestInput): OutreachNote {
+  const text = haystack(input);
+  const fields = input.desiredFields.map((f) => f.toLowerCase());
+  const wantsPhone = fields.some((f) => f.includes("phone"));
+  const wantsEmail = fields.some((f) => f.includes("email"));
+
+  if (SENSITIVE_RECORDS.some((s) => text.includes(s))) {
+    return {
+      level: "caution",
+      text:
+        "Collecting These Records Is Fine, But Cold Contact Is Sensitive — We'll Route Phones Through DNC / Litigator Scrubbing And Quiet Hours, And Some States Restrict Distress-Record Solicitation.",
+    };
+  }
+  if (wantsPhone || wantsEmail) {
+    return {
+      level: "caution",
+      text:
+        "Contactability Is Judged Separately From Collection: Numbers Get DNC And Litigator Scrubbing Before Any Send, And Consent Rules Under TCPA Still Apply Per Campaign.",
+    };
+  }
+  return {
+    level: "ok",
+    text: "No Direct Contact Fields Requested — Mail Or Enrichment Use Only Until You Add Phone Or Email.",
+  };
+}
+
+/**
+ * Tier the request by real risk instead of "is it login-walled". Free-login
+ * public-records portals queue normally; terms-restricted or third-party
+ * proprietary access gets a human look; only impermissible data classes are
+ * refused outright.
  */
 export function screenSourceRequest(input: SourceRequestInput): ScreenResult {
   const text = haystack(input);
-
-  const phrase = LOGIN_PHRASES.find((p) => text.includes(p));
-  if (phrase) {
-    return {
-      ok: false,
-      category: "login_walled",
-      reason:
-        "This Asks Us To Pull Data From Behind A Login, Paywall, Or Other Access Control. LeadTrace Only Builds Sources It Can Access Publicly And Within The Site's Terms.",
-    };
-  }
-
-  const site = LOGIN_WALLED.find((s) => text.includes(s));
-  if (site) {
-    return {
-      ok: false,
-      category: "login_walled",
-      reason:
-        "That Site's Useful Data Sits Behind An Account And Its Terms Prohibit Automated Collection, So We Can't Build It As A Source. Public Records And Public Business Listings Are Fair Game.",
-    };
-  }
+  const login = input.loginRequired ?? "none";
+  const outreach = outreachNote(input);
 
   const data = IMPERMISSIBLE.find((d) => text.includes(d));
   if (data) {
     return {
       ok: false,
-      category: "impermissible_data",
+      tier: "rejected",
+      outreach,
       reason:
-        "That Data Type Can't Be Used Compliantly For Outreach — Credit, Financial, Medical, Screening, And Minors' Data Are Off Limits Regardless Of Source. Ask For Contact Fields Like Name, Phone, Email, And Address Instead.",
+        "That Data Class Is Off Limits Regardless Of Source — Credit, Financial, Medical, Screening, Biometric, And Minors' Data. Ask For Contact Fields Like Name, Phone, Email, And Address Instead.",
     };
   }
 
-  return { ok: true };
+  if (login === "restricted_platform") {
+    return {
+      ok: true,
+      tier: "review",
+      outreach,
+      reason:
+        "You Marked This As A Paid Or Terms-Restricted Login. We'll Have A Human Read The Terms Before Building — Authenticated Access To A Platform's Proprietary Data Isn't Auto-Approved.",
+    };
+  }
+
+  const phrase = REVIEW_PHRASES.find((p) => text.includes(p));
+  if (phrase) {
+    return {
+      ok: true,
+      tier: "review",
+      outreach,
+      reason:
+        "This Describes Automated Access That May Be Restricted By The Site's Terms, Or Reaching Another Party's Private Data. Flagged For Human Review Before Any Build.",
+    };
+  }
+
+  const platform = RESTRICTED_PLATFORMS.find((s) => text.includes(s));
+  if (platform) {
+    return {
+      ok: true,
+      tier: "review",
+      outreach,
+      reason:
+        "That Platform's Terms Commonly Prohibit Automated Collection, So It Goes To Human Review Rather Than Straight To The Build Queue.",
+    };
+  }
+
+  if (login === "unsure" && !PUBLIC_RECORD_PHRASES.some((p) => text.includes(p))) {
+    return {
+      ok: true,
+      tier: "review",
+      outreach,
+      reason:
+        "We Can't Tell Yet Whether This Source Allows Automated Access. We'll Check The Terms During Review — No Action Needed From You.",
+    };
+  }
+
+  return { ok: true, tier: "standard", outreach, reason: null };
 }
 
 /** Canonical grouping key — must match the SQL demand report. */
