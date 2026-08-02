@@ -194,7 +194,7 @@ function ConversationsPage() {
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight });
+    if (scrollerRef.current) scrollerRef.current.scrollTop = 0;
   }, [threadQ.data]);
 
   const activeThread = useMemo(
