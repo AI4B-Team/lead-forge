@@ -274,7 +274,7 @@ function TrainingItem({
           {source.title}
         </div>
         <div className="mt-0.5 text-[11px] text-muted-foreground/80">
-          {source.chars.toLocaleString()} Chars · {ago(source.created_at)}
+          1 {LABELS[source.category] ?? "Item"} Added · {ago(source.created_at)}
         </div>
       </div>
       <Button
