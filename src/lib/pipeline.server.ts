@@ -197,13 +197,16 @@ export async function executePipeline(
 ): Promise<PipelineResult | { ok: true; status: string }> {
   const { data: job, error: jobErr } = await supabase
     .from("jobs")
-    .select("id, workspace_id, source_type, status, params, channel, parent_job_id")
+    .select("id, workspace_id, source_type, status, params, channel, parent_job_id, created_by")
     .eq("id", jobId)
     .single();
   if (jobErr || !job) throw new Error("List Not Found");
   if (job.status !== "queued") return { ok: true, status: job.status as string };
 
   const workspaceId = job.workspace_id as string;
+  // Every credit debit is attributed to the member who created the list, so a
+  // scheduled rescan still lands on a person rather than "system".
+  const actorUserId = (job.created_by as string | null) ?? null;
   const params = (job.params ?? {}) as JobParams;
   const channel = normalizeChannel(job.channel as string | null);
   const phonePipeline = channelUsesPhonePipeline(channel);
@@ -385,6 +388,7 @@ export async function executePipeline(
         delta: -skiptraced,
         reason: "skiptrace",
         job_id: jobId,
+        actor_user_id: actorUserId,
       });
       const { data: bal } = await supabase
         .from("credit_balances")
@@ -449,6 +453,7 @@ export async function executePipeline(
     delta: -verified.length,
     reason: "scrape",
     job_id: jobId,
+    actor_user_id: actorUserId,
   });
   const { data: scrapeBal } = await supabase
     .from("credit_balances")
