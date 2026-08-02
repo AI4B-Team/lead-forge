@@ -30,7 +30,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { FileSpreadsheet, FileText, Files } from "lucide-react";
 import { ChevronDown, Database, Coins } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
+export const Route = createFileRoute("/_authenticated/app/lists/$listId")({
   head: () => ({ meta: [{ title: "Pipeline Review — LeadTrace" }] }),
   component: JobDetail,
 });

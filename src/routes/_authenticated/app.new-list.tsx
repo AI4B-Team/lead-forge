@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { PageHeader } from "@/components/app/page-header";
 import { Search, Landmark, Upload, ArrowRight, Sparkles } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/app/new-job")({
+export const Route = createFileRoute("/_authenticated/app/new-list")({
   head: () => ({ meta: [{ title: "New Job — LeadTrace" }] }),
   component: NewJob,
 });

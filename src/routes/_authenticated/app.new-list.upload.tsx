@@ -17,7 +17,7 @@ import { attachmentRows, readAttachment, type UploadAttachment } from "@/lib/upl
 import { ColumnMapper } from "@/components/app/column-mapper";
 import { queueJob } from "@/lib/job-submit";
 
-export const Route = createFileRoute("/_authenticated/app/new-job/upload")({
+export const Route = createFileRoute("/_authenticated/app/new-list/upload")({
   validateSearch: (search: Record<string, unknown>) => ({
     reattach: search['reattach'] === "1" || search['reattach'] === true,
   }),

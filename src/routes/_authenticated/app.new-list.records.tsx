@@ -15,7 +15,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { runJob } from "@/lib/pipeline.functions";
 import { queueJob } from "@/lib/job-submit";
 
-export const Route = createFileRoute("/_authenticated/app/new-job/records")({
+export const Route = createFileRoute("/_authenticated/app/new-list/records")({
   head: () => ({ meta: [{ title: "Scrape Public Records — LeadTrace" }] }),
   component: Wizard,
 });
