@@ -240,6 +240,49 @@ function resolve(option: PipelineOption, profile: EnrichmentProfile): PipelineOp
 }
 
 /**
+ * Extra context that changes which toggles are honest for a run:
+ * - contactTarget: FSBO records need skip trace; listing agents publish phones.
+ * - nonUs: SMS is US-only here, so a non-US run is an email-only lead file.
+ */
+export type OptionContext = {
+  contactTarget?: ContactTarget | null;
+  nonUs?: boolean;
+  country?: string | null;
+};
+
+/** Ids visible for a profile + context, before source-kind scoping. */
+function visibleIds(profile: EnrichmentProfile, ctx: OptionContext): PipelineOptionId[] {
+  // Research datasets never carry enrichment.
+  if (profile === "data") return ["dedupe"];
+  const nonUs = ctx.nonUs === true;
+  // SMS is US-only, so a non-US run is an email-only lead file: no line-type
+  // check, no skip trace against US phone data.
+  if (nonUs) return ["emailRequired", "dedupe"];
+  if (profile === "creator" || profile === "seller") return ["emailRequired", "dedupe"];
+  if (profile === "portal") {
+    // Listing agents publish their phone numbers; owners do not.
+    return ctx.contactTarget === "fsbo"
+      ? ["skipTrace", "dedupe", "mobileOnly"]
+      : ["dedupe", "mobileOnly"];
+  }
+  return PIPELINE_OPTIONS.filter((o) => o.profiles.includes(profile)).map((o) => o.id);
+}
+
+/** The non-US email requirement borrows the creator toggle with honest wording. */
+function contextOverride(option: PipelineOption, ctx: OptionContext): PipelineOption {
+  if (ctx.nonUs && option.id === "emailRequired") {
+    return {
+      ...option,
+      label: "Only Records With Contact Email",
+      checklistLabel: "Email Required",
+      hint: "SMS launches are US-only, so non-US runs are delivered as an email-ready file. This keeps only records with a contact email.",
+      defaultOn: true,
+    };
+  }
+  return option;
+}
+
+/**
  * Toggles that should render, in canonical order. Visibility is both
  * source-kind aware and enrichment-profile aware: creator sources never see
  * skip trace or mobile filtering, and see the email requirement instead.
@@ -247,13 +290,24 @@ function resolve(option: PipelineOption, profile: EnrichmentProfile): PipelineOp
 export function optionsForSource(
   sourceType: JobSpec["sourceType"],
   templateId?: string | null,
+  ctx: OptionContext = {},
 ): readonly PipelineOption[] {
   const profile = enrichmentProfile(templateId);
-  const inProfile = PIPELINE_OPTIONS.filter((o) => o.profiles.includes(profile));
+  const allowed = new Set(visibleIds(profile, ctx));
+  const inProfile = PIPELINE_OPTIONS.filter((o) => allowed.has(o.id));
   const scoped = sourceType
     ? inProfile.filter((o) => o.sourceKinds.includes(sourceType))
     : inProfile.filter((o) => resolve(o, profile).defaultOn);
-  return scoped.map((o) => resolve(o, profile));
+  return scoped.map((o) => contextOverride(resolve(o, profile), ctx));
+}
+
+/** Context implied by the spec itself (contact target + geography). */
+export function specOptionContext(spec: JobSpec): OptionContext {
+  return {
+    contactTarget: spec.contactTarget,
+    country: spec.country,
+    nonUs: isNonUsRun({ templateId: spec.templateId, country: spec.country }),
+  };
 }
 
 /**
@@ -261,7 +315,7 @@ export function optionsForSource(
  * user (or the assistant) actually turned them on.
  */
 export function enabledOptions(spec: JobSpec): readonly PipelineOption[] {
-  return optionsForSource(spec.sourceType, spec.templateId).filter((o) => spec[o.id]);
+  return optionsForSource(spec.sourceType, spec.templateId, specOptionContext(spec)).filter((o) => spec[o.id]);
 }
 
 /**
@@ -270,11 +324,17 @@ export function enabledOptions(spec: JobSpec): readonly PipelineOption[] {
  * stale skipTrace/mobileOnly true, and LinkedIn starts with skip trace off.
  */
 export function withEnrichmentDefaults(spec: JobSpec, templateId?: string | null): JobSpec {
-  const profile = enrichmentProfile(templateId ?? spec.templateId);
+  const id = templateId ?? spec.templateId;
   const next = { ...spec };
+  const ctx: OptionContext = {
+    contactTarget: spec.contactTarget,
+    country: spec.country ?? defaultCountryFor(id),
+    nonUs: isNonUsRun({ templateId: id, country: spec.country ?? defaultCountryFor(id) }),
+  };
+  const visible = optionsForSource(spec.sourceType ?? "business", id, ctx);
   for (const option of PIPELINE_OPTIONS) {
-    const visible = option.profiles.includes(profile);
-    next[option.id] = visible ? resolve(option, profile).defaultOn : false;
+    const shown = visible.find((v) => v.id === option.id);
+    next[option.id] = shown ? shown.defaultOn : false;
   }
   return next;
 }
