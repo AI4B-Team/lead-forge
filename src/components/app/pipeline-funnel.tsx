@@ -66,6 +66,9 @@ export function PipelineFunnel({
         return (
           <div key={s.key} className="flex min-w-0 flex-1 items-stretch">
             <div className="min-w-0 flex-1">
+              {isClean && readyPill && (
+                <div className="mb-2 flex justify-center">{readyPill}</div>
+              )}
               <div
                 className={cn(
                   "relative w-full overflow-hidden rounded-xl border",
