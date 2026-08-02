@@ -16,10 +16,10 @@ import {
   KnowledgeHealth,
   KnowledgeOutcome,
   SampleQuestions,
-  TrainableSources,
   bucketKnowledge,
   knowledgeScore,
 } from "@/components/app/brand-knowledge";
+import { KnowledgeSourceCards } from "@/components/app/knowledge-cards";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { useWorkspaceAgent } from "@/hooks/use-agent";
 import { createBrand } from "@/lib/brands.functions";
@@ -151,7 +151,7 @@ function AgentSetup({ workspaceId }: { workspaceId: string }) {
           Feed Your Agent Any Of These — It Only Speaks From What You Approve.
         </p>
       </div>
-      <TrainableSources />
+      <KnowledgeSourceCards />
 
       <div className="mt-8 mb-4">
         <h2 className="font-display text-xl font-bold text-foreground">How It Works</h2>
@@ -309,7 +309,7 @@ function AgentPage() {
               Feed Your Agent Any Of These — It Only Speaks From What You Approve.
             </p>
           </div>
-          <TrainableSources />
+          <KnowledgeSourceCards brandId={agent.id} sources={sources} />
         </>
       )}
     </div>

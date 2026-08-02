@@ -10,7 +10,7 @@ export const listBotKnowledge = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     let q = context.supabase
       .from("bot_knowledge")
-      .select("id, source_type, title, source_url, content, created_at")
+      .select("id, source_type, category, title, source_url, content, created_at")
       .order("created_at", { ascending: false });
     q = data.brandId ? q.eq("brand_id", data.brandId) : q.eq("campaign_id", data.campaignId!);
     const { data: rows, error } = await q;
@@ -18,6 +18,7 @@ export const listBotKnowledge = createServerFn({ method: "POST" })
     return (rows ?? []).map((r) => ({
       id: r.id,
       source_type: r.source_type,
+      category: r.category ?? "other",
       title: r.title,
       source_url: r.source_url,
       created_at: r.created_at,
@@ -37,6 +38,7 @@ export const addBotKnowledge = createServerFn({ method: "POST" })
         .array(
           z.object({
             source_type: z.enum(["text", "voice", "file", "url"]),
+            category: z.string().max(40).optional(),
             title: z.string().min(1).max(160),
             content: z.string().min(1).max(200000),
             source_url: z.string().max(600).optional(),
@@ -54,6 +56,7 @@ export const addBotKnowledge = createServerFn({ method: "POST" })
       .map((i) => ({
         ...target,
         source_type: i.source_type,
+        category: i.category?.trim() || "other",
         title: i.title.trim(),
         source_url: i.source_url?.trim() || null,
         content: normalizeContent(i.content),
@@ -73,6 +76,7 @@ export const addBotKnowledgeFromUrls = createServerFn({ method: "POST" })
     z.object({
       brandId: z.string().uuid().optional(),
       campaignId: z.string().uuid().optional(),
+      category: z.string().max(40).optional(),
       urls: z.array(z.string().url().max(600)).min(1).max(10),
     }).parse(input),
   )
@@ -95,6 +99,7 @@ export const addBotKnowledgeFromUrls = createServerFn({ method: "POST" })
         ok.map((r) => ({
           ...target,
           source_type: "url",
+          category: data.category?.trim() || "website",
           title: r.title,
           source_url: r.url,
           content: r.content,

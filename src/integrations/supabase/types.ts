@@ -100,6 +100,7 @@ export type Database = {
         Row: {
           brand_id: string | null
           campaign_id: string | null
+          category: string
           content: string
           created_at: string
           id: string
@@ -111,6 +112,7 @@ export type Database = {
         Insert: {
           brand_id?: string | null
           campaign_id?: string | null
+          category?: string
           content?: string
           created_at?: string
           id?: string
@@ -122,6 +124,7 @@ export type Database = {
         Update: {
           brand_id?: string | null
           campaign_id?: string | null
+          category?: string
           content?: string
           created_at?: string
           id?: string
