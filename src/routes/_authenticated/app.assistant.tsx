@@ -707,23 +707,36 @@ function Assistant() {
         </div>
       )}
 
-      {estimate && spec.sourceType && geoResolved && (
+      {estimate && adapterLive && spec.sourceType && geoResolved && (
         <div className="text-center text-xs text-muted-foreground">
           ≈ {estimate.rows.toLocaleString()} Rows · ~{estimate.scrapeCredits.toLocaleString()} Lead Credits
           {estimate.skipTraceCredits ? ` · ~${estimate.skipTraceCredits.toLocaleString()} Skip-Trace Credits` : ""}
         </div>
       )}
 
-      <Button
-        className="w-full rounded-full"
-        disabled={running || !spec.sourceType || !traceComplete}
-        onClick={reviewAndRun}
-      >
-        {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {ctaLabel}
-      </Button>
-      <div className="text-center text-[11px] text-muted-foreground">
-        The Assistant Assembles. You Run. Nothing Sends Without You.
-      </div>
+      {adapterLive ? (
+        <>
+          <Button
+            className="w-full rounded-full"
+            disabled={running || !spec.sourceType || !traceComplete}
+            onClick={reviewAndRun}
+          >
+            {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {ctaLabel}
+          </Button>
+          <div className="text-center text-[11px] text-muted-foreground">
+            The Assistant Assembles. You Run. Nothing Sends Without You.
+          </div>
+        </>
+      ) : (
+        <>
+          <Button className="w-full rounded-full" variant="outline" onClick={() => void requestTemplateAdapter()}>
+            <Sparkles className="mr-1 h-4 w-4" /> This Source Is Coming — Request Early Access
+          </Button>
+          <div className="text-center text-[11px] text-muted-foreground">
+            {selectedTemplate?.title} Is In Beta. We'll Email You The Day Its Adapter Goes Live.
+          </div>
+        </>
+      )}
     </div>
   );
 
