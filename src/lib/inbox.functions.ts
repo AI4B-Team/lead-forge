@@ -21,7 +21,7 @@ export const listThreads = createServerFn({ method: "GET" })
     // can't do a DISTINCT ON via the JS client cleanly.
     let q = context.supabase
       .from("messages")
-      .select("id, thread_key, direction, body, created_at, read_at, is_optout, lead_id, sending_number_id, campaign_id, is_bot, handoff_reason")
+      .select("id, thread_key, direction, body, created_at, read_at, is_optout, lead_id, sending_number_id, campaign_id, is_bot, handoff_reason, channel, call_event, transcript")
       .eq("workspace_id", data.workspaceId)
       .not("thread_key", "is", null)
       .order("created_at", { ascending: false })
@@ -46,6 +46,9 @@ export const listThreads = createServerFn({ method: "GET" })
       last_inbound_at: string | null;
       bot_active: boolean;
       handoff: string | null;
+      last_channel: string;
+      last_call_event: string | null;
+      voice_inbound: number;
     };
     const byThread = new Map<string, Agg>();
     for (const r of (rows ?? []) as Row[]) {
@@ -67,6 +70,9 @@ export const listThreads = createServerFn({ method: "GET" })
           last_inbound_at: null,
           bot_active: false,
           handoff: null,
+          last_channel: (r as { channel?: string | null }).channel ?? "sms",
+          last_call_event: (r as { call_event?: string | null }).call_event ?? null,
+          voice_inbound: 0,
         };
         byThread.set(r.thread_key, cur);
       }
@@ -77,7 +83,10 @@ export const listThreads = createServerFn({ method: "GET" })
       if (r.direction === "inbound") {
         cur.inbound += 1;
         if (!r.read_at) cur.unread += 1;
-        if (r.body) cur.inbound_bodies.push(r.body);
+        const rr = r as { channel?: string | null; transcript?: string | null };
+        if (rr.channel === "voice") cur.voice_inbound += 1;
+        const text = rr.channel === "voice" ? rr.transcript ?? r.body : r.body;
+        if (text) cur.inbound_bodies.push(text);
         if (!cur.last_inbound_at) cur.last_inbound_at = r.created_at;
       } else {
         cur.outbound += 1;
@@ -152,6 +161,8 @@ export const listThreads = createServerFn({ method: "GET" })
         botEnabled: !!(campaign as { bot_enabled?: boolean } | null)?.bot_enabled,
         handoff: t.handoff,
         intent,
+        lastChannel: t.last_channel,
+        lastCallEvent: t.last_call_event,
       });
       return {
         ...t,
@@ -164,7 +175,11 @@ export const listThreads = createServerFn({ method: "GET" })
         sentiment: sentimentOf(t.inbound_bodies.join(" ")),
         needs_reply,
         bot_handling: !!(campaign as { bot_enabled?: boolean } | null)?.bot_enabled,
-        urgency: urgencyScore({ score, waitingSince: t.last_inbound_at ?? t.last_at }),
+        urgency: urgencyScore({
+          score,
+          waitingSince: t.last_inbound_at ?? t.last_at,
+          isCallback: t.last_channel === "voice" && t.last_direction === "inbound",
+        }),
       };
     });
 
