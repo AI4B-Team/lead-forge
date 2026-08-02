@@ -72,7 +72,7 @@ function Wizard() {
           rows: attached ? attachmentRows({ ...attached, map: mapping }) : null,
         },
       });
-      navigate({ to: "/app/jobs/$jobId", params: { jobId: id } });
+      navigate({ to: "/app/lists/$listId", params: { jobId: id } });
       if (duplicate) {
         toast.info("This File Was Already Queued — Opening That Run.");
         return;
@@ -143,7 +143,7 @@ function Wizard() {
 
           <div className="flex gap-2 justify-end">
             <Button asChild variant="outline" className="rounded-full">
-              <Link to="/app/new-job">Back</Link>
+              <Link to="/app/new-list">Back</Link>
             </Button>
             <Button className="rounded-full" onClick={run} disabled={busy || !workspaceId || !file}>
               {busy ? "Queuing…" : "Run Job"}

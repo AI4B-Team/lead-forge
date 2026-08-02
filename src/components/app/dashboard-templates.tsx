@@ -18,9 +18,9 @@ const TABS: Array<{ key: TabKey; label: string; match: TemplateCategory[] }> = [
 
 /** Deep-links into New Job with the record type preselected (spec §18). */
 function templateLink(t: Template) {
-  if (t.category === "upload") return { to: "/app/new-job/upload" } as const;
-  if (t.category === "records") return { to: "/app/new-job/records" } as const;
-  return { to: "/app/new-job/business", search: { niche: t.title } } as const;
+  if (t.category === "upload") return { to: "/app/new-list/upload" } as const;
+  if (t.category === "records") return { to: "/app/new-list/records" } as const;
+  return { to: "/app/new-list/business", search: { niche: t.title } } as const;
 }
 
 const CATEGORY_LABEL: Partial<Record<TemplateCategory, string>> = {

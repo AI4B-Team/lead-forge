@@ -48,7 +48,7 @@ export function GettingStarted({ workspaceId }: { workspaceId: string | null }) 
       title: "Run Your First Search — Or Upload A List",
       body: "Pick a niche and a county, or bring a CSV you already own.",
       icon: <Search className="h-4 w-4" />,
-      to: "/app/new-job",
+      to: "/app/new-list",
       cta: "Start A Job",
       done: data.hasJob,
     },

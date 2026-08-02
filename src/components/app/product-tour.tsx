@@ -200,7 +200,7 @@ export function ProductTour({ open, onClose }: { open: boolean; onClose: () => v
             )}
             {last ? (
               <Button asChild size="sm" className="rounded-full" onClick={() => finish("completed")}>
-                <Link to="/app/new-job">Run Your First List</Link>
+                <Link to="/app/new-list">Run Your First List</Link>
               </Button>
             ) : (
               <Button size="sm" className="rounded-full" onClick={() => setI((n) => n + 1)}>

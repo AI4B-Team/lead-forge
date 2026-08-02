@@ -32,7 +32,7 @@ import { BRAND_NAME } from "@/config/brand";
 const ITEMS = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/app/assistant", label: "AI Assistant", icon: Sparkles },
-  { to: "/app/new-job", label: "New Job", icon: Plus },
+  { to: "/app/new-list", label: "New Job", icon: Plus },
   { to: "/app/lists", label: "Jobs", icon: ListChecks },
   { to: "/app/leads", label: "Leads", icon: Users },
   { to: "/app/brands", label: "AI Brands", icon: BrainCircuit },

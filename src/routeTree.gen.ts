@@ -53,7 +53,6 @@ import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppRegistrationRouteImport } from './routes/_authenticated/app.registration'
 import { Route as AuthenticatedAppNumbersRouteImport } from './routes/_authenticated/app.numbers'
 import { Route as AuthenticatedAppNewListRouteImport } from './routes/_authenticated/app.new-list'
-import { Route as AuthenticatedAppListsRouteImport } from './routes/_authenticated/app.lists'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
@@ -63,6 +62,7 @@ import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppAssistantRouteImport } from './routes/_authenticated/app.assistant'
 import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/app.admin'
 import { Route as AuthenticatedAppAccountRouteImport } from './routes/_authenticated/app.account'
+import { Route as AuthenticatedAppListsIndexRouteImport } from './routes/_authenticated/app.lists.index'
 import { Route as AuthenticatedAppCampaignsIndexRouteImport } from './routes/_authenticated/app.campaigns.index'
 import { Route as ApiPublicV1LeadsRouteImport } from './routes/api/public/v1/leads'
 import { Route as ApiPublicV1JobsRouteImport } from './routes/api/public/v1/jobs'
@@ -302,11 +302,6 @@ const AuthenticatedAppNewListRoute = AuthenticatedAppNewListRouteImport.update({
   path: '/new-list',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAppListsRoute = AuthenticatedAppListsRouteImport.update({
-  id: '/lists',
-  path: '/lists',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
 const AuthenticatedAppLeadsRoute = AuthenticatedAppLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
@@ -355,6 +350,12 @@ const AuthenticatedAppAccountRoute = AuthenticatedAppAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppListsIndexRoute =
+  AuthenticatedAppListsIndexRouteImport.update({
+    id: '/lists/',
+    path: '/lists/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppCampaignsIndexRoute =
   AuthenticatedAppCampaignsIndexRouteImport.update({
     id: '/campaigns/',
@@ -424,9 +425,9 @@ const AuthenticatedAppNewListBusinessRoute =
   } as any)
 const AuthenticatedAppListsListIdRoute =
   AuthenticatedAppListsListIdRouteImport.update({
-    id: '/$listId',
-    path: '/$listId',
-    getParentRoute: () => AuthenticatedAppListsRoute,
+    id: '/lists/$listId',
+    path: '/lists/$listId',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppCampaignsNewRoute =
   AuthenticatedAppCampaignsNewRouteImport.update({
@@ -491,7 +492,6 @@ export interface FileRoutesByFullPath {
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
-  '/app/lists': typeof AuthenticatedAppListsRouteWithChildren
   '/app/new-list': typeof AuthenticatedAppNewListRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
@@ -515,6 +515,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
+  '/app/lists/': typeof AuthenticatedAppListsIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
 export interface FileRoutesByTo {
@@ -561,7 +562,6 @@ export interface FileRoutesByTo {
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
-  '/app/lists': typeof AuthenticatedAppListsRouteWithChildren
   '/app/new-list': typeof AuthenticatedAppNewListRouteWithChildren
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
@@ -585,6 +585,7 @@ export interface FileRoutesByTo {
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/app/campaigns': typeof AuthenticatedAppCampaignsIndexRoute
+  '/app/lists': typeof AuthenticatedAppListsIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
 export interface FileRoutesById {
@@ -634,7 +635,6 @@ export interface FileRoutesById {
   '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
-  '/_authenticated/app/lists': typeof AuthenticatedAppListsRouteWithChildren
   '/_authenticated/app/new-list': typeof AuthenticatedAppNewListRouteWithChildren
   '/_authenticated/app/numbers': typeof AuthenticatedAppNumbersRoute
   '/_authenticated/app/registration': typeof AuthenticatedAppRegistrationRoute
@@ -658,6 +658,7 @@ export interface FileRoutesById {
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
   '/_authenticated/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
+  '/_authenticated/app/lists/': typeof AuthenticatedAppListsIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
 }
 export interface FileRouteTypes {
@@ -707,7 +708,6 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/inbox'
     | '/app/leads'
-    | '/app/lists'
     | '/app/new-list'
     | '/app/numbers'
     | '/app/registration'
@@ -731,6 +731,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
     | '/app/campaigns/'
+    | '/app/lists/'
     | '/api/public/v1/jobs/$jobId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -777,7 +778,6 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/inbox'
     | '/app/leads'
-    | '/app/lists'
     | '/app/new-list'
     | '/app/numbers'
     | '/app/registration'
@@ -801,6 +801,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
     | '/app/campaigns'
+    | '/app/lists'
     | '/api/public/v1/jobs/$jobId'
   id:
     | '__root__'
@@ -849,7 +850,6 @@ export interface FileRouteTypes {
     | '/_authenticated/app/dashboard'
     | '/_authenticated/app/inbox'
     | '/_authenticated/app/leads'
-    | '/_authenticated/app/lists'
     | '/_authenticated/app/new-list'
     | '/_authenticated/app/numbers'
     | '/_authenticated/app/registration'
@@ -873,6 +873,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
     | '/_authenticated/app/campaigns/'
+    | '/_authenticated/app/lists/'
     | '/api/public/v1/jobs/$jobId'
   fileRoutesById: FileRoutesById
 }
@@ -1231,13 +1232,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppNewListRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/lists': {
-      id: '/_authenticated/app/lists'
-      path: '/lists'
-      fullPath: '/app/lists'
-      preLoaderRoute: typeof AuthenticatedAppListsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
     '/_authenticated/app/leads': {
       id: '/_authenticated/app/leads'
       path: '/leads'
@@ -1299,6 +1293,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/app/account'
       preLoaderRoute: typeof AuthenticatedAppAccountRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/lists/': {
+      id: '/_authenticated/app/lists/'
+      path: '/lists'
+      fullPath: '/app/lists/'
+      preLoaderRoute: typeof AuthenticatedAppListsIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/campaigns/': {
@@ -1387,10 +1388,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/app/lists/$listId': {
       id: '/_authenticated/app/lists/$listId'
-      path: '/$listId'
+      path: '/lists/$listId'
       fullPath: '/app/lists/$listId'
       preLoaderRoute: typeof AuthenticatedAppListsListIdRouteImport
-      parentRoute: typeof AuthenticatedAppListsRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/campaigns/new': {
       id: '/_authenticated/app/campaigns/new'
@@ -1415,19 +1416,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AuthenticatedAppListsRouteChildren {
-  AuthenticatedAppListsListIdRoute: typeof AuthenticatedAppListsListIdRoute
-}
-
-const AuthenticatedAppListsRouteChildren: AuthenticatedAppListsRouteChildren = {
-  AuthenticatedAppListsListIdRoute: AuthenticatedAppListsListIdRoute,
-}
-
-const AuthenticatedAppListsRouteWithChildren =
-  AuthenticatedAppListsRoute._addFileChildren(
-    AuthenticatedAppListsRouteChildren,
-  )
 
 interface AuthenticatedAppNewListRouteChildren {
   AuthenticatedAppNewListBusinessRoute: typeof AuthenticatedAppNewListBusinessRoute
@@ -1457,7 +1445,6 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
-  AuthenticatedAppListsRoute: typeof AuthenticatedAppListsRouteWithChildren
   AuthenticatedAppNewListRoute: typeof AuthenticatedAppNewListRouteWithChildren
   AuthenticatedAppNumbersRoute: typeof AuthenticatedAppNumbersRoute
   AuthenticatedAppRegistrationRoute: typeof AuthenticatedAppRegistrationRoute
@@ -1468,7 +1455,9 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppCampaignsCampaignIdRoute: typeof AuthenticatedAppCampaignsCampaignIdRoute
   AuthenticatedAppCampaignsNewRoute: typeof AuthenticatedAppCampaignsNewRoute
+  AuthenticatedAppListsListIdRoute: typeof AuthenticatedAppListsListIdRoute
   AuthenticatedAppCampaignsIndexRoute: typeof AuthenticatedAppCampaignsIndexRoute
+  AuthenticatedAppListsIndexRoute: typeof AuthenticatedAppListsIndexRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
@@ -1481,7 +1470,6 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
-  AuthenticatedAppListsRoute: AuthenticatedAppListsRouteWithChildren,
   AuthenticatedAppNewListRoute: AuthenticatedAppNewListRouteWithChildren,
   AuthenticatedAppNumbersRoute: AuthenticatedAppNumbersRoute,
   AuthenticatedAppRegistrationRoute: AuthenticatedAppRegistrationRoute,
@@ -1493,7 +1481,9 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppCampaignsCampaignIdRoute:
     AuthenticatedAppCampaignsCampaignIdRoute,
   AuthenticatedAppCampaignsNewRoute: AuthenticatedAppCampaignsNewRoute,
+  AuthenticatedAppListsListIdRoute: AuthenticatedAppListsListIdRoute,
   AuthenticatedAppCampaignsIndexRoute: AuthenticatedAppCampaignsIndexRoute,
+  AuthenticatedAppListsIndexRoute: AuthenticatedAppListsIndexRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
@@ -1579,13 +1569,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

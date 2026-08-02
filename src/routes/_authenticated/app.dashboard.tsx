@@ -283,7 +283,7 @@ function Dashboard() {
         description="A live look at your leads, lists, campaigns, and deliverability."
         actions={
           <Button asChild className="rounded-full">
-            <Link to="/app/new-job"><Plus className="mr-1 h-4 w-4" /> Build List</Link>
+            <Link to="/app/new-list"><Plus className="mr-1 h-4 w-4" /> Build List</Link>
           </Button>
         }
       />
@@ -364,7 +364,7 @@ function Dashboard() {
                   return (
                     <Link
                       key={j.id}
-                      to="/app/jobs/$jobId"
+                      to="/app/lists/$listId"
                       params={{ jobId: j.id }}
                       className="-mx-2 flex items-start gap-4 rounded-lg px-2 py-3 hover:bg-surface-muted"
                     >
@@ -405,7 +405,7 @@ function Dashboard() {
               <div className="py-10 text-center">
                 <div className="text-sm text-muted-foreground">No Jobs Yet.</div>
                 <Button asChild className="mt-4 rounded-full">
-                  <Link to="/app/new-job"><Plus className="mr-1 h-4 w-4" /> Build Your First List</Link>
+                  <Link to="/app/new-list"><Plus className="mr-1 h-4 w-4" /> Build Your First List</Link>
                 </Button>
               </div>
             )}

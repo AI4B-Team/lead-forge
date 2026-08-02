@@ -92,7 +92,7 @@ export function ScanDigest({ workspaceId }: { workspaceId: string | null }) {
             <div key={j.id} className="flex items-center justify-between gap-3 py-2.5">
               <div className="min-w-0">
                 <Link
-                  to="/app/jobs/$jobId"
+                  to="/app/lists/$listId"
                   params={{ jobId: j.id }}
                   className="font-medium text-foreground hover:text-primary truncate block"
                 >

@@ -38,7 +38,7 @@ import { buildPipelineStages, ROWS_PROCESSED_LABEL } from "@/lib/pipeline-stages
 import { isStalled, isRunningStatus, stallReason, STALL_HOURS } from "@/lib/job-watchdog";
 import type { JobStatus } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/_authenticated/app/lists")({
+export const Route = createFileRoute("/_authenticated/app/lists/")({
   head: () => ({ meta: [{ title: "Jobs — LeadTrace" }] }),
   component: Jobs,
 });
@@ -139,7 +139,7 @@ function Jobs() {
         description="Every Pipeline You Have Run — Source, Scrub, Verification, And Results. Click A Row To Open The Job Overview."
         actions={
           <Button asChild className="rounded-full">
-            <Link to="/app/new-job"><Plus className="mr-1 h-4 w-4" /> New Job</Link>
+            <Link to="/app/new-list"><Plus className="mr-1 h-4 w-4" /> New Job</Link>
           </Button>
         }
       />
@@ -236,7 +236,7 @@ function Jobs() {
               )}
               {!isLoading && rows.length === 0 && (
                 <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">
-                  No Jobs Match. <Link to="/app/new-job" className="text-primary underline">Start A New Job</Link>.
+                  No Jobs Match. <Link to="/app/new-list" className="text-primary underline">Start A New Job</Link>.
                 </td></tr>
               )}
               {rows.map((j) => {
@@ -245,7 +245,7 @@ function Jobs() {
                 return (
                 <tr
                   key={j.id}
-                  onClick={() => navigate({ to: "/app/jobs/$jobId", params: { jobId: j.id } })}
+                  onClick={() => navigate({ to: "/app/lists/$listId", params: { jobId: j.id } })}
                   className="group cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-surface-muted"
                 >
                   <td className="p-4">
