@@ -44,7 +44,7 @@ export async function guardedExport(opts: {
     return false;
   }
   // Traceable both ways: in the filename and as a footer row inside the file.
-  const rows = [...opts.rows, watermarkRow(opts.rows[0]!, res.watermark)];
+  const rows = [...opts.rows, watermarkRow(Object.keys(opts.rows[0]!), res.watermark)];
   await downloadRows(rows, opts.format, (ext) => stampName(opts.fileName(ext), res.suffix, ext), opts.sheetName);
   return true;
 }
