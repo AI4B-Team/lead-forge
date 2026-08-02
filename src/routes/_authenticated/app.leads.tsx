@@ -391,6 +391,21 @@ function LeadsPageInner() {
                         ) : (
                           <span className="text-muted-foreground/40">—</span>
                         )
+                      ) : f.channel ? (
+                        // Custom outreach-channel field (e.g. a county portal's
+                        // "mailing_address"): channel treatment, generic render.
+                        (() => {
+                          const v = f.value(r as unknown as Record<string, unknown>);
+                          if (!v) return <span className="text-muted-foreground/40">—</span>;
+                          return (
+                            <div className="max-w-[200px]">
+                              <div className="truncate text-foreground" title={v}>{v}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {f.channel === "address" ? "Mailable" : f.channel === "email" ? "Emailable" : "Textable"}
+                              </div>
+                            </div>
+                          );
+                        })()
                       ) : (
                         // Display fields — registry identity fields and unknown
                         // custom-scrape fields alike. Never reachability.
