@@ -1,0 +1,166 @@
+/**
+ * Shared inbound-SMS pipeline used by EVERY provider webhook.
+ *
+ * Order is a compliance requirement, not a style choice:
+ *   1. classify the message (STOP / HELP keywords)
+ *   2. record suppression for opt-outs BEFORE anything can reply
+ *   3. only then may the AI Warm-Up Bot consider a reply, and only after
+ *      passing the same assertCanText gate every other send path uses.
+ *
+ * A STOP therefore can never reach the bot, on any provider.
+ */
+
+import { OPTOUT_RE, HELP_RE, OPTOUT_CONFIRMATION, HELP_RESPONSE } from "@/lib/sms";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type Client = { from: (table: string) => any };
+
+/** Minimal send surface so tests and both providers can share this module. */
+export type Sender = (
+  from: string,
+  to: string,
+  body: string,
+) => Promise<{ status: string; providerSid?: string | null }>;
+
+export type InboundContext = {
+  db: Client;
+  send: Sender;
+  workspaceId: string;
+  /** Our number (the message destination). */
+  toPhone: string;
+  sendingNumberId: string;
+  /** The lead's number (the message origin). */
+  fromPhone: string;
+  body: string;
+  leadId?: string | null;
+  campaignId?: string | null;
+  /** Row id of the stored inbound message, for handoff annotation. */
+  inboundMessageId?: string | null;
+};
+
+export type InboundOutcome = {
+  optOut: boolean;
+  help: boolean;
+  bot: "sent" | "handoff" | "blocked" | "disabled" | "skipped";
+};
+
+export function classifyInbound(body: string): { isOptOut: boolean; isHelp: boolean } {
+  return { isOptOut: OPTOUT_RE.test(body), isHelp: HELP_RE.test(body) };
+}
+
+async function logOutbound(
+  ctx: InboundContext,
+  body: string,
+  res: { status: string; providerSid?: string | null },
+  extra: Record<string, unknown> = {},
+) {
+  await ctx.db.from("messages").insert({
+    workspace_id: ctx.workspaceId,
+    lead_id: ctx.leadId ?? null,
+    sending_number_id: ctx.sendingNumberId,
+    direction: "outbound",
+    body,
+    status: res.status,
+    provider_sid: res.providerSid ?? null,
+    ...extra,
+  });
+}
+
+/** The AI Warm-Up Bot. Never called for opt-outs; always gated on suppression. */
+async function runBot(ctx: InboundContext): Promise<InboundOutcome["bot"]> {
+  if (!ctx.campaignId) return "skipped";
+
+  const { data: campaign } = await ctx.db
+    .from("campaigns")
+    .select("bot_enabled, bot_config, regulated_vertical, brand_id")
+    .eq("id", ctx.campaignId)
+    .maybeSingle();
+  if (!campaign?.bot_enabled) return "disabled";
+
+  // Same chokepoint as manual and campaign sends. The TCPA time window is
+  // waived here: this is a direct reply to an inbound message.
+  const { checkCanText, logBlockedSend } = await import("@/lib/optout.server");
+  const target = {
+    workspaceId: ctx.workspaceId,
+    leadId: ctx.leadId ?? null,
+    phone: ctx.fromPhone,
+    source: `bot:${ctx.campaignId}`,
+  };
+  const gate = await checkCanText(ctx.db, target);
+  if (!gate.ok) {
+    await logBlockedSend(ctx.db, target, gate);
+    return "blocked";
+  }
+
+  const { generateBotReply } = await import("@/lib/bot.server");
+  const { buildKnowledgeBrief } = await import("@/lib/bot-training.server");
+  const { data: knowledgeRows } = await ctx.db
+    .from("bot_knowledge")
+    .select("title, content, source_type, source_url")
+    .or(
+      campaign.brand_id
+        ? `campaign_id.eq.${ctx.campaignId},brand_id.eq.${campaign.brand_id}`
+        : `campaign_id.eq.${ctx.campaignId}`,
+    )
+    .order("created_at", { ascending: false })
+    .limit(25);
+
+  const outcome = await generateBotReply({
+    message: ctx.body,
+    config: (campaign.bot_config ?? {}) as Record<string, never>,
+    regulated: !!campaign.regulated_vertical,
+    knowledge: buildKnowledgeBrief(knowledgeRows ?? []),
+  });
+
+  if (outcome.action === "reply") {
+    try {
+      const res = await ctx.send(ctx.toPhone, ctx.fromPhone, outcome.body);
+      await logOutbound(ctx, outcome.body, res, { campaign_id: ctx.campaignId, is_bot: true });
+      return "sent";
+    } catch {
+      return "handoff"; // thread stays in the inbox for a human
+    }
+  }
+
+  if (ctx.inboundMessageId) {
+    await ctx.db
+      .from("messages")
+      .update({ handoff_reason: outcome.reason })
+      .eq("id", ctx.inboundMessageId);
+  }
+  return "handoff";
+}
+
+/**
+ * Compliance keywords first, bot second. Callers must have already stored the
+ * inbound message row (with is_optout) before calling this.
+ */
+export async function processInbound(ctx: InboundContext): Promise<InboundOutcome> {
+  const { isOptOut, isHelp } = classifyInbound(ctx.body);
+
+  if (isOptOut) {
+    // Suppression is written before any reply can be generated.
+    await ctx.db
+      .from("suppression")
+      .upsert({ workspace_id: ctx.workspaceId, phone: ctx.fromPhone, reason: "optout" });
+    try {
+      const res = await ctx.send(ctx.toPhone, ctx.fromPhone, OPTOUT_CONFIRMATION);
+      await logOutbound(ctx, OPTOUT_CONFIRMATION, res);
+    } catch {
+      /* delivery is best-effort; suppression is already recorded */
+    }
+    return { optOut: true, help: false, bot: "skipped" };
+  }
+
+  if (isHelp) {
+    try {
+      const res = await ctx.send(ctx.toPhone, ctx.fromPhone, HELP_RESPONSE);
+      await logOutbound(ctx, HELP_RESPONSE, res);
+    } catch {
+      /* best-effort */
+    }
+    return { optOut: false, help: true, bot: "skipped" };
+  }
+
+  return { optOut: false, help: false, bot: await runBot(ctx) };
+}
