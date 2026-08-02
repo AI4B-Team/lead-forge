@@ -160,9 +160,19 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
         : `${spec.niches.join(", ")} · ${geoLabel}`);
 
     const { queueJob } = await import("@/lib/job-submit");
+    const { inferChannel } = await import("@/lib/channels");
+    const channel =
+      spec.channel ??
+      inferChannel({
+        templateId: spec.templateId,
+        sourceType: spec.sourceType,
+        recordType: spec.recordType,
+        country: spec.country,
+      });
     const queued = await queueJob(context.supabase, {
       workspaceId: data.workspaceId,
       sourceType: spec.sourceType,
+      channel,
       params: {
         name,
         // The source template drives creator vs phone funnel wording and the

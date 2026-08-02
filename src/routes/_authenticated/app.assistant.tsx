@@ -18,6 +18,7 @@ import {
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { supabase } from "@/integrations/supabase/client";
 import { queueJob } from "@/lib/job-submit";
+import { inferChannel } from "@/lib/channels";
 import { ColumnMapperDialog } from "@/components/app/column-mapper";
 import {
   attachmentReady, attachmentRows, isSpreadsheet, readAttachment, type UploadAttachment,
@@ -674,6 +675,14 @@ function Assistant() {
         const { id, duplicate } = await queueJob(supabase, {
           workspaceId,
           sourceType: "upload",
+          channel:
+            spec.channel ??
+            inferChannel({
+              templateId: spec.templateId,
+              sourceType: spec.sourceType,
+              recordType: spec.recordType,
+              country: spec.country,
+            }),
           params: {
             file_name: upload.name,
             file_size: upload.size,
