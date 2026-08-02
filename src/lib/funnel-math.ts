@@ -19,6 +19,7 @@ export type FunnelStageKey =
   | "emailFound"
   | "skipTraced"
   | "scrubbed"
+  | "exported"
   | "clean";
 
 export type FunnelStage = {
@@ -46,7 +47,7 @@ export type FunnelInput = {
 
 const n = (v: number | null | undefined) => Math.max(0, Math.round(v ?? 0));
 
-export type FunnelVariant = "phone" | "creator";
+export type FunnelVariant = "phone" | "creator" | "data";
 
 /**
  * Normalize raw job counters into a monotonically narrowing funnel. Each stage
@@ -92,6 +93,18 @@ export function buildFunnel(input: FunnelInput, opts?: { variant?: FunnelVariant
   const stages: FunnelStage[] = [
     stage("found", "Found", found, null, { annotation: "Source Records" }),
     stage("deduped", "Deduped", deduped, found, { removalNoun: "Removed" }),
+  ];
+
+  // Research datasets never touch the compliance pipeline: they collapse to
+  // Found -> Deduped -> Exported.
+  if (variant === "data") {
+    stages.push(
+      stage("exported", "Exported", deduped, deduped, { annotation: "Dataset Ready", alwaysAnnotate: true }),
+    );
+    return stages;
+  }
+
+  stages.push(
     variant === "creator"
       ? stage("emailFound", "Email Found", verified, deduped, {
           removalNoun: "No Contact Info",
@@ -110,7 +123,7 @@ export function buildFunnel(input: FunnelInput, opts?: { variant?: FunnelVariant
       annotation: "Compliance Checked",
     }),
     stage("clean", "Clean", clean, scrubbed, { annotation: "Launch Ready", alwaysAnnotate: true }),
-  ];
+  );
   return stages;
 }
 
@@ -131,13 +144,14 @@ export function funnelViolations(
 ): string[] {
   const errors: string[] = [];
   stages.forEach((s, i) => {
-    if (i === 0 || s.key === "skipTraced") return;
+    if (i === 0 || s.key === "skipTraced" || s.key === "exported") return;
     const prev = stages[i - 1]!.remaining;
     if (prev - s.removed !== s.remaining) {
       errors.push(`${s.label}: ${prev} − ${s.removed} ≠ ${s.remaining}`);
     }
   });
-  const clean = stages.find((s) => s.key === "clean")?.remaining ?? 0;
+  const last = stages[stages.length - 1];
+  const clean = (last?.key === "exported" ? last.remaining : stages.find((s) => s.key === "clean")?.remaining) ?? 0;
   if (expectations?.readyToSend != null && expectations.readyToSend !== clean) {
     errors.push(`Ready To Send (${expectations.readyToSend}) ≠ Clean (${clean})`);
   }
