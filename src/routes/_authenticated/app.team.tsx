@@ -148,7 +148,19 @@ function TeamPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="invite-role">Role</Label>
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor="invite-role">Role</Label>
+                  <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[220px] text-center">
+                        <p>{ROLE_BLURB[role]}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Select value={role} onValueChange={(v) => setRole(v as WorkspaceRole)}>
                   <SelectTrigger id="invite-role" className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -164,7 +176,7 @@ function TeamPage() {
             </div>
             <div className="grid md:grid-cols-[1fr_180px_auto] gap-3">
               <div />
-              <p className="text-xs text-muted-foreground">{ROLE_BLURB[role]}</p>
+              <p className="text-xs text-muted-foreground text-center">{ROLE_BLURB[role]}</p>
               <div />
             </div>
           </div>
