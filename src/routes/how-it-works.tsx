@@ -186,9 +186,9 @@ function HeroTransform() {
         <div className="mt-3 font-display text-2xl font-black text-foreground">
           {out.toLocaleString()} Ready-To-Contact Records
         </div>
-        <div className="mt-1 text-sm text-muted-foreground">
-          Verified · DNC Scrubbed{s.skipTrace ? " · Skip Traced" : ""}
-        </div>
+          <div className="mt-1 text-sm text-muted-foreground">
+            Mobile Verified · DNC Scrubbed{s.skipTrace ? " · Skip Traced" : ""}
+          </div>
       </div>
     </div>
   );
