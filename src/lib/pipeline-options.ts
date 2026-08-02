@@ -166,11 +166,16 @@ export const PIPELINE_OPTIONS: readonly PipelineOption[] = [
     hint: "When a record has no phone number, we look one up from public and licensed data. Skip trace is metered separately from your plan allowance.",
     defaultOn: true,
     sourceKinds: ["business", "records", "upload"],
-    profiles: ["standard", "b2b"],
+    profiles: ["standard", "b2b", "portal"],
     overrides: {
       b2b: {
         defaultOn: false,
         hint: "Find direct dials for decision-makers (uses skip-trace credits).",
+      },
+      portal: {
+        defaultOn: true,
+        label: "Skip Trace Owners",
+        hint: "For-Sale-By-Owner records rarely publish a phone number, so we look one up from public and licensed data. Skip trace is metered separately.",
       },
     },
   },
@@ -181,7 +186,13 @@ export const PIPELINE_OPTIONS: readonly PipelineOption[] = [
     hint: "Keeps only creators who publish a contact email, since creator outreach runs on email and DMs. We never text creators' personal cell phones.",
     defaultOn: true,
     sourceKinds: ["business", "records", "upload"],
-    profiles: ["creator"],
+    profiles: ["creator", "seller"],
+    overrides: {
+      seller: {
+        label: "Only Sellers With Contact Email",
+        hint: "Keeps only merchants who publish a contact email. Marketplace seller outreach runs on email, not cold calls.",
+      },
+    },
   },
   {
     id: "removeFranchises",
@@ -197,7 +208,13 @@ export const PIPELINE_OPTIONS: readonly PipelineOption[] = [
     hint: "Removes anyone already in your Leads library, so you never pay for or text the same person twice.",
     defaultOn: true,
     sourceKinds: ["business", "records", "upload"],
-    profiles: ["creator", "b2b", "standard"],
+    profiles: ["creator", "b2b", "seller", "portal", "data", "standard"],
+    overrides: {
+      data: {
+        label: "Dedupe Against Past Runs",
+        hint: "Removes records you already pulled in an earlier run of this source, so the dataset stays unique.",
+      },
+    },
   },
   {
     id: "mobileOnly",
@@ -205,7 +222,7 @@ export const PIPELINE_OPTIONS: readonly PipelineOption[] = [
     hint: "Runs a line-type check and keeps only mobile numbers — landlines and VoIP can't receive texts reliably.",
     defaultOn: true,
     sourceKinds: ["business", "records", "upload"],
-    profiles: ["standard", "b2b"],
+    profiles: ["standard", "b2b", "portal"],
   },
 ];
 
