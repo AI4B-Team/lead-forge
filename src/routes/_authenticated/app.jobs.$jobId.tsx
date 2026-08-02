@@ -25,6 +25,9 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { isStalled, stallReason } from "@/lib/job-watchdog";
 import { qualityGrade } from "@/lib/quality-grade";
 import { brandedFileName, brandedJobTitle, BUCKET_FILE_TYPE } from "@/lib/download-name";
+import { downloadRows, toCsv, downloadCsv, type ExportFormat } from "@/lib/export-file";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { FileSpreadsheet, FileText, Files } from "lucide-react";
 import { ChevronDown, Database, Coins } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/jobs/$jobId")({
@@ -44,24 +47,6 @@ function fmtDuration(ms: number) {
   const m = Math.floor(s / 60);
   if (m < 60) return `${m}m ${s % 60}s`;
   return `${Math.floor(m / 60)}h ${m % 60}m`;
-}
-
-function toCsv(rows: Array<Record<string, unknown>>) {
-  if (!rows.length) return "";
-  const headers = Object.keys(rows[0]!);
-  const esc = (v: unknown) => {
-    const s = v == null ? "" : String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  return [headers.join(","), ...rows.map((r) => headers.map((h) => esc(r[h])).join(","))].join("\n");
-}
-
-function downloadCsv(name: string, csv: string) {
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = name; a.click();
-  URL.revokeObjectURL(url);
 }
 
 function JobDetail() {
