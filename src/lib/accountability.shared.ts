@@ -145,3 +145,33 @@ export function detectAnomalies(input: {
 export function monthStart(now: Date = new Date()): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 }
+
+/** Per-member rollup shown on the admin cost dashboard. */
+export type MemberCostRow = {
+  user_id: string;
+  email: string;
+  role: string;
+  last_visit_at: string | null;
+  credits_this_month: number;
+  credits_prior_avg: number;
+  export_rows_this_month: number;
+  export_count_this_month: number;
+  lists_built: number;
+  campaigns_launched: number;
+  limits: MemberLimits & { user_id?: string };
+  anomalies: Anomaly[];
+};
+
+/** A spend or export held for admin sign-off. */
+export type ApprovalRow = {
+  id: string;
+  requested_by: string;
+  requester: string;
+  kind: string;
+  amount: number | null;
+  summary: string;
+  status: string;
+  created_at: string;
+  decided_at: string | null;
+  decision_note: string | null;
+};

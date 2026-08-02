@@ -9,6 +9,8 @@ import {
   exportWatermark,
   monthStart,
   watermarkSuffix,
+  type ApprovalRow,
+  type MemberCostRow,
   type MemberLimits,
 } from "./accountability.shared";
 import { can, hasTeamControls, isAdminRole, roleOf, type TeamAction } from "./team-roles.shared";
@@ -250,7 +252,7 @@ export const memberCostReport = createServerFn({ method: "GET" })
       (limits ?? []).find((l: any) => l.user_id === uid) ?? { ...NO_LIMITS, user_id: uid };
     const inMonth = (iso: string) => new Date(iso) >= since;
 
-    const rows = [] as Array<Record<string, unknown>>;
+    const rows: MemberCostRow[] = [];
     for (const m of members ?? []) {
       const { data: u } = await supabaseAdmin.auth.admin.getUserById(m.user_id);
       const email = u?.user?.email ?? "";
@@ -293,7 +295,7 @@ export const memberCostReport = createServerFn({ method: "GET" })
         }),
       });
     }
-    rows.sort((a, b) => (b.credits_this_month as number) - (a.credits_this_month as number));
+    rows.sort((a, b) => b.credits_this_month - a.credits_this_month);
     return { rows, teamControls: ctx.enforced, plan: ctx.plan };
   });
 
@@ -488,10 +490,10 @@ export const listApprovals = createServerFn({ method: "GET" })
       .limit(50);
     if (!isAdminRole(ctx.role)) q = q.eq("requested_by", context.userId);
     const { data: rows } = await q;
-    const out = [] as Array<Record<string, unknown>>;
+    const out: ApprovalRow[] = [];
     for (const r of rows ?? []) {
       const { data: u } = await supabaseAdmin.auth.admin.getUserById(r.requested_by);
-      out.push({ ...r, requester: u?.user?.email ?? r.requested_by.slice(0, 8) });
+      out.push({ ...r, requester: u?.user?.email ?? r.requested_by.slice(0, 8) } as ApprovalRow);
     }
     return { requests: out, isAdmin: isAdminRole(ctx.role) };
   });
