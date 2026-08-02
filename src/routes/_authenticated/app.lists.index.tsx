@@ -407,12 +407,10 @@ function Jobs() {
                 {sourceOptions.map((g) =>
                   g.items.length > 1 ? (
                     <SelectGroup key={g.group}>
-                      <SelectLabel className="p-0">
-                        {/* The header itself filters to the whole category. */}
-                        <SelectItem value={`cat:${g.group}`} className="font-semibold">
-                          {g.label} · {g.count}
-                        </SelectItem>
-                      </SelectLabel>
+                      {/* The header itself filters to the whole category. */}
+                      <SelectItem value={`cat:${g.group}`} className="font-semibold">
+                        {g.label} · {g.count}
+                      </SelectItem>
                       {g.items.map((it) => (
                         <SelectItem key={it.key} value={it.key} className="pl-8">
                           {it.label} · {it.count}
