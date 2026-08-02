@@ -323,6 +323,12 @@
   }
 }
 
+/* Full-height Conversations/inbox layout — scoped to the inbox only. Height math
+   accounts for the 56px top bar, the content padding, and the 0.8 content zoom. */
+.inbox-shell {
+  height: calc((100vh - 3.5rem) / 0.8 - 4rem);
+}
+
 /* Thin overflow scrollbar — applied only when content actually overflows, so a
    panel that fits reserves no gutter at all. */
 .thin-scroll {
