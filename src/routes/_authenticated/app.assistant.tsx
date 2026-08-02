@@ -1264,29 +1264,15 @@ function Assistant() {
         onSelect={selectTemplate}
       />
 
-      {/* Attaching a file replaces a scrape setup — always confirmed first. */}
-      <AlertDialog open={!!pendingFile} onOpenChange={(o) => { if (!o) setPendingFile(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Switch To Upload My List And Use This File?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your Current {currentSourceLabel} Setup Will Be Cleared.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingFile(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                const f = pendingFile;
-                setPendingFile(null);
-                if (f) void attachFile(f, true);
-              }}
-            >
-              Switch And Map Columns
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Every attached file passes through the intent chooser first. */}
+      <UploadIntentDialog
+        open={!!pendingUpload}
+        fileName={pendingUpload?.name ?? ""}
+        detection={pendingDetection}
+        allowSuppression={Boolean(spec.sourceType && spec.sourceType !== "upload")}
+        onCancel={clearPending}
+        onConfirm={confirmIntent}
+      />
     </div>
   );
 }
