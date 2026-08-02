@@ -18,6 +18,7 @@ import { listLeadRecords, getLeadListMemberships } from "@/lib/monitoring.functi
 import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
 import { PhoneLink } from "@/components/app/phone-link";
 import { LeadTagChips } from "@/components/app/lead-tag-picker";
+import { ChannelIcons } from "@/components/app/channel-icons";
 
 export const Route = createFileRoute("/_authenticated/app/leads")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -142,19 +143,21 @@ function LeadsPageInner() {
   const [q, setQ] = useState("");
   const [disposition, setDisposition] = useState<"all" | "clean" | "dnc" | "litigator">("all");
   const [sourceType, setSourceType] = useState("all");
+  const [channel, setChannel] = useState<"all" | "phone" | "email" | "address">("all");
   const [lineType, setLineType] = useState<"all" | "mobile" | "landline" | "voip" | "unknown">("all");
   const [onlyNew, setOnlyNew] = useState<boolean>(onlyNewParam === true);
   const [multiList, setMultiList] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["lead-records", workspaceId, q, disposition, sourceType, lineType, onlyNew, multiList],
+    queryKey: ["lead-records", workspaceId, q, disposition, sourceType, channel, lineType, onlyNew, multiList],
     queryFn: () =>
       fetchRecords({
         data: {
           workspaceId: workspaceId!,
           disposition,
           sourceType,
-          lineType,
+          channel,
+          lineType: channel === "phone" ? lineType : "all",
           onlyNew,
           multiList,
           ...(q.trim() ? { search: q.trim() } : {}),
@@ -232,16 +235,27 @@ function LeadsPageInner() {
               <SelectItem value="upload">Upload</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={lineType} onValueChange={(v) => setLineType(v as typeof lineType)}>
-            <SelectTrigger className="lg:w-[150px]"><SelectValue /></SelectTrigger>
+          <Select value={channel} onValueChange={(v) => setChannel(v as typeof channel)}>
+            <SelectTrigger className="lg:w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Line Types</SelectItem>
-              <SelectItem value="mobile">Mobile</SelectItem>
-              <SelectItem value="landline">Landline</SelectItem>
-              <SelectItem value="voip">VoIP</SelectItem>
-              <SelectItem value="unknown">Unknown</SelectItem>
+              <SelectItem value="all">All Channels</SelectItem>
+              <SelectItem value="phone">Has Phone</SelectItem>
+              <SelectItem value="email">Has Email</SelectItem>
+              <SelectItem value="address">Has Mailing Address</SelectItem>
             </SelectContent>
           </Select>
+          {channel === "phone" && (
+            <Select value={lineType} onValueChange={(v) => setLineType(v as typeof lineType)}>
+              <SelectTrigger className="lg:w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any Line Type</SelectItem>
+                <SelectItem value="mobile">Mobile Only</SelectItem>
+                <SelectItem value="landline">Landline</SelectItem>
+                <SelectItem value="voip">VoIP</SelectItem>
+                <SelectItem value="unknown">Unknown</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <div className="flex items-center gap-2">
             <Button
               type="button"
