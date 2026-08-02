@@ -75,51 +75,80 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border">
-        <div className={cn("relative flex items-center px-2 py-2", collapsed ? "justify-center" : "justify-between gap-1")}>
-          <Link
-            to="/app/dashboard"
-            className={cn(
-              "flex items-center gap-2 font-display font-bold text-base text-sidebar-foreground",
-              collapsed && "justify-center"
-            )}
-          >
-            <span className="grid place-items-center h-7 w-7 rounded-md bg-primary text-primary-foreground shrink-0">
-              <Radar className="h-4 w-4" />
-            </span>
-            {!collapsed && BRAND_NAME}
-          </Link>
-          <SidebarTrigger className={cn("h-7 w-7 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "absolute right-1")} />
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel>Navigate</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {ITEMS.map((item) => {
-                const active = pathname === item.to || pathname.startsWith(item.to + "/");
-                return (
-                  <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton asChild isActive={active} data-tour={`nav-${item.to.replace("/app/", "")}`}>
-                      <Link to={item.to} className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        {!collapsed && <span className="flex-1">{item.label}</span>}
-                        {!collapsed && badgeFor(item.to) > 0 && (
-                          <span className="shrink-0 rounded-full bg-sidebar-accent px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-sidebar-accent-foreground">
-                            {badgeFor(item.to) > 999 ? "999+" : badgeFor(item.to)}
-                          </span>
+    <TooltipProvider delayDuration={0}>
+      <Sidebar collapsible="icon">
+        <SidebarHeader className="border-b border-sidebar-border">
+          <div className={cn("relative flex items-center px-2 py-2", collapsed ? "justify-center" : "justify-between gap-1")}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  to="/app/dashboard"
+                  className={cn(
+                    "flex items-center gap-2 font-display font-bold text-base text-sidebar-foreground",
+                    collapsed && "justify-center"
+                  )}
+                >
+                  <span className="grid place-items-center h-7 w-7 rounded-md bg-primary text-primary-foreground shrink-0">
+                    <Radar className="h-4 w-4" />
+                  </span>
+                  {!collapsed && BRAND_NAME}
+                </Link>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right" className="bg-white text-foreground border-border">
+                  {BRAND_NAME}
+                </TooltipContent>
+              )}
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarTrigger className={cn("h-7 w-7 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "absolute right-1")} />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-white text-foreground border-border">
+                {collapsed ? "Expand" : "Collapse"} Menu
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel>Navigate</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {ITEMS.map((item) => {
+                  const active = pathname === item.to || pathname.startsWith(item.to + "/");
+                  const badge = badgeFor(item.to);
+                  const label = item.label;
+                  return (
+                    <SidebarMenuItem key={item.to}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton asChild isActive={active} data-tour={`nav-${item.to.replace("/app/", "")}`}>
+                            <Link to={item.to} className="flex items-center gap-2">
+                              <item.icon className="h-4 w-4" />
+                              {!collapsed && <span className="flex-1">{label}</span>}
+                              {!collapsed && badge > 0 && (
+                                <span className="shrink-0 rounded-full bg-sidebar-accent px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-sidebar-accent-foreground">
+                                  {badge > 999 ? "999+" : badge}
+                                </span>
+                              )}
+                            </Link>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+                        {collapsed && (
+                          <TooltipContent side="right" className="bg-white text-foreground border-border">
+                            {label}
+                          </TooltipContent>
                         )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+                      </Tooltip>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+    </TooltipProvider>
   );
 }
