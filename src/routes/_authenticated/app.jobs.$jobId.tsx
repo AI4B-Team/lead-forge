@@ -787,7 +787,7 @@ function BucketCard({ tone, icon, title, count, note, ready, onDownload, onView 
   count: number;
   note: string;
   ready: boolean;
-  onDownload: () => void;
+  onDownload: (format: ExportFormat) => void;
   onView: () => void;
 }) {
   const toneClasses = {
@@ -807,11 +807,28 @@ function BucketCard({ tone, icon, title, count, note, ready, onDownload, onView 
       <div className="mt-1 text-sm text-muted-foreground">{note}</div>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button size="sm" variant="outline" className="rounded-full" disabled={!ready || count === 0} onClick={onView}>
-          <Eye className="mr-1 h-3.5 w-3.5" /> View Online
+          <Eye className="mr-1 h-3.5 w-3.5" /> View
         </Button>
-        <Button size="sm" variant="outline" className="rounded-full" disabled={!ready || count === 0} onClick={onDownload}>
-          <Download className="mr-1 h-3.5 w-3.5" /> Download File
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="outline" className="rounded-full" disabled={!ready || count === 0}>
+              <Download className="mr-1 h-3.5 w-3.5" /> Download
+              <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-60" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-52">
+            <DropdownMenuLabel>Download As</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => onDownload("csv")}>
+              <FileText className="mr-2 h-4 w-4" /> CSV (.csv)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDownload("xlsx")}>
+              <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel (.xlsx)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDownload("both")}>
+              <Files className="mr-2 h-4 w-4" /> Both Files
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
