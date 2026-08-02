@@ -135,11 +135,9 @@ export function AppSidebar() {
                             </Link>
                           </SidebarMenuButton>
                         </TooltipTrigger>
-                        {collapsed && (
-                          <TooltipContent side="right" className="bg-white text-foreground border-border shadow-md">
-                            {label}
-                          </TooltipContent>
-                        )}
+                        <TooltipContent side="right" className="bg-white text-foreground border-border shadow-md">
+                          {label}
+                        </TooltipContent>
                       </Tooltip>
                     </SidebarMenuItem>
                   );
