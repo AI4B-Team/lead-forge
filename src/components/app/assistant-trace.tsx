@@ -2,7 +2,7 @@ import { Check, Loader2 } from "lucide-react";
 import { specStates, type JobSpec } from "@/lib/assistant.shared";
 import { US_STATES } from "@/lib/us-geo";
 import { enabledOptions } from "@/lib/pipeline-options";
-import type { Template } from "@/lib/templates";
+import { getTemplate, type Template } from "@/lib/templates";
 import {
   FIELD_SLOT_LABEL, fieldFilled, fieldsForSpec, isOptionalField,
 } from "@/lib/template-schema";
@@ -38,7 +38,9 @@ const SOURCE_LABEL: Record<string, string> = {
 /** Turns the assembled spec into the human-readable reasoning trail the AI "thought out loud". */
 export function buildTraceSteps(spec: JobSpec): TraceStep[] {
   const steps: TraceStep[] = [];
-  if (spec.sourceType) steps.push({ label: "Identified Source", value: SOURCE_LABEL[spec.sourceType] ?? spec.sourceType });
+  const picked = spec.templateId ? getTemplate(spec.templateId) : undefined;
+  if (picked) steps.push({ label: "Identified Source", value: picked.title });
+  else if (spec.sourceType) steps.push({ label: "Identified Source", value: SOURCE_LABEL[spec.sourceType] ?? spec.sourceType });
   if (spec.recordType) steps.push({ label: "Record Type", value: spec.recordType });
   if (spec.niches.length) steps.push({ label: "Industry", value: spec.niches.join(", ") });
   if (spec.targetUrl) steps.push({ label: "Target URL", value: spec.targetUrl });
