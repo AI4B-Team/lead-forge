@@ -508,7 +508,7 @@ export function LeadProfilePanel({
               </Field>
             </>
           )}
-          {ctx?.brand && <Field label="Brand Voice">{ctx.brand.name}</Field>}
+          {ctx?.brand && <Field label="Agent Voice">{ctx.brand.name}</Field>}
           {ctx?.job && (
             <Field label="Source List">
               {ctx.job.name || SOURCE_LABEL[ctx.job.source_type] || ctx.job.source_type}

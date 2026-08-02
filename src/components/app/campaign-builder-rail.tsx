@@ -135,7 +135,7 @@ export function CampaignSummaryPanel({
 }) {
   const rows: Array<[string, string]> = [
     ["Campaign", name || "Untitled"],
-    ["Brand", brandName || "Not Selected"],
+    ["AI Agent", brandName || "Not Set Up"],
     ["List", listName || "Not Selected"],
     ["Contacts", projection.recipients.toLocaleString()],
     ["Daily Cap", projection.perDay.toLocaleString()],

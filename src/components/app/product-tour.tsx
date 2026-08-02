@@ -34,9 +34,9 @@ export const TOUR_STEPS: TourStep[] = [
     body: "Every list is deduped, line-type checked, and scrubbed against DNC and litigator data — with a timestamped audit trail.",
   },
   {
-    anchor: "nav-brands",
-    title: "Set Up Your Brand",
-    body: "Add your website, offers, and approved talking points here. The bot writes in your voice and only replies from material you've approved — carrier registration is handled from the same place at no extra cost.",
+    anchor: "nav-agent",
+    title: "Set Up Your AI Agent",
+    body: "Add your website, offers, and approved talking points here. Your agent writes in your voice and only replies from material you've approved — carrier registration is handled from the same place at no extra cost.",
   },
   {
     anchor: "nav-campaigns",

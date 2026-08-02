@@ -10,7 +10,7 @@ import {
   MessageSquare,
   Radar,
   BarChart3,
-  BrainCircuit,
+  Bot,
   Users,
 } from "lucide-react";
 import {
@@ -39,7 +39,7 @@ const ITEMS = [
   { to: "/app/assistant", label: "New List", icon: Plus },
   { to: "/app/lists", label: "Lists", icon: ListChecks },
   { to: "/app/leads", label: "Leads", icon: Users },
-  { to: "/app/brands", label: "AI Agent", icon: BrainCircuit },
+  { to: "/app/agent", label: "AI Agent", icon: Bot },
   { to: "/app/campaigns", label: "Campaigns", icon: MessageSquare },
   { to: "/app/reports", label: "Performance", icon: BarChart3 },
 ] as const;
