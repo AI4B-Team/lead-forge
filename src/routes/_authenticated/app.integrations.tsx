@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
-  Webhook, Zap, Link2, Sheet, Mail, Plug, ChevronDown,
+  Webhook, Zap, Link2, Sheet, Mail, Plug, ChevronDown, KeyRound, BookOpen, Terminal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { HubConnection } from "@/components/app/hub-connection";
+import { WebhookEndpoints } from "@/components/app/webhook-endpoints";
 import { listWebhooks } from "@/lib/monitoring.functions";
 import { getHubLink } from "@/lib/hub.functions";
 
@@ -74,7 +75,7 @@ function IntegrationsPage() {
           description: "Push List, Lead, And Reply Events To Any Endpoint.",
           icon: Webhook,
           status: hookCount > 0 ? "connected" : "not_connected",
-          href: "/app/api#webhooks",
+          href: "#developer",
         },
         {
           key: "zapier",
@@ -161,6 +162,61 @@ function IntegrationsPage() {
               Webhooks Already Cover Most Custom Handoffs Today.
             </CardContent>
           </Card>
+
+          <section id="developer" className="scroll-mt-24">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h2 className="font-display text-base font-bold text-foreground">Developer</h2>
+              <p className="text-xs text-muted-foreground">API Keys, Event Webhooks, And Payload Reference.</p>
+            </div>
+
+            <Card className="mt-3">
+              <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
+                <CardTitle className="flex items-center gap-2 text-base font-display">
+                  <KeyRound className="h-4 w-4 text-primary" /> API Keys
+                </CardTitle>
+                <Badge variant="outline" className="text-muted-foreground">Coming Soon</Badge>
+              </CardHeader>
+              <CardContent className="flex flex-wrap items-center justify-between gap-4">
+                <p className="max-w-xl text-sm text-muted-foreground">
+                  Scoped, Revocable Keys For Reading Leads And Triggering Runs. Until Keys Ship,
+                  Webhooks Below Cover Most Custom Handoffs.
+                </p>
+                <Button variant="outline" size="sm" className="rounded-full" disabled>
+                  Create Key
+                </Button>
+              </CardContent>
+            </Card>
+
+            <div className="mt-3">
+              <WebhookEndpoints />
+            </div>
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-sm font-display">
+                    <Webhook className="h-4 w-4 text-muted-foreground" /> Event Payloads
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-xs text-muted-foreground">
+                  Every Delivery Is Signed And Retried With Backoff. Events Cover List Completion,
+                  New Clean Leads, And Inbound Replies.
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-sm font-display">
+                    <BookOpen className="h-4 w-4 text-muted-foreground" /> Guides
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-2">
+                    <Terminal className="h-3.5 w-3.5" /> Full API Docs Land With Public Keys.
+                  </span>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
         </div>
       </SettingsShell>
     </div>
