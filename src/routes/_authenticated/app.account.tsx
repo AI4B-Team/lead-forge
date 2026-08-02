@@ -333,10 +333,10 @@ function AccountPage() {
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center justify-between gap-4">
                   <p className="max-w-xl text-sm text-muted-foreground">
-                    Workspace API Keys Are Managed On The Developer & API Page.
+                    Workspace API Keys Are Managed On The API Page.
                   </p>
                   <Button variant="outline" className="rounded-full" asChild>
-                    <Link to="/app/api">Open Developer & API</Link>
+                    <Link to="/app/api">Open API</Link>
                   </Button>
                 </CardContent>
               </Card>
