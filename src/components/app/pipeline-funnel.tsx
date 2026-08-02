@@ -44,7 +44,7 @@ export function PipelineFunnel({
   completedThrough?: number;
   /** Pill centered above the Clean card (e.g. "✓ 8 Ready To Launch"). */
   readyPill?: ReactNode;
-  /** "creator" swaps Mobile Verified / Skip Traced for a single Email Found stage. */
+  /** "creator" swaps Verified / Traced for a single Email Found stage. */
   variant?: FunnelVariant;
   className?: string;
 }) {

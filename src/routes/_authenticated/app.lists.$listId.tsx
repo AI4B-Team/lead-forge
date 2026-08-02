@@ -236,12 +236,12 @@ function JobDetail() {
           </>
         ) : (
           <>
-        <Stat label={isCreatorRun ? "Email Found" : "Mobile Verified"} value={funnel[2]!.remaining.toLocaleString()} />
+        <Stat label={isCreatorRun ? "Email Found" : "Verified"} value={funnel[2]!.remaining.toLocaleString()} />
         {isCreatorRun ? (
           <Stat label="Contact Emails" value={counts.clean.toLocaleString()} />
         ) : (
           <Stat
-            label="Skip Traced"
+            label="Traced"
             value={traced > 0 ? traced.toLocaleString() : "None Needed"}
             muted={traced === 0}
           />
@@ -494,7 +494,7 @@ function JobDetail() {
                           ? "Records — Email-Ready (SMS Is US-Only)"
                           : isCreatorRun
                             ? "Creators With Contact Emails"
-                            : "Mobile Verified Leads"
+                            : "Verified Leads"
                     }`
                   : isReady
                     ? "Try A Wider Area Or Another Niche."

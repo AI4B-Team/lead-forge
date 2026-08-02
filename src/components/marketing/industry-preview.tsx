@@ -54,7 +54,7 @@ const PREVIEWS: Preview[] = [
     verified: 5324,
     ready: 4712,
     outputLabel: "Property Owners",
-    guarantees: ["Mobile Verified", "DNC Checked", "Ready For Outreach"],
+    guarantees: ["Verified", "DNC Checked", "Ready For Outreach"],
   },
   {
     key: "solar",
@@ -67,7 +67,7 @@ const PREVIEWS: Preview[] = [
     verified: 3878,
     ready: 3245,
     outputLabel: "Homeowners",
-    guarantees: ["Mobile Verified", "DNC Checked", "Quiet Hours Enforced"],
+    guarantees: ["Verified", "DNC Checked", "Quiet Hours Enforced"],
   },
   {
     key: "home_services",
@@ -186,7 +186,7 @@ export function IndustryPreview() {
               </div>
               <div className="mt-3 space-y-4">
                 <Stat label="Records Found" value={p.found} total={p.found} />
-                <Stat label="Mobile Verified" value={p.verified} total={p.found} />
+                <Stat label="Verified" value={p.verified} total={p.found} />
                 <Stat label="Ready For Outreach" value={p.ready} total={p.found} accent />
               </div>
               <div className="mt-5 rounded-xl bg-primary/5 px-4 py-3">

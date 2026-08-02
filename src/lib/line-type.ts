@@ -1,8 +1,8 @@
 /**
- * Line-type classification for the Mobile Verified stage.
+ * Line-type classification for the Verified stage.
  *
  * The carrier check runs on every sourced record. When "Mobile Numbers Only"
- * is enabled the pipeline DROPS landline/VoIP rows, so the Mobile Verified
+ * is enabled the pipeline DROPS landline/VoIP rows, so the Verified
  * stage reports a real delta instead of passing everything through.
  */
 export type LineType = "mobile" | "landline" | "voip" | "unknown";
