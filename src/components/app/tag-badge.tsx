@@ -17,4 +17,21 @@ export function TagBadge({ tag, className = "" }: { tag: TagLike; className?: st
   );
 }
 
-export const TAG_SWATCHES = ["#2563eb", "#16a34a", "#f59e0b", "#dc2626", "#7c3aed", "#0891b2", "#db2777", "#65a30d"];
+/** Six semantic tag colors — each one means something, so nothing is decorative. */
+export const TAG_COLORS = [
+  { value: "#dc2626", label: "High Priority" },
+  { value: "#f97316", label: "Warm" },
+  { value: "#f59e0b", label: "Needs Review" },
+  { value: "#16a34a", label: "Winning" },
+  { value: "#2563eb", label: "Testing" },
+  { value: "#6b7280", label: "Default" },
+] as const;
+
+export const TAG_SWATCHES = TAG_COLORS.map((c) => c.value);
+
+/** Next color in rotation so tag creation never requires a color decision. */
+export function nextTagColor(used: string[]): string {
+  const counts = TAG_SWATCHES.map((c) => used.filter((u) => u.toLowerCase() === c).length);
+  const min = Math.min(...counts);
+  return TAG_SWATCHES[counts.indexOf(min)];
+}
