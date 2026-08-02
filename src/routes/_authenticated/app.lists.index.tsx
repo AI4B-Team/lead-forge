@@ -177,7 +177,7 @@ function Jobs() {
         description="Every Pipeline You Have Run — Source, Scrub, Verification, And Results. Click A Row To Open The Latest Run."
         actions={
           <Button asChild className="rounded-full">
-            <Link to="/app/new-list"><Plus className="mr-1 h-4 w-4" /> New List</Link>
+            <Link to="/app/assistant"><Plus className="mr-1 h-4 w-4" /> New List</Link>
           </Button>
         }
       />
@@ -274,7 +274,7 @@ function Jobs() {
               )}
               {!isLoading && rows.length === 0 && (
                 <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">
-                  No Lists Match. <Link to="/app/new-list" className="text-primary underline">Start A New List</Link>.
+                  No Lists Match. <Link to="/app/assistant" className="text-primary underline">Start A New List</Link>.
                 </td></tr>
               )}
               {entries.flatMap(({ latest, prior }) => {

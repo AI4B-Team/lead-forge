@@ -24,7 +24,7 @@ function StartRedirect() {
       if (search.prompt) params.set("prompt", search.prompt);
       const query = params.toString();
       const destination = search.upload
-        ? "/app/new-list/upload?reattach=1"
+        ? "/app/assistant?source=upload"
         : `/app/assistant${query ? `?${query}` : ""}`;
 
       const { data } = await supabase.auth.getSession();
