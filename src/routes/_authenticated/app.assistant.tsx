@@ -797,7 +797,7 @@ function Assistant() {
       <div>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">AI Lead Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Describe the leads you want. The assistant interprets it, assembles your list, and hands you the controls to review.
+          Describe the leads you want — or set it up yourself in List Settings. Nothing runs until you approve.
         </p>
       </div>
 
@@ -827,15 +827,25 @@ function Assistant() {
           className="min-h-[150px] resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
         />
         <div className="mt-4 flex items-center justify-between gap-3">
-          <label className="inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
-            <Paperclip className="mr-1.5 h-4 w-4" /> Attach Files
-            <input
-              type="file"
-              className="hidden"
-              accept=".csv,.xlsx"
-              onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
-            />
-          </label>
+          <div className="flex flex-wrap items-center gap-1">
+            <label className="inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
+              <Paperclip className="mr-1.5 h-4 w-4" /> Attach Files
+              <input
+                type="file"
+                className="hidden"
+                accept=".csv,.xlsx"
+                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachFile(f); }}
+              />
+            </label>
+            {/* Panel-only path: no chat needed, straight into List Settings. */}
+            <button
+              type="button"
+              onClick={() => openPanelWithSource("business")}
+              className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <SlidersHorizontal className="mr-1.5 h-4 w-4" /> Set It Up Yourself
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             {micSupported && (
               <Button
