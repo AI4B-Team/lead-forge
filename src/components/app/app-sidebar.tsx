@@ -11,7 +11,6 @@ import {
   Radar,
   BarChart3,
   BrainCircuit,
-  Sparkles,
   Users,
 } from "lucide-react";
 import {
