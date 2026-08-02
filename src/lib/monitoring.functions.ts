@@ -92,13 +92,16 @@ export const listLeadRecords = createServerFn({ method: "GET" })
     }
 
     const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
-    const [total, clean, dnc, litigator, thisWeek, multi] = await Promise.all([
+    const [total, clean, dnc, litigator, thisWeek, multi, smsEligible, emailReachable, mailable] = await Promise.all([
       baseCount(),
       baseCount().eq("disposition", "clean"),
       baseCount().eq("disposition", "dnc"),
       baseCount().eq("disposition", "litigator"),
       baseCount().gte("first_seen_at", weekAgo),
       baseCount().gt("list_count", 1),
+      baseCount().eq("disposition", "clean").eq("phone_type", "mobile"),
+      baseCount().neq("disposition", "litigator").not("email", "is", null),
+      baseCount().not("address", "is", null),
     ]);
 
     const { data: sourceRows } = await supabase
@@ -123,6 +126,9 @@ export const listLeadRecords = createServerFn({ method: "GET" })
         litigator: litigator.count ?? 0,
         newThisWeek: thisWeek.count ?? 0,
         multiList: multi.count ?? 0,
+        smsEligible: smsEligible.count ?? 0,
+        emailReachable: emailReachable.count ?? 0,
+        mailable: mailable.count ?? 0,
       },
       bySource,
       byRecordType,
