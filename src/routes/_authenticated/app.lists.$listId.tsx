@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { getJobReview, getLeadsByBucket, launchCampaignFromJob, listJobEvents, listJobLeads, listJobs, pauseJob, resumeJob } from "@/lib/jobs.functions";
 import { RESCRUB_DAYS } from "@/lib/compliance-rules";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
+import { normalizeChannel, channelPrimaryAction, CHANNEL_LEAD_NOUN } from "@/lib/channels";
 import { buildFunnel, funnelViolations } from "@/lib/funnel-math";
 import { enrichmentProfile, isDataSource, isNonUsRun } from "@/lib/pipeline-options";
 import { exportShapeFor, shapeExportRows, cleanFileType } from "@/lib/export-columns";
@@ -120,9 +121,17 @@ function JobDetail() {
     templateId: runTemplateId,
     country: typeof params.country === "string" ? params.country : null,
   });
+  // The list's outreach channel decides what the run can do at the end. SMS is
+  // the only channel with a sending engine; email and direct mail are exports.
+  const channel = normalizeChannel((job as { channel?: string | null }).channel ?? null);
   // SMS is US-only, and a dataset isn't contactable — neither can launch.
-  const campaignable = !isDataRun && !nonUsRun;
-  const funnelVariant = isDataRun ? "data" : isCreatorRun ? "creator" : "phone";
+  const campaignable = !isDataRun && !nonUsRun && channel === "sms";
+  const funnelVariant =
+    isDataRun || channel === "direct_mail"
+      ? "data"
+      : isCreatorRun || channel === "email"
+        ? "creator"
+        : "phone";
   const funnel = buildFunnel(
     {
       found: job.rows_in ?? 0,
@@ -447,7 +456,7 @@ function JobDetail() {
               icon={<Smartphone className="h-3.5 w-3.5" />}
               value={estimate.reach.toLocaleString()}
               label="Launch-Ready Leads"
-              note={isCreatorRun ? "Contact Emails" : "Mobile Phones"}
+              note={isCreatorRun || channel === "email" ? "Contact Emails" : "Mobile Phones"}
             />
             <MoneyStat
               icon={<Send className="h-3.5 w-3.5" />}
@@ -495,7 +504,7 @@ function JobDetail() {
                           ? "Records — Email-Ready (SMS Is US-Only)"
                           : isCreatorRun
                             ? "Creators With Contact Emails"
-                            : "Verified Leads"
+                            : CHANNEL_LEAD_NOUN[channel]
                     }`
                   : isReady
                     ? "Try A Wider Area Or Another Niche."
@@ -510,7 +519,18 @@ function JobDetail() {
             <Button variant="outline" className="rounded-full" onClick={() => navigate({ to: "/app/lists" })}>
               Back To Lists
             </Button>
-            {campaignable && <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />}
+            {campaignable ? (
+              <LaunchCampaignDialog defaultJobId={jobId} defaultJobName={jobName} />
+            ) : (
+              isReady &&
+              counts.clean > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    {channelPrimaryAction(channel).note}
+                  </span>
+                </div>
+              )
+            )}
           </div>
         </div>
       </div>

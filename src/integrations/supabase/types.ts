@@ -484,13 +484,17 @@ export type Database = {
       }
       jobs: {
         Row: {
+          auto_launch: boolean
+          channel: string
           created_at: string
           created_by: string | null
+          custom_interval_minutes: number | null
           error: string | null
           id: string
           idempotency_key: string | null
           last_run_at: string | null
           name: string | null
+          net_new_count: number
           next_run_at: string | null
           params: Json
           parent_job_id: string | null
@@ -500,18 +504,23 @@ export type Database = {
           rows_in: number | null
           rows_skiptraced: number | null
           schedule: string
+          schedule_active: boolean
           source_type: string
           status: string
           workspace_id: string
         }
         Insert: {
+          auto_launch?: boolean
+          channel?: string
           created_at?: string
           created_by?: string | null
+          custom_interval_minutes?: number | null
           error?: string | null
           id?: string
           idempotency_key?: string | null
           last_run_at?: string | null
           name?: string | null
+          net_new_count?: number
           next_run_at?: string | null
           params?: Json
           parent_job_id?: string | null
@@ -521,18 +530,23 @@ export type Database = {
           rows_in?: number | null
           rows_skiptraced?: number | null
           schedule?: string
+          schedule_active?: boolean
           source_type: string
           status?: string
           workspace_id: string
         }
         Update: {
+          auto_launch?: boolean
+          channel?: string
           created_at?: string
           created_by?: string | null
+          custom_interval_minutes?: number | null
           error?: string | null
           id?: string
           idempotency_key?: string | null
           last_run_at?: string | null
           name?: string | null
+          net_new_count?: number
           next_run_at?: string | null
           params?: Json
           parent_job_id?: string | null
@@ -542,6 +556,7 @@ export type Database = {
           rows_in?: number | null
           rows_skiptraced?: number | null
           schedule?: string
+          schedule_active?: boolean
           source_type?: string
           status?: string
           workspace_id?: string
@@ -881,6 +896,54 @@ export type Database = {
           state?: string
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          job_id: string | null
+          kind: string
+          read_at: string | null
+          title: string
+          workspace_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          kind?: string
+          read_at?: string | null
+          title: string
+          workspace_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          kind?: string
+          read_at?: string | null
+          title?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       provider_alerts: {
         Row: {
