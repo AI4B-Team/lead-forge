@@ -5,7 +5,7 @@
 // the inbound reply bot's knowledge brief picks it up automatically.
 // ---------------------------------------------------------------------------
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -54,6 +54,7 @@ import {
   type KnowledgeCardSpec,
   type KnowledgeItem,
 } from "@/lib/knowledge-cards.shared";
+import { OPEN_KNOWLEDGE_EVENT, sourceDepths } from "@/lib/agent-readiness";
 
 const ICONS: Record<string, LucideIcon> = {
   website: Globe,
@@ -89,6 +90,16 @@ function AddSourceDialog({
   const [urls, setUrls] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [pairs, setPairs] = useState<{ q: string; a: string }[]>([{ q: "", a: "" }]);
+
+  // Lets the readiness suggestion open this exact source's Add flow.
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const key = (e as CustomEvent<{ key?: string }>).detail?.key;
+      if (key === spec.key) setOpen(true);
+    };
+    window.addEventListener(OPEN_KNOWLEDGE_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_KNOWLEDGE_EVENT, onOpen);
+  }, [spec.key]);
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["bot-knowledge", `brand:${brandId}`] });
 
@@ -525,11 +536,16 @@ export function KnowledgeSourceList({
 }) {
   return (
     <div className="divide-y divide-border rounded-2xl border border-border bg-card">
-      {KNOWLEDGE_CARDS.map((spec) => {
+      {(() => {
+        const depths = new Map(sourceDepths(sources).map((d) => [d.key, d]));
+        return KNOWLEDGE_CARDS.map((spec) => {
         const Icon = ICONS[spec.key] ?? FileText;
         const items = sources.filter((s) => s.category === spec.key);
-        const isAdded = items.length > 0;
-        const progress = isAdded ? 100 : 0;
+        const depth = depths.get(spec.key);
+        const isAdded = !!depth?.covered;
+        const isThin = !!depth?.thin;
+        // Depth bar is a rough fullness cue only — never a quota to fill.
+        const progress = depth ? Math.min(100, Math.round((depth.chars / 3000) * 100)) : 0;
         return (
           <div
             key={spec.key}
@@ -538,7 +554,11 @@ export function KnowledgeSourceList({
           >
             <span
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${
-                isAdded ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                isAdded
+                  ? "bg-success/10 text-success"
+                  : isThin
+                    ? "bg-warn/10 text-warn"
+                    : "bg-muted text-muted-foreground"
               }`}
             >
               <Icon className="h-4.5 w-4.5" />
@@ -548,10 +568,19 @@ export function KnowledgeSourceList({
                 <div className="truncate text-sm font-semibold text-foreground">{spec.title}</div>
                 {isAdded && <Check className="h-3.5 w-3.5 text-success" />}
               </div>
-              <div className="truncate text-[11px] text-muted-foreground">{spec.action}</div>
+              <div className="truncate text-[11px] text-muted-foreground">
+                {depth && depth.count > 0 ? (
+                  <>
+                    {depth.detail}
+                    {isThin && <span className="text-warn"> · Thin</span>}
+                  </>
+                ) : (
+                  <>None Yet · {spec.action}</>
+                )}
+              </div>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-success transition-all duration-500"
+                  className={`h-full rounded-full transition-all duration-500 ${isAdded ? "bg-success" : "bg-warn"}`}
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -567,7 +596,8 @@ export function KnowledgeSourceList({
             </div>
           </div>
         );
-      })}
+        });
+      })()}
     </div>
   );
 }
