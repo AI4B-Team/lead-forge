@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { jobSpecSchema, specStates } from "@/lib/assistant.shared";
+import { screenSourceRequest } from "@/lib/source-request.shared";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -65,7 +66,12 @@ export const assistantChat = createServerFn({ method: "POST" })
     };
   });
 
-/** Log a county the platform does not cover yet, so it lands in the backlog. */
+/**
+ * Log a source the platform can't run yet so it lands in the build backlog.
+ * The intake carries build-scoping detail (URL, fields, geo, cadence) and every
+ * submission is screened server-side: non-compliant asks are recorded as
+ * `screened_out` and never queued as buildable.
+ */
 export const requestCoverage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -76,10 +82,27 @@ export const requestCoverage = createServerFn({ method: "POST" })
         recordType: z.string().max(80).nullable().default(null),
         templateId: z.string().max(60).nullable().default(null),
         type: z.enum(["county", "record_type", "template_adapter"]).default("county"),
+        sourceLabel: z.string().max(160).nullable().default(null),
+        targetUrl: z.string().max(600).nullable().default(null),
+        desiredFields: z.array(z.string().max(60)).max(20).default([]),
+        geo: z.string().max(200).nullable().default(null),
+        frequency: z.enum(["one_time", "daily", "weekly", "monthly"]).default("one_time"),
+        notes: z.string().max(2000).nullable().default(null),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const label = data.sourceLabel?.trim() || data.recordType || data.county || null;
+    // Authoritative screen — the client's copy of this is only a fast preview.
+    const screen = screenSourceRequest({
+      sourceLabel: label ?? "",
+      targetUrl: data.targetUrl,
+      desiredFields: data.desiredFields,
+      geo: data.geo,
+      frequency: data.frequency,
+      notes: data.notes,
+    });
+
     // Beta waitlist clicks are idempotent — one row per workspace + template.
     if (data.type === "template_adapter" && data.templateId) {
       const { data: existing } = await context.supabase
@@ -90,7 +113,13 @@ export const requestCoverage = createServerFn({ method: "POST" })
         .eq("template_id", data.templateId)
         .limit(1);
       if (existing && existing.length > 0) {
-        return { ok: true, email: context.claims?.email ?? null, alreadyRequested: true };
+        return {
+          ok: true,
+          email: context.claims?.email ?? null,
+          alreadyRequested: true,
+          screened: false,
+          reason: null as string | null,
+        };
       }
     }
     const { error } = await context.supabase.from("adapter_requests").insert({
@@ -99,21 +128,35 @@ export const requestCoverage = createServerFn({ method: "POST" })
       record_type: data.recordType,
       template_id: data.templateId,
       type: data.type,
+      source_label: label,
+      target_url: data.targetUrl,
+      desired_fields: data.desiredFields,
+      geo: data.geo,
+      frequency: data.frequency,
+      notes: data.notes,
+      requested_by: context.userId,
+      status: screen.ok ? "queued" : "screened_out",
+      screening_reason: screen.ok ? null : screen.reason,
     });
     if (error) throw new Error(error.message);
     {
       const { logActivity } = await import("./activity.server");
       await logActivity(context.supabase, data.workspaceId, {
         type: "adapter_requested",
-        summary:
-          data.type === "template_adapter"
-            ? `Early Access Requested — ${data.templateId ?? "New Source"}`
-            : "New Data Source Requested",
-        detail: data.county ?? data.recordType ?? null,
+        summary: screen.ok
+          ? `Source Requested — ${label ?? data.templateId ?? "New Source"}`
+          : `Source Request Not Buildable — ${label ?? "New Source"}`,
+        detail: screen.ok ? data.county ?? data.recordType ?? data.targetUrl ?? null : screen.reason,
         refType: "template",
       });
     }
-    return { ok: true, email: context.claims?.email ?? null, alreadyRequested: false };
+    return {
+      ok: screen.ok,
+      email: context.claims?.email ?? null,
+      alreadyRequested: false,
+      screened: !screen.ok,
+      reason: screen.ok ? null : screen.reason,
+    };
   });
 
 /** Which beta sources this workspace already joined the waitlist for. */
@@ -123,12 +166,15 @@ export const listAdapterRequests = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("adapter_requests")
-      .select("template_id")
+      .select("template_id, status")
       .eq("workspace_id", data.workspaceId)
       .eq("type", "template_adapter");
     if (error) throw new Error(error.message);
     return {
-      templateIds: (rows ?? []).map((r) => r.template_id).filter((id): id is string => Boolean(id)),
+      templateIds: (rows ?? [])
+        .filter((r) => r.status !== "screened_out")
+        .map((r) => r.template_id)
+        .filter((id): id is string => Boolean(id)),
       email: context.claims?.email ?? null,
     };
   });
