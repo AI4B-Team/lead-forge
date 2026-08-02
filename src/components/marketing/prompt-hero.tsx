@@ -161,8 +161,10 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
             }}
             placeholder={
               focused || value || stopTypingRef.current
-                ? "Describe who you want to reach, paste a website, or upload a list…"
-                : placeholder
+                ? selectedTemplate?.placeholderHint ?? GENERIC_PLACEHOLDER
+                : selectedTemplate
+                  ? selectedTemplate.placeholderHint ?? GENERIC_PLACEHOLDER
+                  : placeholder
             }
             onBlur={() => setFocused(false)}
             onFocusCapture={() => setFocused(true)}
