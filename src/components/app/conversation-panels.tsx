@@ -423,21 +423,28 @@ export function QuickActions({
       <Button size="sm" variant="outline" className="h-7 rounded-full text-xs" onClick={onAppointment}>
         <CalendarPlus className="h-3 w-3 mr-1" /> Appointment
       </Button>
-      <Button size="sm" variant="outline" className="h-7 rounded-full text-xs" onClick={onTag}>
-        <TagIcon className="h-3 w-3 mr-1" /> Tag
-      </Button>
-      <Button size="sm" variant="outline" className="h-7 rounded-full text-xs" onClick={onArchive}>
-        <Archive className="h-3 w-3 mr-1" /> {archived ? "Unarchive" : "Archive"}
-      </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        className="h-7 rounded-full text-xs text-danger hover:text-danger"
-        onClick={onBlacklist}
-        disabled={blacklisting}
-      >
-        {blacklisting ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Ban className="h-3 w-3 mr-1" />} Blacklist
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" variant="ghost" className="h-7 w-7 rounded-full p-0" aria-label="More Actions">
+            {blacklisting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <MoreHorizontal className="h-3.5 w-3.5" />
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onClick={onTag} className="cursor-pointer text-xs">
+            <TagIcon className="h-3.5 w-3.5" /> Tag
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onArchive} className="cursor-pointer text-xs">
+            <Archive className="h-3.5 w-3.5" /> {archived ? "Unarchive" : "Archive"}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onBlacklist} disabled={blacklisting} className="cursor-pointer text-xs text-danger focus:text-danger">
+            <Ban className="h-3.5 w-3.5" /> Blacklist
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
