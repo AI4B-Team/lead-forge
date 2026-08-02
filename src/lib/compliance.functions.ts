@@ -106,6 +106,8 @@ export const importSuppression = createServerFn({ method: "POST" })
         workspaceId: z.string().uuid(),
         phones: z.array(z.string()).min(1).max(20000),
         reason: z.string().max(60).default("manual"),
+        source: z.string().max(40).default("compliance"),
+        note: z.string().max(500).optional(),
       })
       .parse(input),
   )
