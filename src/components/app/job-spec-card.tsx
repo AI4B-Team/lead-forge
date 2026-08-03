@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { HelpHint } from "@/components/app/help-hint";
-import { INDUSTRIES, COUNTIES } from "@/lib/mock-data";
+import { INDUSTRIES, coverageForCounty } from "@/lib/mock-data";
 import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
@@ -268,8 +268,11 @@ export function JobSpecCard({
 }) {
   const set = <K extends keyof JobSpec>(key: K, value: JobSpec[K]) => onChange({ ...spec, [key]: value });
   const inf = (key: keyof JobSpec) => Boolean(inferred?.has(key));
+  // Business / local scrapes have no geo whitelist, so fall back to the
+  // source-aware verdict instead of assuming "Not Covered".
   const covFor = (county: string): Coverage =>
-    coverage.find((c) => c.county.toLowerCase() === county.toLowerCase())?.coverage ?? "unknown";
+    coverage.find((c) => c.county.toLowerCase() === county.toLowerCase())?.coverage ??
+    coverageForCounty(county, spec.sourceType);
 
   const fields: BuilderField[] = template ? templateFieldSchema(template) : fieldsForSourceType(spec.sourceType);
   const has = (f: BuilderField) => fields.includes(f);
@@ -652,7 +655,11 @@ export function JobSpecCard({
               <FieldLabel
                 confidence={98}
                 show={spec.counties.length > 0 && inf("counties")}
-                hint="Narrow to specific counties inside your selected states. Leave it empty to cover the whole state. Badges show whether we have coverage there yet."
+                hint={
+                  isRecords
+                    ? "Narrow to specific counties inside your selected states. Leave it empty to cover the whole state. Badges show whether we have public-records coverage there yet."
+                    : "Narrow to specific counties inside your selected states. Leave it empty to cover the whole state. Any US county works for this source."
+                }
               >
                 Counties
               </FieldLabel>
@@ -667,7 +674,7 @@ export function JobSpecCard({
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   {states.length
                     ? `Select One Or More Of The ${states.reduce((n, s) => n + countiesForState(s).length, 0)} Counties In ${states.join(", ")}. Leave Empty To Cover ${states.length > 1 ? "Every Selected State" : "The Whole State"}.`
-                    : `Covered Now: ${COUNTIES.filter((c) => c.coverage === "live").map((c) => c.name).join(", ")}`}
+                    : "Pick A State To Choose Counties. Leave Empty To Cover The Whole State."}
                 </p>
               )}
             </div>
