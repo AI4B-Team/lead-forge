@@ -98,30 +98,63 @@ const businessAdapter: SourceAdapter = {
 };
 
 const recordsAdapter: SourceAdapter = {
-  key: "records.mock",
+  key: "records.county",
   coverage: "live",
-  async run(params) {
-    const county = (params.county as string | undefined) ?? "Hillsborough, FL";
-    const record = (params.record_type as string | undefined) ?? "Probate";
-    // A rescan of a records feed should mostly return the same filings plus a
-    // few genuinely new ones, so the net-new number means something.
-    const drift = Math.floor(Date.now() / 3_600_000) % 40;
-    const count = 200 + county.length * 3 + drift;
-    const rows: RawLead[] = [];
-    for (let i = 0; i < count; i++) {
-      const hasPhone = i % 3 !== 0; // records door often lacks phones -> skiptrace
-      rows.push({
-        full_name: `${pick(FIRST_NAMES, i)} ${pick(LAST_NAMES, i + 3)}`,
-        phone: hasPhone ? fakePhone(i) : null,
-        email: `owner${i}@example.com`,
-        address: `${100 + i} Main St`,
-        city: county.split(",")[0],
-        state: "FL",
-        zip: `336${String(10 + (i % 89))}`,
-        source_meta: { record_type: record, county },
-      });
+  async run(params, onProgress) {
+    // Multi-select support (both axes): `counties`/`record_types` arrays are
+    // the new shape; single `county`/`record_type` kept for backwards compat
+    // with older queued/scheduled jobs.
+    const counties = ((params.counties as string[] | undefined)?.filter(Boolean) ??
+      [(params.county as string | undefined) ?? "Hillsborough, FL"]) as string[];
+    const recordTypes =
+      (params.record_types as string[] | undefined)?.filter(Boolean) ??
+      [(params.record_type as string | undefined) ?? "Probate"];
+
+    // Real county open-data scrapers (Cook IL, Philadelphia PA, NYC NY).
+    // Falls back to the deterministic mock for counties not yet wired.
+    const { hasLiveCountyScraper, scrapeCountyRecords } = await import(
+      "./data-providers/county-records"
+    );
+
+    const all: RawLead[] = [];
+    for (const county of counties) {
+      if (hasLiveCountyScraper(county)) {
+        await onProgress?.(`Pulling live public records for ${county}…`);
+        // One slice per record type (offset pagination) so multi-select pulls
+        // distinct rows per type instead of the same page N times.
+        for (let t = 0; t < recordTypes.length; t++) {
+          const slice = await scrapeCountyRecords({
+            county,
+            recordType: recordTypes[t]!,
+            offset: t * 25,
+            dateFrom: (params.date_from as string | null | undefined) ?? null,
+            dateTo: (params.date_to as string | null | undefined) ?? null,
+          });
+          all.push(...slice);
+        }
+        continue;
+      }
+      // A rescan of a records feed should mostly return the same filings plus
+      // a few genuinely new ones, so the net-new number means something.
+      const drift = Math.floor(Date.now() / 3_600_000) % 40;
+      for (const record of recordTypes) {
+        const count = 200 + county.length * 3 + drift;
+        for (let i = 0; i < count; i++) {
+          const hasPhone = i % 3 !== 0; // records door often lacks phones -> skiptrace
+          all.push({
+            full_name: `${pick(FIRST_NAMES, i)} ${pick(LAST_NAMES, i + 3)}`,
+            phone: hasPhone ? fakePhone(i) : null,
+            email: `owner${i}@example.com`,
+            address: `${100 + i} Main St`,
+            city: county.split(",")[0],
+            state: "FL",
+            zip: `336${String(10 + (i % 89))}`,
+            source_meta: { record_type: record, county },
+          });
+        }
+      }
     }
-    return rows;
+    return all;
   },
 };
 
@@ -479,6 +512,62 @@ async function runPipelineBody(
     // 3) SKIPTRACE ----------------------------------------------------------
     await supabase.from("jobs").update({ status: "skiptracing" }).eq("id", jobId);
     if (shouldSkiptrace) {
+      // Real records leads (live county scrapers set source_meta.provider) go
+      // through the skip-trace provider (default "realeflow-semi": Realeflow
+      // Property Data API → assessor owner name + MAILING address + value/
+      // equity, stacked into source_meta.realeflow for the lead drawer).
+      const isRealRecords =
+        job.source_type === "records" &&
+        verified.some((r) => (r.source_meta as { provider?: string } | undefined)?.provider);
+      if (isRealRecords) {
+        const { getSkipTraceProvider } = await import("./skiptrace/provider.server");
+        const provider = getSkipTraceProvider();
+        // Cloudflare Workers (free plan) caps ~50 subrequests per invocation.
+        // Each trace = 2 API calls (autocomplete + details) — keep the slice
+        // small so the request always survives to "ready".
+        const MAX_LIVE_TRACES = 5;
+        let traceCalls = 0;
+        let consecutiveFailures = 0;
+        for (const r of verified) {
+          if (traceCalls >= MAX_LIVE_TRACES || consecutiveFailures >= 3) break;
+          if (!r.address) continue;
+          traceCalls++;
+          try {
+            const t = await provider.trace({
+              ownerName: r.full_name ?? null,
+              street: r.address,
+              city: r.city ?? null,
+              state: r.state ?? null,
+              zip: r.zip ?? null,
+            });
+            if (t.ownerName && !r.full_name) r.full_name = t.ownerName;
+            if (!r.phone && t.phones[0]) {
+              r.phone = t.phones[0];
+              r.line_type = classifyLineType(t.phones[0]);
+            }
+            r.source_meta = {
+              ...(r.source_meta ?? {}),
+              realeflow: {
+                provider: t.provider,
+                address_hash: t.addressHash,
+                owner_name: t.ownerName,
+                mailing_street: t.mailingStreet,
+                mailing_city: t.mailingCity,
+                mailing_state: t.mailingState,
+                mailing_zip: t.mailingZip,
+                absentee_owner: t.absenteeOwner,
+                ...t.extras,
+                traced_at: t.tracedAt,
+              },
+            };
+            skiptraced++;
+            consecutiveFailures = 0;
+          } catch {
+            // No property match / subrequest budget hit — keep the lead as-is.
+            consecutiveFailures++;
+          }
+        }
+      }
       for (let i = 0; i < verified.length; i++) {
         if (!verified[i]!.phone) {
           const filled = fakePhone(1_000_000 + i);
