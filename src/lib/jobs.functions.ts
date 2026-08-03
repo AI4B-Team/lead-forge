@@ -121,6 +121,8 @@ export const listJobs = createServerFn({ method: "GET" })
           cadence_badge: cadenceBadge(j.schedule),
           source_type: j.source_type,
           status: j.status,
+          error: j.error ?? null,
+          failed_stage: j.failed_stage ?? null,
           rows_in: j.rows_in ?? 0,
           rows_deduped: j.rows_deduped ?? 0,
           rows_enriched: j.rows_enriched ?? 0,
