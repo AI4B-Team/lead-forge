@@ -89,6 +89,7 @@ const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   state: "State",
   counties: "Counties",
   recencyDays: "Recency",
+  maxResults: "Max Rows Per Search",
   // Toggle names come from the shared config so chips match the panel and checklist.
   removeFranchises: PIPELINE_OPTION_LABELS.removeFranchises,
   dedupe: PIPELINE_OPTION_LABELS.dedupe,
