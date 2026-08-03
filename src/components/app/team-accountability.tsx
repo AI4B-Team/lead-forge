@@ -112,7 +112,7 @@ export function MemberCostDashboard({ workspaceId }: { workspaceId: string }) {
                       {r.anomalies.map((a) => (
                         <Tooltip key={a.kind}>
                           <TooltipTrigger asChild>
-                            <Badge variant="outline" className="border-amber-500/40 text-amber-600">
+                            <Badge variant="outline" className="border-amber-500/40 text-amber-500">
                               <AlertTriangle className="mr-1 h-3 w-3" /> {a.kind === "off_hours" ? "Off Hours" : "Spike"}
                             </Badge>
                           </TooltipTrigger>

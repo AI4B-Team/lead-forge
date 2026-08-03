@@ -136,7 +136,7 @@ export function SourceRequestDialog({
                 {done.tier === "review" ? (
                   <><ScanSearch className="h-5 w-5 text-warning" /> Request Received — Under Review</>
                 ) : (
-                  <><Check className="h-5 w-5 text-emerald-500" /> Request Received</>
+                  <><Check className="h-5 w-5 text-success" /> Request Received</>
                 )}
               </DialogTitle>
               <DialogDescription>
@@ -309,7 +309,7 @@ export function SourceRequestDialog({
                   </div>
                 ) : (
                   <div className="flex items-start gap-2 rounded-xl border border-border bg-surface p-3 text-xs text-muted-foreground">
-                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                     <span>
                       <span className="font-semibold text-foreground">Standard — </span>
                       Public Data And Public Records Queue Normally, Including Portals That Ask For A Free Account.

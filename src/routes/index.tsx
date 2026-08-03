@@ -211,7 +211,7 @@ function ConsolidationBand() {
             <div className="mt-4 h-2 rounded-full bg-surface-muted overflow-hidden">
               <div className="h-full bg-primary" style={{ width: "78%" }} />
             </div>
-            <div className="mt-5 flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-2 text-sm">
+            <div className="mt-5 flex items-center gap-2 rounded-lg bg-success/10 border border-success/25 text-success px-3 py-2 text-sm">
               <Check className="h-4 w-4" />
               Compliance Scrub Baked In
             </div>

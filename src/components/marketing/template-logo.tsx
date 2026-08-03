@@ -31,7 +31,7 @@ export function TemplateLogo({
     <span
       className={cn(
         "grid place-items-center shrink-0 overflow-hidden rounded-xl border border-border",
-        showLogo ? "bg-white" : template.tint,
+        showLogo ? "bg-card" : template.tint,
         className ?? "h-12 w-12",
       )}
     >

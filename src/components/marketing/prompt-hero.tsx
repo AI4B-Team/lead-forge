@@ -147,7 +147,7 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
           }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
-          className="mx-auto mt-8 w-full max-w-[820px] rounded-[22px] bg-white text-left transition"
+          className="mx-auto mt-8 w-full max-w-[820px] rounded-[22px] bg-card text-card-foreground text-left transition"
           style={{
             border: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
           }}
@@ -176,14 +176,14 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
               {files.map((f, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 text-xs font-medium"
+                  className="inline-flex items-center gap-2 rounded-full bg-success/10 text-success border border-success/25 px-3 py-1 text-xs font-medium"
                 >
                   <FileText className="h-3.5 w-3.5 shrink-0" />
                   {f.name}
                   <button
                     type="button"
                     onClick={() => setFiles((arr) => arr.filter((_, j) => j !== i))}
-                    className="hover:text-emerald-900"
+                    className="hover:text-success/80"
                     aria-label="Remove File"
                   >
                     <X className="h-3 w-3" />
