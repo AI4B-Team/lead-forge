@@ -8,7 +8,6 @@
 import { jobSpecSchema, withStates, specStates, type JobSpec, type AssistantMessage } from "./assistant.shared";
 import { enrichmentProfile, isNonUsRun, templateOutputType } from "./pipeline-options";
 import { estimateSpec } from "./estimate.shared";
-import { GMAPS_TEMPLATE_ID } from "./pipeline-options";
 import { countiesForState, formatCounty, parseCounty } from "./us-geo";
 
 /** Snap model-provided county names onto real counties in the spec's state. */
