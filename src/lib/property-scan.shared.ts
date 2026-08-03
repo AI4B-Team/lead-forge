@@ -14,23 +14,6 @@
 
 import { z } from "zod";
 
-export type ScanMode = "area" | "list" | "monitor";
-
-export const SCAN_MODES: Array<{
-  id: ScanMode;
-  title: string;
-  blurb: string;
-  /** Monitor is the only tier-gated mode — it re-scans, so it carries ongoing cost. */
-  minTier?: ScanTier;
-}> = [
-  { id: "area", title: "Area Scan", blurb: "Name the ZIPs, cities, or counties you work. We pull the parcels, apply your buy box, and score what survives." },
-  { id: "list", title: "List Scan", blurb: "Score a list you already built, or a CSV you already own. Every row comes back with condition detail and reasoning." },
-  { id: "monitor", title: "Monitor", blurb: "Re-score a saved list on a schedule and get told when a house gets worse — a tarp appears, a yard goes to overgrowth.", minTier: "growth" },
-];
-
-// ---------------------------------------------------------------------------
-// Verticals. Same scan, different ranking — switching re-ranks, never re-scans.
-// ---------------------------------------------------------------------------
 
 export type ScanVertical =
   | "investor" | "roofing" | "paint_siding" | "landscaping"
@@ -342,10 +325,6 @@ export const SCAN_TIERS: Record<ScanTier, {
 
 export const TIER_RANK: Record<ScanTier, number> = { starter: 0, growth: 1, pro: 2 };
 
-export function modeAvailable(mode: ScanMode, tier: ScanTier): boolean {
-  const min = SCAN_MODES.find((m) => m.id === mode)?.minTier;
-  return !min || TIER_RANK[tier] >= TIER_RANK[min];
-}
 
 // ---------------------------------------------------------------------------
 // Job progress, relabelled for the scan pipeline.
@@ -364,23 +343,3 @@ export function streetViewLink(lat: number, lng: number, heading?: number | null
   const h = heading ?? 0;
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}&heading=${h}`;
 }
-
-export const scanJobInputSchema = z.object({
-  workspaceId: z.string().uuid(),
-  name: z.string().max(120).nullable().default(null),
-  mode: z.enum(["area", "list", "monitor"]).default("area"),
-  vertical: z.string().max(40).default("investor"),
-  prompt: z.string().max(600).nullable().default(null),
-  matchThreshold: z.number().int().min(50).max(100).default(DEFAULT_MATCH_THRESHOLD),
-  imagesPer: z.union([z.literal(1), z.literal(3)]).default(3),
-  buyBox: buyBoxSchema,
-  areas: z.array(z.string().max(80)).max(50).default([]),
-  sourceListId: z.string().uuid().nullable().default(null),
-  examples: z.array(z.string().max(160)).max(3).default([]),
-  parcelsInArea: z.number().int().min(0).default(0),
-  parcelsFiltered: z.number().int().min(0).default(0),
-  creditsQuoted: z.number().int().min(0).default(0),
-  monitorCadence: z.enum(["monthly", "quarterly"]).nullable().default(null),
-});
-
-export type ScanJobInput = z.infer<typeof scanJobInputSchema>;
