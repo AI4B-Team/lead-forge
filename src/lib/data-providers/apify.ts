@@ -223,7 +223,7 @@ export function getBusinessScraper(): BusinessScraper {
         if (useMockData()) return mockScrape(params);
         throw new Error("Apify is not connected. Add credentials in Settings → Integrations.");
       }
-      const actor = process.env.APIFY_GMAPS_ACTOR ?? "compass~google-maps-scraper";
+      const actor = process.env.APIFY_GMAPS_ACTOR ?? "compass~crawler-google-places";
       // No mock fallback: real failures must surface, never fabricate leads.
       return apifyScrape(token, actor, params, params.onProgress);
     },
