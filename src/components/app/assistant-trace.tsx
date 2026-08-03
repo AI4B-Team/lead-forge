@@ -66,6 +66,9 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
     steps.push({ label: "Location", value: stateNames.join(", ") });
   }
   if (spec.recencyDays) steps.push({ label: "Recency Window", value: `Last ${spec.recencyDays} Days` });
+  if (spec.sourceType && spec.sourceType !== "upload" && spec.maxResults) {
+    steps.push({ label: "Max Rows Per Search", value: spec.maxResults.toLocaleString() });
+  }
   // Toggle lines use the exact List Builder labels, in panel order, so the two
   // lists can be checked off against each other.
   for (const option of enabledOptions(spec)) {
