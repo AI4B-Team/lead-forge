@@ -22,9 +22,10 @@ export const assistantChat = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { askAssistant, estimate, precheckCompliance } = await import("@/lib/assistant.server");
-    const { COUNTIES, NICHES, RECORD_TYPES, coverageForCounty } = await import("@/lib/mock-data");
+    const { loadReferenceData } = await import("@/lib/reference-data.server");
+    const { coverageForCounty, coverageLabel } = await import("@/lib/reference-data.shared");
     const { TEMPLATES } = await import("@/lib/templates");
     const { templateAdapterStatus } = await import("@/lib/template-schema");
 
@@ -40,14 +41,17 @@ export const assistantChat = createServerFn({ method: "POST" })
       };
     }
 
-    const covered = COUNTIES.filter((c) => c.coverage !== "requested").map((c) => c.name);
+    const ref = await loadReferenceData(context.supabase);
+    const covered = ref.countyCoverage
+      .filter((c) => c.source_type === "records" && c.status !== "requested")
+      .map(coverageLabel);
     const result = await askAssistant({
       history: data.history,
       message: data.message,
       spec: data.spec,
       coveredCounties: covered,
-      niches: [...NICHES],
-      recordTypes: [...RECORD_TYPES],
+      niches: ref.niches.map((n) => n.name),
+      recordTypes: ref.recordTypes.map((r) => r.name),
       templateCatalog: TEMPLATES.map((t) => `${t.id} — ${t.title} — ${templateAdapterStatus(t)}`).join("\n"),
     });
 
@@ -55,7 +59,7 @@ export const assistantChat = createServerFn({ method: "POST" })
     // public-records adapters are county-scoped; business scrapes are nationwide.
     const coverage = result.spec.counties.map((county) => ({
       county,
-      coverage: coverageForCounty(county, result.spec.sourceType),
+      coverage: coverageForCounty(ref.countyCoverage, county, result.spec.sourceType),
     }));
 
     return {
@@ -229,12 +233,14 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
     if (spec.sourceType === "business" && !spec.niches.length) throw new Error("Add At Least One Niche");
     if (spec.sourceType === "records" && !spec.recordType) throw new Error("Pick A Record Type");
 
-    const { coverageForCounty } = await import("@/lib/mock-data");
+    const { loadReferenceData } = await import("@/lib/reference-data.server");
+    const { coverageForCounty } = await import("@/lib/reference-data.shared");
+    const ref = await loadReferenceData(context.supabase);
     // Geo gating applies to public records only — business scrapes are nationwide.
     const blocked =
       spec.sourceType === "records"
         ? spec.counties.filter((c) => {
-            const cov = coverageForCounty(c, "records");
+            const cov = coverageForCounty(ref.countyCoverage, c, "records");
             return cov === "requested" || cov === "unknown";
           })
         : [];

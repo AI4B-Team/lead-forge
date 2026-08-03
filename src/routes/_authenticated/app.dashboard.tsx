@@ -8,7 +8,7 @@ import { QuickRun } from "@/components/app/quick-run";
 import { DashboardTemplates } from "@/components/app/dashboard-templates";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { type JobStatus } from "@/lib/mock-data";
+import { type JobStatus } from "@/lib/job-status";
 import { supabase } from "@/integrations/supabase/client";
 import { isRunningStatus, isStalled } from "@/lib/job-watchdog";
 import { useWorkspaceId } from "@/hooks/use-workspace";

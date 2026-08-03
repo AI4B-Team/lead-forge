@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { INDUSTRIES } from "@/lib/mock-data";
+import { useReferenceData } from "@/hooks/use-reference-data";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
@@ -38,6 +38,7 @@ const STATES = ["FL", "TX", "GA", "NC", "AZ", "CA", "OH", "PA"];
 
 function Settings() {
   const { workspaceName } = useWorkspaceId();
+  const { industries } = useReferenceData();
   const [industry, setIndustry] = useState("real_estate");
   const [timezone, setTimezone] = useState("America/New_York");
   const [state, setState] = useState("FL");
@@ -87,14 +88,14 @@ function Settings() {
                   Tunes Templates, Message Tone, And Default Filters Across The Workspace.
                 </p>
                 <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {INDUSTRIES.map((i) => {
-                    const Icon = INDUSTRY_ICONS[i.key] ?? MoreHorizontal;
-                    const active = industry === i.key;
+                  {industries.map((i) => {
+                    const Icon = INDUSTRY_ICONS[i.slug] ?? MoreHorizontal;
+                    const active = industry === i.slug;
                     return (
                       <button
-                        key={i.key}
+                        key={i.slug}
                         type="button"
-                        onClick={() => setIndustry(i.key)}
+                        onClick={() => setIndustry(i.slug)}
                         className={`rounded-xl border p-3 text-left transition-all ${
                           active
                             ? "border-primary bg-primary/5 ring-1 ring-primary/30"
@@ -102,7 +103,7 @@ function Settings() {
                         }`}
                       >
                         <Icon className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                        <div className="mt-2 text-sm font-semibold text-foreground">{i.label}</div>
+                        <div className="mt-2 text-sm font-semibold text-foreground">{i.name}</div>
                         <div className="mt-1 h-4 text-[11px] font-semibold uppercase tracking-wider text-primary">
                           {active && (
                             <span className="inline-flex items-center gap-1"><Check className="h-3 w-3" /> Selected</span>
