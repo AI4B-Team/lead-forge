@@ -52,7 +52,30 @@ export type Template = {
    * example for the slots the operator still has to supply.
    */
   placeholderHint?: string;
+  /**
+   * Credits this source draws per lead returned. 0 means genuinely zero
+   * marginal cost to us (own-data uploads, single-site crawls) and renders the
+   * "Free" badge. Left undefined, `creditCostPerLead` falls back to the metered
+   * default — we never promise free unless it's explicitly set here.
+   */
+  credit_cost_per_lead?: number;
 };
+
+/** Metered default for any source that hits a paid provider per record. */
+export const DEFAULT_CREDIT_COST_PER_LEAD = 1;
+
+/** Single source of truth for what a template draws from the plan's credits. */
+export function creditCostPerLead(t: Template): number {
+  return t.credit_cost_per_lead ?? DEFAULT_CREDIT_COST_PER_LEAD;
+}
+
+/** Badge copy for a template's credit draw. `free` drives the green treatment. */
+export function templateCostBadge(t: Template): { free: boolean; label: string } {
+  const cost = creditCostPerLead(t);
+  if (cost <= 0) return { free: true, label: "Free" };
+  const amount = Number.isInteger(cost) ? String(cost) : cost.toFixed(2);
+  return { free: false, label: `${amount} credit${cost === 1 ? "" : "s"} / lead` };
+}
 
 export const TEMPLATES: Template[] = [
   // ---------- Upload (pinned first) ----------
@@ -65,6 +88,7 @@ export const TEMPLATES: Template[] = [
     icon: Upload,
     tint: "bg-yellow-500/10 text-yellow-700",
     placeholderHint: "e.g. Skip trace my CSV and scrub it against DNC — mobile numbers only",
+    credit_cost_per_lead: 0,
   },
 
   // ---------- Business & Local ----------
@@ -92,6 +116,7 @@ export const TEMPLATES: Template[] = [
     tint: "bg-primary/10 text-primary",
     logoDomain: "google.com/maps",
     placeholderHint: "e.g. Roofers in Hillsborough County, FL — mobile numbers only",
+    credit_cost_per_lead: 1,
   },
   {
     id: "gserp",
@@ -105,6 +130,7 @@ export const TEMPLATES: Template[] = [
     tint: "bg-blue-500/10 text-blue-600",
     logoDomain: "google.com",
     placeholderHint: "e.g. Water damage restoration in Tampa, FL — emails and phones",
+    credit_cost_per_lead: 1,
   },
   {
     id: "glocal",
@@ -118,6 +144,7 @@ export const TEMPLATES: Template[] = [
     tint: "bg-emerald-500/10 text-emerald-600",
     logoDomain: "google.com",
     placeholderHint: "e.g. Plumbers in Pinellas County, FL with phone numbers",
+    credit_cost_per_lead: 1,
   },
   {
     id: "contact-details",
@@ -130,6 +157,7 @@ export const TEMPLATES: Template[] = [
     icon: Mail,
     tint: "bg-primary/10 text-primary",
     placeholderHint: "e.g. Pull contacts from these 40 roofing company websites",
+    credit_cost_per_lead: 0,
   },
   {
     id: "universal-crawl",
@@ -142,6 +170,7 @@ export const TEMPLATES: Template[] = [
     icon: Network,
     tint: "bg-indigo-500/10 text-indigo-600",
     placeholderHint: "e.g. Crawl acmeroofing.com and every subpage for contacts",
+    credit_cost_per_lead: 0,
   },
   {
     id: "yelp",

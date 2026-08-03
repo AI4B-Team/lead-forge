@@ -587,3 +587,38 @@ export const markNotificationsRead = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+/**
+ * First-touch setup captured on the list progress screen while the scrape runs.
+ * Stored on the list's params so the Campaign Builder can prefill from it —
+ * skipping it changes nothing, the builder just collects it later.
+ */
+export const setListFirstTouch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        jobId: z.string().uuid(),
+        industry: z.string().max(40).nullable().optional(),
+        messageAngle: z.string().max(400).nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: job, error: readError } = await context.supabase
+      .from("jobs")
+      .select("params")
+      .eq("id", data.jobId)
+      .maybeSingle();
+    if (readError) throw readError;
+    if (!job) throw new Error("List Not Found");
+    const params = { ...((job.params ?? {}) as Record<string, unknown>) };
+    if (data.industry !== undefined) params.industry = data.industry;
+    if (data.messageAngle !== undefined) params.message_angle = data.messageAngle;
+    const { error } = await context.supabase
+      .from("jobs")
+      .update({ params } as never)
+      .eq("id", data.jobId);
+    if (error) throw error;
+    return { ok: true };
+  });

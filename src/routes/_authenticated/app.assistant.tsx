@@ -111,6 +111,10 @@ function diffSpec(prev: JobSpec, next: JobSpec): string[] {
 const GENERIC_PLACEHOLDER =
   "Describe The Leads You Want. E.g. Roofing Companies In Hillsborough County With Mobile Numbers.";
 
+/** Placeholder follows the conversation state, never a stale example. */
+const REFINE_PLACEHOLDER = "Refine this list, or describe a new one…";
+const RUNNING_PLACEHOLDER = "Ask me anything, or start your next list…";
+
 /**
  * Cycles the composer's example placeholder with a crossfade. Paused while the
  * user types or a template is selected, so the rotation never fights real input.
@@ -866,6 +870,14 @@ function Assistant() {
         ? "Generate List"
         : "Looks Good";
 
+  // No spec yet → show an example. Spec assembled or assembling → refine copy.
+  // Run queued → the conversation moves on to the next list.
+  const composerPlaceholder = running
+    ? RUNNING_PLACEHOLDER
+    : spec.sourceType || busy
+      ? REFINE_PLACEHOLDER
+      : selectedTemplate?.placeholderHint ?? GENERIC_PLACEHOLDER;
+
   const geoResolved = Boolean(specStates(spec).length || spec.counties.length || spec.sourceType === "upload");
 
   /** Last row cap this workspace used, so it isn't re-entered every run. */
@@ -1088,7 +1100,7 @@ function Assistant() {
             void send(input);
           }
         }}
-        placeholder={selectedTemplate?.placeholderHint ?? GENERIC_PLACEHOLDER}
+        placeholder={composerPlaceholder}
         className="resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
       />
       <div className="mt-3 flex items-center justify-between gap-3">

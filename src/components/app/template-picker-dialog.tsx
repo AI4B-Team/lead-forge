@@ -4,7 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 import { TemplateCard } from "@/components/marketing/template-card";
-import { TEMPLATES, CATEGORY_LABELS, type Template, type TemplateCategory } from "@/lib/templates";
+import { TEMPLATES, CATEGORY_LABELS, creditCostPerLead, type Template, type TemplateCategory } from "@/lib/templates";
+/** Included (0-credit) sources first, then ascending by credit draw. */
+function byCost(list: Template[]) {
+  return [...list].sort((a, b) => creditCostPerLead(a) - creditCostPerLead(b));
+}
+
 import { useOverflow } from "@/hooks/use-overflow";
 
 type Props = {
@@ -46,7 +51,7 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
 
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return TEMPLATES.filter((t) => {
+    return byCost(TEMPLATES.filter((t) => {
       if (category !== "all" && t.category !== category) return false;
       if (!q) return true;
       return (
@@ -54,7 +59,7 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
         t.subtitle.toLowerCase().includes(q) ||
         CATEGORY_LABELS[t.category].toLowerCase().includes(q)
       );
-    });
+    }));
   }, [query, category]);
 
   const grouped = useMemo(() => {
@@ -64,7 +69,7 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
       list.push(t);
       groups.set(t.category, list);
     }
-    return Array.from(groups.entries());
+    return Array.from(groups.entries()).map(([cat, list]) => [cat, byCost(list)] as const);
   }, [matches]);
 
   const grid = (list: Template[]) => (
@@ -88,6 +93,9 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
       <DialogContent className="max-h-[85vh] grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-0 sm:max-w-[62rem]">
         <DialogHeader className="min-w-0 border-b px-6 pb-4 pt-6">
           <DialogTitle>All Templates</DialogTitle>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Everything runs on your plan credits. Nothing is ever billed separately.
+          </p>
           <div className="relative mt-3">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input

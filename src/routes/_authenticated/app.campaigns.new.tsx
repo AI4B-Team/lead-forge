@@ -203,6 +203,10 @@ function NewCampaign() {
     ? ((selectedJobRow.params ?? {}) as { name?: string }).name ?? `List ${selectedJobRow.id.slice(0, 8)}`
     : "";
   const brandName = agent?.name ?? "";
+  // First-touch setup captured on the list progress screen carries in here as
+  // the default guidance for the sequence.
+  const carried = (selectedJobRow?.params ?? {}) as { industry?: string | null; message_angle?: string | null };
+  const carriedAngle = carried.message_angle?.trim() || "";
   const recipients = preview?.recipients ?? selectedJobRow?.rows_deduped ?? 0;
   const totalDelayMinutes = cleanSteps.reduce((n, s) => n + s.delay_minutes, 0);
   const projection = projectCampaign({ recipients, bodies, dailyCap, totalDelayMinutes });
@@ -435,6 +439,12 @@ function NewCampaign() {
           </Step>
 
           <Step id="sequence" n={5} title="Review Sequence" hint="Each Touch Waits Its Own Duration Before Sending.">
+            {carriedAngle && (
+              <div className="mb-4 rounded-xl border border-border bg-primary/5 p-3">
+                <p className="text-xs font-semibold text-foreground">First-Touch Angle From This List</p>
+                <p className="mt-1 text-sm text-muted-foreground">{carriedAngle}</p>
+              </div>
+            )}
             <DripEditor steps={steps} onChange={setSteps} />
             {cleanSteps.length > 0 && (
               <SequenceAnalytics

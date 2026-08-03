@@ -2,7 +2,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -211,26 +210,6 @@ function CommitInput({
   );
 }
 
-function CommitTextarea({
-  value,
-  onCommit,
-  className,
-  placeholder,
-  rows,
-}: { value: string; onCommit: (v: string) => void; className?: string; placeholder?: string; rows?: number }) {
-  const d = useCommitDraft(value, onCommit);
-  return (
-    <Textarea
-      className={className}
-      rows={rows}
-      value={d.value}
-      placeholder={placeholder}
-      onChange={(e) => d.onChange(e.target.value)}
-      onBlur={d.onBlur}
-    />
-  );
-}
-
 /**
  * The List Builder panel. It renders from the selected template's field schema,
  * so each source asks only for what it actually needs.
@@ -269,7 +248,7 @@ export function JobSpecCard({
 }) {
   const set = <K extends keyof JobSpec>(key: K, value: JobSpec[K]) => onChange({ ...spec, [key]: value });
   const inf = (key: keyof JobSpec) => Boolean(inferred?.has(key));
-  const { industries, countyCoverage } = useReferenceData();
+  const { countyCoverage } = useReferenceData();
   // Business / local scrapes have no geo whitelist, so fall back to the
   // source-aware verdict instead of assuming "Not Covered".
   const covFor = (county: string): Coverage =>
@@ -691,35 +670,9 @@ export function JobSpecCard({
           </p>
         )}
 
-        {!dataOnly && (
-        <div>
-          <FieldLabel hint="Sets the tone and compliance defaults for messaging — real estate, home services, insurance, and so on. The assistant suggests one from your request.">
-            Industry Preset
-          </FieldLabel>
-          <Select value={spec.industry ?? ""} onValueChange={(v) => set("industry", v)}>
-            <SelectTrigger className="mt-1"><SelectValue placeholder="Suggested By The Assistant" /></SelectTrigger>
-            <SelectContent>
-              {industries.map((i) => <SelectItem key={i.slug} value={i.slug}>{i.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        )}
-
-        {!dataOnly && (
-        <div>
-          <FieldLabel hint="How the first text should come across, in your words. It shapes the opening message your AI agent sends — nothing sends without your approval.">
-            First-Touch Angle
-          </FieldLabel>
-          <CommitTextarea
-            className="mt-1"
-            rows={3}
-            value={spec.messageAngle ?? ""}
-            onCommit={(v) => set("messageAngle", v || null)}
-            placeholder="Empathetic, low-pressure opener…"
-          />
-        </div>
-        )}
-
+        {/* Industry preset and first-touch angle are campaign concerns, not list
+            concerns — they're collected on the list progress screen while the
+            scrape runs, then carried into the Campaign Builder as defaults. */}
         <div>
           <FieldLabel
             hintTitle="Outreach Channel"
