@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { KeyRound, ShieldCheck, Gauge, Terminal, BookOpen, Code2, Webhook, Plug } from "lucide-react";
+import { KeyRound, ShieldCheck, Gauge, Terminal, BookOpen, Code2, Webhook, Plug, History as HistoryIcon } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsShell } from "@/components/app/settings-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,7 +77,7 @@ function DeveloperPage() {
             <Card className="mt-3">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm font-display">
-                  <History className="h-4 w-4 text-muted-foreground" /> Recent Deliveries
+                  <HistoryIcon className="h-4 w-4 text-muted-foreground" /> Recent Deliveries
                 </CardTitle>
               </CardHeader>
               <CardContent>
