@@ -8,6 +8,7 @@ import { AssistantTrace, buildTraceSteps, openSlots } from "@/components/app/ass
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -37,6 +38,8 @@ import { SourceRequestDialog, type SourceRequestType } from "@/components/app/so
 import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, specStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { PIPELINE_OPTION_LABELS, withEnrichmentDefaults } from "@/lib/pipeline-options";
+import { estimateSpec, MAX_ROWS_PRESETS } from "@/lib/estimate.shared";
+import { DEFAULT_MAX_ROWS, loadMaxRows, saveMaxRows } from "@/lib/max-rows";
 import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
 import { TEMPLATES, templateSourceType, type Template } from "@/lib/templates";
 import { TemplateCard } from "@/components/marketing/template-card";
@@ -159,7 +162,8 @@ function Assistant() {
   const [spec, setSpec] = useState<JobSpec>(EMPTY_SPEC);
   const [firstPrompt, setFirstPrompt] = useState("");
   const [coverage, setCoverage] = useState<Array<{ county: string; coverage: Coverage }>>([]);
-  const [estimate, setEstimate] = useState<{ rows: number; skipTraceCredits: number; scrapeCredits: number } | null>(null);
+  /** Quoted live from the spec, so changing the row cap requotes immediately. */
+  const estimate = useMemo(() => estimateSpec(spec), [spec]);
   const [suggested, setSuggested] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [running, setRunning] = useState(false);
@@ -283,7 +287,6 @@ function Assistant() {
       setThread([]);
       setFirstPrompt("");
       setCoverage([]);
-      setEstimate(null);
       setSuggested([]);
       setConfirmed(false);
       setRevealed(0);
@@ -322,7 +325,6 @@ function Assistant() {
     setSpec(nextSpec);
     if (wasScrape) {
       setCoverage([]);
-      setEstimate(null);
       setInferred(new Set());
     }
     setInferred((prev) => { const out = new Set(prev); out.delete("sourceType"); return out; });
@@ -576,7 +578,6 @@ function Assistant() {
         }
       }
       setCoverage(res.coverage);
-      setEstimate(res.estimate);
       setSuggested(res.suggestedTemplates);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "The Assistant Could Not Answer");
@@ -595,7 +596,6 @@ function Assistant() {
     setSpec(EMPTY_SPEC);
     setFirstPrompt("");
     setCoverage([]);
-    setEstimate(null);
     setSuggested([]);
     setConfirmed(false);
     setRevealed(0);
