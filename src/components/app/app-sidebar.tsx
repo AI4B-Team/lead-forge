@@ -94,7 +94,7 @@ export function AppSidebar() {
                 </Link>
               </TooltipTrigger>
               {collapsed && (
-                <TooltipContent side="right" className="bg-white text-foreground border-border shadow-md">
+                <TooltipContent side="right" className="bg-popover text-popover-foreground border-border shadow-md">
                   {BRAND_NAME}
                 </TooltipContent>
               )}
@@ -104,7 +104,7 @@ export function AppSidebar() {
                 <SidebarTrigger className={cn("h-7 w-7 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "absolute right-1")} />
               </TooltipTrigger>
               {collapsed && (
-                <TooltipContent side="right" className="bg-white text-foreground border-border shadow-md">
+                <TooltipContent side="right" className="bg-popover text-popover-foreground border-border shadow-md">
                   Expand Menu
                 </TooltipContent>
               )}
@@ -137,7 +137,7 @@ export function AppSidebar() {
                           </SidebarMenuButton>
                         </TooltipTrigger>
                         {collapsed && (
-                          <TooltipContent side="right" className="bg-white text-foreground border-border shadow-md">
+                          <TooltipContent side="right" className="bg-popover text-popover-foreground border-border shadow-md">
                             {label}
                           </TooltipContent>
                         )}

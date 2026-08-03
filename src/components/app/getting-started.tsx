@@ -101,13 +101,13 @@ export function GettingStarted({ workspaceId }: { workspaceId: string | null }) 
       <ProductTour open={tourOpen} onClose={() => setTourOpen(false)} />
 
       {!data.welcomeDismissed && (
-        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3">
+          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div className="flex-1 text-sm">
             <span className="font-display font-bold text-foreground">Welcome to LeadTrace</span>
             <span className="text-muted-foreground">
               {" — Knock out the steps below, or "}
-              <button type="button" onClick={() => setTourOpen(true)} className="font-medium text-red-600 underline underline-offset-2">
+              <button type="button" onClick={() => setTourOpen(true)} className="font-medium text-primary underline underline-offset-2">
                 take the 60-second tour →
               </button>
             </span>

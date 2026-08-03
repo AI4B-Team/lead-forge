@@ -263,7 +263,7 @@ function TrainingItem({
 }) {
   return (
     <div className="group relative flex items-center gap-3 rounded-2xl border border-border bg-background p-4">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success/10 text-success">
         <CheckCircle2 className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1">

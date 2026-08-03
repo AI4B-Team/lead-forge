@@ -44,7 +44,7 @@ export function IndustryLandingPage({ data }: { data: IndustryLanding }) {
             </div>
           </div>
           <div className="relative">
-            <div className="relative rounded-2xl bg-white text-foreground p-6 border border-border shadow-2xl">
+            <div className="relative rounded-2xl bg-card text-card-foreground p-6 border border-border shadow-2xl">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <Icon className="h-4 w-4 text-primary" /> Wired To
               </div>
@@ -57,7 +57,7 @@ export function IndustryLandingPage({ data }: { data: IndustryLanding }) {
                   "{data.sampleMessage}"
                 </div>
               </div>
-              <div className="mt-4 flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-2 text-sm">
+              <div className="mt-4 flex items-center gap-2 rounded-lg bg-success/10 border border-success/25 text-success px-3 py-2 text-sm">
                 <Check className="h-4 w-4" /> DNC + Litigator Scrubbed
               </div>
             </div>
