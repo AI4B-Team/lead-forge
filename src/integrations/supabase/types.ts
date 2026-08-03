@@ -957,6 +957,61 @@ export type Database = {
           },
         ]
       }
+      lead_outcomes: {
+        Row: {
+          id: string
+          lead_record_id: string | null
+          reason: string | null
+          result_id: string | null
+          set_by: string
+          status: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          id?: string
+          lead_record_id?: string | null
+          reason?: string | null
+          result_id?: string | null
+          set_by?: string
+          status?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          id?: string
+          lead_record_id?: string | null
+          reason?: string | null
+          result_id?: string | null
+          set_by?: string
+          status?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_outcomes_lead_record_id_fkey"
+            columns: ["lead_record_id"]
+            isOneToOne: false
+            referencedRelation: "lead_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_outcomes_result_id_fkey"
+            columns: ["result_id"]
+            isOneToOne: false
+            referencedRelation: "scan_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_outcomes_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_records: {
         Row: {
           address: string | null
@@ -1324,6 +1379,73 @@ export type Database = {
           },
         ]
       }
+      monitor_subscriptions: {
+        Row: {
+          active: boolean
+          alert_on: Json
+          cadence: string
+          created_at: string
+          created_by: string
+          id: string
+          last_run_at: string | null
+          list_id: string | null
+          next_run_at: string | null
+          scan_job_id: string | null
+          vertical: string
+          workspace_id: string
+        }
+        Insert: {
+          active?: boolean
+          alert_on?: Json
+          cadence?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          last_run_at?: string | null
+          list_id?: string | null
+          next_run_at?: string | null
+          scan_job_id?: string | null
+          vertical?: string
+          workspace_id: string
+        }
+        Update: {
+          active?: boolean
+          alert_on?: Json
+          cadence?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          last_run_at?: string | null
+          list_id?: string | null
+          next_run_at?: string | null
+          scan_job_id?: string | null
+          vertical?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monitor_subscriptions_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitor_subscriptions_scan_job_id_fkey"
+            columns: ["scan_job_id"]
+            isOneToOne: false
+            referencedRelation: "scan_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitor_subscriptions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       municipalities: {
         Row: {
           city: string | null
@@ -1392,6 +1514,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      parcel_conditions: {
+        Row: {
+          apn: string
+          boolean_detections: Json
+          condition_confidence: number | null
+          condition_vector: Json
+          confidence_vector: Json
+          distress_score: number
+          fips: string
+          id: string
+          imagery_date: string
+          imagery_source: string
+          lat: number | null
+          lng: number | null
+          model_version: string
+          rationale: Json | null
+          scored_at: string
+        }
+        Insert: {
+          apn: string
+          boolean_detections?: Json
+          condition_confidence?: number | null
+          condition_vector?: Json
+          confidence_vector?: Json
+          distress_score?: number
+          fips: string
+          id?: string
+          imagery_date: string
+          imagery_source: string
+          lat?: number | null
+          lng?: number | null
+          model_version: string
+          rationale?: Json | null
+          scored_at?: string
+        }
+        Update: {
+          apn?: string
+          boolean_detections?: Json
+          condition_confidence?: number | null
+          condition_vector?: Json
+          confidence_vector?: Json
+          distress_score?: number
+          fips?: string
+          id?: string
+          imagery_date?: string
+          imagery_source?: string
+          lat?: number | null
+          lng?: number | null
+          model_version?: string
+          rationale?: Json | null
+          scored_at?: string
+        }
+        Relationships: []
       }
       provider_alerts: {
         Row: {
@@ -1548,6 +1724,198 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: true
             referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scan_jobs: {
+        Row: {
+          areas: Json
+          buy_box: Json
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          credits_charged: number | null
+          credits_quoted: number | null
+          credits_refunded: number | null
+          example_parcels: Json
+          failed_reason: string | null
+          id: string
+          images_per: number
+          match_threshold: number
+          mode: string
+          name: string | null
+          parcels_filtered: number | null
+          parcels_in_area: number | null
+          parcels_matched: number | null
+          parcels_scanned: number | null
+          prompt: string | null
+          source_list_id: string | null
+          status: string
+          vertical: string
+          workspace_id: string
+        }
+        Insert: {
+          areas?: Json
+          buy_box?: Json
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          credits_charged?: number | null
+          credits_quoted?: number | null
+          credits_refunded?: number | null
+          example_parcels?: Json
+          failed_reason?: string | null
+          id?: string
+          images_per?: number
+          match_threshold?: number
+          mode?: string
+          name?: string | null
+          parcels_filtered?: number | null
+          parcels_in_area?: number | null
+          parcels_matched?: number | null
+          parcels_scanned?: number | null
+          prompt?: string | null
+          source_list_id?: string | null
+          status?: string
+          vertical?: string
+          workspace_id: string
+        }
+        Update: {
+          areas?: Json
+          buy_box?: Json
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          credits_charged?: number | null
+          credits_quoted?: number | null
+          credits_refunded?: number | null
+          example_parcels?: Json
+          failed_reason?: string | null
+          id?: string
+          images_per?: number
+          match_threshold?: number
+          mode?: string
+          name?: string | null
+          parcels_filtered?: number | null
+          parcels_in_area?: number | null
+          parcels_matched?: number | null
+          parcels_scanned?: number | null
+          prompt?: string | null
+          source_list_id?: string | null
+          status?: string
+          vertical?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_jobs_source_list_id_fkey"
+            columns: ["source_list_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scan_jobs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scan_results: {
+        Row: {
+          address: string | null
+          apn: string | null
+          city: string | null
+          condition_confidence: number | null
+          created_at: string
+          distress_score: number | null
+          enriched_at: string | null
+          id: string
+          job_id: string
+          match_reason: string | null
+          matched: boolean
+          parcel_condition_id: string | null
+          refunded: boolean
+          refusal_code: string | null
+          scored_image_date: string | null
+          scored_image_src: string | null
+          scored_image_url: string | null
+          skip_traced_at: string | null
+          state: string | null
+          sv_heading: number | null
+          sv_lat: number | null
+          sv_lng: number | null
+          sv_pano_id: string | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          apn?: string | null
+          city?: string | null
+          condition_confidence?: number | null
+          created_at?: string
+          distress_score?: number | null
+          enriched_at?: string | null
+          id?: string
+          job_id: string
+          match_reason?: string | null
+          matched?: boolean
+          parcel_condition_id?: string | null
+          refunded?: boolean
+          refusal_code?: string | null
+          scored_image_date?: string | null
+          scored_image_src?: string | null
+          scored_image_url?: string | null
+          skip_traced_at?: string | null
+          state?: string | null
+          sv_heading?: number | null
+          sv_lat?: number | null
+          sv_lng?: number | null
+          sv_pano_id?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          apn?: string | null
+          city?: string | null
+          condition_confidence?: number | null
+          created_at?: string
+          distress_score?: number | null
+          enriched_at?: string | null
+          id?: string
+          job_id?: string
+          match_reason?: string | null
+          matched?: boolean
+          parcel_condition_id?: string | null
+          refunded?: boolean
+          refusal_code?: string | null
+          scored_image_date?: string | null
+          scored_image_src?: string | null
+          scored_image_url?: string | null
+          skip_traced_at?: string | null
+          state?: string | null
+          sv_heading?: number | null
+          sv_lat?: number | null
+          sv_lng?: number | null
+          sv_pano_id?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_results_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "scan_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scan_results_parcel_condition_id_fkey"
+            columns: ["parcel_condition_id"]
+            isOneToOne: false
+            referencedRelation: "parcel_conditions"
             referencedColumns: ["id"]
           },
         ]
