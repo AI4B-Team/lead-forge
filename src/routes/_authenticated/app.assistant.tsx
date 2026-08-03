@@ -201,6 +201,16 @@ function Assistant() {
   const appliedSource = useRef(false);
   const composer = useRef<HTMLTextAreaElement>(null);
   const specScroll = useOverflow<HTMLDivElement>();
+  // One-time "Scroll for more" nudge: auto-dismisses after 4s, on first scroll,
+  // or immediately when the viewer prefers reduced motion.
+  const [nudgeVisible, setNudgeVisible] = useState(
+    () => typeof window === "undefined" || !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  useEffect(() => {
+    if (!nudgeVisible) return;
+    const t = setTimeout(() => setNudgeVisible(false), 4000);
+    return () => clearTimeout(t);
+  }, [nudgeVisible]);
 
   const started = thread.length > 0 || panelOpen;
   /** True only once a message exists in the thread (panel-only mode has none). */
