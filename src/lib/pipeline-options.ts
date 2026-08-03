@@ -171,7 +171,7 @@ export const PIPELINE_OPTIONS: readonly PipelineOption[] = [
     label: "Skip Trace Missing Numbers",
     hint: "When a record has no phone number, we look one up from public and licensed data. Skip trace is metered separately from your plan allowance.",
     defaultOn: true,
-    sourceKinds: ["business", "records", "upload"],
+    sourceKinds: ["business", "records", "upload", "property_scan"],
     profiles: ["standard", "b2b", "portal"],
     overrides: {
       b2b: {
@@ -191,7 +191,7 @@ export const PIPELINE_OPTIONS: readonly PipelineOption[] = [
     checklistLabel: "Email Required",
     hint: "Keeps only creators who publish a contact email, since creator outreach runs on email and DMs. We never text creators' personal cell phones.",
     defaultOn: true,
-    sourceKinds: ["business", "records", "upload"],
+    sourceKinds: ["business", "records", "upload", "property_scan"],
     profiles: ["creator", "seller"],
     overrides: {
       seller: {
@@ -213,7 +213,7 @@ export const PIPELINE_OPTIONS: readonly PipelineOption[] = [
     label: "Dedupe Against Past Lists",
     hint: "Removes anyone already in your Leads library, so you never pay for or text the same person twice.",
     defaultOn: true,
-    sourceKinds: ["business", "records", "upload"],
+    sourceKinds: ["business", "records", "upload", "property_scan"],
     profiles: ["creator", "b2b", "seller", "portal", "data", "standard"],
     overrides: {
       data: {
@@ -227,7 +227,7 @@ export const PIPELINE_OPTIONS: readonly PipelineOption[] = [
     label: "Mobile Numbers Only",
     hint: "Runs a line-type check and keeps only mobile numbers — landlines and VoIP can't receive texts reliably.",
     defaultOn: true,
-    sourceKinds: ["business", "records", "upload"],
+    sourceKinds: ["business", "records", "upload", "property_scan"],
     profiles: ["standard", "b2b", "portal"],
   },
 ];

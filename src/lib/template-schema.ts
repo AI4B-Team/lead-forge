@@ -29,6 +29,10 @@ export type BuilderField =
   | "url"
   | "audienceFilter"
   | "listingFilter"
+  /** Plain-language condition criteria scored from imagery (Property Scan). */
+  | "visualCriteria"
+  /** The data filter that runs before imagery is bought (Property Scan). */
+  | "buyBox"
   | "upload";
 
 export type AdapterStatus = "live" | "beta" | "requested";
@@ -44,6 +48,9 @@ const VENDOR_REVIEW_TEMPLATES = ["g2", "capterra", "trustpilot", "trustradius"] 
 
 /** Templates whose fields don't follow their catalog category. */
 const SCHEMA_BY_ID: Record<string, BuilderField[]> = {
+  // Property Scan reuses State + Counties for its market, adds the buy box and
+  // the visual criteria the assistant inferred. No second prompt box.
+  propscan: ["state", "counties", "visualCriteria", "buyBox"],
   linkedin: ["keyword", "audienceFilter"],
   crunchbase: ["keyword", "audienceFilter"],
   // Marketplace sellers: keyword + the marketplace's country.
@@ -136,6 +143,7 @@ export function fieldsForSourceType(source: JobSpec["sourceType"]): BuilderField
   if (source === "upload") return BY_CATEGORY.upload;
   if (source === "records") return BY_CATEGORY.records;
   if (source === "business") return BY_CATEGORY.business;
+  if (source === "property_scan") return ["state", "counties", "visualCriteria", "buyBox"];
   return [];
 }
 
@@ -146,7 +154,7 @@ export function fieldsForSpec(spec: JobSpec, template?: Template | null): Builde
 }
 
 /** Optional fields never block Generate List. */
-const OPTIONAL: BuilderField[] = ["recency", "audienceFilter", "listingFilter"];
+const OPTIONAL: BuilderField[] = ["recency", "audienceFilter", "listingFilter", "buyBox"];
 
 export function isOptionalField(f: BuilderField): boolean {
   return OPTIONAL.includes(f);
@@ -165,6 +173,8 @@ export const FIELD_SLOT_LABEL: Record<BuilderField, string> = {
   url: "URL",
   audienceFilter: "Audience Filter",
   listingFilter: "Listing Filter",
+  visualCriteria: "Visual Criteria",
+  buyBox: "Buy Box",
   upload: "File",
 };
 
@@ -189,6 +199,8 @@ export function fieldFilled(f: BuilderField, spec: JobSpec, uploadReady: boolean
       return Boolean(spec.contactTarget);
     case "url":
       return Boolean(spec.targetUrl && /\./.test(spec.targetUrl));
+    case "visualCriteria":
+      return spec.visualCriteria.length > 0;
     default:
       return true;
   }

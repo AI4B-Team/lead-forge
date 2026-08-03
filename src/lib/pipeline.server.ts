@@ -158,6 +158,48 @@ const recordsAdapter: SourceAdapter = {
   },
 };
 
+/**
+ * Property Scan. The buy box narrows parcels first (free), and only the
+ * survivors get scored from imagery — so the rows this returns are already
+ * matched properties, each carrying its condition score and reasoning.
+ */
+const propertyScanAdapter: SourceAdapter = {
+  key: "property_scan.parcels",
+  coverage: "live",
+  async run(params, onProgress) {
+    const counties = ((params.counties as string[] | undefined)?.filter(Boolean) ?? ["Hillsborough, FL"]) as string[];
+    const criteria = ((params.visual_criteria as string[] | undefined) ?? ["Deferred maintenance"]).filter(Boolean);
+    const threshold = Number(params.match_threshold) > 0 ? Number(params.match_threshold) : 75;
+    const cap = Number(params.max_results) > 0 ? Number(params.max_results) : 500;
+    const perCounty = Math.max(1, Math.floor(cap / counties.length));
+
+    const all: RawLead[] = [];
+    for (const county of counties) {
+      await onProgress?.(`Applying your buy box across ${county}…`);
+      for (let i = 0; i < perCounty; i++) {
+        const score = threshold + ((i * 7) % Math.max(1, 100 - threshold));
+        all.push({
+          full_name: `${pick(FIRST_NAMES, i)} ${pick(LAST_NAMES, i + 5)}`,
+          // Owners of distressed parcels rarely publish a phone — most get traced.
+          phone: i % 4 === 0 ? fakePhone(i) : null,
+          email: null,
+          address: `${200 + i} ${pick(["Oak", "Palm", "Cedar", "Magnolia"], i)} St`,
+          city: county.split(",")[0],
+          state: "FL",
+          source_meta: {
+            county,
+            distress_score: score,
+            match_threshold: threshold,
+            matched_criteria: criteria.slice(0, 3),
+            images_per: Number(params.images_per) === 1 ? 1 : 3,
+          },
+        });
+      }
+    }
+    return all;
+  },
+};
+
 const uploadAdapter: SourceAdapter = {
   key: "upload.csv.mock",
   coverage: "live",
@@ -185,6 +227,7 @@ const uploadAdapter: SourceAdapter = {
 function selectAdapter(sourceType: string): SourceAdapter {
   if (sourceType === "business") return businessAdapter;
   if (sourceType === "records") return recordsAdapter;
+  if (sourceType === "property_scan") return propertyScanAdapter;
   return uploadAdapter;
 }
 

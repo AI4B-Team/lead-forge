@@ -97,11 +97,12 @@ export const TEMPLATES: Template[] = [
     shortTitle: "Property Scan",
     shortSubtitle: "AI Driving For Dollars",
     title: "Property Scan",
-    subtitle: "Find Visibly Distressed Properties — Scored, Enriched, And Skip Traced.",
+    subtitle: "AI Driving For Dollars",
     category: "realestate",
     prompt: "Scan Hillsborough County, FL for rundown single-family homes with roof damage, overgrown yards, or signs of vacancy",
     icon: ScanEye,
     tint: "bg-primary/10 text-primary",
+    adapterStatus: "live",
     placeholderHint: "e.g. Tarped roofs in ZIP 33610 — absentee owners, 7+ years owned",
   },
   {
@@ -701,7 +702,9 @@ export function templateFields(t: Template): string[] {
 }
 
 /** The Job Spec source a template already determines on its own. */
-export function templateSourceType(t: Template): "business" | "records" | "upload" {
+export function templateSourceType(t: Template): "business" | "records" | "upload" | "property_scan" {
+  // Property Scan is its own source kind: parcels + buy box + imagery scoring.
+  if (t.id === "propscan") return "property_scan";
   if (t.category === "upload") return "upload";
   if (t.category === "records") return "records";
   return "business";

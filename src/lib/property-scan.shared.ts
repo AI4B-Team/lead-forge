@@ -269,6 +269,55 @@ export function previewFunnel(parcelsInArea: number, box: BuyBox) {
 export const PARCELS_PER_ZIP = 18_420;
 export const PARCELS_PER_COUNTY = 214_000;
 
+/**
+ * Share of scored properties expected to clear the match threshold. A stricter
+ * threshold matches fewer houses, which is the whole point of the control.
+ */
+export function matchRate(threshold: number): number {
+  return Math.max(0.04, Math.min(0.6, (100 - threshold) / 100));
+}
+
+/** Property owners usually publish no phone, so nearly every match gets traced. */
+export const SCAN_SKIP_TRACE_GAP_RATE = 0.8;
+
+export type ScanEstimate = {
+  parcelsInArea: number;
+  afterOwnership: number;
+  afterFinancial: number;
+  scanned: number;
+  matched: number;
+  /** Imagery credits, charged only on parcels that actually get scored. */
+  scanCredits: number;
+  skipTraceCredits: number;
+};
+
+/**
+ * One estimator for the whole Property Scan flow, quoted from the same buy box
+ * the rail edits. Charged on scored parcels, so narrowing the box is cheaper.
+ */
+export function estimateScan(input: {
+  counties: string[];
+  states: string[];
+  buyBox: BuyBox | null;
+  matchThreshold: number | null;
+  imagesPer: 1 | 3;
+  /** Cap on how many matched properties the run may return. */
+  maxResults: number | null;
+}): ScanEstimate {
+  const box = input.buyBox ?? DEFAULT_BUY_BOX;
+  const areas = input.counties.length || input.states.length || 1;
+  const funnel = previewFunnel(areas * PARCELS_PER_COUNTY, box);
+  const rate = matchRate(input.matchThreshold ?? DEFAULT_MATCH_THRESHOLD);
+  const cap = input.maxResults && input.maxResults > 0 ? input.maxResults : null;
+  const matched = Math.min(Math.round(funnel.scanned * rate), cap ?? Number.MAX_SAFE_INTEGER);
+  return {
+    ...funnel,
+    matched,
+    scanCredits: scanCreditQuote(funnel.scanned, input.imagesPer),
+    skipTraceCredits: Math.round(matched * SCAN_SKIP_TRACE_GAP_RATE),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Tiers. Property Scan is available on every paid tier — tiers limit volume,
 // not access. A padlock reads as "they're holding out", which churns; an empty

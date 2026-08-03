@@ -41,6 +41,7 @@ const SOURCE_LABEL: Record<string, string> = {
   business: "Business Search",
   records: "Public Records",
   upload: "Uploaded List",
+  property_scan: "Property Scan",
 };
 
 /** Turns the assembled spec into the human-readable reasoning trail the AI "thought out loud". */
@@ -50,6 +51,7 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
   if (picked) steps.push({ label: "Identified Source", value: picked.title });
   else if (spec.sourceType) steps.push({ label: "Identified Source", value: SOURCE_LABEL[spec.sourceType] ?? spec.sourceType });
   if (spec.recordType) steps.push({ label: "Record Type", value: spec.recordType });
+  if (spec.visualCriteria.length) steps.push({ label: "Visual Criteria", value: spec.visualCriteria.join(", ") });
   if (spec.niches.length) steps.push({ label: "Industry", value: spec.niches.join(", ") });
   if (spec.targetUrl) steps.push({ label: "Target URL", value: spec.targetUrl });
   if (spec.filters) steps.push({ label: "Filters", value: spec.filters });
