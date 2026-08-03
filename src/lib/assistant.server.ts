@@ -8,7 +8,6 @@
 import { jobSpecSchema, withStates, specStates, type JobSpec, type AssistantMessage } from "./assistant.shared";
 import { enrichmentProfile, isNonUsRun, templateOutputType } from "./pipeline-options";
 import { estimateSpec } from "./estimate.shared";
-import { GMAPS_TEMPLATE_ID } from "./pipeline-options";
 import { countiesForState, formatCounty, parseCounty } from "./us-geo";
 
 /** Snap model-provided county names onto real counties in the spec's state. */
@@ -70,10 +69,10 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "- Coverage caveats apply ONLY to the records source. For a records county not listed above, select it if asked but say plainly it is not covered yet, offer to log a county request, and suggest the closest covered market. For business / local scrapes never mention coverage limits — every US county works.",
     "- Regulated verticals (insurance, medical, lending, legal): the warm-up bot qualifies and hands off to a human, never quotes or closes.",
     "- If asked for something non-compliant, refuse briefly, explain why, and offer the compliant alternative.",
-    "- removeFranchises is a minor filter, ON by default only for the Google Maps Businesses template and OFF everywhere else. NEVER mention franchises, chains, \"remove franchises\", or which sources support it unless the operator explicitly raises it (\"franchise\", \"no franchises\", \"no chains\", \"independents only\", \"local mom-and-pop only\") or has already toggled it on. Do not list it among source capabilities, do not suggest it, and never volunteer caveats about it. Only change removeFranchises when explicitly asked, and only for the business source.",
+    "- removeFranchises is a minor filter, OFF by default everywhere. NEVER mention franchises, chains, \"remove franchises\", or which sources support it unless the operator explicitly raises it (\"franchise\", \"no franchises\", \"no chains\", \"independents only\", \"local mom-and-pop only\") or has already toggled it on. Do not list it among source capabilities, do not suggest it, and never volunteer caveats about it. Only change removeFranchises when explicitly asked, and only for the business source.",
     "",
-    "ROW CAP (maxResults):",
-    "- maxResults is the cap PER SEARCH STRING, and one search runs per niche × county. 3 niches across 2 counties at 500 is up to 3,000 rows.",
+    "MAX LEADS (maxResults):",
+    "- maxResults caps how many leads one search can pull, and one search runs per niche × county. 3 niches across 2 counties at 500 is up to 3,000 leads.",
     "- When the operator says \"just a few\", \"small test\", \"sample\", or \"quick check\", set maxResults to 25. For \"a couple hundred\" or a cautious first run set 100. When they name a number, set maxResults to that number (max 50000).",
     "- Otherwise leave maxResults as it is; the default is 500. Never mention it unless the operator asks about volume, cost, or a test run.",
     "",
@@ -164,15 +163,9 @@ export async function askAssistant(opts: {
         const synced = withStates(merged.data, specStates(merged.data));
         return {
           ...synced,
-          // Franchise removal is business-only; never carry it onto other
-          // sources. Google Maps runs default it ON (the card promises it)
-          // unless this turn explicitly set it.
-          removeFranchises:
-            synced.sourceType === "business"
-              ? synced.removeFranchises ||
-                (out.specPatch?.removeFranchises === undefined &&
-                  synced.templateId === GMAPS_TEMPLATE_ID)
-              : false,
+          // Franchise removal is business-only and off unless the operator
+          // turns it on; never carry it onto other sources.
+          removeFranchises: synced.sourceType === "business" ? synced.removeFranchises : false,
           counties: normalizeCounties(synced.counties, synced.state),
         };
       })()

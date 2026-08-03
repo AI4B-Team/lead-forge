@@ -8,6 +8,13 @@ import { enrichmentProfile, isNonUsRun, templateOutputType } from "./pipeline-op
 /** Heuristic ceiling per search string, per source kind. */
 export const ROWS_PER_SEARCH_CEILING = { business: 800, records: 1200 } as const;
 
+/**
+ * Expected share of scraped records that arrive with no phone, and therefore
+ * need skip tracing. Business listings usually publish a number; public-record
+ * rows usually don't.
+ */
+export const SKIP_TRACE_GAP_RATE = { business: 0.15, records: 0.8 } as const;
+
 export type SpecEstimate = { rows: number; skipTraceCredits: number; scrapeCredits: number };
 
 /** Quick presets offered next to the numeric row-cap input. */
@@ -38,7 +45,14 @@ export function estimateSpec(spec: JobSpec): SpecEstimate | null {
   return {
     rows,
     skipTraceCredits:
-      spec.skipTrace && !noPhoneWork ? Math.round(rows * (spec.sourceType === "records" ? 0.8 : 0.25)) : 0,
+      spec.skipTrace && !noPhoneWork
+        ? Math.round(
+            rows *
+              (spec.sourceType === "records"
+                ? SKIP_TRACE_GAP_RATE.records
+                : SKIP_TRACE_GAP_RATE.business),
+          )
+        : 0,
     scrapeCredits: Math.round(rows / 10),
   };
 }

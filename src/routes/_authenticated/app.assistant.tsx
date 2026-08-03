@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
@@ -24,6 +24,7 @@ import {
   Paperclip, Mic, Send, BellPlus, Loader2, Check,
 } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { useCreditBalances } from "@/hooks/use-credit-balances";
 import { FirstRunSetup } from "@/components/app/getting-started";
 import { supabase } from "@/integrations/supabase/client";
 import { queueJob } from "@/lib/job-submit";
@@ -89,7 +90,7 @@ const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   state: "State",
   counties: "Counties",
   recencyDays: "Recency",
-  maxResults: "Max Rows Per Search",
+  maxResults: "Max Leads",
   // Toggle names come from the shared config so chips match the panel and checklist.
   removeFranchises: PIPELINE_OPTION_LABELS.removeFranchises,
   dedupe: PIPELINE_OPTION_LABELS.dedupe,
@@ -880,13 +881,19 @@ function Assistant() {
     if (workspaceId && next) saveMaxRows(workspaceId, next);
   };
 
-  const searchCount =
-    Math.max(1, spec.counties.length || 1) *
-    (spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1);
+  const { balances: creditBalances } = useCreditBalances();
+
+  const countyCount = Math.max(1, spec.counties.length || 1);
+  const tradeCount = spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1;
+  const searchCount = countyCount * tradeCount;
+
+  const overLead = Boolean(estimate && estimate.scrapeCredits > creditBalances.scrape);
+  const overSkip = Boolean(estimate && estimate.skipTraceCredits > creditBalances.skip_trace);
+  const overBudget = overLead || overSkip;
 
   const rowCapControl = adapterLive && spec.sourceType && spec.sourceType !== "upload" && (
     <div className="rounded-xl border border-border p-3">
-      <div className="text-xs font-medium text-foreground">Max Rows Per Search</div>
+      <div className="text-xs font-medium text-foreground">Max Leads</div>
       <div className="mt-2 flex items-center gap-2">
         <Input
           type="number"
@@ -896,7 +903,7 @@ function Assistant() {
           className="h-8 w-24 text-sm"
           value={spec.maxResults ?? ""}
           onChange={(e) => setMaxRows(e.target.value === "" ? null : Number(e.target.value))}
-          aria-label="Max rows per search"
+          aria-label="Max leads"
         />
         <div className="flex flex-wrap gap-1">
           {MAX_ROWS_PRESETS.map((preset) => (
@@ -914,10 +921,10 @@ function Assistant() {
         </div>
       </div>
       <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
-        This cap is per search string, and one search runs per niche × county combination — so 3 niches
-        across 2 counties at 500 is up to 3,000 rows, not 500.
+        Caps how many leads this job can pull. Because we run one search per trade per county, your
+        total is this number × trades × counties.
         {spec.maxResults
-          ? ` Right now that's ${searchCount.toLocaleString()} ${searchCount === 1 ? "search" : "searches"} × ${spec.maxResults.toLocaleString()} = up to ${(searchCount * spec.maxResults).toLocaleString()} rows.`
+          ? ` Right now: ${tradeCount.toLocaleString()} ${tradeCount === 1 ? "trade" : "trades"} × ${countyCount.toLocaleString()} ${countyCount === 1 ? "county" : "counties"} × ${spec.maxResults.toLocaleString()} = up to ${(searchCount * spec.maxResults).toLocaleString()} leads.`
           : " Leave it empty to use the source default of 500."}
       </p>
     </div>
@@ -944,9 +951,26 @@ function Assistant() {
       {rowCapControl}
 
       {estimate && adapterLive && spec.sourceType && geoResolved && (
-        <div className="text-center text-xs text-muted-foreground">
-          ≈ {estimate.rows.toLocaleString()} Rows · ~{estimate.scrapeCredits.toLocaleString()} Lead Credits
-          {estimate.skipTraceCredits ? ` · ~${estimate.skipTraceCredits.toLocaleString()} Skip-Trace Credits` : ""}
+        <div className="space-y-1.5 text-center text-xs">
+          <div className="text-muted-foreground">
+            ≈ {estimate.rows.toLocaleString()} Leads ·{" "}
+            <span className={overLead ? "font-semibold text-primary" : undefined}>
+              {estimate.scrapeCredits.toLocaleString()} of {creditBalances.scrape.toLocaleString()} Lead Credits
+            </span>{" "}
+            ·{" "}
+            <span className={overSkip ? "font-semibold text-primary" : undefined}>
+              {estimate.skipTraceCredits.toLocaleString()} of {creditBalances.skip_trace.toLocaleString()} Skip-Trace Credits
+            </span>
+          </div>
+          {overBudget && (
+            <div className="text-primary">
+              This job costs more {overLead && overSkip ? "credits" : overLead ? "lead credits" : "skip-trace credits"} than
+              you have left.{" "}
+              <Link to="/app/billing" className="font-semibold underline">
+                Add Credits
+              </Link>
+            </div>
+          )}
         </div>
       )}
 

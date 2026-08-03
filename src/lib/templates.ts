@@ -72,7 +72,7 @@ export const TEMPLATES: Template[] = [
     shortTitle: "Google Maps",
     shortSubtitle: "Business Listings",
     title: "Google Maps Businesses",
-    subtitle: "Businesses By Trade + Location. Franchises Removed.",
+    subtitle: "Businesses By Trade + Location. Optional Franchise Filter.",
     category: "business",
     prompt: "Scrape all HVAC and plumbing businesses on Google Maps across every county in Florida, remove franchises",
     icon: MapPin,
