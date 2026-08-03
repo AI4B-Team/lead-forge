@@ -458,7 +458,8 @@ async function runPipelineBody(
     const { verifyPending, verifyLineTypes, classifyLineType } = await import("./line-type");
     const shouldSkiptrace =
       job.source_type === "records" ||
-      (job.source_type === "upload" && params.skip_trace !== false);
+      ((job.source_type === "upload" || job.source_type === "business") &&
+        params.skip_trace !== false);
     const mobileOnly = params.mobile_only === true;
     const verify = shouldSkiptrace
       ? verifyPending(deduped, mobileOnly)
