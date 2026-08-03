@@ -196,6 +196,21 @@ export const COUNTIES = [
   { name: "Fulton, GA", coverage: "requested" },
 ] as const;
 
+/**
+ * County coverage is only a real constraint for public-records adapters, which
+ * are built county by county. Business / local scrapes run through the Google
+ * Maps scraper, which has no geographic restriction — any US city, county, or
+ * ZIP is scrapeable, so those always report as live.
+ */
+export function coverageForCounty(
+  county: string,
+  sourceType?: string | null,
+): "live" | "beta" | "requested" | "unknown" {
+  if (sourceType !== "records") return "live";
+  const hit = COUNTIES.find((c) => c.name.toLowerCase() === county.toLowerCase());
+  return hit?.coverage ?? "unknown";
+}
+
 /** Single source of truth lives in record-types.ts; re-exported for legacy imports. */
 export { RECORD_TYPE_LABELS as RECORD_TYPES } from "./record-types";
 
