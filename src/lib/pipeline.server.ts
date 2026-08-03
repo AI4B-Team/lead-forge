@@ -492,6 +492,7 @@ async function runPipelineBody(
         kind: "skip_trace",
         balance: Math.max(0, (bal?.balance ?? 0) - skiptraced),
       });
+      ctx.debits.push({ kind: "skip_trace", amount: skiptraced });
     }
     await supabase.from("jobs").update({ rows_skiptraced: skiptraced }).eq("id", jobId);
     await say(
@@ -557,6 +558,7 @@ async function runPipelineBody(
     kind: "scrape",
     balance: Math.max(0, (scrapeBal?.balance ?? 0) - verified.length),
   });
+  ctx.debits.push({ kind: "scrape", amount: verified.length });
 
   // 5) SCRUB — SMS only. Email/direct-mail files are not phone campaigns. ----
   const { data: inserted } = await supabase.from("leads").select("id, phone").eq("job_id", jobId);
