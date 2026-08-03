@@ -867,6 +867,62 @@ function Assistant() {
 
   const geoResolved = Boolean(specStates(spec).length || spec.counties.length || spec.sourceType === "upload");
 
+  /** Last row cap this workspace used, so it isn't re-entered every run. */
+  useEffect(() => {
+    if (!workspaceId) return;
+    const saved = loadMaxRows(workspaceId);
+    if (saved) setSpec((s) => (s.maxResults === saved ? s : { ...s, maxResults: saved }));
+  }, [workspaceId]);
+
+  const setMaxRows = (value: number | null) => {
+    const next = value && value > 0 ? Math.min(50000, Math.round(value)) : null;
+    setSpec((s) => ({ ...s, maxResults: next }));
+    if (workspaceId && next) saveMaxRows(workspaceId, next);
+  };
+
+  const searchCount =
+    Math.max(1, spec.counties.length || 1) *
+    (spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1);
+
+  const rowCapControl = adapterLive && spec.sourceType && spec.sourceType !== "upload" && (
+    <div className="rounded-xl border border-border p-3">
+      <div className="text-xs font-medium text-foreground">Max Rows Per Search</div>
+      <div className="mt-2 flex items-center gap-2">
+        <Input
+          type="number"
+          min={1}
+          max={50000}
+          inputMode="numeric"
+          className="h-8 w-24 text-sm"
+          value={spec.maxResults ?? ""}
+          onChange={(e) => setMaxRows(e.target.value === "" ? null : Number(e.target.value))}
+          aria-label="Max rows per search"
+        />
+        <div className="flex flex-wrap gap-1">
+          {MAX_ROWS_PRESETS.map((preset) => (
+            <Button
+              key={preset}
+              type="button"
+              size="sm"
+              variant={spec.maxResults === preset ? "default" : "outline"}
+              className="h-7 rounded-full px-2.5 text-[11px]"
+              onClick={() => setMaxRows(preset)}
+            >
+              {preset.toLocaleString()}
+            </Button>
+          ))}
+        </div>
+      </div>
+      <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+        This cap is per search string, and one search runs per niche × county combination — so 3 niches
+        across 2 counties at 500 is up to 3,000 rows, not 500.
+        {spec.maxResults
+          ? ` Right now that's ${searchCount.toLocaleString()} ${searchCount === 1 ? "search" : "searches"} × ${spec.maxResults.toLocaleString()} = up to ${(searchCount * spec.maxResults).toLocaleString()} rows.`
+          : " Leave it empty to use the source default of 500."}
+      </p>
+    </div>
+  );
+
   const runFooter = (
     <div className="space-y-3 border-t border-border bg-background pt-4">
       {uncovered.length > 0 && (
@@ -884,6 +940,8 @@ function Assistant() {
           </div>
         </div>
       )}
+
+      {rowCapControl}
 
       {estimate && adapterLive && spec.sourceType && geoResolved && (
         <div className="text-center text-xs text-muted-foreground">
