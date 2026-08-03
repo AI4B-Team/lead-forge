@@ -90,6 +90,12 @@ export function isJobBoard(templateId?: string | null): boolean {
 }
 
 /**
+ * The Google Maps Businesses template. Its card promises franchises removed,
+ * so franchise removal defaults ON for this source only.
+ */
+export const GMAPS_TEMPLATE_ID = "gmaps";
+
+/**
  * Enrichment profiles. Phone enrichment is not universal:
  * - creator: TikTok / Instagram / YouTube style sources. The deliverable is
  *   email + profile + engagement. Creator outreach runs on email and DMs, and
