@@ -142,7 +142,7 @@ function Billing() {
                       {new Date(row.created_at).toLocaleString()}
                     </div>
                   </div>
-                  <div className={`font-mono font-semibold ${row.delta >= 0 ? "text-emerald-600" : "text-foreground"}`}>
+                  <div className={`font-mono font-semibold ${row.delta >= 0 ? "text-success" : "text-foreground"}`}>
                     {row.delta >= 0 ? "+" : ""}
                     {row.delta.toLocaleString()}
                   </div>

@@ -183,7 +183,7 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
                   <button
                     type="button"
                     onClick={() => setFiles((arr) => arr.filter((_, j) => j !== i))}
-                    className="hover:text-emerald-900"
+                    className="hover:text-success/80"
                     aria-label="Remove File"
                   >
                     <X className="h-3 w-3" />
