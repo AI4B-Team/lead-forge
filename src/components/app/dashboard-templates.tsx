@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TEMPLATES, type Template, type TemplateCategory } from "@/lib/templates";
 import { TemplateLogo } from "@/components/marketing/template-logo";
+import { TemplateCostBadge } from "@/components/marketing/template-card";
 import { cn } from "@/lib/utils";
 
 type TabKey = "all" | "records" | "business" | "social";
@@ -99,6 +100,7 @@ export function DashboardTemplates() {
                     <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                       {CATEGORY_LABEL[t.category] ?? "Template"}
                     </span>
+                    <TemplateCostBadge template={t} />
                     {i < 3 && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary">
                         <Star className="h-3 w-3 fill-current" /> Popular
