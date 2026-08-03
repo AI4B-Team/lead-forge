@@ -439,6 +439,12 @@ function NewCampaign() {
           </Step>
 
           <Step id="sequence" n={5} title="Review Sequence" hint="Each Touch Waits Its Own Duration Before Sending.">
+            {carriedAngle && (
+              <div className="mb-4 rounded-xl border border-border bg-primary/5 p-3">
+                <p className="text-xs font-semibold text-foreground">First-Touch Angle From This List</p>
+                <p className="mt-1 text-sm text-muted-foreground">{carriedAngle}</p>
+              </div>
+            )}
             <DripEditor steps={steps} onChange={setSteps} />
             {cleanSteps.length > 0 && (
               <SequenceAnalytics
