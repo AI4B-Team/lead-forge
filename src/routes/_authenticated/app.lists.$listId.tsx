@@ -447,6 +447,8 @@ function JobDetail() {
         </CardContent>
       </Card>
 
+      {params.source_type === "property_scan" && <MonitorListCard jobId={jobId} workspaceId={team.workspaceId} />}
+
       {isRunning && campaignable && (
         <FirstTouchCard
           jobId={jobId}
@@ -1098,6 +1100,113 @@ function FirstTouchCard({
           </p>
         </div>
       </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Monitor. A standing subscription against this saved list, not a build mode:
+ * we re-score the same houses on a cadence and alert when one gets worse.
+ * Growth tier and above, because re-scoring carries ongoing imagery cost.
+ */
+function MonitorListCard({ jobId, workspaceId }: { jobId: string; workspaceId: string | null }) {
+  const { plan } = useTeamContext();
+  const gated = plan === "starter";
+  const load = useServerFn(getListMonitor);
+  const save = useServerFn(setListMonitor);
+  const qc = useQueryClient();
+
+  const { data } = useQuery({
+    queryKey: ["list-monitor", jobId],
+    queryFn: () => load({ data: { listId: jobId } }),
+  });
+  const monitor = data?.monitor as
+    | { cadence: string; active: boolean; alert_on: Record<string, unknown>; next_run_at: string | null }
+    | null
+    | undefined;
+
+  const [pending, setPending] = useState(false);
+  const cadence = (monitor?.cadence === "quarterly" ? "quarterly" : "monthly") as "monthly" | "quarterly";
+  const alertOnTarp = monitor?.alert_on?.["tarp_appeared"] !== false;
+
+  const commit = async (next: { active?: boolean; cadence?: "monthly" | "quarterly"; alertOnTarp?: boolean }) => {
+    if (!workspaceId || gated) return;
+    setPending(true);
+    try {
+      await save({
+        data: {
+          workspaceId,
+          listId: jobId,
+          active: next.active ?? monitor?.active ?? false,
+          cadence: next.cadence ?? cadence,
+          alertOnTarp: next.alertOnTarp ?? alertOnTarp,
+        },
+      });
+      await qc.invalidateQueries({ queryKey: ["list-monitor", jobId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Update Monitoring");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <Card className="mt-6">
+      <CardHeader className="flex flex-row items-start justify-between gap-3">
+        <div>
+          <CardTitle className="text-base font-display">Monitor This List</CardTitle>
+          <p className="mt-1 text-xs text-muted-foreground">
+            We re-score these houses on a schedule and tell you when one gets worse — a tarp appears, a yard goes to
+            overgrowth. {monitor?.next_run_at ? `Next check ${new Date(monitor.next_run_at).toLocaleDateString()}.` : ""}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {pending && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+          <Switch
+            checked={Boolean(monitor?.active)}
+            disabled={gated || pending || !workspaceId}
+            onCheckedChange={(v) => void commit({ active: v })}
+            aria-label="Monitor this list"
+          />
+        </div>
+      </CardHeader>
+      {gated ? (
+        <CardContent>
+          <div className="rounded-xl border border-border bg-primary/5 p-3 text-xs text-muted-foreground">
+            Monitoring is available on Growth and above.{" "}
+            <Link to="/app/billing" className="font-semibold text-primary underline">Upgrade</Link>
+          </div>
+        </CardContent>
+      ) : (
+        <CardContent className="grid gap-4 md:grid-cols-2">
+          <div>
+            <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cadence</Label>
+            <Select value={cadence} onValueChange={(v) => void commit({ cadence: v as "monthly" | "quarterly" })}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="quarterly">Quarterly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Alert On New Damage
+              </Label>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Notify me when a tarp or fresh damage shows up, or the condition score jumps.
+              </p>
+            </div>
+            <Switch
+              checked={alertOnTarp}
+              disabled={pending}
+              onCheckedChange={(v) => void commit({ alertOnTarp: v })}
+              aria-label="Alert on new damage"
+            />
+          </div>
+        </CardContent>
+      )}
     </Card>
   );
 }
