@@ -35,12 +35,12 @@ export function WebhookEndpoints() {
   const create = useMutation({
     mutationFn: () => save({ data: { workspaceId: workspaceId!, url, eventTypes: selected } }),
     onSuccess: () => {
-      toast.success("Endpoint Added.");
+      toast.success("Endpoint added.");
       setUrl("");
       setSelected([]);
       qc.invalidateQueries({ queryKey: ["webhooks", workspaceId] });
     },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could Not Save Endpoint."),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not save endpoint."),
   });
 
   const rows = data?.rows ?? [];
@@ -49,10 +49,11 @@ export function WebhookEndpoints() {
     <Card>
       <CardHeader>
         <CardTitle className="text-base font-display flex items-center gap-2">
-          <Webhook className="h-4 w-4" /> Integrations & Webhooks
+          <Webhook className="h-4 w-4" /> Webhook Endpoints
         </CardTitle>
         <p className="text-sm text-muted-foreground mt-1">
-          Push List, Lead, And Reply Events To Any External System. Each Request Is Signed With Your Endpoint Secret.
+          Push list, lead, and reply events to any external system. Each request is signed with your
+          endpoint secret.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -63,7 +64,7 @@ export function WebhookEndpoints() {
                 <div className="min-w-0">
                   <div className="font-medium text-sm text-foreground truncate">{r.url}</div>
                   <div className="mt-1 flex flex-wrap gap-1">
-                    {(r.event_types?.length ? r.event_types : ["All Events"]).map((t) => (
+                    {(r.event_types?.length ? r.event_types : ["All events"]).map((t) => (
                       <Badge key={t} variant="secondary" className="font-normal text-[10px]">{t}</Badge>
                     ))}
                   </div>
@@ -71,7 +72,7 @@ export function WebhookEndpoints() {
                 <Button
                   size="icon"
                   variant="ghost"
-                  aria-label="Delete Endpoint"
+                  aria-label="Delete endpoint"
                   onClick={async () => {
                     await remove({ data: { id: r.id } });
                     qc.invalidateQueries({ queryKey: ["webhooks", workspaceId] });
@@ -95,7 +96,7 @@ export function WebhookEndpoints() {
           />
         </div>
         <div>
-          <Label>Events (Leave Empty For All)</Label>
+          <Label>Events (leave empty for all)</Label>
           <div className="mt-2 flex flex-wrap gap-2">
             {EVENT_TYPES.map((t) => {
               const on = selected.includes(t);
@@ -103,9 +104,12 @@ export function WebhookEndpoints() {
                 <button
                   key={t}
                   type="button"
+                  aria-pressed={on}
                   onClick={() => setSelected((prev) => (on ? prev.filter((x) => x !== t) : [...prev, t]))}
-                  className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                    on ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:bg-muted"
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                    on
+                      ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "border-border bg-muted text-foreground hover:bg-muted/70 hover:border-primary/40"
                   }`}
                 >
                   {t}
@@ -120,7 +124,7 @@ export function WebhookEndpoints() {
           onClick={() => create.mutate()}
         >
           {create.isPending && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-          Add Endpoint
+          Add endpoint
         </Button>
       </CardContent>
     </Card>

@@ -552,7 +552,7 @@ export async function executePipeline(
     net_new: deduped.length,
   });
   if (clean > 0) {
-    await emitEvent(supabase, workspaceId, "leads.new", { job_id: jobId, count: clean });
+    await emitEvent(supabase, workspaceId, "lead.new", { job_id: jobId, count: clean });
   }
   if (dnc > 0)
     await emitEvent(supabase, workspaceId, "lead.flagged_dnc", { job_id: jobId, count: dnc });

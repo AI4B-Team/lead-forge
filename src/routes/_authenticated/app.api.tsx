@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { KeyRound, ShieldCheck, Gauge, Terminal, BookOpen, Code2, Webhook, Plug } from "lucide-react";
+import { KeyRound, ShieldCheck, Gauge, Terminal, BookOpen, Code2, Webhook, Plug, History as HistoryIcon } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { SettingsShell } from "@/components/app/settings-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,12 +22,14 @@ export const Route = createFileRoute("/_authenticated/app/api")({
 });
 
 const ENDPOINTS = [
-  { method: "GET", path: "/api/public/v1/leads", note: "List Clean Leads With Filters And Paging." },
-  { method: "GET", path: "/api/public/v1/jobs", note: "List Runs And Their Pipeline Stages." },
-  { method: "POST", path: "/api/public/v1/jobs", note: "Trigger A New List Run." },
-  { method: "GET", path: "/api/public/v1/jobs/{jobId}", note: "Fetch A Single Run With Stage Counts." },
-  { method: "GET", path: "/api/public/v1/campaigns", note: "List Campaigns And Delivery Totals." },
+  { method: "GET", path: "/api/public/v1/leads", note: "List clean leads with filters and paging." },
+  { method: "GET", path: "/api/public/v1/jobs", note: "List runs and their pipeline stages." },
+  { method: "POST", path: "/api/public/v1/jobs", note: "Trigger a new list run." },
+  { method: "GET", path: "/api/public/v1/jobs/{jobId}", note: "Fetch a single run with stage counts." },
+  { method: "GET", path: "/api/public/v1/campaigns", note: "List campaigns and delivery totals." },
 ];
+
+const DELIVERY_COLUMNS = ["Event", "Endpoint", "Status", "Response Code", "Timestamp"];
 
 function DeveloperPage() {
   return (
@@ -35,7 +37,7 @@ function DeveloperPage() {
       <SettingsShell current="developer">
         <PageHeader
           title="API"
-          description="API Keys, Event Webhooks, Rate Limits, And Endpoint References For Building On LeadTrace."
+          description="API keys, event webhooks, rate limits, and endpoint references for building on LeadTrace."
         />
 
         <div className="max-w-4xl space-y-6">
@@ -48,16 +50,16 @@ function DeveloperPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="max-w-xl text-sm text-muted-foreground">
-                Scoped, Revocable Keys For Reading Leads And Triggering Runs. Keys Are Shown Once At
-                Creation, Can Be Rotated Without Downtime, And Revoked Instantly.
+                Scoped, revocable keys for reading leads and triggering runs. Keys are shown once at
+                creation, can be rotated without downtime, and revoked instantly.
               </p>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" className="rounded-full" disabled>Create Key</Button>
-                <Button size="sm" variant="outline" className="rounded-full" disabled>Rotate</Button>
-                <Button size="sm" variant="outline" className="rounded-full" disabled>Revoke</Button>
+                <Button size="sm" className="pointer-events-none rounded-full opacity-40" disabled aria-disabled>Create Key</Button>
+                <Button size="sm" variant="outline" className="pointer-events-none rounded-full opacity-40" disabled aria-disabled>Rotate</Button>
+                <Button size="sm" variant="outline" className="pointer-events-none rounded-full opacity-40" disabled aria-disabled>Revoke</Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Until Keys Ship, The Event Webhooks Below Cover Most Custom Handoffs.
+                Until keys ship, the event webhooks below cover most custom handoffs.
               </p>
             </CardContent>
           </Card>
@@ -65,12 +67,40 @@ function DeveloperPage() {
           <section id="webhooks" className="scroll-mt-24">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <h2 className="font-display text-base font-bold text-foreground">Event Webhooks</h2>
-              <p className="text-xs text-muted-foreground">Endpoints, Delivery Status, And Payload Reference.</p>
+              <p className="text-xs text-muted-foreground">Endpoints, delivery status, and payload reference.</p>
             </div>
 
             <div className="mt-3">
               <WebhookEndpoints />
             </div>
+
+            <Card className="mt-3">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm font-display">
+                  <HistoryIcon className="h-4 w-4 text-muted-foreground" /> Recent Deliveries
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border text-left text-muted-foreground">
+                        {DELIVERY_COLUMNS.map((c) => (
+                          <th key={c} className="pb-2 pr-4 font-medium">{c}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan={DELIVERY_COLUMNS.length} className="py-6 text-center text-muted-foreground">
+                          No deliveries yet. Add an endpoint to start receiving events.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
 
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <Card>
@@ -80,8 +110,8 @@ function DeveloperPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-xs text-muted-foreground">
-                  Every Delivery Is Signed And Retried With Backoff. Events Cover List Completion,
-                  New Clean Leads, And Inbound Replies.
+                  Every delivery is signed and retried with backoff. Events cover list completion,
+                  new clean leads, and inbound replies.
                 </CardContent>
               </Card>
               <Card>
@@ -91,7 +121,7 @@ function DeveloperPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-                  <span>Zapier, Sheets, And The Real Elite Suite Live On Integrations.</span>
+                  <span>Zapier, Sheets, CRMs, and the Real Elite Suite live on the Integrations page.</span>
                   <Button variant="outline" size="sm" className="rounded-full" asChild>
                     <Link to="/app/integrations">Open</Link>
                   </Button>
@@ -102,15 +132,16 @@ function DeveloperPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
                 <CardTitle className="flex items-center gap-2 text-sm font-display">
                   <Gauge className="h-4 w-4 text-muted-foreground" /> Rate Limits
                 </CardTitle>
+                <span className="text-[10px] text-muted-foreground">Available when API keys ship</span>
               </CardHeader>
               <CardContent className="space-y-1 text-xs text-muted-foreground">
-                <div>120 Requests Per Minute Per Key.</div>
-                <div>10 Run Triggers Per Minute Per Workspace.</div>
-                <div>429 Responses Include A Retry-After Header.</div>
+                <div>120 requests per minute per key.</div>
+                <div>10 run triggers per minute per workspace.</div>
+                <div>429 responses include a Retry-After header.</div>
               </CardContent>
             </Card>
             <Card>
@@ -120,8 +151,8 @@ function DeveloperPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground">
-                Send Your Key As <code className="rounded bg-muted px-1 py-0.5">Authorization: Bearer &lt;token&gt;</code>.
-                Requests Are Scoped To The Workspaces Your Key Belongs To.
+                Send your key as <code className="rounded bg-muted px-1 py-0.5">Authorization: Bearer &lt;token&gt;</code>.
+                Requests are scoped to the workspaces your key belongs to.
               </CardContent>
             </Card>
           </div>
@@ -145,10 +176,11 @@ function DeveloperPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
                 <CardTitle className="flex items-center gap-2 text-sm font-display">
                   <Terminal className="h-4 w-4 text-muted-foreground" /> Quickstart
                 </CardTitle>
+                <span className="text-[10px] text-muted-foreground">Available when API keys ship</span>
               </CardHeader>
               <CardContent>
                 <pre className="overflow-x-auto rounded-lg bg-muted p-3 text-[11px] leading-relaxed text-foreground">
@@ -164,8 +196,8 @@ function DeveloperPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground">
-                TypeScript And Python SDKs Land With Public Keys. Full Reference Docs Will Ship
-                Alongside Them.
+                TypeScript and Python SDKs land with public keys. Full reference docs will ship
+                alongside them.
               </CardContent>
             </Card>
           </div>
