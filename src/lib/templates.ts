@@ -88,6 +88,7 @@ export const TEMPLATES: Template[] = [
     icon: Upload,
     tint: "bg-yellow-500/10 text-yellow-700",
     placeholderHint: "e.g. Skip trace my CSV and scrub it against DNC — mobile numbers only",
+    credit_cost_per_lead: 0,
   },
 
   // ---------- Business & Local ----------
@@ -115,6 +116,7 @@ export const TEMPLATES: Template[] = [
     tint: "bg-primary/10 text-primary",
     logoDomain: "google.com/maps",
     placeholderHint: "e.g. Roofers in Hillsborough County, FL — mobile numbers only",
+    credit_cost_per_lead: 1,
   },
   {
     id: "gserp",
