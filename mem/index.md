@@ -4,7 +4,7 @@
 Internal accountability log (who spent/exported) stays separate from the compliance audit log (legal evidence).
 Multi-source lead data — never call Google Maps the primary source. Uploads and skip trace are first-class.
 Franchise removal is an optional toggle, never a headline benefit.
-Title Case headings and marketing labels. Lucide icons, no emoji in UI.
+Title Case headings, card titles, and button labels only — descriptions/body copy are sentence case. Lucide icons, no emoji in UI.
 Skip tracing is included free on Growth and up within daily/monthly fair-use caps; metered on Starter and past caps.
 Enrichment is per source category: creator sources are email-only (no skip trace, no mobile filter); LinkedIn keeps skip trace but default off.
 
