@@ -40,6 +40,8 @@ import { runJob } from "@/lib/pipeline.functions";
 import { EMPTY_SPEC, describeSpec, specStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { PIPELINE_OPTION_LABELS, withEnrichmentDefaults } from "@/lib/pipeline-options";
 import { estimateSpec, MAX_ROWS_PRESETS } from "@/lib/estimate.shared";
+import { PipelineFunnel } from "@/components/app/pipeline-funnel";
+import { DEFAULT_MATCH_THRESHOLD, estimateScan } from "@/lib/property-scan.shared";
 import { DEFAULT_MAX_ROWS, loadMaxRows, saveMaxRows } from "@/lib/max-rows";
 import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
 import { TEMPLATES, templateSourceType, type Template } from "@/lib/templates";
@@ -899,6 +901,114 @@ function Assistant() {
   const tradeCount = spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1;
   const searchCount = countyCount * tradeCount;
 
+  const isScan = spec.sourceType === "property_scan";
+  /**
+   * Property Scan quotes from its own buy-box cascade, but it renders in the
+   * SAME estimate slot as every other source — one estimator, one approve.
+   */
+  const scanEstimate = useMemo(
+    () =>
+      isScan
+        ? estimateScan({
+            counties: spec.counties,
+            states: specStates(spec),
+            buyBox: spec.buyBox,
+            matchThreshold: spec.matchThreshold,
+            imagesPer: spec.imagesPer,
+            maxResults: spec.maxResults,
+          })
+        : null,
+    [isScan, spec.counties, spec.buyBox, spec.matchThreshold, spec.imagesPer, spec.maxResults, spec.state, spec.states],
+  );
+
+  const overScan = Boolean(scanEstimate && scanEstimate.scanCredits > creditBalances.scrape);
+  const overScanSkip = Boolean(scanEstimate && scanEstimate.skipTraceCredits > creditBalances.skip_trace);
+
+  const scanControls = isScan && (
+    <div className="grid grid-cols-2 gap-2 rounded-xl border border-border p-3">
+      <div>
+        <div className="text-xs font-medium text-foreground">Match Threshold</div>
+        <Input
+          type="number"
+          min={50}
+          max={100}
+          inputMode="numeric"
+          className="mt-2 h-8 w-24 text-sm"
+          value={spec.matchThreshold ?? DEFAULT_MATCH_THRESHOLD}
+          onChange={(e) =>
+            setSpec((prev) => ({
+              ...prev,
+              matchThreshold: Math.max(50, Math.min(100, Number(e.target.value) || DEFAULT_MATCH_THRESHOLD)),
+            }))
+          }
+          aria-label="Match threshold"
+        />
+        <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+          Minimum condition score a house needs to make your list. Higher keeps fewer, worse-looking houses.
+        </p>
+      </div>
+      <div>
+        <div className="text-xs font-medium text-foreground">Images Per Property</div>
+        <div className="mt-2 flex gap-1">
+          {([1, 3] as const).map((count) => (
+            <Button
+              key={count}
+              type="button"
+              size="sm"
+              variant={spec.imagesPer === count ? "default" : "outline"}
+              className="h-7 rounded-full px-2.5 text-[11px]"
+              onClick={() => setSpec((prev) => ({ ...prev, imagesPer: count }))}
+            >
+              {count === 1 ? "1 Angle" : "3 Angles"}
+            </Button>
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+          Three angles score more accurately and cost more. One angle is enough for a first pass.
+        </p>
+      </div>
+    </div>
+  );
+
+  const scanEstimateBlock = scanEstimate && adapterLive && geoResolved && (
+    <div className="space-y-2">
+      <PipelineFunnel
+        size="sm"
+        variant="scan"
+        stages={{
+          found: scanEstimate.parcelsInArea,
+          deduped: scanEstimate.afterOwnership,
+          verified: scanEstimate.afterFinancial,
+          scrubbed: scanEstimate.scanned,
+          clean: scanEstimate.matched,
+        }}
+      />
+      <div className="space-y-1.5 text-center text-xs">
+        <div className="text-muted-foreground">
+          ≈ {scanEstimate.matched.toLocaleString()} Matched Properties ·{" "}
+          <span className={overScan ? "font-semibold text-primary" : undefined}>
+            {scanEstimate.scanCredits.toLocaleString()} of {creditBalances.scrape.toLocaleString()} Lead Credits
+          </span>{" "}
+          ·{" "}
+          <span className={overScanSkip ? "font-semibold text-primary" : undefined}>
+            {scanEstimate.skipTraceCredits.toLocaleString()} of {creditBalances.skip_trace.toLocaleString()} Skip-Trace Credits
+          </span>
+        </div>
+        <div className="text-[11px] text-muted-foreground">
+          Imagery is only bought for the {scanEstimate.scanned.toLocaleString()} parcels left after your buy box.
+        </div>
+        {(overScan || overScanSkip) && (
+          <div className="text-primary">
+            This scan costs more credits than you have left.{" "}
+            <Link to="/app/billing" className="font-semibold underline">
+              Add Credits
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   const overLead = Boolean(estimate && estimate.scrapeCredits > creditBalances.scrape);
   const overSkip = Boolean(estimate && estimate.skipTraceCredits > creditBalances.skip_trace);
   const overBudget = overLead || overSkip;
@@ -961,6 +1071,10 @@ function Assistant() {
       )}
 
       {rowCapControl}
+
+      {scanControls}
+
+      {scanEstimateBlock}
 
       {estimate && adapterLive && spec.sourceType && geoResolved && (
         <div className="space-y-1.5 text-center text-xs">

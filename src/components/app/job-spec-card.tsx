@@ -21,6 +21,7 @@ import {
 } from "@/lib/upload-attachment";
 import { optionsForSource, specOptionContext, defaultCountryFor, isDataSource, isNonUsRun } from "@/lib/pipeline-options";
 import { TemplateLogo } from "@/components/marketing/template-logo";
+import { BuyBoxFields, VisualCriteriaField } from "@/components/app/buy-box-fields";
 import {
   channelOptions, inferChannel, CHANNEL_LABEL, CHANNEL_HINT, type Channel,
 } from "@/lib/channels";
@@ -477,6 +478,18 @@ export function JobSpecCard({
               placeholder={has("niche") ? "e.g. HVAC, Roofer" : "e.g. Fintech Founders, #realtor"}
             />
           </div>
+        )}
+
+        {has("visualCriteria") && (
+          <VisualCriteriaField
+            value={spec.visualCriteria}
+            onChange={(v) => set("visualCriteria", v)}
+            inferred={inf("visualCriteria")}
+          />
+        )}
+
+        {has("buyBox") && (
+          <BuyBoxFields value={spec.buyBox} onChange={(v) => set("buyBox", v)} />
         )}
 
         {has("url") && (

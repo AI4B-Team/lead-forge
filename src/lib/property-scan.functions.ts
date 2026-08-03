@@ -1,77 +1,58 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { scanJobInputSchema, scanCreditQuote } from "@/lib/property-scan.shared";
-
-/** Every scan this workspace has run, newest first. */
-export const listScanJobs = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
-  .handler(async ({ data, context }) => {
-    const { data: rows, error } = await context.supabase
-      .from("scan_jobs")
-      .select(
-        "id, name, mode, vertical, status, prompt, match_threshold, images_per, areas, parcels_in_area, parcels_filtered, parcels_scanned, parcels_matched, credits_quoted, credits_charged, credits_refunded, created_at, completed_at",
-      )
-      .eq("workspace_id", data.workspaceId)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    if (error) throw error;
-    return { scans: rows ?? [] };
-  });
 
 /**
- * Queue a scan. The quote is recomputed server-side from the surviving parcel
- * count so a tampered client can't buy a 200k-parcel scan for one credit, and
- * credits are only ever charged on parcels that actually get scored.
+ * Monitor is a standing subscription against a saved list, not a build mode:
+ * we re-score the same houses on a cadence and tell the operator when one gets
+ * worse. It lives per-list under Lists, and it is Growth-tier and above.
  */
-export const createScanJob = createServerFn({ method: "POST" })
+export const getListMonitor = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => scanJobInputSchema.parse(input))
+  .inputValidator((input) => z.object({ listId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const quoted = scanCreditQuote(data.parcelsFiltered, data.imagesPer);
-
     const { data: row, error } = await context.supabase
-      .from("scan_jobs")
-      .insert({
-        workspace_id: data.workspaceId,
-        created_by: context.userId,
-        name: data.name,
-        mode: data.mode,
-        vertical: data.vertical,
-        prompt: data.prompt,
-        example_parcels: data.examples,
-        match_threshold: data.matchThreshold,
-        images_per: data.imagesPer,
-        buy_box: data.buyBox,
-        areas: data.areas,
-        source_list_id: data.sourceListId,
-        parcels_in_area: data.parcelsInArea,
-        parcels_filtered: data.parcelsFiltered,
-        credits_quoted: quoted,
-        status: "queued",
-      } as never)
-      .select("id")
-      .single();
+      .from("monitor_subscriptions")
+      .select("id, cadence, alert_on, active, next_run_at")
+      .eq("list_id", data.listId)
+      .maybeSingle();
     if (error) throw error;
+    return { monitor: row ?? null };
+  });
 
-    // Monitor mode is a standing scan, so it also gets a subscription row.
-    if (data.mode === "monitor" && data.monitorCadence) {
-      await context.supabase.from("monitor_subscriptions").insert({
+export const setListMonitor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        listId: z.string().uuid(),
+        active: z.boolean(),
+        cadence: z.enum(["monthly", "quarterly"]).default("monthly"),
+        alertOnTarp: z.boolean().default(true),
+        distressDelta: z.number().int().min(5).max(50).default(15),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const nextRun = new Date(
+      Date.now() + (data.cadence === "monthly" ? 30 : 91) * 86_400_000,
+    ).toISOString();
+
+    const { error } = await context.supabase.from("monitor_subscriptions").upsert(
+      {
         workspace_id: data.workspaceId,
         created_by: context.userId,
-        scan_job_id: (row as { id: string }).id,
-        list_id: data.sourceListId,
-        cadence: data.monitorCadence,
-        vertical: data.vertical,
-        alert_on: { tarp_appeared: true, distress_delta: 15 },
-        next_run_at: new Date(
-          Date.now() + (data.monitorCadence === "monthly" ? 30 : 91) * 86_400_000,
-        ).toISOString(),
-      } as never);
-    }
-
-    return { id: (row as { id: string }).id, creditsQuoted: quoted };
+        list_id: data.listId,
+        cadence: data.cadence,
+        active: data.active,
+        alert_on: { tarp_appeared: data.alertOnTarp, distress_delta: data.distressDelta },
+        next_run_at: data.active ? nextRun : null,
+      } as never,
+      { onConflict: "list_id" },
+    );
+    if (error) throw error;
+    return { ok: true, next_run_at: data.active ? nextRun : null };
   });
 
 /** Quick-set outcome on a scanned lead. `already_renovated` labels a scoring miss. */

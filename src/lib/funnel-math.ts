@@ -20,6 +20,10 @@ export type FunnelStageKey =
   | "skipTraced"
   | "scrubbed"
   | "exported"
+  | "parcels"
+  | "ownership"
+  | "financial"
+  | "filtered"
   | "clean";
 
 export type FunnelStage = {
@@ -47,7 +51,7 @@ export type FunnelInput = {
 
 const n = (v: number | null | undefined) => Math.max(0, Math.round(v ?? 0));
 
-export type FunnelVariant = "phone" | "creator" | "data";
+export type FunnelVariant = "phone" | "creator" | "data" | "scan";
 
 /**
  * Normalize raw job counters into a monotonically narrowing funnel. Each stage
@@ -94,6 +98,18 @@ export function buildFunnel(input: FunnelInput, opts?: { variant?: FunnelVariant
     stage("found", "Found", found, null, { annotation: "Source Records" }),
     stage("deduped", "Deduped", deduped, found, { removalNoun: "Removed" }),
   ];
+
+  if (variant === "scan") {
+    // Property Scan narrows parcels with free data filters BEFORE any imagery
+    // is bought, so its cascade is the buy box itself, stage by stage.
+    return [
+      stage("parcels", "Parcels In Area", found, null, { annotation: "Candidate Parcels" }),
+      stage("ownership", "Ownership + Tenure", deduped, found, { removalNoun: "Filtered" }),
+      stage("financial", "Equity + Age", verified, deduped, { removalNoun: "Filtered" }),
+      stage("filtered", "Permit + Negative Filters", scrubbed, verified, { removalNoun: "Filtered" }),
+      stage("clean", "Matched", clean, scrubbed, { annotation: "Scored + Ready", alwaysAnnotate: true }),
+    ];
+  }
 
   // Research datasets never touch the compliance pipeline: they collapse to
   // Found -> Deduped -> Exported.

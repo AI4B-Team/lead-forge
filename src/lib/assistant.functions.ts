@@ -238,6 +238,9 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
     if (spec.sourceType === "upload") throw new Error("Uploaded Lists Start On The Upload Page");
     if (spec.sourceType === "business" && !spec.niches.length) throw new Error("Add At Least One Niche");
     if (spec.sourceType === "records" && !spec.recordType) throw new Error("Pick A Record Type");
+    if (spec.sourceType === "property_scan" && !spec.visualCriteria.length) {
+      throw new Error("Add At Least One Visual Criterion");
+    }
 
     const { loadReferenceData } = await import("@/lib/reference-data.server");
     const { coverageForCounty } = await import("@/lib/reference-data.shared");
@@ -259,7 +262,9 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
       spec.name ??
       (spec.sourceType === "records"
         ? `${spec.recordType} · ${geoLabel}`
-        : `${spec.niches.join(", ")} · ${geoLabel}`);
+        : spec.sourceType === "property_scan"
+          ? `Property Scan · ${geoLabel}`
+          : `${spec.niches.join(", ")} · ${geoLabel}`);
 
     const { queueJob } = await import("@/lib/job-submit");
     const { inferChannel } = await import("@/lib/channels");
@@ -296,6 +301,12 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
         scrape_target_kind: spec.scrapeTargetKind,
         upload_intent: spec.uploadIntent,
         suppression_file: spec.suppressionFile,
+        // Property Scan: the buy box runs before imagery, and the visual
+        // criteria are what the imagery model scores against.
+        visual_criteria: spec.visualCriteria,
+        buy_box: spec.buyBox,
+        match_threshold: spec.matchThreshold,
+        images_per: spec.imagesPer,
         dedupe: spec.dedupe,
         mobile_only: spec.mobileOnly,
         skip_trace: spec.skipTrace,

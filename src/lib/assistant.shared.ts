@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { buyBoxSchema, DEFAULT_MATCH_THRESHOLD } from "./property-scan.shared";
 
 /**
  * The Job Spec the assistant assembles. It maps 1:1 onto the existing
  * `jobs.params` shape so "Review & Run" just creates a jobs row.
  */
 export const jobSpecSchema = z.object({
-  sourceType: z.enum(["business", "records", "upload"]).nullable().default(null),
+  sourceType: z.enum(["business", "records", "upload", "property_scan"]).nullable().default(null),
   name: z.string().max(120).nullable().default(null),
   niches: z.array(z.string().max(60)).max(20).default([]),
   recordType: z.string().max(80).nullable().default(null),
@@ -54,6 +55,19 @@ export const jobSpecSchema = z.object({
   scrapeTargetKind: z.enum(["keywords", "areas", "urls"]).nullable().default(null),
   /** Workspace suppression file applied to this run (informational). */
   suppressionFile: z.string().max(160).nullable().default(null),
+  // ---- Property Scan (AI Driving For Dollars) ----
+  /**
+   * Plain-language condition criteria the imagery model scores against. The
+   * assistant infers these from the operator's prompt; the rail edits them the
+   * same way Niches are edited. There is no second prompt box.
+   */
+  visualCriteria: z.array(z.string().max(160)).max(12).default([]),
+  /** The data filter that runs BEFORE any imagery is bought. */
+  buyBox: buyBoxSchema.nullable().default(null),
+  /** Minimum match score a scored property needs to make the list. */
+  matchThreshold: z.number().int().min(50).max(100).nullable().default(DEFAULT_MATCH_THRESHOLD),
+  /** Images bought per property. Three angles cost more and score better. */
+  imagesPer: z.union([z.literal(1), z.literal(3)]).default(3),
 });
 
 export type JobSpec = z.infer<typeof jobSpecSchema>;
@@ -96,6 +110,9 @@ export function describeSpec(spec: JobSpec): string {
     specStates(spec).join(", ") ||
     spec.country ||
     "No Geography";
+  if (spec.sourceType === "property_scan") {
+    return ["Property Scan", geo].join(" · ");
+  }
   if (spec.sourceType === "records") {
     return [spec.recordType ?? "Public Records", geo]
       .join(" · ");

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS monitor_subs_list_uniq ON public.monitor_subscriptions (list_id) WHERE list_id IS NOT NULL;
