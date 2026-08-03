@@ -480,10 +480,6 @@ export function JobSpecCard({
           </div>
         )}
 
-        {has("url") && (
-          <>
-          </>
-        )}
         {has("visualCriteria") && (
           <VisualCriteriaField
             value={spec.visualCriteria}
