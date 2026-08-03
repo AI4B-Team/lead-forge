@@ -262,7 +262,7 @@ export async function ingestAgencyFile(args: {
 }
 
 type LeadShape = {
-  full_name: string | null;
+  full_name?: string | null;
   address?: string | null;
   city?: string | null;
   state?: string | null;
@@ -323,12 +323,12 @@ async function distributeToSubscribers(args: {
         args.leads.slice(i, i + chunk).map((l) => ({
           workspace_id: workspaceId,
           job_id: jobId,
-          full_name: l.full_name,
+          full_name: l.full_name ?? null,
           address: l.address ?? null,
           city: l.city ?? null,
           state: l.state ?? null,
           zip: l.zip ?? null,
-          source_meta: l.source_meta ?? {},
+          source_meta: (l.source_meta ?? {}) as never,
         })),
       );
     }
