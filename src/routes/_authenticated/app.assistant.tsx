@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
@@ -24,6 +24,7 @@ import {
   Paperclip, Mic, Send, BellPlus, Loader2, Check,
 } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { useCreditBalances } from "@/hooks/use-credit-balances";
 import { FirstRunSetup } from "@/components/app/getting-started";
 import { supabase } from "@/integrations/supabase/client";
 import { queueJob } from "@/lib/job-submit";
@@ -89,7 +90,7 @@ const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   state: "State",
   counties: "Counties",
   recencyDays: "Recency",
-  maxResults: "Max Rows Per Search",
+  maxResults: "Max Leads",
   // Toggle names come from the shared config so chips match the panel and checklist.
   removeFranchises: PIPELINE_OPTION_LABELS.removeFranchises,
   dedupe: PIPELINE_OPTION_LABELS.dedupe,
