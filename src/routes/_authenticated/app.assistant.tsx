@@ -1092,7 +1092,7 @@ function Assistant() {
             void send(input);
           }
         }}
-        placeholder={selectedTemplate?.placeholderHint ?? GENERIC_PLACEHOLDER}
+        placeholder={composerPlaceholder}
         className="resize-none rounded-none border-0 bg-transparent px-2 py-0 text-base shadow-none focus-visible:ring-0"
       />
       <div className="mt-3 flex items-center justify-between gap-3">
