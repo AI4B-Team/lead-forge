@@ -447,6 +447,14 @@ function JobDetail() {
         </CardContent>
       </Card>
 
+      {isRunning && campaignable && (
+        <FirstTouchCard
+          jobId={jobId}
+          initialIndustry={typeof params.industry === "string" ? params.industry : null}
+          initialAngle={typeof params.message_angle === "string" ? params.message_angle : null}
+        />
+      )}
+
       <div className="grid md:grid-cols-3 gap-4 mt-6">
         <BucketCard
           tone="success"
