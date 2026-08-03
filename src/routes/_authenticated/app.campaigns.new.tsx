@@ -203,6 +203,10 @@ function NewCampaign() {
     ? ((selectedJobRow.params ?? {}) as { name?: string }).name ?? `List ${selectedJobRow.id.slice(0, 8)}`
     : "";
   const brandName = agent?.name ?? "";
+  // First-touch setup captured on the list progress screen carries in here as
+  // the default guidance for the sequence.
+  const carried = (selectedJobRow?.params ?? {}) as { industry?: string | null; message_angle?: string | null };
+  const carriedAngle = carried.message_angle?.trim() || "";
   const recipients = preview?.recipients ?? selectedJobRow?.rows_deduped ?? 0;
   const totalDelayMinutes = cleanSteps.reduce((n, s) => n + s.delay_minutes, 0);
   const projection = projectCampaign({ recipients, bodies, dailyCap, totalDelayMinutes });
