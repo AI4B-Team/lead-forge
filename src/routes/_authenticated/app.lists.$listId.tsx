@@ -1001,3 +1001,103 @@ function BucketCard({ tone, icon, title, count, note, ready, onDownload, onView 
     </div>
   );
 }
+/**
+ * Campaign setup collected while the scrape runs — it's dead time otherwise,
+ * and both values carry into the Campaign Builder as defaults. Skipping it is
+ * fine: the builder still asks for them later.
+ */
+function FirstTouchCard({
+  jobId,
+  initialIndustry,
+  initialAngle,
+}: {
+  jobId: string;
+  initialIndustry: string | null;
+  initialAngle: string | null;
+}) {
+  const { industries } = useReferenceData();
+  const save = useServerFn(setListFirstTouch);
+  const [industry, setIndustry] = useState(initialIndustry ?? "");
+  const [angle, setAngle] = useState(initialAngle ?? "");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const commit = async (next: { industry?: string | null; messageAngle?: string | null }) => {
+    setSaving(true);
+    try {
+      await save({ data: { jobId, ...next } });
+      setSaved(true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Save First Touch");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="mt-6">
+      <CardHeader className="flex flex-row items-center justify-between gap-3">
+        <div>
+          <CardTitle className="text-base font-display">
+            While We Build Your List — Set Up Your First Touch
+          </CardTitle>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Optional. Whatever you set here becomes the default in your Campaign Builder.
+          </p>
+        </div>
+        {saving ? (
+          <Badge variant="outline" className="shrink-0">
+            <Loader2 className="mr-1 h-3 w-3 animate-spin" /> Saving
+          </Badge>
+        ) : saved ? (
+          <Badge variant="outline" className="shrink-0 border-success/50 bg-success/10 text-success">
+            <Check className="mr-1 h-3 w-3" /> Saved
+          </Badge>
+        ) : null}
+      </CardHeader>
+      <CardContent className="grid gap-4 md:grid-cols-2">
+        <div>
+          <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Industry Preset
+          </Label>
+          <Select
+            value={industry}
+            onValueChange={(v) => {
+              setIndustry(v);
+              void commit({ industry: v || null });
+            }}
+          >
+            <SelectTrigger className="mt-1"><SelectValue placeholder="Pick An Industry" /></SelectTrigger>
+            <SelectContent>
+              {industries.map((i) => (
+                <SelectItem key={i.slug} value={i.slug}>{i.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
+            Sets the tone and compliance defaults for messaging.
+          </p>
+        </div>
+        <div>
+          <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            First-Touch Angle
+          </Label>
+          <Textarea
+            className="mt-1"
+            rows={3}
+            value={angle}
+            placeholder="Empathetic, low-pressure opener…"
+            onChange={(e) => setAngle(e.target.value)}
+            onBlur={() => {
+              if ((initialAngle ?? "") === angle && !saved) return;
+              void commit({ messageAngle: angle.trim() || null });
+            }}
+          />
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
+            How the first text should come across. Nothing sends without your approval.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
