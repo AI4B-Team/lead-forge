@@ -35,12 +35,12 @@ export function WebhookEndpoints() {
   const create = useMutation({
     mutationFn: () => save({ data: { workspaceId: workspaceId!, url, eventTypes: selected } }),
     onSuccess: () => {
-      toast.success("Endpoint Added.");
+      toast.success("Endpoint added.");
       setUrl("");
       setSelected([]);
       qc.invalidateQueries({ queryKey: ["webhooks", workspaceId] });
     },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could Not Save Endpoint."),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not save endpoint."),
   });
 
   const rows = data?.rows ?? [];
