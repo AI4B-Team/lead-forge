@@ -881,13 +881,19 @@ function Assistant() {
     if (workspaceId && next) saveMaxRows(workspaceId, next);
   };
 
-  const searchCount =
-    Math.max(1, spec.counties.length || 1) *
-    (spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1);
+  const { balances: creditBalances } = useCreditBalances();
+
+  const countyCount = Math.max(1, spec.counties.length || 1);
+  const tradeCount = spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1;
+  const searchCount = countyCount * tradeCount;
+
+  const overLead = Boolean(estimate && estimate.scrapeCredits > creditBalances.scrape);
+  const overSkip = Boolean(estimate && estimate.skipTraceCredits > creditBalances.skip_trace);
+  const overBudget = overLead || overSkip;
 
   const rowCapControl = adapterLive && spec.sourceType && spec.sourceType !== "upload" && (
     <div className="rounded-xl border border-border p-3">
-      <div className="text-xs font-medium text-foreground">Max Rows Per Search</div>
+      <div className="text-xs font-medium text-foreground">Max Leads</div>
       <div className="mt-2 flex items-center gap-2">
         <Input
           type="number"
@@ -897,7 +903,7 @@ function Assistant() {
           className="h-8 w-24 text-sm"
           value={spec.maxResults ?? ""}
           onChange={(e) => setMaxRows(e.target.value === "" ? null : Number(e.target.value))}
-          aria-label="Max rows per search"
+          aria-label="Max leads"
         />
         <div className="flex flex-wrap gap-1">
           {MAX_ROWS_PRESETS.map((preset) => (
@@ -915,10 +921,10 @@ function Assistant() {
         </div>
       </div>
       <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
-        This cap is per search string, and one search runs per niche × county combination — so 3 niches
-        across 2 counties at 500 is up to 3,000 rows, not 500.
+        Caps how many leads this job can pull. Because we run one search per trade per county, your
+        total is this number × trades × counties.
         {spec.maxResults
-          ? ` Right now that's ${searchCount.toLocaleString()} ${searchCount === 1 ? "search" : "searches"} × ${spec.maxResults.toLocaleString()} = up to ${(searchCount * spec.maxResults).toLocaleString()} rows.`
+          ? ` Right now: ${tradeCount.toLocaleString()} ${tradeCount === 1 ? "trade" : "trades"} × ${countyCount.toLocaleString()} ${countyCount === 1 ? "county" : "counties"} × ${spec.maxResults.toLocaleString()} = up to ${(searchCount * spec.maxResults).toLocaleString()} leads.`
           : " Leave it empty to use the source default of 500."}
       </p>
     </div>
