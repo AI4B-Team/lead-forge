@@ -111,6 +111,10 @@ function diffSpec(prev: JobSpec, next: JobSpec): string[] {
 const GENERIC_PLACEHOLDER =
   "Describe The Leads You Want. E.g. Roofing Companies In Hillsborough County With Mobile Numbers.";
 
+/** Placeholder follows the conversation state, never a stale example. */
+const REFINE_PLACEHOLDER = "Refine this list, or describe a new one…";
+const RUNNING_PLACEHOLDER = "Ask me anything, or start your next list…";
+
 /**
  * Cycles the composer's example placeholder with a crossfade. Paused while the
  * user types or a template is selected, so the rotation never fights real input.
