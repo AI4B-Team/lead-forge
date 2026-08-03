@@ -951,9 +951,26 @@ function Assistant() {
       {rowCapControl}
 
       {estimate && adapterLive && spec.sourceType && geoResolved && (
-        <div className="text-center text-xs text-muted-foreground">
-          ≈ {estimate.rows.toLocaleString()} Rows · ~{estimate.scrapeCredits.toLocaleString()} Lead Credits
-          {estimate.skipTraceCredits ? ` · ~${estimate.skipTraceCredits.toLocaleString()} Skip-Trace Credits` : ""}
+        <div className="space-y-1.5 text-center text-xs">
+          <div className="text-muted-foreground">
+            ≈ {estimate.rows.toLocaleString()} Leads ·{" "}
+            <span className={overLead ? "font-semibold text-primary" : undefined}>
+              {estimate.scrapeCredits.toLocaleString()} of {creditBalances.scrape.toLocaleString()} Lead Credits
+            </span>{" "}
+            ·{" "}
+            <span className={overSkip ? "font-semibold text-primary" : undefined}>
+              {estimate.skipTraceCredits.toLocaleString()} of {creditBalances.skip_trace.toLocaleString()} Skip-Trace Credits
+            </span>
+          </div>
+          {overBudget && (
+            <div className="text-primary">
+              This job costs more {overLead && overSkip ? "credits" : overLead ? "lead credits" : "skip-trace credits"} than
+              you have left.{" "}
+              <Link to="/app/billing" className="font-semibold underline">
+                Add Credits
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
