@@ -56,17 +56,19 @@ function authHeaders(token: string, json = false): Record<string, string> {
   };
 }
 
-/** Cheap credential probe used by the integrations UI. */
+/**
+ * Cheap credential probe used by the integrations UI. Uses /actor-runs rather
+ * than /users/me so scoped (limited-permission) tokens still verify.
+ */
 export async function verifyApifyToken(): Promise<{ ok: boolean; message: string }> {
   const token = process.env.APIFY_TOKEN;
   if (!token) return { ok: false, message: "No Apify token is configured." };
-  const res = await fetch(`${APIFY_BASE}/users/me`, { headers: authHeaders(token) });
+  const res = await fetch(`${APIFY_BASE}/actor-runs?limit=1`, { headers: authHeaders(token) });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     return { ok: false, message: `Apify rejected the token (${res.status}). ${body.slice(0, 200)}` };
   }
-  const json = (await res.json()) as { data?: { username?: string } };
-  return { ok: true, message: `Connected as ${json.data?.username ?? "apify user"}.` };
+  return { ok: true, message: "Apify is connected." };
 }
 
 /** Retries 429/5xx up to 3 times; 4xx auth errors throw immediately. */
