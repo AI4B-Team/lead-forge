@@ -59,7 +59,6 @@ import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
 import { Route as AuthenticatedAppRegistrationRouteImport } from './routes/_authenticated/app.registration'
 import { Route as AuthenticatedAppPropertySearchRouteImport } from './routes/_authenticated/app.property-search'
-import { Route as AuthenticatedAppPropertyScanRouteImport } from './routes/_authenticated/app.property-scan'
 import { Route as AuthenticatedAppNumbersRouteImport } from './routes/_authenticated/app.numbers'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
@@ -353,12 +352,6 @@ const AuthenticatedAppPropertySearchRoute =
     path: '/property-search',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppPropertyScanRoute =
-  AuthenticatedAppPropertyScanRouteImport.update({
-    id: '/property-scan',
-    path: '/property-scan',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
 const AuthenticatedAppNumbersRoute = AuthenticatedAppNumbersRouteImport.update({
   id: '/numbers',
   path: '/numbers',
@@ -599,7 +592,6 @@ export interface FileRoutesByFullPath {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
-  '/app/property-scan': typeof AuthenticatedAppPropertyScanRoute
   '/app/property-search': typeof AuthenticatedAppPropertySearchRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
@@ -683,7 +675,6 @@ export interface FileRoutesByTo {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
-  '/app/property-scan': typeof AuthenticatedAppPropertyScanRoute
   '/app/property-search': typeof AuthenticatedAppPropertySearchRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
@@ -771,7 +762,6 @@ export interface FileRoutesById {
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
   '/_authenticated/app/numbers': typeof AuthenticatedAppNumbersRoute
-  '/_authenticated/app/property-scan': typeof AuthenticatedAppPropertyScanRoute
   '/_authenticated/app/property-search': typeof AuthenticatedAppPropertySearchRoute
   '/_authenticated/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
@@ -859,7 +849,6 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/leads'
     | '/app/numbers'
-    | '/app/property-scan'
     | '/app/property-search'
     | '/app/registration'
     | '/app/reports'
@@ -943,7 +932,6 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/leads'
     | '/app/numbers'
-    | '/app/property-scan'
     | '/app/property-search'
     | '/app/registration'
     | '/app/reports'
@@ -1030,7 +1018,6 @@ export interface FileRouteTypes {
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/leads'
     | '/_authenticated/app/numbers'
-    | '/_authenticated/app/property-scan'
     | '/_authenticated/app/property-search'
     | '/_authenticated/app/registration'
     | '/_authenticated/app/reports'
@@ -1467,13 +1454,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppPropertySearchRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/property-scan': {
-      id: '/_authenticated/app/property-scan'
-      path: '/property-scan'
-      fullPath: '/app/property-scan'
-      preLoaderRoute: typeof AuthenticatedAppPropertyScanRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
     '/_authenticated/app/numbers': {
       id: '/_authenticated/app/numbers'
       path: '/numbers'
@@ -1728,7 +1708,6 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
   AuthenticatedAppNumbersRoute: typeof AuthenticatedAppNumbersRoute
-  AuthenticatedAppPropertyScanRoute: typeof AuthenticatedAppPropertyScanRoute
   AuthenticatedAppPropertySearchRoute: typeof AuthenticatedAppPropertySearchRoute
   AuthenticatedAppRegistrationRoute: typeof AuthenticatedAppRegistrationRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
@@ -1763,7 +1742,6 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
   AuthenticatedAppNumbersRoute: AuthenticatedAppNumbersRoute,
-  AuthenticatedAppPropertyScanRoute: AuthenticatedAppPropertyScanRoute,
   AuthenticatedAppPropertySearchRoute: AuthenticatedAppPropertySearchRoute,
   AuthenticatedAppRegistrationRoute: AuthenticatedAppRegistrationRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
