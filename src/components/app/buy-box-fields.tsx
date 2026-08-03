@@ -10,11 +10,11 @@ import {
 } from "@/lib/property-scan.shared";
 
 /** Small label + help affordance, matching the rest of the List Builder rail. */
-function RailLabel({ children, hint }: { children: React.ReactNode; hint: string }) {
+function RailLabel({ children, hint }: { children: string; hint: string }) {
   return (
     <div className="flex items-center gap-1.5">
       <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{children}</Label>
-      <HelpHint text={hint} />
+      <HelpHint title={children}>{hint}</HelpHint>
     </div>
   );
 }
