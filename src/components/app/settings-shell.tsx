@@ -65,7 +65,7 @@ const GROUPS: { label: string; items: NavDef[] }[] = [
       { key: "workspace-admin", label: "Overview", icon: LayoutDashboard, to: "/app/workspace" },
       { key: "workspace", label: "General", icon: Building2, to: "/app/settings" },
       { key: "team", label: "Team", icon: Users, to: "/app/team" },
-      { key: "numbers", label: "Phone Numbers", icon: Smartphone, to: "/app/numbers" },
+      { key: "numbers", label: "Numbers", icon: Smartphone, to: "/app/numbers" },
     ],
   },
   {
