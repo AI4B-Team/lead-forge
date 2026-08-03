@@ -363,7 +363,6 @@ export function withEnrichmentDefaults(spec: JobSpec, templateId?: string | null
   if (!US_REALESTATE_PORTAL_IDS.includes(id ?? "")) next.contactTarget = null;
   // Job-board runs are only useful when fresh; the posting date is the trigger.
   if (isJobBoard(id) && !next.recencyDays) next.recencyDays = 30;
-  // The Google Maps card advertises franchises removed — honour it by default.
-  if (id === GMAPS_TEMPLATE_ID && next.sourceType !== "records") next.removeFranchises = true;
+  // Franchise removal stays a user-controlled toggle, off unless turned on.
   return next;
 }

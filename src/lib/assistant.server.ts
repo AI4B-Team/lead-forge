@@ -164,15 +164,9 @@ export async function askAssistant(opts: {
         const synced = withStates(merged.data, specStates(merged.data));
         return {
           ...synced,
-          // Franchise removal is business-only; never carry it onto other
-          // sources. Google Maps runs default it ON (the card promises it)
-          // unless this turn explicitly set it.
-          removeFranchises:
-            synced.sourceType === "business"
-              ? synced.removeFranchises ||
-                (out.specPatch?.removeFranchises === undefined &&
-                  synced.templateId === GMAPS_TEMPLATE_ID)
-              : false,
+          // Franchise removal is business-only and off unless the operator
+          // turns it on; never carry it onto other sources.
+          removeFranchises: synced.sourceType === "business" ? synced.removeFranchises : false,
           counties: normalizeCounties(synced.counties, synced.state),
         };
       })()
