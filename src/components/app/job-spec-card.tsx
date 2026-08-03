@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { HelpHint } from "@/components/app/help-hint";
-import { INDUSTRIES, coverageForCounty } from "@/lib/mock-data";
+import { coverageForCounty } from "@/lib/reference-data.shared";
+import { useReferenceData } from "@/hooks/use-reference-data";
 import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
@@ -268,11 +269,12 @@ export function JobSpecCard({
 }) {
   const set = <K extends keyof JobSpec>(key: K, value: JobSpec[K]) => onChange({ ...spec, [key]: value });
   const inf = (key: keyof JobSpec) => Boolean(inferred?.has(key));
+  const { industries, countyCoverage } = useReferenceData();
   // Business / local scrapes have no geo whitelist, so fall back to the
   // source-aware verdict instead of assuming "Not Covered".
   const covFor = (county: string): Coverage =>
     coverage.find((c) => c.county.toLowerCase() === county.toLowerCase())?.coverage ??
-    coverageForCounty(county, spec.sourceType);
+    coverageForCounty(countyCoverage, county, spec.sourceType);
 
   const fields: BuilderField[] = template ? templateFieldSchema(template) : fieldsForSourceType(spec.sourceType);
   const has = (f: BuilderField) => fields.includes(f);
@@ -697,7 +699,7 @@ export function JobSpecCard({
           <Select value={spec.industry ?? ""} onValueChange={(v) => set("industry", v)}>
             <SelectTrigger className="mt-1"><SelectValue placeholder="Suggested By The Assistant" /></SelectTrigger>
             <SelectContent>
-              {INDUSTRIES.map((i) => <SelectItem key={i.key} value={i.key}>{i.label}</SelectItem>)}
+              {industries.map((i) => <SelectItem key={i.slug} value={i.slug}>{i.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
