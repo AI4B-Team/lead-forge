@@ -24,7 +24,7 @@ export const assistantChat = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { askAssistant, estimate, precheckCompliance } = await import("@/lib/assistant.server");
-    const { COUNTIES, NICHES, RECORD_TYPES } = await import("@/lib/mock-data");
+    const { COUNTIES, NICHES, RECORD_TYPES, coverageForCounty } = await import("@/lib/mock-data");
     const { TEMPLATES } = await import("@/lib/templates");
     const { templateAdapterStatus } = await import("@/lib/template-schema");
 
@@ -51,11 +51,12 @@ export const assistantChat = createServerFn({ method: "POST" })
       templateCatalog: TEMPLATES.map((t) => `${t.id} — ${t.title} — ${templateAdapterStatus(t)}`).join("\n"),
     });
 
-    // Coverage is decided by real adapter data, never by the model.
-    const coverage = result.spec.counties.map((county) => {
-      const hit = COUNTIES.find((c) => c.name.toLowerCase() === county.toLowerCase());
-      return { county, coverage: (hit?.coverage ?? "unknown") as "live" | "beta" | "requested" | "unknown" };
-    });
+    // Coverage is decided by real adapter data, never by the model. Only
+    // public-records adapters are county-scoped; business scrapes are nationwide.
+    const coverage = result.spec.counties.map((county) => ({
+      county,
+      coverage: coverageForCounty(county, result.spec.sourceType),
+    }));
 
     return {
       reply: result.reply,
