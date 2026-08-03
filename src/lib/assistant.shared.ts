@@ -20,6 +20,8 @@ export const jobSpecSchema = z.object({
   /** US real-estate portals: whose contact details the run targets. */
   contactTarget: z.enum(["agents", "fsbo"]).nullable().default(null),
   recencyDays: z.number().int().min(1).max(3650).nullable().default(null),
+  /** Per-search cap. Total rows ≈ maxResults × niches × counties. */
+  maxResults: z.number().int().min(1).max(50000).nullable().default(500),
   /** Opt-in only: business sources start with franchises included. */
   removeFranchises: z.boolean().default(false),
   dedupe: z.boolean().default(true),
