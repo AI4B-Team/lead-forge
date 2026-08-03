@@ -57,6 +57,7 @@ import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
 import { Route as AuthenticatedAppRegistrationRouteImport } from './routes/_authenticated/app.registration'
+import { Route as AuthenticatedAppPropertyScanRouteImport } from './routes/_authenticated/app.property-scan'
 import { Route as AuthenticatedAppNumbersRouteImport } from './routes/_authenticated/app.numbers'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
@@ -339,6 +340,12 @@ const AuthenticatedAppRegistrationRoute =
     path: '/registration',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppPropertyScanRoute =
+  AuthenticatedAppPropertyScanRouteImport.update({
+    id: '/property-scan',
+    path: '/property-scan',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppNumbersRoute = AuthenticatedAppNumbersRouteImport.update({
   id: '/numbers',
   path: '/numbers',
@@ -578,6 +585,7 @@ export interface FileRoutesByFullPath {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/app/property-scan': typeof AuthenticatedAppPropertyScanRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -659,6 +667,7 @@ export interface FileRoutesByTo {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/app/property-scan': typeof AuthenticatedAppPropertyScanRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -744,6 +753,7 @@ export interface FileRoutesById {
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
   '/_authenticated/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/_authenticated/app/property-scan': typeof AuthenticatedAppPropertyScanRoute
   '/_authenticated/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -829,6 +839,7 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/leads'
     | '/app/numbers'
+    | '/app/property-scan'
     | '/app/registration'
     | '/app/reports'
     | '/app/settings'
@@ -910,6 +921,7 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/leads'
     | '/app/numbers'
+    | '/app/property-scan'
     | '/app/registration'
     | '/app/reports'
     | '/app/settings'
@@ -994,6 +1006,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/leads'
     | '/_authenticated/app/numbers'
+    | '/_authenticated/app/property-scan'
     | '/_authenticated/app/registration'
     | '/_authenticated/app/reports'
     | '/_authenticated/app/settings'
@@ -1414,6 +1427,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRegistrationRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/property-scan': {
+      id: '/_authenticated/app/property-scan'
+      path: '/property-scan'
+      fullPath: '/app/property-scan'
+      preLoaderRoute: typeof AuthenticatedAppPropertyScanRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/numbers': {
       id: '/_authenticated/app/numbers'
       path: '/numbers'
@@ -1668,6 +1688,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
   AuthenticatedAppNumbersRoute: typeof AuthenticatedAppNumbersRoute
+  AuthenticatedAppPropertyScanRoute: typeof AuthenticatedAppPropertyScanRoute
   AuthenticatedAppRegistrationRoute: typeof AuthenticatedAppRegistrationRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
@@ -1701,6 +1722,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
   AuthenticatedAppNumbersRoute: AuthenticatedAppNumbersRoute,
+  AuthenticatedAppPropertyScanRoute: AuthenticatedAppPropertyScanRoute,
   AuthenticatedAppRegistrationRoute: AuthenticatedAppRegistrationRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
