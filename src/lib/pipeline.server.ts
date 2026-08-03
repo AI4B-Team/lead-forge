@@ -183,6 +183,93 @@ export type PipelineResult = {
   channel: Channel;
 };
 
+type PipelineDebit = { kind: "scrape" | "skip_trace" | "sms"; amount: number };
+type PipelineCtx = {
+  stage: string;
+  debits: PipelineDebit[];
+  workspaceId: string | null;
+  actorUserId: string | null;
+};
+
+/** Never let a provider token or key reach a column workspace members can read. */
+function sanitizeError(message: string): string {
+  return message
+    .replace(/(token|key|secret|password|authorization|bearer)([=:\s"']+)[^\s"'&,)]+/gi, "$1=[redacted]")
+    .replace(/\b[A-Za-z0-9_-]{32,}\b/g, "[redacted]")
+    .slice(0, 500);
+}
+
+/**
+ * Public entry point. Wraps the pipeline so any throw lands the list in a real
+ * terminal `failed` state, refunds credits this run already debited, and still
+ * re-throws for callers (runJob, the recurring engine).
+ */
+export async function executePipeline(
+  supabase: AnyClient,
+  jobId: string,
+  opts: { priorRunJobIds?: string[] } = {},
+): Promise<PipelineResult | { ok: true; status: string }> {
+  const ctx: PipelineCtx = { stage: "queued", debits: [], workspaceId: null, actorUserId: null };
+  try {
+    return await runPipelineBody(supabase, jobId, opts, ctx);
+  } catch (err) {
+    const message = sanitizeError(err instanceof Error ? err.message : String(err));
+    await supabase
+      .from("jobs")
+      .update({
+        status: "failed",
+        error: message,
+        failed_stage: ctx.stage,
+        failed_at: new Date().toISOString(),
+      })
+      .eq("id", jobId);
+
+    if (ctx.workspaceId) {
+      await supabase.from("job_events").insert({
+        job_id: jobId,
+        workspace_id: ctx.workspaceId,
+        stage: "failed",
+        message: `Run failed during ${ctx.stage}: ${message}`,
+        count: null,
+      });
+
+      // Refund every debit this run made. Keyed on job + kind + reason so a
+      // retry can never double-refund.
+      for (const debit of ctx.debits) {
+        if (debit.amount <= 0) continue;
+        const { data: already } = await supabase
+          .from("credit_ledger")
+          .select("id")
+          .eq("job_id", jobId)
+          .eq("kind", debit.kind)
+          .eq("reason", "refund:job_failed")
+          .maybeSingle();
+        if (already) continue;
+        await supabase.from("credit_ledger").insert({
+          workspace_id: ctx.workspaceId,
+          kind: debit.kind,
+          delta: debit.amount,
+          reason: "refund:job_failed",
+          job_id: jobId,
+          actor_user_id: ctx.actorUserId,
+        });
+        const { data: bal } = await supabase
+          .from("credit_balances")
+          .select("balance")
+          .eq("workspace_id", ctx.workspaceId)
+          .eq("kind", debit.kind)
+          .maybeSingle();
+        await supabase.from("credit_balances").upsert({
+          workspace_id: ctx.workspaceId,
+          kind: debit.kind,
+          balance: (bal?.balance ?? 0) + debit.amount,
+        });
+      }
+    }
+    throw err;
+  }
+}
+
 /**
  * Advance a queued job all the way to `ready`.
  *
@@ -190,10 +277,11 @@ export type PipelineResult = {
  * delivered by an earlier run of the SAME list is dropped before any credit is
  * spent on enrichment or scrubbing.
  */
-export async function executePipeline(
+async function runPipelineBody(
   supabase: AnyClient,
   jobId: string,
   opts: { priorRunJobIds?: string[] } = {},
+  ctx: PipelineCtx = { stage: "queued", debits: [], workspaceId: null, actorUserId: null },
 ): Promise<PipelineResult | { ok: true; status: string }> {
   const { data: job, error: jobErr } = await supabase
     .from("jobs")
@@ -207,11 +295,14 @@ export async function executePipeline(
   // Every credit debit is attributed to the member who created the list, so a
   // scheduled rescan still lands on a person rather than "system".
   const actorUserId = (job.created_by as string | null) ?? null;
+  ctx.workspaceId = workspaceId;
+  ctx.actorUserId = actorUserId;
   const params = (job.params ?? {}) as JobParams;
   const channel = normalizeChannel(job.channel as string | null);
   const phonePipeline = channelUsesPhonePipeline(channel);
 
   const say = async (stage: string, message: string, count?: number) => {
+    ctx.stage = stage;
     await supabase.from("job_events").insert({
       job_id: jobId,
       workspace_id: workspaceId,
