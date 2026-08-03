@@ -32,6 +32,7 @@ import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as B2bRouteImport } from './routes/b2b'
 import { Route as AutoRouteImport } from './routes/auto'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AiDrivingForDollarsRouteImport } from './routes/ai-driving-for-dollars'
 import { Route as AgencyRouteImport } from './routes/agency'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -206,6 +207,11 @@ const AutoRoute = AutoRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiDrivingForDollarsRoute = AiDrivingForDollarsRouteImport.update({
+  id: '/ai-driving-for-dollars',
+  path: '/ai-driving-for-dollars',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgencyRoute = AgencyRouteImport.update({
@@ -540,6 +546,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
+  '/ai-driving-for-dollars': typeof AiDrivingForDollarsRoute
   '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
@@ -624,6 +631,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
+  '/ai-driving-for-dollars': typeof AiDrivingForDollarsRoute
   '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
@@ -708,6 +716,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
+  '/ai-driving-for-dollars': typeof AiDrivingForDollarsRoute
   '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
@@ -794,6 +803,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invite'
     | '/agency'
+    | '/ai-driving-for-dollars'
     | '/auth'
     | '/auto'
     | '/b2b'
@@ -878,6 +888,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invite'
     | '/agency'
+    | '/ai-driving-for-dollars'
     | '/auth'
     | '/auto'
     | '/b2b'
@@ -961,6 +972,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/accept-invite'
     | '/agency'
+    | '/ai-driving-for-dollars'
     | '/auth'
     | '/auto'
     | '/b2b'
@@ -1047,6 +1059,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
   AgencyRoute: typeof AgencyRoute
+  AiDrivingForDollarsRoute: typeof AiDrivingForDollarsRoute
   AuthRoute: typeof AuthRouteWithChildren
   AutoRoute: typeof AutoRoute
   B2bRoute: typeof B2bRoute
@@ -1250,6 +1263,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-driving-for-dollars': {
+      id: '/ai-driving-for-dollars'
+      path: '/ai-driving-for-dollars'
+      fullPath: '/ai-driving-for-dollars'
+      preLoaderRoute: typeof AiDrivingForDollarsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/agency': {
@@ -1806,6 +1826,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
   AgencyRoute: AgencyRoute,
+  AiDrivingForDollarsRoute: AiDrivingForDollarsRoute,
   AuthRoute: AuthRouteWithChildren,
   AutoRoute: AutoRoute,
   B2bRoute: B2bRoute,
