@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,10 +12,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "@tanstack/react-router";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Users, ShieldCheck, ShieldAlert, Ban, Sparkles, Layers, HelpCircle } from "lucide-react";
+import { Search, Users, ShieldCheck, ShieldAlert, Ban, Sparkles, Layers, HelpCircle, Wand2, Loader2 } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { formatLocation } from "@/lib/location";
 import { listLeadRecords, getLeadListMemberships } from "@/lib/monitoring.functions";
+import { enrichLeadRecord } from "@/lib/enrich-lead.functions";
 import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
 import { LeadTagChips } from "@/components/app/lead-tag-picker";
 import { PhoneCell, EmailCell } from "@/components/app/channel-icons";
@@ -78,6 +80,52 @@ function Stat({ icon, label, value, tone, help, sub }: { icon: React.ReactNode; 
 
 function LeadsPage() {
   return <LeadsPageInner />;
+}
+
+// On-demand enrichment (boss 2026-08-03): one click → skip-trace provider →
+// owner/mailing/property intel lands on the record. Phones/emails start
+// flowing automatically once Realeflow exposes their skip-trace contact data.
+function EnrichButton({ leadId, hasAddress }: { leadId: string; hasAddress: boolean }) {
+  const { workspaceId } = useWorkspaceId();
+  const queryClient = useQueryClient();
+  const enrich = useServerFn(enrichLeadRecord);
+  const mutation = useMutation({
+    mutationFn: () => enrich({ data: { workspaceId: workspaceId!, leadRecordId: leadId } }),
+    onSuccess: (res) => {
+      const bits = [
+        res.ownerName ? `Owner: ${res.ownerName}` : null,
+        res.absenteeOwner ? "Absentee Owner" : null,
+        res.phoneFound ? `Phone: ${res.phoneFound}` : null,
+        res.propertyValue ? `Value: $${res.propertyValue.toLocaleString()}` : null,
+      ].filter(Boolean);
+      toast.success("Lead Enriched", {
+        description: bits.length ? bits.join(" · ") : "Property record matched.",
+      });
+      void queryClient.invalidateQueries({ queryKey: ["lead-records"] });
+    },
+    onError: (e) => {
+      toast.error("Enrichment Failed", { description: (e as Error).message });
+    },
+  });
+
+  if (!hasAddress) return null;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          disabled={mutation.isPending}
+          onClick={() => mutation.mutate()}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-50"
+        >
+          {mutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs">
+        <p>Enrich — Pull Owner, Mailing Address &amp; Property Intel (1 Skip-Trace Credit)</p>
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 function ListMembershipCell({ leadId, count }: { leadId: string; count: number }) {
@@ -178,7 +226,7 @@ function LeadsPageInner() {
   // Registry fields present in this view, plus any novel fields a custom
   // scrape contributed — no column code per source.
   const dynamicCols: LeadField[] = aggregateFields(rows as Array<Record<string, unknown>>);
-  const colCount = dynamicCols.length + 4;
+  const colCount = dynamicCols.length + 5;
   const byRecordType = Object.entries(data?.byRecordType ?? {});
   const bySource = Object.entries(data?.bySource ?? {});
 
@@ -306,6 +354,7 @@ function LeadsPageInner() {
                 <th className="p-4">Disposition</th>
                 <th className="p-4">Lists</th>
                 <th className="p-4">Last Seen</th>
+                <th className="p-4" />
               </tr>
             </thead>
             <tbody>
@@ -438,6 +487,9 @@ function LeadsPageInner() {
                     title={`First Seen ${new Date(r.first_seen_at).toLocaleDateString()}`}
                   >
                     {new Date(r.last_seen_at).toLocaleDateString()}
+                  </td>
+                  <td className="p-4">
+                    <EnrichButton leadId={r.id} hasAddress={!!r.address} />
                   </td>
                 </tr>
                 );
