@@ -153,6 +153,7 @@ export const TEMPLATES: Template[] = [
     icon: Mail,
     tint: "bg-primary/10 text-primary",
     placeholderHint: "e.g. Pull contacts from these 40 roofing company websites",
+    credit_cost_per_lead: 0,
   },
   {
     id: "universal-crawl",
@@ -165,6 +166,7 @@ export const TEMPLATES: Template[] = [
     icon: Network,
     tint: "bg-indigo-500/10 text-indigo-600",
     placeholderHint: "e.g. Crawl acmeroofing.com and every subpage for contacts",
+    credit_cost_per_lead: 0,
   },
   {
     id: "yelp",
