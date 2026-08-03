@@ -12,7 +12,6 @@ import {
   BarChart3,
   Bot,
   Users,
-  ScanEye,
   Home,
 } from "lucide-react";
 import {
@@ -40,7 +39,6 @@ const ITEMS = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/app/assistant", label: "Build", icon: Plus },
   { to: "/app/lists", label: "Lists", icon: ListChecks },
-  { to: "/app/property-scan", label: "Property Scan", icon: ScanEye },
   { to: "/app/leads", label: "Leads", icon: Users },
   { to: "/app/property-search", label: "Property Search", icon: Home },
   { to: "/app/agent", label: "AI Agent", icon: Bot },
