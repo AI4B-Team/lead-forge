@@ -1,7 +1,7 @@
-import {
-  Database, createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  Database,
   Building2,
   Layers,
   LayoutDashboard,

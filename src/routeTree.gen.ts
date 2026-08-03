@@ -51,6 +51,7 @@ import { Route as AuthenticatedPlatformIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedPlatformWorkspacesRouteImport } from './routes/_authenticated/platform.workspaces'
 import { Route as AuthenticatedPlatformSourcesRouteImport } from './routes/_authenticated/platform.sources'
+import { Route as AuthenticatedPlatformRecordsRouteImport } from './routes/_authenticated/platform.records'
 import { Route as AuthenticatedPlatformAccessRouteImport } from './routes/_authenticated/platform.access'
 import { Route as AuthenticatedAppWorkspaceRouteImport } from './routes/_authenticated/app.workspace'
 import { Route as AuthenticatedAppTemplatesRouteImport } from './routes/_authenticated/app.templates'
@@ -306,6 +307,12 @@ const AuthenticatedPlatformSourcesRoute =
   AuthenticatedPlatformSourcesRouteImport.update({
     id: '/sources',
     path: '/sources',
+    getParentRoute: () => AuthenticatedPlatformRoute,
+  } as any)
+const AuthenticatedPlatformRecordsRoute =
+  AuthenticatedPlatformRecordsRouteImport.update({
+    id: '/records',
+    path: '/records',
     getParentRoute: () => AuthenticatedPlatformRoute,
   } as any)
 const AuthenticatedPlatformAccessRoute =
@@ -614,6 +621,7 @@ export interface FileRoutesByFullPath {
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/platform/access': typeof AuthenticatedPlatformAccessRoute
+  '/platform/records': typeof AuthenticatedPlatformRecordsRoute
   '/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -699,6 +707,7 @@ export interface FileRoutesByTo {
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/platform/access': typeof AuthenticatedPlatformAccessRoute
+  '/platform/records': typeof AuthenticatedPlatformRecordsRoute
   '/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -788,6 +797,7 @@ export interface FileRoutesById {
   '/_authenticated/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/_authenticated/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/_authenticated/platform/access': typeof AuthenticatedPlatformAccessRoute
+  '/_authenticated/platform/records': typeof AuthenticatedPlatformRecordsRoute
   '/_authenticated/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/_authenticated/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -877,6 +887,7 @@ export interface FileRouteTypes {
     | '/app/templates'
     | '/app/workspace'
     | '/platform/access'
+    | '/platform/records'
     | '/platform/sources'
     | '/platform/workspaces'
     | '/app/'
@@ -962,6 +973,7 @@ export interface FileRouteTypes {
     | '/app/templates'
     | '/app/workspace'
     | '/platform/access'
+    | '/platform/records'
     | '/platform/sources'
     | '/platform/workspaces'
     | '/app'
@@ -1050,6 +1062,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/templates'
     | '/_authenticated/app/workspace'
     | '/_authenticated/platform/access'
+    | '/_authenticated/platform/records'
     | '/_authenticated/platform/sources'
     | '/_authenticated/platform/workspaces'
     | '/_authenticated/app/'
@@ -1424,6 +1437,13 @@ declare module '@tanstack/react-router' {
       path: '/sources'
       fullPath: '/platform/sources'
       preLoaderRoute: typeof AuthenticatedPlatformSourcesRouteImport
+      parentRoute: typeof AuthenticatedPlatformRoute
+    }
+    '/_authenticated/platform/records': {
+      id: '/_authenticated/platform/records'
+      path: '/records'
+      fullPath: '/platform/records'
+      preLoaderRoute: typeof AuthenticatedPlatformRecordsRouteImport
       parentRoute: typeof AuthenticatedPlatformRoute
     }
     '/_authenticated/platform/access': {
@@ -1811,6 +1831,7 @@ const AuthenticatedAppRouteWithChildren =
 
 interface AuthenticatedPlatformRouteChildren {
   AuthenticatedPlatformAccessRoute: typeof AuthenticatedPlatformAccessRoute
+  AuthenticatedPlatformRecordsRoute: typeof AuthenticatedPlatformRecordsRoute
   AuthenticatedPlatformSourcesRoute: typeof AuthenticatedPlatformSourcesRoute
   AuthenticatedPlatformWorkspacesRoute: typeof AuthenticatedPlatformWorkspacesRoute
   AuthenticatedPlatformIndexRoute: typeof AuthenticatedPlatformIndexRoute
@@ -1818,6 +1839,7 @@ interface AuthenticatedPlatformRouteChildren {
 
 const AuthenticatedPlatformRouteChildren: AuthenticatedPlatformRouteChildren = {
   AuthenticatedPlatformAccessRoute: AuthenticatedPlatformAccessRoute,
+  AuthenticatedPlatformRecordsRoute: AuthenticatedPlatformRecordsRoute,
   AuthenticatedPlatformSourcesRoute: AuthenticatedPlatformSourcesRoute,
   AuthenticatedPlatformWorkspacesRoute: AuthenticatedPlatformWorkspacesRoute,
   AuthenticatedPlatformIndexRoute: AuthenticatedPlatformIndexRoute,
