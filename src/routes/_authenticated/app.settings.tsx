@@ -103,7 +103,7 @@ function Settings() {
                         }`}
                       >
                         <Icon className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                        <div className="mt-2 text-sm font-semibold text-foreground">{i.label}</div>
+                        <div className="mt-2 text-sm font-semibold text-foreground">{i.name}</div>
                         <div className="mt-1 h-4 text-[11px] font-semibold uppercase tracking-wider text-primary">
                           {active && (
                             <span className="inline-flex items-center gap-1"><Check className="h-3 w-3" /> Selected</span>
