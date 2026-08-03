@@ -164,8 +164,15 @@ export async function askAssistant(opts: {
         const synced = withStates(merged.data, specStates(merged.data));
         return {
           ...synced,
-          // Franchise removal is business-only; never carry it onto other sources.
-          removeFranchises: synced.sourceType === "business" ? synced.removeFranchises : false,
+          // Franchise removal is business-only; never carry it onto other
+          // sources. Google Maps runs default it ON (the card promises it)
+          // unless this turn explicitly set it.
+          removeFranchises:
+            synced.sourceType === "business"
+              ? synced.removeFranchises ||
+                (out.specPatch?.removeFranchises === undefined &&
+                  synced.templateId === GMAPS_TEMPLATE_ID)
+              : false,
           counties: normalizeCounties(synced.counties, synced.state),
         };
       })()
@@ -177,27 +184,8 @@ export async function askAssistant(opts: {
   };
 }
 
-/** Rough, honest pre-run estimate. Never presented as an exact bill. */
-export function estimate(spec: JobSpec): { rows: number; skipTraceCredits: number; scrapeCredits: number } | null {
-  if (!spec.sourceType || spec.sourceType === "upload") return null;
-  // Sources that never skip trace never quote skip-trace credits: creators and
-  // marketplace sellers are email-first, datasets have no enrichment at all,
-  // and non-US runs are email-only because SMS is US-only.
-  const profile = enrichmentProfile(spec.templateId);
-  const noPhoneWork =
-    profile === "creator" ||
-    profile === "seller" ||
-    templateOutputType(spec.templateId) === "data" ||
-    isNonUsRun({ templateId: spec.templateId, country: spec.country });
-  const geo = Math.max(1, spec.counties.length || 1);
-  const rows =
-    spec.sourceType === "records"
-      ? geo * 1200
-      : geo * Math.max(1, spec.niches.length) * 800;
-  return {
-    rows,
-    skipTraceCredits:
-      spec.skipTrace && !noPhoneWork ? Math.round(rows * (spec.sourceType === "records" ? 0.8 : 0.25)) : 0,
-    scrapeCredits: Math.round(rows / 10),
-  };
-}
+/**
+ * Rough, honest pre-run estimate. The math lives in estimate.shared so the
+ * List Builder requotes live from the exact same function.
+ */
+export const estimate = estimateSpec;
