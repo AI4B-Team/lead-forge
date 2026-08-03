@@ -935,7 +935,21 @@ function Assistant() {
       <div className="relative min-h-0 flex-1">
         <div
           ref={specScroll.ref}
-          className={`h-full min-h-0 lg:overflow-y-auto ${specScroll.overflowing ? "thin-scroll lg:pr-1" : ""}`}
+          tabIndex={0}
+          onScroll={() => setNudgeVisible(false)}
+          className={`h-full min-h-0 lg:overflow-y-auto ${
+            specScroll.overflowing ? "list-builder-scroll lg:pr-1" : ""
+          } ${
+            !specScroll.overflowing
+              ? ""
+              : !specScroll.atTop && !specScroll.atBottom
+                ? "scroll-mask-both"
+                : !specScroll.atBottom
+                  ? "scroll-mask-bottom"
+                  : !specScroll.atTop
+                    ? "scroll-mask-top"
+                    : ""
+          }`}
         >
           <JobSpecCard
             spec={spec}
@@ -955,8 +969,12 @@ function Assistant() {
             onRequestRecordType={requestRecordType}
           />
         </div>
-        {specScroll.overflowing && !specScroll.atBottom && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background to-transparent" />
+        {specScroll.overflowing && !specScroll.atBottom && nudgeVisible && (
+          <div className="scroll-nudge pointer-events-none absolute inset-x-0 bottom-2 flex justify-center">
+            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground shadow-sm">
+              <ChevronDown className="h-3.5 w-3.5" /> Scroll for more
+            </span>
+          </div>
         )}
       </div>
       <div className="shrink-0">{runFooter}</div>
