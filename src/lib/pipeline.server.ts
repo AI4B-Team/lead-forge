@@ -28,7 +28,10 @@ function norm(v: unknown): string {
 interface SourceAdapter {
   key: string;
   coverage: "live" | "beta" | "requested";
-  run(params: JobParams): Promise<RawLead[]>;
+  run(
+    params: JobParams,
+    onProgress?: (message: string, count?: number) => Promise<void> | void,
+  ): Promise<RawLead[]>;
 }
 
 const FIRST_NAMES = [
@@ -70,7 +73,7 @@ function fakePhone(i: number) {
 const businessAdapter: SourceAdapter = {
   key: "business.apify",
   coverage: "live",
-  async run(params) {
+  async run(params, onProgress) {
     const { getBusinessScraper } = await import("./data-providers");
     const scraper = getBusinessScraper();
     // A parameter file fans the same search out across every uploaded value.
@@ -88,6 +91,8 @@ const businessAdapter: SourceAdapter = {
       niches,
       counties,
       state: (params.state as string | undefined) ?? "FL",
+      max_results: Number(params.max_results) > 0 ? Number(params.max_results) : null,
+      onProgress,
     });
   },
 };
@@ -317,10 +322,20 @@ async function runPipelineBody(
   await supabase.from("jobs").update({ status: "scraping" }).eq("id", jobId);
   await say("scraping", "Searching the source for matching records…");
   const adapter = selectAdapter(job.source_type as string);
-  const sourced = await adapter.run(params);
+  const sourced = await adapter.run(params, (message, count) => say("scraping", message, count));
   const maxResults = Number(params.max_results) > 0 ? Number(params.max_results) : null;
   const raw = maxResults ? sourced.slice(0, maxResults) : sourced;
-  await supabase.from("jobs").update({ rows_in: raw.length }).eq("id", jobId);
+  const isSampleData = raw.some(
+    (r) => (r.source_meta as { provider?: string } | undefined)?.provider === "mock",
+  );
+  await supabase
+    .from("jobs")
+    .update(
+      isSampleData
+        ? { rows_in: raw.length, params: { ...params, sample_data: true } as never }
+        : { rows_in: raw.length },
+    )
+    .eq("id", jobId);
   await say("scraping", `Found ${raw.length.toLocaleString()} records.`, raw.length);
 
   // 2) DEDUPE — in-batch, workspace-wide, and against every prior run --------
