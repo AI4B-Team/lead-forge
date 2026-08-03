@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { INDUSTRIES } from "@/lib/mock-data";
+import { useReferenceData } from "@/hooks/use-reference-data";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
@@ -38,6 +38,7 @@ const STATES = ["FL", "TX", "GA", "NC", "AZ", "CA", "OH", "PA"];
 
 function Settings() {
   const { workspaceName } = useWorkspaceId();
+  const { industries } = useReferenceData();
   const [industry, setIndustry] = useState("real_estate");
   const [timezone, setTimezone] = useState("America/New_York");
   const [state, setState] = useState("FL");
