@@ -46,3 +46,11 @@ export const subscribeProviderAlert = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, email };
   });
+
+/** Live credential probe for the Apify scraper (Settings → Integrations). */
+export const checkApifyConnection = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const { verifyApifyToken } = await import("./data-providers/apify");
+    return verifyApifyToken();
+  });
