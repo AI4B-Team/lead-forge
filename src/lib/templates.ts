@@ -130,6 +130,7 @@ export const TEMPLATES: Template[] = [
     tint: "bg-blue-500/10 text-blue-600",
     logoDomain: "google.com",
     placeholderHint: "e.g. Water damage restoration in Tampa, FL — emails and phones",
+    credit_cost_per_lead: 1,
   },
   {
     id: "glocal",
@@ -143,6 +144,7 @@ export const TEMPLATES: Template[] = [
     tint: "bg-emerald-500/10 text-emerald-600",
     logoDomain: "google.com",
     placeholderHint: "e.g. Plumbers in Pinellas County, FL with phone numbers",
+    credit_cost_per_lead: 1,
   },
   {
     id: "contact-details",
