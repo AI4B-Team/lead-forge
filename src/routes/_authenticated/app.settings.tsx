@@ -88,14 +88,14 @@ function Settings() {
                   Tunes Templates, Message Tone, And Default Filters Across The Workspace.
                 </p>
                 <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {INDUSTRIES.map((i) => {
-                    const Icon = INDUSTRY_ICONS[i.key] ?? MoreHorizontal;
-                    const active = industry === i.key;
+                  {industries.map((i) => {
+                    const Icon = INDUSTRY_ICONS[i.slug] ?? MoreHorizontal;
+                    const active = industry === i.slug;
                     return (
                       <button
-                        key={i.key}
+                        key={i.slug}
                         type="button"
-                        onClick={() => setIndustry(i.key)}
+                        onClick={() => setIndustry(i.slug)}
                         className={`rounded-xl border p-3 text-left transition-all ${
                           active
                             ? "border-primary bg-primary/5 ring-1 ring-primary/30"
