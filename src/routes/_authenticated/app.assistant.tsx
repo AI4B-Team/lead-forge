@@ -203,11 +203,13 @@ function Assistant() {
   const specScroll = useOverflow<HTMLDivElement>();
   // One-time "Scroll for more" nudge: auto-dismisses after 4s, on first scroll,
   // or immediately when the viewer prefers reduced motion.
-  const [nudgeVisible, setNudgeVisible] = useState(
-    () => typeof window === "undefined" || !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
+  const [nudgeVisible, setNudgeVisible] = useState(true);
   useEffect(() => {
     if (!nudgeVisible) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setNudgeVisible(false);
+      return;
+    }
     const t = setTimeout(() => setNudgeVisible(false), 4000);
     return () => clearTimeout(t);
   }, [nudgeVisible]);
