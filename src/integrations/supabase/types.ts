@@ -729,6 +729,8 @@ export type Database = {
           created_by: string | null
           custom_interval_minutes: number | null
           error: string | null
+          failed_at: string | null
+          failed_stage: string | null
           id: string
           idempotency_key: string | null
           last_run_at: string | null
@@ -755,6 +757,8 @@ export type Database = {
           created_by?: string | null
           custom_interval_minutes?: number | null
           error?: string | null
+          failed_at?: string | null
+          failed_stage?: string | null
           id?: string
           idempotency_key?: string | null
           last_run_at?: string | null
@@ -781,6 +785,8 @@ export type Database = {
           created_by?: string | null
           custom_interval_minutes?: number | null
           error?: string | null
+          failed_at?: string | null
+          failed_stage?: string | null
           id?: string
           idempotency_key?: string | null
           last_run_at?: string | null
