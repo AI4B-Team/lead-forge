@@ -497,6 +497,42 @@ export type Database = {
           },
         ]
       }
+      county_coverage: {
+        Row: {
+          county_name: string
+          created_at: string
+          fips: string | null
+          id: string
+          notes: string | null
+          source_type: string
+          state: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          county_name: string
+          created_at?: string
+          fips?: string | null
+          id?: string
+          notes?: string | null
+          source_type?: string
+          state: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          county_name?: string
+          created_at?: string
+          fips?: string | null
+          id?: string
+          notes?: string | null
+          source_type?: string
+          state?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_balances: {
         Row: {
           balance: number
@@ -675,6 +711,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      industries: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          parent_id: string | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          parent_id?: string | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "industries_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "industries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_events: {
         Row: {
@@ -1406,6 +1483,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      record_types: {
+        Row: {
+          active: boolean
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       registrations: {
         Row: {
