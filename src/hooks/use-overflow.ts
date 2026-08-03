@@ -9,6 +9,7 @@ export function useOverflow<T extends HTMLElement = HTMLDivElement>() {
   const ref = useRef<T | null>(null);
   const [overflowing, setOverflowing] = useState(false);
   const [atBottom, setAtBottom] = useState(true);
+  const [atTop, setAtTop] = useState(true);
 
   const measure = useCallback(() => {
     const el = ref.current;
@@ -16,6 +17,7 @@ export function useOverflow<T extends HTMLElement = HTMLDivElement>() {
     const over = el.scrollHeight - el.clientHeight > 2;
     setOverflowing(over);
     setAtBottom(!over || el.scrollTop + el.clientHeight >= el.scrollHeight - 4);
+    setAtTop(!over || el.scrollTop <= 4);
   }, []);
 
   useEffect(() => {
@@ -26,11 +28,13 @@ export function useOverflow<T extends HTMLElement = HTMLDivElement>() {
     ro.observe(el);
     if (el.firstElementChild) ro.observe(el.firstElementChild);
     el.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
     return () => {
       ro.disconnect();
       el.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
     };
   }, [measure]);
 
-  return { ref, overflowing, atBottom, measure };
+  return { ref, overflowing, atBottom, atTop, measure };
 }
