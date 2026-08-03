@@ -222,7 +222,13 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
     // pre-flight check still cannot spend past its cap.
     {
       const { assertSpendAllowed } = await import("./accountability.server");
-      const estimated = Math.max(0, Number((spec as { maxResults?: number }).maxResults ?? 0));
+      // Real projected volume: the cap applies per search, and one search runs
+      // per niche × county. This is what the credit cap must be checked against.
+      const perSearch = Math.max(0, Number(spec.maxResults ?? 0));
+      const searches =
+        Math.max(1, spec.counties.length || 1) *
+        (spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1);
+      const estimated = perSearch * searches;
       await assertSpendAllowed(context.supabase, data.workspaceId, context.userId, {
         amount: estimated,
         action: "build_list",
@@ -282,6 +288,8 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
         counties: spec.counties,
         county: spec.counties[0] ?? null,
         recency_days: spec.recencyDays,
+        // Per-search row cap — reaches the Apify actor input, not a post-fetch slice.
+        max_results: spec.maxResults,
         remove_franchises: spec.removeFranchises,
         // Parameter file: fan the scrape out across each uploaded value.
         scrape_targets: spec.scrapeTargets,

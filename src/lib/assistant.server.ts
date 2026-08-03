@@ -7,6 +7,8 @@
 
 import { jobSpecSchema, withStates, specStates, type JobSpec, type AssistantMessage } from "./assistant.shared";
 import { enrichmentProfile, isNonUsRun, templateOutputType } from "./pipeline-options";
+import { estimateSpec } from "./estimate.shared";
+import { GMAPS_TEMPLATE_ID } from "./pipeline-options";
 import { countiesForState, formatCounty, parseCounty } from "./us-geo";
 
 /** Snap model-provided county names onto real counties in the spec's state. */
@@ -68,7 +70,12 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "- Coverage caveats apply ONLY to the records source. For a records county not listed above, select it if asked but say plainly it is not covered yet, offer to log a county request, and suggest the closest covered market. For business / local scrapes never mention coverage limits — every US county works.",
     "- Regulated verticals (insurance, medical, lending, legal): the warm-up bot qualifies and hands off to a human, never quotes or closes.",
     "- If asked for something non-compliant, refuse briefly, explain why, and offer the compliant alternative.",
-    "- removeFranchises is a minor opt-in filter that is OFF by default. NEVER mention franchises, chains, \"remove franchises\", or which sources support it unless the operator explicitly raises it (\"franchise\", \"no franchises\", \"no chains\", \"independents only\", \"local mom-and-pop only\") or has already toggled it on. Do not list it among source capabilities, do not suggest it, and never volunteer caveats about it. Set removeFranchises true only when explicitly asked, and only for the business source.",
+    "- removeFranchises is a minor filter, ON by default only for the Google Maps Businesses template and OFF everywhere else. NEVER mention franchises, chains, \"remove franchises\", or which sources support it unless the operator explicitly raises it (\"franchise\", \"no franchises\", \"no chains\", \"independents only\", \"local mom-and-pop only\") or has already toggled it on. Do not list it among source capabilities, do not suggest it, and never volunteer caveats about it. Only change removeFranchises when explicitly asked, and only for the business source.",
+    "",
+    "ROW CAP (maxResults):",
+    "- maxResults is the cap PER SEARCH STRING, and one search runs per niche × county. 3 niches across 2 counties at 500 is up to 3,000 rows.",
+    "- When the operator says \"just a few\", \"small test\", \"sample\", or \"quick check\", set maxResults to 25. For \"a couple hundred\" or a cautious first run set 100. When they name a number, set maxResults to that number (max 50000).",
+    "- Otherwise leave maxResults as it is; the default is 500. Never mention it unless the operator asks about volume, cost, or a test run.",
     "",
     "ENRICHMENT BY SOURCE TYPE (important):",
     "- Creator sources (TikTok, Instagram, YouTube, Pinterest, and their hashtag/search variants): the deliverable is contact email + profile + engagement. NEVER offer skip tracing or mobile-number filtering for these, and never set skipTrace or mobileOnly true. Set emailRequired true instead.",
@@ -157,8 +164,15 @@ export async function askAssistant(opts: {
         const synced = withStates(merged.data, specStates(merged.data));
         return {
           ...synced,
-          // Franchise removal is business-only; never carry it onto other sources.
-          removeFranchises: synced.sourceType === "business" ? synced.removeFranchises : false,
+          // Franchise removal is business-only; never carry it onto other
+          // sources. Google Maps runs default it ON (the card promises it)
+          // unless this turn explicitly set it.
+          removeFranchises:
+            synced.sourceType === "business"
+              ? synced.removeFranchises ||
+                (out.specPatch?.removeFranchises === undefined &&
+                  synced.templateId === GMAPS_TEMPLATE_ID)
+              : false,
           counties: normalizeCounties(synced.counties, synced.state),
         };
       })()
@@ -170,27 +184,8 @@ export async function askAssistant(opts: {
   };
 }
 
-/** Rough, honest pre-run estimate. Never presented as an exact bill. */
-export function estimate(spec: JobSpec): { rows: number; skipTraceCredits: number; scrapeCredits: number } | null {
-  if (!spec.sourceType || spec.sourceType === "upload") return null;
-  // Sources that never skip trace never quote skip-trace credits: creators and
-  // marketplace sellers are email-first, datasets have no enrichment at all,
-  // and non-US runs are email-only because SMS is US-only.
-  const profile = enrichmentProfile(spec.templateId);
-  const noPhoneWork =
-    profile === "creator" ||
-    profile === "seller" ||
-    templateOutputType(spec.templateId) === "data" ||
-    isNonUsRun({ templateId: spec.templateId, country: spec.country });
-  const geo = Math.max(1, spec.counties.length || 1);
-  const rows =
-    spec.sourceType === "records"
-      ? geo * 1200
-      : geo * Math.max(1, spec.niches.length) * 800;
-  return {
-    rows,
-    skipTraceCredits:
-      spec.skipTrace && !noPhoneWork ? Math.round(rows * (spec.sourceType === "records" ? 0.8 : 0.25)) : 0,
-    scrapeCredits: Math.round(rows / 10),
-  };
-}
+/**
+ * Rough, honest pre-run estimate. The math lives in estimate.shared so the
+ * List Builder requotes live from the exact same function.
+ */
+export const estimate = estimateSpec;
