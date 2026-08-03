@@ -32,6 +32,7 @@ import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as B2bRouteImport } from './routes/b2b'
 import { Route as AutoRouteImport } from './routes/auto'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AiDrivingForDollarsRouteImport } from './routes/ai-driving-for-dollars'
 import { Route as AgencyRouteImport } from './routes/agency'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -57,6 +58,7 @@ import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
 import { Route as AuthenticatedAppRegistrationRouteImport } from './routes/_authenticated/app.registration'
+import { Route as AuthenticatedAppPropertyScanRouteImport } from './routes/_authenticated/app.property-scan'
 import { Route as AuthenticatedAppNumbersRouteImport } from './routes/_authenticated/app.numbers'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
@@ -207,6 +209,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiDrivingForDollarsRoute = AiDrivingForDollarsRouteImport.update({
+  id: '/ai-driving-for-dollars',
+  path: '/ai-driving-for-dollars',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgencyRoute = AgencyRouteImport.update({
   id: '/agency',
   path: '/agency',
@@ -337,6 +344,12 @@ const AuthenticatedAppRegistrationRoute =
   AuthenticatedAppRegistrationRouteImport.update({
     id: '/registration',
     path: '/registration',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppPropertyScanRoute =
+  AuthenticatedAppPropertyScanRouteImport.update({
+    id: '/property-scan',
+    path: '/property-scan',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppNumbersRoute = AuthenticatedAppNumbersRouteImport.update({
@@ -533,6 +546,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
+  '/ai-driving-for-dollars': typeof AiDrivingForDollarsRoute
   '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
@@ -578,6 +592,7 @@ export interface FileRoutesByFullPath {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/app/property-scan': typeof AuthenticatedAppPropertyScanRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -616,6 +631,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
+  '/ai-driving-for-dollars': typeof AiDrivingForDollarsRoute
   '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
@@ -659,6 +675,7 @@ export interface FileRoutesByTo {
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/app/property-scan': typeof AuthenticatedAppPropertyScanRoute
   '/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -699,6 +716,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
   '/agency': typeof AgencyRoute
+  '/ai-driving-for-dollars': typeof AiDrivingForDollarsRoute
   '/auth': typeof AuthRouteWithChildren
   '/auto': typeof AutoRoute
   '/b2b': typeof B2bRoute
@@ -744,6 +762,7 @@ export interface FileRoutesById {
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
   '/_authenticated/app/numbers': typeof AuthenticatedAppNumbersRoute
+  '/_authenticated/app/property-scan': typeof AuthenticatedAppPropertyScanRoute
   '/_authenticated/app/registration': typeof AuthenticatedAppRegistrationRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -784,6 +803,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invite'
     | '/agency'
+    | '/ai-driving-for-dollars'
     | '/auth'
     | '/auto'
     | '/b2b'
@@ -829,6 +849,7 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/leads'
     | '/app/numbers'
+    | '/app/property-scan'
     | '/app/registration'
     | '/app/reports'
     | '/app/settings'
@@ -867,6 +888,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invite'
     | '/agency'
+    | '/ai-driving-for-dollars'
     | '/auth'
     | '/auto'
     | '/b2b'
@@ -910,6 +932,7 @@ export interface FileRouteTypes {
     | '/app/integrations'
     | '/app/leads'
     | '/app/numbers'
+    | '/app/property-scan'
     | '/app/registration'
     | '/app/reports'
     | '/app/settings'
@@ -949,6 +972,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/accept-invite'
     | '/agency'
+    | '/ai-driving-for-dollars'
     | '/auth'
     | '/auto'
     | '/b2b'
@@ -994,6 +1018,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/leads'
     | '/_authenticated/app/numbers'
+    | '/_authenticated/app/property-scan'
     | '/_authenticated/app/registration'
     | '/_authenticated/app/reports'
     | '/_authenticated/app/settings'
@@ -1034,6 +1059,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
   AgencyRoute: typeof AgencyRoute
+  AiDrivingForDollarsRoute: typeof AiDrivingForDollarsRoute
   AuthRoute: typeof AuthRouteWithChildren
   AutoRoute: typeof AutoRoute
   B2bRoute: typeof B2bRoute
@@ -1239,6 +1265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-driving-for-dollars': {
+      id: '/ai-driving-for-dollars'
+      path: '/ai-driving-for-dollars'
+      fullPath: '/ai-driving-for-dollars'
+      preLoaderRoute: typeof AiDrivingForDollarsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/agency': {
       id: '/agency'
       path: '/agency'
@@ -1412,6 +1445,13 @@ declare module '@tanstack/react-router' {
       path: '/registration'
       fullPath: '/app/registration'
       preLoaderRoute: typeof AuthenticatedAppRegistrationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/property-scan': {
+      id: '/_authenticated/app/property-scan'
+      path: '/property-scan'
+      fullPath: '/app/property-scan'
+      preLoaderRoute: typeof AuthenticatedAppPropertyScanRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/numbers': {
@@ -1668,6 +1708,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
   AuthenticatedAppNumbersRoute: typeof AuthenticatedAppNumbersRoute
+  AuthenticatedAppPropertyScanRoute: typeof AuthenticatedAppPropertyScanRoute
   AuthenticatedAppRegistrationRoute: typeof AuthenticatedAppRegistrationRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
@@ -1701,6 +1742,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
   AuthenticatedAppNumbersRoute: AuthenticatedAppNumbersRoute,
+  AuthenticatedAppPropertyScanRoute: AuthenticatedAppPropertyScanRoute,
   AuthenticatedAppRegistrationRoute: AuthenticatedAppRegistrationRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
@@ -1784,6 +1826,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
   AgencyRoute: AgencyRoute,
+  AiDrivingForDollarsRoute: AiDrivingForDollarsRoute,
   AuthRoute: AuthRouteWithChildren,
   AutoRoute: AutoRoute,
   B2bRoute: B2bRoute,

@@ -12,6 +12,7 @@ import {
   BarChart3,
   Bot,
   Users,
+  ScanEye,
 } from "lucide-react";
 import {
   Sidebar,
@@ -38,6 +39,7 @@ const ITEMS = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/app/assistant", label: "Build", icon: Plus },
   { to: "/app/lists", label: "Lists", icon: ListChecks },
+  { to: "/app/property-scan", label: "Property Scan", icon: ScanEye },
   { to: "/app/leads", label: "Leads", icon: Users },
   { to: "/app/agent", label: "AI Agent", icon: Bot },
   { to: "/app/campaigns", label: "Campaigns", icon: MessageSquare },

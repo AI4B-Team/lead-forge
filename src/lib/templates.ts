@@ -4,6 +4,7 @@ import {
   Car, Utensils, Stethoscope, Wrench, Camera, Music, Plane, Store,
   Mail, Rocket, BadgeCheck, Network,
   DollarSign, BookOpen, Trophy, Film, Code, MessageSquare, Hotel, Bed,
+  ScanEye,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -67,6 +68,18 @@ export const TEMPLATES: Template[] = [
   },
 
   // ---------- Business & Local ----------
+  {
+    id: "propscan",
+    shortTitle: "Property Scan",
+    shortSubtitle: "AI Driving For Dollars",
+    title: "Property Scan",
+    subtitle: "Find Visibly Distressed Properties — Scored, Enriched, And Skip Traced.",
+    category: "realestate",
+    prompt: "Scan Hillsborough County, FL for rundown single-family homes with roof damage, overgrown yards, or signs of vacancy",
+    icon: ScanEye,
+    tint: "bg-primary/10 text-primary",
+    placeholderHint: "e.g. Tarped roofs in ZIP 33610 — absentee owners, 7+ years owned",
+  },
   {
     id: "gmaps",
     shortTitle: "Google Maps",
