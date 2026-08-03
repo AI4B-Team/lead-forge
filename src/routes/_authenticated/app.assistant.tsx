@@ -617,7 +617,6 @@ function Assistant() {
     lastTemplateId.current = null;
     setFirstPrompt("");
     setCoverage([]);
-    setEstimate(null);
     setSuggested([]);
     setConfirmed(false);
     setRevealed(0);
