@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { statusLabel, type JobStatus } from "@/lib/mock-data";
+import { statusLabel, type JobStatus } from "@/lib/job-status";
 import { cn } from "@/lib/utils";
 import { resolveListStatus } from "@/lib/list-status";
 
