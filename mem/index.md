@@ -8,9 +8,12 @@ Title Case headings, card titles, and button labels only — descriptions/body c
 Skip tracing is included free on Growth and up within daily/monthly fair-use caps; metered on Starter and past caps.
 Enrichment is per source category: creator sources are email-only (no skip trace, no mobile filter); LinkedIn keeps skip trace but default off.
 
+Public records: never solve CAPTCHAs; one records request per agency per cycle, distributed to all subscribed workspaces. All records paths are free.
+
 Platform-wide metrics and admin tools live only in Platform Admin (/platform), never in the customer app.
 
 ## Memories
+- [Public records sourcing](mem://product/public-records-sourcing.md) — Access-path order, no-CAPTCHA rule, one-request-per-agency throttle, free credit cost
 - [Product positioning](mem://product/positioning.md) — Copy rules: multi-source data, uploaded lists, optional skip trace, outcome-first messaging
 - [Pricing model](mem://pricing/model.md) — Tier allowances, flat SMS rates, included skip trace with fair-use caps, annual −20%, stack-replacement math
 - [Real Elite identity spine](mem://product/identity-spine.md) — Federated SSO handoff, canonical org/user IDs, hub event payloads
