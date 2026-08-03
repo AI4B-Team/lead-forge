@@ -211,26 +211,6 @@ function CommitInput({
   );
 }
 
-function CommitTextarea({
-  value,
-  onCommit,
-  className,
-  placeholder,
-  rows,
-}: { value: string; onCommit: (v: string) => void; className?: string; placeholder?: string; rows?: number }) {
-  const d = useCommitDraft(value, onCommit);
-  return (
-    <Textarea
-      className={className}
-      rows={rows}
-      value={d.value}
-      placeholder={placeholder}
-      onChange={(e) => d.onChange(e.target.value)}
-      onBlur={d.onBlur}
-    />
-  );
-}
-
 /**
  * The List Builder panel. It renders from the selected template's field schema,
  * so each source asks only for what it actually needs.
@@ -269,7 +249,7 @@ export function JobSpecCard({
 }) {
   const set = <K extends keyof JobSpec>(key: K, value: JobSpec[K]) => onChange({ ...spec, [key]: value });
   const inf = (key: keyof JobSpec) => Boolean(inferred?.has(key));
-  const { industries, countyCoverage } = useReferenceData();
+  const { countyCoverage } = useReferenceData();
   // Business / local scrapes have no geo whitelist, so fall back to the
   // source-aware verdict instead of assuming "Not Covered".
   const covFor = (county: string): Coverage =>
