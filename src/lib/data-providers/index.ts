@@ -20,6 +20,10 @@ export type BusinessScrapeParams = {
   niches: string[];
   counties: string[];
   state: string;
+  /** Per-search cap. Defaults to 500 in the adapter when unset. */
+  max_results?: number | null;
+  /** Optional progress sink so long runs can stream status to the user. */
+  onProgress?: (message: string, count?: number) => Promise<void> | void;
 };
 
 export interface BusinessScraper {
