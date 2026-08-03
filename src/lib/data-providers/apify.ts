@@ -2,8 +2,8 @@ import type { BusinessScraper, BusinessScrapeParams, RawLead } from "./index";
 
 // Apify Google Maps scraper adapter. Reads APIFY_TOKEN (and optional
 // APIFY_GMAPS_ACTOR override) at call time from process.env — never at module
-// scope. Falls back to a deterministic mock when the token is missing so the
-// full pipeline still works out of the box.
+// scope. Real failures propagate to the pipeline's failure path; mock data only
+// ever runs when LEADTRACE_USE_MOCK_DATA === 'true'.
 
 const FRANCHISE_MARKERS = ["ServPro", "Roto-Rooter", "Mr Rooter", "Aire Serv"];
 const LAST_NAMES = ["Nguyen", "Patel", "Garcia", "Smith", "Johnson", "Lopez", "Kim", "Davis", "Martinez", "Chen"];
@@ -32,7 +32,8 @@ async function mockScrape(params: BusinessScrapeParams): Promise<RawLead[]> {
           email: `contact${i}@example.com`,
           city: county,
           state: params.state,
-          source_meta: { niche, county, franchise: isFranchise, provider: "mock" },
+          // Mock rows are always stamped so results UI can flag them.
+          source_meta: { niche, county, franchise: isFranchise, provider: "mock", sample_data: true },
         });
         i++;
       }
@@ -42,8 +43,42 @@ async function mockScrape(params: BusinessScrapeParams): Promise<RawLead[]> {
 }
 
 const APIFY_BASE = "https://api.apify.com/v2";
+const POLL_TIMEOUT_MS = 20 * 60 * 1000;
 
-async function apifyScrape(token: string, actor: string, params: BusinessScrapeParams): Promise<RawLead[]> {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+class ApifyAuthError extends Error {}
+
+/** Retries 429/5xx up to 3 times; 4xx auth errors throw immediately. */
+async function apifyFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  let delay = 1000;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const res = await fetch(url, init);
+    if (res.ok) return res;
+    const body = await res.text().catch(() => "");
+    const transient = res.status === 429 || res.status >= 500;
+    if (res.status === 401 || res.status === 403) {
+      throw new ApifyAuthError(
+        `Apify rejected the credentials (${res.status}). Reconnect Apify in Settings → Integrations.`,
+      );
+    }
+    if (!transient || attempt === 3) {
+      throw new Error(`Apify request failed: ${res.status} ${body.slice(0, 200)}`);
+    }
+    await sleep(delay);
+    delay *= 2;
+  }
+  throw new Error("Apify request failed after retries.");
+}
+
+type Progress = (message: string, count?: number) => Promise<void> | void;
+
+async function apifyScrape(
+  token: string,
+  actor: string,
+  params: BusinessScrapeParams & { max_results?: number | null },
+  onProgress?: Progress,
+): Promise<RawLead[]> {
   const searchStrings: string[] = [];
   const niches = params.niches.length ? params.niches : ["local business"];
   const counties = params.counties.length ? params.counties : [""];
@@ -52,24 +87,72 @@ async function apifyScrape(token: string, actor: string, params: BusinessScrapeP
       searchStrings.push(`${niche} in ${county} ${params.state}`.trim());
     }
   }
+  const maxPerSearch = params.max_results && params.max_results > 0 ? params.max_results : 500;
 
-  // Kick off actor synchronously and get dataset items back.
-  const url = `${APIFY_BASE}/acts/${encodeURIComponent(actor)}/run-sync-get-dataset-items?token=${encodeURIComponent(token)}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      searchStringsArray: searchStrings,
-      maxCrawledPlacesPerSearch: 100,
-      language: "en",
-      exportPlaceUrls: false,
-    }),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Apify actor failed: ${res.status} ${text.slice(0, 200)}`);
+  // a) START -----------------------------------------------------------------
+  const startRes = await apifyFetch(
+    `${APIFY_BASE}/acts/${encodeURIComponent(actor)}/runs?token=${encodeURIComponent(token)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        searchStringsArray: searchStrings,
+        maxCrawledPlacesPerSearch: maxPerSearch,
+        language: "en",
+        exportPlaceUrls: false,
+      }),
+    },
+  );
+  const start = (await startRes.json()) as { data?: { id?: string; defaultDatasetId?: string } };
+  const runId = start.data?.id;
+  const datasetId = start.data?.defaultDatasetId;
+  if (!runId || !datasetId) throw new Error("Apify did not return a run id.");
+
+  // b) POLL ------------------------------------------------------------------
+  const startedAt = Date.now();
+  let interval = 2000;
+  for (;;) {
+    if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
+      await apifyFetch(`${APIFY_BASE}/actor-runs/${runId}/abort?token=${encodeURIComponent(token)}`, {
+        method: "POST",
+      }).catch(() => undefined);
+      throw new Error("Apify run exceeded the 20 minute limit and was aborted.");
+    }
+    await sleep(interval);
+    interval = Math.min(Math.round(interval * 1.5), 15000);
+
+    const statusRes = await apifyFetch(
+      `${APIFY_BASE}/actor-runs/${runId}?token=${encodeURIComponent(token)}`,
+    );
+    const run = (await statusRes.json()) as {
+      data?: { status?: string; statusMessage?: string; stats?: { itemCount?: number } };
+    };
+    const status = run.data?.status ?? "RUNNING";
+    const itemCount = run.data?.stats?.itemCount;
+    if (status === "SUCCEEDED") break;
+    if (status === "FAILED" || status === "ABORTED" || status === "TIMED-OUT") {
+      throw new Error(`Apify run ${status.toLowerCase()}: ${run.data?.statusMessage ?? "no detail"}`);
+    }
+    await onProgress?.(
+      typeof itemCount === "number"
+        ? `Scraping in progress — ${itemCount.toLocaleString()} records so far.`
+        : "Scraping in progress…",
+      itemCount,
+    );
   }
-  const items = (await res.json()) as Array<Record<string, unknown>>;
+
+  // c) FETCH (paged) ---------------------------------------------------------
+  const limit = 1000;
+  const items: Array<Record<string, unknown>> = [];
+  for (let offset = 0; ; offset += limit) {
+    const res = await apifyFetch(
+      `${APIFY_BASE}/datasets/${datasetId}/items?token=${encodeURIComponent(token)}&clean=true&format=json&offset=${offset}&limit=${limit}`,
+    );
+    const page = (await res.json()) as Array<Record<string, unknown>>;
+    items.push(...page);
+    if (page.length < limit) break;
+  }
+
   return items.map((it) => {
     const title = (it.title as string | undefined) ?? (it.name as string | undefined) ?? null;
     const phone = (it.phone as string | undefined) ?? (it.phoneUnformatted as string | undefined) ?? null;
@@ -99,6 +182,10 @@ async function apifyScrape(token: string, actor: string, params: BusinessScrapeP
   });
 }
 
+export function useMockData(): boolean {
+  return process.env.LEADTRACE_USE_MOCK_DATA === "true";
+}
+
 export function getBusinessScraper(): BusinessScraper {
   return {
     key: "apify.gmaps",
@@ -107,14 +194,13 @@ export function getBusinessScraper(): BusinessScraper {
     },
     async scrape(params) {
       const token = process.env.APIFY_TOKEN;
-      if (!token) return mockScrape(params);
-      const actor = process.env.APIFY_GMAPS_ACTOR ?? "compass~google-maps-scraper";
-      try {
-        return await apifyScrape(token, actor, params);
-      } catch (err) {
-        console.error("[apify] scrape failed, falling back to mock:", err);
-        return mockScrape(params);
+      if (!token) {
+        if (useMockData()) return mockScrape(params);
+        throw new Error("Apify is not connected. Add credentials in Settings → Integrations.");
       }
+      const actor = process.env.APIFY_GMAPS_ACTOR ?? "compass~google-maps-scraper";
+      // No mock fallback: real failures must surface, never fabricate leads.
+      return apifyScrape(token, actor, params, params.onProgress);
     },
   };
 }

@@ -28,7 +28,10 @@ function norm(v: unknown): string {
 interface SourceAdapter {
   key: string;
   coverage: "live" | "beta" | "requested";
-  run(params: JobParams): Promise<RawLead[]>;
+  run(
+    params: JobParams,
+    onProgress?: (message: string, count?: number) => Promise<void> | void,
+  ): Promise<RawLead[]>;
 }
 
 const FIRST_NAMES = [
@@ -70,7 +73,7 @@ function fakePhone(i: number) {
 const businessAdapter: SourceAdapter = {
   key: "business.apify",
   coverage: "live",
-  async run(params) {
+  async run(params, onProgress) {
     const { getBusinessScraper } = await import("./data-providers");
     const scraper = getBusinessScraper();
     // A parameter file fans the same search out across every uploaded value.
@@ -88,6 +91,8 @@ const businessAdapter: SourceAdapter = {
       niches,
       counties,
       state: (params.state as string | undefined) ?? "FL",
+      max_results: Number(params.max_results) > 0 ? Number(params.max_results) : null,
+      onProgress,
     });
   },
 };
@@ -183,6 +188,93 @@ export type PipelineResult = {
   channel: Channel;
 };
 
+type PipelineDebit = { kind: "scrape" | "skip_trace" | "sms"; amount: number };
+type PipelineCtx = {
+  stage: string;
+  debits: PipelineDebit[];
+  workspaceId: string | null;
+  actorUserId: string | null;
+};
+
+/** Never let a provider token or key reach a column workspace members can read. */
+function sanitizeError(message: string): string {
+  return message
+    .replace(/(token|key|secret|password|authorization|bearer)([=:\s"']+)[^\s"'&,)]+/gi, "$1=[redacted]")
+    .replace(/\b[A-Za-z0-9_-]{32,}\b/g, "[redacted]")
+    .slice(0, 500);
+}
+
+/**
+ * Public entry point. Wraps the pipeline so any throw lands the list in a real
+ * terminal `failed` state, refunds credits this run already debited, and still
+ * re-throws for callers (runJob, the recurring engine).
+ */
+export async function executePipeline(
+  supabase: AnyClient,
+  jobId: string,
+  opts: { priorRunJobIds?: string[] } = {},
+): Promise<PipelineResult | { ok: true; status: string }> {
+  const ctx: PipelineCtx = { stage: "queued", debits: [], workspaceId: null, actorUserId: null };
+  try {
+    return await runPipelineBody(supabase, jobId, opts, ctx);
+  } catch (err) {
+    const message = sanitizeError(err instanceof Error ? err.message : String(err));
+    await supabase
+      .from("jobs")
+      .update({
+        status: "failed",
+        error: message,
+        failed_stage: ctx.stage,
+        failed_at: new Date().toISOString(),
+      })
+      .eq("id", jobId);
+
+    if (ctx.workspaceId) {
+      await supabase.from("job_events").insert({
+        job_id: jobId,
+        workspace_id: ctx.workspaceId,
+        stage: "failed",
+        message: `Run failed during ${ctx.stage}: ${message}`,
+        count: null,
+      });
+
+      // Refund every debit this run made. Keyed on job + kind + reason so a
+      // retry can never double-refund.
+      for (const debit of ctx.debits) {
+        if (debit.amount <= 0) continue;
+        const { data: already } = await supabase
+          .from("credit_ledger")
+          .select("id")
+          .eq("job_id", jobId)
+          .eq("kind", debit.kind)
+          .eq("reason", "refund:job_failed")
+          .maybeSingle();
+        if (already) continue;
+        await supabase.from("credit_ledger").insert({
+          workspace_id: ctx.workspaceId,
+          kind: debit.kind,
+          delta: debit.amount,
+          reason: "refund:job_failed",
+          job_id: jobId,
+          actor_user_id: ctx.actorUserId,
+        });
+        const { data: bal } = await supabase
+          .from("credit_balances")
+          .select("balance")
+          .eq("workspace_id", ctx.workspaceId)
+          .eq("kind", debit.kind)
+          .maybeSingle();
+        await supabase.from("credit_balances").upsert({
+          workspace_id: ctx.workspaceId,
+          kind: debit.kind,
+          balance: (bal?.balance ?? 0) + debit.amount,
+        });
+      }
+    }
+    throw err;
+  }
+}
+
 /**
  * Advance a queued job all the way to `ready`.
  *
@@ -190,10 +282,11 @@ export type PipelineResult = {
  * delivered by an earlier run of the SAME list is dropped before any credit is
  * spent on enrichment or scrubbing.
  */
-export async function executePipeline(
+async function runPipelineBody(
   supabase: AnyClient,
   jobId: string,
   opts: { priorRunJobIds?: string[] } = {},
+  ctx: PipelineCtx = { stage: "queued", debits: [], workspaceId: null, actorUserId: null },
 ): Promise<PipelineResult | { ok: true; status: string }> {
   const { data: job, error: jobErr } = await supabase
     .from("jobs")
@@ -207,11 +300,14 @@ export async function executePipeline(
   // Every credit debit is attributed to the member who created the list, so a
   // scheduled rescan still lands on a person rather than "system".
   const actorUserId = (job.created_by as string | null) ?? null;
+  ctx.workspaceId = workspaceId;
+  ctx.actorUserId = actorUserId;
   const params = (job.params ?? {}) as JobParams;
   const channel = normalizeChannel(job.channel as string | null);
   const phonePipeline = channelUsesPhonePipeline(channel);
 
   const say = async (stage: string, message: string, count?: number) => {
+    ctx.stage = stage;
     await supabase.from("job_events").insert({
       job_id: jobId,
       workspace_id: workspaceId,
@@ -226,10 +322,20 @@ export async function executePipeline(
   await supabase.from("jobs").update({ status: "scraping" }).eq("id", jobId);
   await say("scraping", "Searching the source for matching records…");
   const adapter = selectAdapter(job.source_type as string);
-  const sourced = await adapter.run(params);
+  const sourced = await adapter.run(params, (message, count) => say("scraping", message, count));
   const maxResults = Number(params.max_results) > 0 ? Number(params.max_results) : null;
   const raw = maxResults ? sourced.slice(0, maxResults) : sourced;
-  await supabase.from("jobs").update({ rows_in: raw.length }).eq("id", jobId);
+  const isSampleData = raw.some(
+    (r) => (r.source_meta as { provider?: string } | undefined)?.provider === "mock",
+  );
+  await supabase
+    .from("jobs")
+    .update(
+      isSampleData
+        ? { rows_in: raw.length, params: { ...params, sample_data: true } as never }
+        : { rows_in: raw.length },
+    )
+    .eq("id", jobId);
   await say("scraping", `Found ${raw.length.toLocaleString()} records.`, raw.length);
 
   // 2) DEDUPE — in-batch, workspace-wide, and against every prior run --------
@@ -401,6 +507,7 @@ export async function executePipeline(
         kind: "skip_trace",
         balance: Math.max(0, (bal?.balance ?? 0) - skiptraced),
       });
+      ctx.debits.push({ kind: "skip_trace", amount: skiptraced });
     }
     await supabase.from("jobs").update({ rows_skiptraced: skiptraced }).eq("id", jobId);
     await say(
@@ -466,6 +573,7 @@ export async function executePipeline(
     kind: "scrape",
     balance: Math.max(0, (scrapeBal?.balance ?? 0) - verified.length),
   });
+  ctx.debits.push({ kind: "scrape", amount: verified.length });
 
   // 5) SCRUB — SMS only. Email/direct-mail files are not phone campaigns. ----
   const { data: inserted } = await supabase.from("leads").select("id, phone").eq("job_id", jobId);

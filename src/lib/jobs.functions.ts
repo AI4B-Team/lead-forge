@@ -17,7 +17,7 @@ export const listJobs = createServerFn({ method: "GET" })
     const { data: jobs, error } = await supabase
       .from("jobs")
       .select(
-        "id, source_type, record_type, status, rows_in, rows_deduped, rows_enriched, rows_skiptraced, params, created_at, schedule, next_run_at, last_run_at, custom_interval_minutes, schedule_active, auto_launch, channel, net_new_count",
+        "id, source_type, record_type, status, rows_in, rows_deduped, rows_enriched, rows_skiptraced, params, created_at, schedule, next_run_at, last_run_at, custom_interval_minutes, schedule_active, auto_launch, channel, net_new_count, error, failed_stage, failed_at",
       )
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: false });
@@ -121,6 +121,8 @@ export const listJobs = createServerFn({ method: "GET" })
           cadence_badge: cadenceBadge(j.schedule),
           source_type: j.source_type,
           status: j.status,
+          error: j.error ?? null,
+          failed_stage: j.failed_stage ?? null,
           rows_in: j.rows_in ?? 0,
           rows_deduped: j.rows_deduped ?? 0,
           rows_enriched: j.rows_enriched ?? 0,
@@ -317,7 +319,7 @@ export const resumeJob = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("jobs")
-      .update({ status: "queued" })
+      .update({ status: "queued", error: null, failed_stage: null, failed_at: null })
       .eq("id", data.jobId);
     if (error) throw error;
     await context.supabase.from("job_events").insert({

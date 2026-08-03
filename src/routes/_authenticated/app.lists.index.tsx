@@ -699,7 +699,7 @@ function Jobs() {
                         />
                       </td>
                       <td className="p-4">
-                        {j.stalled ? (
+                        {j.stalled || j.status === "failed" ? (
                           <div
                             className="flex items-center gap-2 whitespace-nowrap"
                             onClick={(e) => e.stopPropagation()}
@@ -707,11 +707,14 @@ function Jobs() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span className="cursor-help">
-                                  <ListStatusBadge status={j.status} stalled />
+                                  <ListStatusBadge status={j.status} stalled={j.stalled} />
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent className="max-w-[260px] text-xs leading-snug">
-                                {stallReason(j.status)}
+                                {j.status === "failed"
+                                  ? j.error ||
+                                    `This run failed${j.failed_stage ? ` during ${j.failed_stage}` : ""}. Any credits it spent were refunded.`
+                                  : stallReason(j.status)}
                               </TooltipContent>
                             </Tooltip>
                             <button
