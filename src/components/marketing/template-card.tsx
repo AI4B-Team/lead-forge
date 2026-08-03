@@ -1,7 +1,26 @@
 import { Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
-import type { Template } from "@/lib/templates";
+import { templateCostBadge, type Template } from "@/lib/templates";
 import { TemplateLogo } from "@/components/marketing/template-logo";
+
+/**
+ * What this source draws from the plan's single credit pool — never an extra
+ * charge. 0-cost sources render as "Free".
+ */
+export function TemplateCostBadge({ template }: { template: Template }) {
+  const { free, label } = templateCostBadge(template);
+  return (
+    <span
+      className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold ${
+        free
+          ? "border-success/30 bg-success/10 text-success"
+          : "border-border bg-surface-muted text-muted-foreground"
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
 
 export function TemplateCard({
   template,
@@ -47,6 +66,9 @@ export function TemplateCard({
           ) : null}
         </span>
         <span className="block text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</span>
+        <span className="mt-1.5 flex items-center gap-2">
+          <TemplateCostBadge template={template} />
+        </span>
       </span>
     </>
   );
