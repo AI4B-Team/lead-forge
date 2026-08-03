@@ -870,6 +870,14 @@ function Assistant() {
         ? "Generate List"
         : "Looks Good";
 
+  // No spec yet → show an example. Spec assembled or assembling → refine copy.
+  // Run queued → the conversation moves on to the next list.
+  const composerPlaceholder = running
+    ? RUNNING_PLACEHOLDER
+    : spec.sourceType || busy
+      ? REFINE_PLACEHOLDER
+      : selectedTemplate?.placeholderHint ?? GENERIC_PLACEHOLDER;
+
   const geoResolved = Boolean(specStates(spec).length || spec.counties.length || spec.sourceType === "upload");
 
   /** Last row cap this workspace used, so it isn't re-entered every run. */
