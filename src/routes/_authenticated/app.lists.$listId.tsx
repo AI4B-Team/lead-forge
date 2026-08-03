@@ -290,7 +290,38 @@ function JobDetail() {
         )}
       </div>
 
-      {stalled && (
+      {params.sample_data === true && (
+        <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-warn/40 bg-warn/10 p-4">
+          <AlertTriangle className="h-4 w-4 text-warn" />
+          <span className="text-sm font-semibold text-foreground">
+            SAMPLE DATA — NOT REAL LEADS.
+          </span>
+          <span className="text-sm text-muted-foreground">
+            This run used mock records because live data credentials are not connected. Do not text
+            these numbers.
+          </span>
+        </div>
+      )}
+
+      {job.status === "failed" && (
+        <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <div className="min-w-[12rem] flex-1">
+            <div className="text-sm font-semibold text-foreground">
+              Run Failed{job.failed_stage ? ` During ${String(job.failed_stage)}` : ""}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {job.error ?? "Something went wrong before this run finished."} Any credits this run
+              spent were refunded.
+            </div>
+          </div>
+          <Button variant="outline" size="sm" className="rounded-full" onClick={toggleRun}>
+            <Play className="mr-1 h-4 w-4" /> Retry
+          </Button>
+        </div>
+      )}
+
+      {stalled && job.status !== "failed" && (
         <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-warn/40 bg-warn/10 p-4">
           <AlertTriangle className="h-4 w-4 text-warn" />
           <span className="text-sm font-semibold text-foreground">Needs Attention — {stallReason(job.status)}</span>
