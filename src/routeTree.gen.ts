@@ -51,6 +51,7 @@ import { Route as AuthenticatedPlatformIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedPlatformWorkspacesRouteImport } from './routes/_authenticated/platform.workspaces'
 import { Route as AuthenticatedPlatformSourcesRouteImport } from './routes/_authenticated/platform.sources'
+import { Route as AuthenticatedPlatformRecordsRouteImport } from './routes/_authenticated/platform.records'
 import { Route as AuthenticatedPlatformAccessRouteImport } from './routes/_authenticated/platform.access'
 import { Route as AuthenticatedAppWorkspaceRouteImport } from './routes/_authenticated/app.workspace'
 import { Route as AuthenticatedAppTemplatesRouteImport } from './routes/_authenticated/app.templates'
@@ -80,11 +81,13 @@ import { Route as ApiPublicV1LeadsRouteImport } from './routes/api/public/v1/lea
 import { Route as ApiPublicV1JobsRouteImport } from './routes/api/public/v1/jobs'
 import { Route as ApiPublicV1CampaignsRouteImport } from './routes/api/public/v1/campaigns'
 import { Route as ApiPublicHubCallbackRouteImport } from './routes/api/public/hub/callback'
+import { Route as ApiPublicHooksTickRecordsRequestsRouteImport } from './routes/api/public/hooks/tick-records-requests'
 import { Route as ApiPublicHooksTickJobsRouteImport } from './routes/api/public/hooks/tick-jobs'
 import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
 import { Route as ApiPublicHooksTelnyxInboundRouteImport } from './routes/api/public/hooks/telnyx-inbound'
 import { Route as ApiPublicHooksTelnyxDlrRouteImport } from './routes/api/public/hooks/telnyx-dlr'
 import { Route as ApiPublicHooksTelnyxCallRouteImport } from './routes/api/public/hooks/telnyx-call'
+import { Route as ApiPublicHooksRecordsInboundRouteImport } from './routes/api/public/hooks/records-inbound'
 import { Route as ApiPublicHooksInboundSmsRouteImport } from './routes/api/public/hooks/inbound-sms'
 import { Route as AuthenticatedAppNewListSplatRouteImport } from './routes/_authenticated/app.new-list.$'
 import { Route as AuthenticatedAppNewJobSplatRouteImport } from './routes/_authenticated/app.new-job.$'
@@ -306,6 +309,12 @@ const AuthenticatedPlatformSourcesRoute =
     path: '/sources',
     getParentRoute: () => AuthenticatedPlatformRoute,
   } as any)
+const AuthenticatedPlatformRecordsRoute =
+  AuthenticatedPlatformRecordsRouteImport.update({
+    id: '/records',
+    path: '/records',
+    getParentRoute: () => AuthenticatedPlatformRoute,
+  } as any)
 const AuthenticatedPlatformAccessRoute =
   AuthenticatedPlatformAccessRouteImport.update({
     id: '/access',
@@ -466,6 +475,12 @@ const ApiPublicHubCallbackRoute = ApiPublicHubCallbackRouteImport.update({
   path: '/api/public/hub/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksTickRecordsRequestsRoute =
+  ApiPublicHooksTickRecordsRequestsRouteImport.update({
+    id: '/api/public/hooks/tick-records-requests',
+    path: '/api/public/hooks/tick-records-requests',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksTickJobsRoute = ApiPublicHooksTickJobsRouteImport.update({
   id: '/api/public/hooks/tick-jobs',
   path: '/api/public/hooks/tick-jobs',
@@ -492,6 +507,12 @@ const ApiPublicHooksTelnyxCallRoute =
   ApiPublicHooksTelnyxCallRouteImport.update({
     id: '/api/public/hooks/telnyx-call',
     path: '/api/public/hooks/telnyx-call',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksRecordsInboundRoute =
+  ApiPublicHooksRecordsInboundRouteImport.update({
+    id: '/api/public/hooks/records-inbound',
+    path: '/api/public/hooks/records-inbound',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksInboundSmsRoute =
@@ -600,6 +621,7 @@ export interface FileRoutesByFullPath {
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/platform/access': typeof AuthenticatedPlatformAccessRoute
+  '/platform/records': typeof AuthenticatedPlatformRecordsRoute
   '/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -611,11 +633,13 @@ export interface FileRoutesByFullPath {
   '/app/new-job/$': typeof AuthenticatedAppNewJobSplatRoute
   '/app/new-list/$': typeof AuthenticatedAppNewListSplatRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
+  '/api/public/hooks/records-inbound': typeof ApiPublicHooksRecordsInboundRoute
   '/api/public/hooks/telnyx-call': typeof ApiPublicHooksTelnyxCallRoute
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
+  '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
@@ -683,6 +707,7 @@ export interface FileRoutesByTo {
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/platform/access': typeof AuthenticatedPlatformAccessRoute
+  '/platform/records': typeof AuthenticatedPlatformRecordsRoute
   '/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -694,11 +719,13 @@ export interface FileRoutesByTo {
   '/app/new-job/$': typeof AuthenticatedAppNewJobSplatRoute
   '/app/new-list/$': typeof AuthenticatedAppNewListSplatRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
+  '/api/public/hooks/records-inbound': typeof ApiPublicHooksRecordsInboundRoute
   '/api/public/hooks/telnyx-call': typeof ApiPublicHooksTelnyxCallRoute
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
+  '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
@@ -770,6 +797,7 @@ export interface FileRoutesById {
   '/_authenticated/app/templates': typeof AuthenticatedAppTemplatesRoute
   '/_authenticated/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/_authenticated/platform/access': typeof AuthenticatedPlatformAccessRoute
+  '/_authenticated/platform/records': typeof AuthenticatedPlatformRecordsRoute
   '/_authenticated/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/_authenticated/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -781,11 +809,13 @@ export interface FileRoutesById {
   '/_authenticated/app/new-job/$': typeof AuthenticatedAppNewJobSplatRoute
   '/_authenticated/app/new-list/$': typeof AuthenticatedAppNewListSplatRoute
   '/api/public/hooks/inbound-sms': typeof ApiPublicHooksInboundSmsRoute
+  '/api/public/hooks/records-inbound': typeof ApiPublicHooksRecordsInboundRoute
   '/api/public/hooks/telnyx-call': typeof ApiPublicHooksTelnyxCallRoute
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
+  '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
@@ -857,6 +887,7 @@ export interface FileRouteTypes {
     | '/app/templates'
     | '/app/workspace'
     | '/platform/access'
+    | '/platform/records'
     | '/platform/sources'
     | '/platform/workspaces'
     | '/app/'
@@ -868,11 +899,13 @@ export interface FileRouteTypes {
     | '/app/new-job/$'
     | '/app/new-list/$'
     | '/api/public/hooks/inbound-sms'
+    | '/api/public/hooks/records-inbound'
     | '/api/public/hooks/telnyx-call'
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hooks/tick-jobs'
+    | '/api/public/hooks/tick-records-requests'
     | '/api/public/hub/callback'
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
@@ -940,6 +973,7 @@ export interface FileRouteTypes {
     | '/app/templates'
     | '/app/workspace'
     | '/platform/access'
+    | '/platform/records'
     | '/platform/sources'
     | '/platform/workspaces'
     | '/app'
@@ -951,11 +985,13 @@ export interface FileRouteTypes {
     | '/app/new-job/$'
     | '/app/new-list/$'
     | '/api/public/hooks/inbound-sms'
+    | '/api/public/hooks/records-inbound'
     | '/api/public/hooks/telnyx-call'
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hooks/tick-jobs'
+    | '/api/public/hooks/tick-records-requests'
     | '/api/public/hub/callback'
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
@@ -1026,6 +1062,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/templates'
     | '/_authenticated/app/workspace'
     | '/_authenticated/platform/access'
+    | '/_authenticated/platform/records'
     | '/_authenticated/platform/sources'
     | '/_authenticated/platform/workspaces'
     | '/_authenticated/app/'
@@ -1037,11 +1074,13 @@ export interface FileRouteTypes {
     | '/_authenticated/app/new-job/$'
     | '/_authenticated/app/new-list/$'
     | '/api/public/hooks/inbound-sms'
+    | '/api/public/hooks/records-inbound'
     | '/api/public/hooks/telnyx-call'
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hooks/tick-jobs'
+    | '/api/public/hooks/tick-records-requests'
     | '/api/public/hub/callback'
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
@@ -1091,11 +1130,13 @@ export interface RootRouteChildren {
   TemplatesIndexRoute: typeof TemplatesIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   ApiPublicHooksInboundSmsRoute: typeof ApiPublicHooksInboundSmsRoute
+  ApiPublicHooksRecordsInboundRoute: typeof ApiPublicHooksRecordsInboundRoute
   ApiPublicHooksTelnyxCallRoute: typeof ApiPublicHooksTelnyxCallRoute
   ApiPublicHooksTelnyxDlrRoute: typeof ApiPublicHooksTelnyxDlrRoute
   ApiPublicHooksTelnyxInboundRoute: typeof ApiPublicHooksTelnyxInboundRoute
   ApiPublicHooksTickCampaignsRoute: typeof ApiPublicHooksTickCampaignsRoute
   ApiPublicHooksTickJobsRoute: typeof ApiPublicHooksTickJobsRoute
+  ApiPublicHooksTickRecordsRequestsRoute: typeof ApiPublicHooksTickRecordsRequestsRoute
   ApiPublicHubCallbackRoute: typeof ApiPublicHubCallbackRoute
   ApiPublicV1CampaignsRoute: typeof ApiPublicV1CampaignsRoute
   ApiPublicV1JobsRoute: typeof ApiPublicV1JobsRouteWithChildren
@@ -1398,6 +1439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlatformSourcesRouteImport
       parentRoute: typeof AuthenticatedPlatformRoute
     }
+    '/_authenticated/platform/records': {
+      id: '/_authenticated/platform/records'
+      path: '/records'
+      fullPath: '/platform/records'
+      preLoaderRoute: typeof AuthenticatedPlatformRecordsRouteImport
+      parentRoute: typeof AuthenticatedPlatformRoute
+    }
     '/_authenticated/platform/access': {
       id: '/_authenticated/platform/access'
       path: '/access'
@@ -1601,6 +1649,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHubCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/tick-records-requests': {
+      id: '/api/public/hooks/tick-records-requests'
+      path: '/api/public/hooks/tick-records-requests'
+      fullPath: '/api/public/hooks/tick-records-requests'
+      preLoaderRoute: typeof ApiPublicHooksTickRecordsRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/tick-jobs': {
       id: '/api/public/hooks/tick-jobs'
       path: '/api/public/hooks/tick-jobs'
@@ -1634,6 +1689,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/telnyx-call'
       fullPath: '/api/public/hooks/telnyx-call'
       preLoaderRoute: typeof ApiPublicHooksTelnyxCallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/records-inbound': {
+      id: '/api/public/hooks/records-inbound'
+      path: '/api/public/hooks/records-inbound'
+      fullPath: '/api/public/hooks/records-inbound'
+      preLoaderRoute: typeof ApiPublicHooksRecordsInboundRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/inbound-sms': {
@@ -1769,6 +1831,7 @@ const AuthenticatedAppRouteWithChildren =
 
 interface AuthenticatedPlatformRouteChildren {
   AuthenticatedPlatformAccessRoute: typeof AuthenticatedPlatformAccessRoute
+  AuthenticatedPlatformRecordsRoute: typeof AuthenticatedPlatformRecordsRoute
   AuthenticatedPlatformSourcesRoute: typeof AuthenticatedPlatformSourcesRoute
   AuthenticatedPlatformWorkspacesRoute: typeof AuthenticatedPlatformWorkspacesRoute
   AuthenticatedPlatformIndexRoute: typeof AuthenticatedPlatformIndexRoute
@@ -1776,6 +1839,7 @@ interface AuthenticatedPlatformRouteChildren {
 
 const AuthenticatedPlatformRouteChildren: AuthenticatedPlatformRouteChildren = {
   AuthenticatedPlatformAccessRoute: AuthenticatedPlatformAccessRoute,
+  AuthenticatedPlatformRecordsRoute: AuthenticatedPlatformRecordsRoute,
   AuthenticatedPlatformSourcesRoute: AuthenticatedPlatformSourcesRoute,
   AuthenticatedPlatformWorkspacesRoute: AuthenticatedPlatformWorkspacesRoute,
   AuthenticatedPlatformIndexRoute: AuthenticatedPlatformIndexRoute,
@@ -1858,11 +1922,14 @@ const rootRouteChildren: RootRouteChildren = {
   TemplatesIndexRoute: TemplatesIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   ApiPublicHooksInboundSmsRoute: ApiPublicHooksInboundSmsRoute,
+  ApiPublicHooksRecordsInboundRoute: ApiPublicHooksRecordsInboundRoute,
   ApiPublicHooksTelnyxCallRoute: ApiPublicHooksTelnyxCallRoute,
   ApiPublicHooksTelnyxDlrRoute: ApiPublicHooksTelnyxDlrRoute,
   ApiPublicHooksTelnyxInboundRoute: ApiPublicHooksTelnyxInboundRoute,
   ApiPublicHooksTickCampaignsRoute: ApiPublicHooksTickCampaignsRoute,
   ApiPublicHooksTickJobsRoute: ApiPublicHooksTickJobsRoute,
+  ApiPublicHooksTickRecordsRequestsRoute:
+    ApiPublicHooksTickRecordsRequestsRoute,
   ApiPublicHubCallbackRoute: ApiPublicHubCallbackRoute,
   ApiPublicV1CampaignsRoute: ApiPublicV1CampaignsRoute,
   ApiPublicV1JobsRoute: ApiPublicV1JobsRouteWithChildren,

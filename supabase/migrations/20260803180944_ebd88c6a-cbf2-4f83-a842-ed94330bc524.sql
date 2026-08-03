@@ -1,0 +1,1 @@
+ALTER TABLE public.records_request_files ALTER COLUMN request_id DROP NOT NULL;

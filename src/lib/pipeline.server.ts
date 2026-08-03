@@ -110,11 +110,14 @@ const recordsAdapter: SourceAdapter = {
       (params.record_types as string[] | undefined)?.filter(Boolean) ??
       [(params.record_type as string | undefined) ?? "Probate"];
 
-    // Real county open-data scrapers (Cook IL, Philadelphia PA, NYC NY).
-    // Falls back to the deterministic mock for counties not yet wired.
+    // Access-path preference: hand-coded open-data scrapers first (Cook IL,
+    // Philadelphia PA, NYC NY), then any catalogued Socrata / ArcGIS / bulk
+    // file source discovered for that county, then the deterministic mock for
+    // counties still waiting on a records request.
     const { hasLiveCountyScraper, scrapeCountyRecords } = await import(
       "./data-providers/county-records"
     );
+    const { fetchCatalogedRecords } = await import("./data-providers/source-registry.server");
 
     const all: RawLead[] = [];
     for (const county of counties) {
@@ -134,6 +137,25 @@ const recordsAdapter: SourceAdapter = {
         }
         continue;
       }
+
+      // Catalogued source for this county?
+      let cataloged = 0;
+      for (let t = 0; t < recordTypes.length; t++) {
+        const rows = await fetchCatalogedRecords({
+          county,
+          recordType: recordTypes[t]!,
+          offset: t * 25,
+          dateFrom: (params.date_from as string | null | undefined) ?? null,
+          dateTo: (params.date_to as string | null | undefined) ?? null,
+        });
+        if (rows && rows.length > 0) {
+          if (cataloged === 0) await onProgress?.(`Pulling catalogued public records for ${county}…`);
+          all.push(...rows);
+          cataloged += rows.length;
+        }
+      }
+      if (cataloged > 0) continue;
+
       // A rescan of a records feed should mostly return the same filings plus
       // a few genuinely new ones, so the net-new number means something.
       const drift = Math.floor(Date.now() / 3_600_000) % 40;

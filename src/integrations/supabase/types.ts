@@ -138,6 +138,107 @@ export type Database = {
           },
         ]
       }
+      agency_column_maps: {
+        Row: {
+          agency_id: string
+          column_map: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          record_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          column_map?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          record_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          column_map?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          record_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_column_maps_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agency_contacts: {
+        Row: {
+          agency_name: string
+          avg_turnaround_days: number | null
+          contact_name: string | null
+          contact_title: string | null
+          county_name: string | null
+          created_at: string
+          department: string | null
+          email: string | null
+          fips: string | null
+          id: string
+          jurisdiction: string | null
+          notes: string | null
+          phone: string | null
+          record_types: string[]
+          response_format: string | null
+          responsive: boolean
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          agency_name: string
+          avg_turnaround_days?: number | null
+          contact_name?: string | null
+          contact_title?: string | null
+          county_name?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          fips?: string | null
+          id?: string
+          jurisdiction?: string | null
+          notes?: string | null
+          phone?: string | null
+          record_types?: string[]
+          response_format?: string | null
+          responsive?: boolean
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          agency_name?: string
+          avg_turnaround_days?: number | null
+          contact_name?: string | null
+          contact_title?: string | null
+          county_name?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          fips?: string | null
+          id?: string
+          jurisdiction?: string | null
+          notes?: string | null
+          phone?: string | null
+          record_types?: string[]
+          response_format?: string | null
+          responsive?: boolean
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       approval_requests: {
         Row: {
           amount: number
@@ -499,6 +600,7 @@ export type Database = {
       }
       county_coverage: {
         Row: {
+          access_path: string
           county_name: string
           created_at: string
           fips: string | null
@@ -507,9 +609,11 @@ export type Database = {
           source_type: string
           state: string
           status: string
+          tos_prohibits_automation: boolean
           updated_at: string
         }
         Insert: {
+          access_path?: string
           county_name: string
           created_at?: string
           fips?: string | null
@@ -518,9 +622,11 @@ export type Database = {
           source_type?: string
           state: string
           status?: string
+          tos_prohibits_automation?: boolean
           updated_at?: string
         }
         Update: {
+          access_path?: string
           county_name?: string
           created_at?: string
           fips?: string | null
@@ -529,6 +635,7 @@ export type Database = {
           source_type?: string
           state?: string
           status?: string
+          tos_prohibits_automation?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -602,6 +709,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      data_sources: {
+        Row: {
+          county_name: string | null
+          created_at: string
+          dataset_id: string | null
+          discovered_at: string
+          domain: string
+          field_map: Json
+          fips: string | null
+          id: string
+          jurisdiction: string | null
+          last_error: string | null
+          last_verified_at: string | null
+          platform: string
+          record_type: string
+          resource_url: string | null
+          row_estimate: number | null
+          state: string | null
+          status: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          county_name?: string | null
+          created_at?: string
+          dataset_id?: string | null
+          discovered_at?: string
+          domain: string
+          field_map?: Json
+          fips?: string | null
+          id?: string
+          jurisdiction?: string | null
+          last_error?: string | null
+          last_verified_at?: string | null
+          platform: string
+          record_type: string
+          resource_url?: string | null
+          row_estimate?: number | null
+          state?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          county_name?: string | null
+          created_at?: string
+          dataset_id?: string | null
+          discovered_at?: string
+          domain?: string
+          field_map?: Json
+          fips?: string | null
+          id?: string
+          jurisdiction?: string | null
+          last_error?: string | null
+          last_verified_at?: string | null
+          platform?: string
+          record_type?: string
+          resource_url?: string | null
+          row_estimate?: number | null
+          state?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       events: {
         Row: {
@@ -1569,6 +1742,60 @@ export type Database = {
         }
         Relationships: []
       }
+      portal_sessions: {
+        Row: {
+          captured_at: string
+          captured_by: string | null
+          cookies_encrypted: string | null
+          county_name: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          needs_reauth: boolean
+          notes: string | null
+          portal_key: string
+          portal_url: string | null
+          state: string | null
+          tos_allows_automation: boolean
+          tos_checked_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          captured_at?: string
+          captured_by?: string | null
+          cookies_encrypted?: string | null
+          county_name?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          needs_reauth?: boolean
+          notes?: string | null
+          portal_key: string
+          portal_url?: string | null
+          state?: string | null
+          tos_allows_automation?: boolean
+          tos_checked_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          captured_at?: string
+          captured_by?: string | null
+          cookies_encrypted?: string | null
+          county_name?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          needs_reauth?: boolean
+          notes?: string | null
+          portal_key?: string
+          portal_url?: string | null
+          state?: string | null
+          tos_allows_automation?: boolean
+          tos_checked_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       provider_alerts: {
         Row: {
           created_at: string
@@ -1695,6 +1922,122 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      records_request_files: {
+        Row: {
+          agency_id: string
+          file_type: string | null
+          filename: string
+          id: string
+          parse_error: string | null
+          parse_status: string
+          received_at: string
+          request_id: string | null
+          rows_parsed: number
+          rows_total: number
+          storage_path: string | null
+        }
+        Insert: {
+          agency_id: string
+          file_type?: string | null
+          filename: string
+          id?: string
+          parse_error?: string | null
+          parse_status?: string
+          received_at?: string
+          request_id?: string | null
+          rows_parsed?: number
+          rows_total?: number
+          storage_path?: string | null
+        }
+        Update: {
+          agency_id?: string
+          file_type?: string | null
+          filename?: string
+          id?: string
+          parse_error?: string | null
+          parse_status?: string
+          received_at?: string
+          request_id?: string | null
+          rows_parsed?: number
+          rows_total?: number
+          storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "records_request_files_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "records_request_files_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "records_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      records_requests: {
+        Row: {
+          agency_id: string
+          body: string | null
+          cadence: string
+          created_at: string
+          date_range_days: number
+          id: string
+          last_error: string | null
+          last_received_at: string | null
+          last_sent_at: string | null
+          next_send_at: string | null
+          record_types: string[]
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          body?: string | null
+          cadence?: string
+          created_at?: string
+          date_range_days?: number
+          id?: string
+          last_error?: string | null
+          last_received_at?: string | null
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          record_types?: string[]
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          body?: string | null
+          cadence?: string
+          created_at?: string
+          date_range_days?: number
+          id?: string
+          last_error?: string | null
+          last_received_at?: string | null
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          record_types?: string[]
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "records_requests_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agency_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       registrations: {
         Row: {
