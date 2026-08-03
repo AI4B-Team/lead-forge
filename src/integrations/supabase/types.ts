@@ -1932,7 +1932,7 @@ export type Database = {
           parse_error: string | null
           parse_status: string
           received_at: string
-          request_id: string
+          request_id: string | null
           rows_parsed: number
           rows_total: number
           storage_path: string | null
@@ -1945,7 +1945,7 @@ export type Database = {
           parse_error?: string | null
           parse_status?: string
           received_at?: string
-          request_id: string
+          request_id?: string | null
           rows_parsed?: number
           rows_total?: number
           storage_path?: string | null
@@ -1958,7 +1958,7 @@ export type Database = {
           parse_error?: string | null
           parse_status?: string
           received_at?: string
-          request_id?: string
+          request_id?: string | null
           rows_parsed?: number
           rows_total?: number
           storage_path?: string | null
