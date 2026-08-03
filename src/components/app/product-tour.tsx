@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Check, Zap, ArrowDown } from "lucide-react";
 import { getTourStatus, setTourStatus } from "@/lib/help.functions";
 
 /**
@@ -116,18 +116,66 @@ export function ProductTour({ open, onClose }: { open: boolean; onClose: () => v
   if (phase === "welcome") {
     return (
       <div className="fixed inset-0 z-[60] grid place-items-center bg-foreground/60 p-4">
-        <div className="w-full max-w-[420px] rounded-2xl border border-border bg-background p-6 shadow-xl">
-          <h2 className="font-display text-2xl font-bold text-foreground">Welcome To LeadTrace</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Sixty seconds, eight stops — how raw data becomes clean, compliant, ready-to-contact leads.
-          </p>
-          <div className="mt-6 flex items-center gap-2">
-            <Button className="rounded-full flex-1" onClick={() => setPhase("steps")}>
-              Start Tour
+        <div className="w-full max-w-[720px] overflow-hidden rounded-2xl border border-border bg-background shadow-2xl sm:grid sm:grid-cols-[240px_1fr]">
+          {/* Branded illustration rail */}
+          <div className="hidden flex-col justify-center gap-4 border-r border-border bg-primary/5 p-6 sm:flex">
+            <div className="flex items-center gap-2">
+              <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
+                <Zap className="size-4" />
+              </span>
+              <span className="font-display text-sm font-bold tracking-tight text-foreground">LeadTrace</span>
+            </div>
+            <div className="mt-2 space-y-1">
+              {["Build", "Verify", "Launch", "AI"].map((label, idx) => (
+                <div key={label}>
+                  <div className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-card-foreground">
+                    <span className="mr-2 text-primary">{idx + 1}</span>
+                    {label}
+                  </div>
+                  {idx < 3 && (
+                    <div className="flex justify-center py-0.5">
+                      <ArrowDown className="size-3 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">60-second guided tour</p>
+          </div>
+
+          {/* Copy + actions */}
+          <div className="p-6 sm:p-7">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
+              Let's Build Your First List
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              See how LeadTrace finds, verifies, and prepares leads for outreach — in just 60 seconds.
+            </p>
+            <ul className="mt-5 space-y-2">
+              {[
+                "Build a lead list",
+                "Verify contact data",
+                "Launch your first campaign",
+                "Let AI handle replies",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2 text-sm text-foreground">
+                  <span className="grid size-4 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                    <Check className="size-3" />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Button className="mt-6 w-full rounded-full" onClick={() => setPhase("steps")}>
+              Start 60-Second Tour
             </Button>
-            <Button variant="ghost" className="rounded-full" onClick={() => finish("skipped")}>
-              Skip For Now
-            </Button>
+            <button
+              type="button"
+              className="mt-3 w-full text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
+              onClick={() => finish("skipped")}
+            >
+              Skip for now
+            </button>
           </div>
         </div>
       </div>
