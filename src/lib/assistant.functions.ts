@@ -229,12 +229,16 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
     if (spec.sourceType === "business" && !spec.niches.length) throw new Error("Add At Least One Niche");
     if (spec.sourceType === "records" && !spec.recordType) throw new Error("Pick A Record Type");
 
-    const { COUNTIES } = await import("@/lib/mock-data");
-    const blocked = spec.counties.filter((c) => {
-      const hit = COUNTIES.find((x) => x.name.toLowerCase() === c.toLowerCase());
-      return !hit || hit.coverage === "requested";
-    });
-    if (blocked.length && spec.sourceType === "records") {
+    const { coverageForCounty } = await import("@/lib/mock-data");
+    // Geo gating applies to public records only — business scrapes are nationwide.
+    const blocked =
+      spec.sourceType === "records"
+        ? spec.counties.filter((c) => {
+            const cov = coverageForCounty(c, "records");
+            return cov === "requested" || cov === "unknown";
+          })
+        : [];
+    if (blocked.length) {
       throw new Error(`Not Covered Yet: ${blocked.join(", ")}. Request It And We'll Add It.`);
     }
 
