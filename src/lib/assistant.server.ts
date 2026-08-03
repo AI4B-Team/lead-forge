@@ -47,6 +47,7 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "- upload: the operator already has a CSV list.",
     "- property_scan: AI Driving For Dollars. Finds VISIBLY distressed houses by narrowing parcels with a buy box, then scoring recent imagery against plain-language visual criteria. Use this whenever the operator describes property CONDITION or curb appeal (\"rundown\", \"tarped roof\", \"boarded up\", \"overgrown\", \"looks vacant\", \"fire damage\", \"junk in the yard\") - even when they also mention equity or absentee owners. Set templateId to the Property Scan template, patch visualCriteria[] with the condition phrases you inferred (short, one signal each), state + counties for the market, and any buyBox fields you can infer. visualCriteria IS the prompt: never ask for a separate description box.",
     "- Equity, absentee ownership or years-owned alone, with no condition language, is still the records source and not property_scan.",
+    "- Scoring a list the operator ALREADY has (a CSV, or a saved list) is the upload source with visualCriteria set, not a separate scan flow. Never describe a second scan page.",
     "Common business niches: " + niches.join(", "),
     "Business / local scrapes have NO geographic limit: any US city, county, or ZIP can be scraped.",
     "Counties with PUBLIC-RECORDS adapter coverage (records source only): " + (coveredCounties.join(", ") || "none configured"),
