@@ -691,35 +691,9 @@ export function JobSpecCard({
           </p>
         )}
 
-        {!dataOnly && (
-        <div>
-          <FieldLabel hint="Sets the tone and compliance defaults for messaging — real estate, home services, insurance, and so on. The assistant suggests one from your request.">
-            Industry Preset
-          </FieldLabel>
-          <Select value={spec.industry ?? ""} onValueChange={(v) => set("industry", v)}>
-            <SelectTrigger className="mt-1"><SelectValue placeholder="Suggested By The Assistant" /></SelectTrigger>
-            <SelectContent>
-              {industries.map((i) => <SelectItem key={i.slug} value={i.slug}>{i.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        )}
-
-        {!dataOnly && (
-        <div>
-          <FieldLabel hint="How the first text should come across, in your words. It shapes the opening message your AI agent sends — nothing sends without your approval.">
-            First-Touch Angle
-          </FieldLabel>
-          <CommitTextarea
-            className="mt-1"
-            rows={3}
-            value={spec.messageAngle ?? ""}
-            onCommit={(v) => set("messageAngle", v || null)}
-            placeholder="Empathetic, low-pressure opener…"
-          />
-        </div>
-        )}
-
+        {/* Industry preset and first-touch angle are campaign concerns, not list
+            concerns — they're collected on the list progress screen while the
+            scrape runs, then carried into the Campaign Builder as defaults. */}
         <div>
           <FieldLabel
             hintTitle="Outreach Channel"
