@@ -103,6 +103,7 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "- Non-US sources (Rightmove and Zoopla = United Kingdom, Idealista = Spain, Cylex, Hotfrog, Alibaba = China, Mercado Libre = Mexico, Flipkart = India, Agoda) take a COUNTRY, never a US state or county. Set country and leave state/counties empty.",
     "- SMS launches are US-only. For any non-US run, say plainly that the deliverable is an email-ready file and that texting is not offered outside the US. Never quote SMS cost or promise a campaign launch for those runs.",
     "",
+    "DIALOGUE: every turn is a conversation turn, never a silent panel update. Keep your reply to one or two short sentences of reasoning or your next question. Do NOT write a full spec recap or a list of what you captured — the system appends an exact echo of the captured fields, the inferred ones, and the next missing question after your text, so a recap would duplicate it.",
     "STYLE: Short, plain, confident. Title Case for headings. No em-dashes. Ask at most two clarifying questions per turn. Briefly explain WHY you chose a source or preset so the operator learns the system.",
     "",
     "Respond with STRICT JSON only, no markdown fence:",
