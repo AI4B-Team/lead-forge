@@ -530,11 +530,13 @@ function Assistant() {
       return;
     }
     if (spec.sourceType === "upload" && !body) return;
-    // Template selected but slots still missing: the assistant opens the
-    // conversation itself and asks only for what it doesn't have.
-    if (selectedTemplate && templateSourceType(selectedTemplate) !== "upload") {
+    // Template selected and nothing typed yet: the assistant opens the
+    // conversation itself. Once the operator HAS typed something it always goes
+    // to the server — a local shortcut here is how "hillsborough county" got
+    // swallowed before it ever reached the Counties field.
+    if (!body && selectedTemplate && templateSourceType(selectedTemplate) !== "upload") {
       const miss = missingSlots(body, spec);
-      if (!body || miss.geo || miss.subject) {
+      if (miss.geo || miss.subject) {
         const ask = miss.subject && miss.geo
           ? hasCategory(selectedTemplate, "records")
             ? "which record type should I pull, and in which county or state?"
@@ -544,12 +546,10 @@ function Assistant() {
               ? "which record type should I pull?"
               : "what should I look for?"
             : "which county or state should I cover?";
-        if (body) setThread((m) => [...m, { role: "user", content: body }]);
         setThread((m) => [
           ...m,
           { role: "assistant", content: `You picked ${selectedTemplate.title} — ${ask}`, spec },
         ]);
-        if (body && !firstPrompt) setFirstPrompt(body);
         setInput("");
         setRevealed(0);
         return;
@@ -572,8 +572,12 @@ function Assistant() {
     setConfirmed(false);
     setRevealed(0);
     try {
-      const res = await chat({ data: { workspaceId, message: body, history: history.slice(-12), spec } });
+      const res = await chat({
+        data: { workspaceId, message: body, history: history.slice(-12), spec, panelEdits },
+      });
+      setPanelEdits([]);
       setThread((m) => [...m, { role: "assistant", content: res.reply, spec: res.spec }]);
+      setSpecStated(res.specComplete);
       // Anything the model changed this turn counts as inferred, except fields the
       // template already determined (those are certain and need no badge).
       setInferred((prev) => {
