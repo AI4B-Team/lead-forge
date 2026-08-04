@@ -104,6 +104,8 @@ async function tickOne(campaign: {
   const { data: steps } = await supabaseAdmin
     .from("campaign_steps").select("*").eq("campaign_id", campaign.id).order("step_order");
   if (!steps?.length) return { dispatched: 0, reason: "no_steps" };
+  // Touch 1 only. Touches 2..n are owned by lead_sequence_state and driven by
+  // runSequenceTick — see sequence-runner.server.ts.
   const step1 = steps[0] as { message_variants: string[] };
 
   const { data: numbers } = await supabaseAdmin
@@ -293,6 +295,18 @@ async function tickOne(campaign: {
       body,
       provider_sid: providerSid,
     } as never);
+    // Hand the lead to the sequence runner: touch 1 is done, schedule touch 2.
+    try {
+      const { recordSequenceSend } = await import("@/lib/sequence-runner.server");
+      await recordSequenceSend(supabaseAdmin as never, {
+        workspaceId: campaign.workspace_id,
+        campaignId: campaign.id,
+        leadId: lead.id,
+        sentStep: 0,
+      });
+    } catch (err) {
+      console.error("[campaign-runner] sequence enrollment failed:", err);
+    }
     state.sentToday += 1;
     dispatched += 1;
   }
