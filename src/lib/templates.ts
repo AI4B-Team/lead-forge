@@ -455,6 +455,22 @@ export const TEMPLATES: Template[] = [
 
   // ---------- Public Records ----------
   {
+    // The maintained feed itself: we pull these counties nightly, so browsing
+    // and filtering costs nothing and only pulling records into leads spends
+    // credits. The record-type templates below are presets over the same feed.
+    id: "distress-feed",
+    shortTitle: "Distress Feed",
+    shortSubtitle: "Pulled Nightly",
+    title: "Distress Feed",
+    subtitle: "Probate · Foreclosure · Tax · Liens · Evictions",
+    category: "records",
+    prompt:
+      "Show me new probate, pre-foreclosure and tax deed filings in Hillsborough County FL from the Distress Feed",
+    icon: Scale,
+    tint: "bg-red-500/10 text-red-600",
+    placeholderHint: "e.g. New probate and tax deed filings in Hillsborough County, FL",
+  },
+  {
     id: "probate",
     shortTitle: "Probate",
     shortSubtitle: "New Filings",
