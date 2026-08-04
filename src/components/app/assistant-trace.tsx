@@ -1,4 +1,4 @@
-import { Check, Loader2, Square } from "lucide-react";
+import { Check, Loader2, MinusCircle, Square } from "lucide-react";
 import { specStates, type JobSpec } from "@/lib/assistant.shared";
 import { US_STATES } from "@/lib/us-geo";
 import { availableOptions, enabledOptions } from "@/lib/pipeline-options";
@@ -84,6 +84,31 @@ export function buildTraceSteps(spec: JobSpec): TraceStep[] {
   return steps;
 }
 
+/** Coverage summary the card needs so it never claims success for a dead run. */
+export type TraceCoverage = {
+  status: "covered" | "partial" | "none" | "scope_too_broad";
+  covered: number;
+  requested: number;
+};
+
+function headline(
+  done: boolean,
+  complete: boolean,
+  cov: TraceCoverage | null,
+): { text: string; ok: boolean } {
+  if (!done) return { text: complete ? "Building Your List…" : "Assembling…", ok: false };
+  if (cov && (cov.status === "none" || cov.status === "scope_too_broad")) {
+    return { text: "Spec Complete — Not Available Yet", ok: false };
+  }
+  if (cov && cov.status === "partial") {
+    return {
+      text: `Spec Complete — ${cov.covered} of ${cov.requested} counties covered`,
+      ok: true,
+    };
+  }
+  return { text: "List Assembled", ok: true };
+}
+
 /**
  * The live activity feed. `revealed` counts how many rows are visible so the
  * page reads as the assistant working through the request, not a form filling in.
@@ -93,29 +118,38 @@ export function AssistantTrace({
   revealed,
   thinking,
   open = [],
+  coverage = null,
 }: {
   steps: TraceStep[];
   revealed: number;
   thinking: boolean;
   /** Required slots still missing; while non-empty the card stays neutral. */
   open?: string[];
+  /** Coverage verdict for the assembled spec, from the same gate as the runner. */
+  coverage?: TraceCoverage | null;
 }) {
   const visible = steps.slice(0, revealed);
   const complete = open.length === 0;
   const done = complete && revealed >= steps.length && !thinking;
+  const head = headline(done, complete, coverage);
+  const blocked = Boolean(
+    coverage && (coverage.status === "none" || coverage.status === "scope_too_broad"),
+  );
 
   return (
     <div className="rounded-2xl border border-border bg-surface-muted/60 p-5">
       <div className="flex items-center gap-2">
-        {done ? (
+        {done && head.ok ? (
           <span className="grid h-5 w-5 place-items-center rounded-full bg-success/15 text-success">
             <Check className="h-3 w-3" strokeWidth={3} />
           </span>
+        ) : done ? (
+          <MinusCircle className="h-4 w-4 text-muted-foreground" />
         ) : (
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
         )}
         <span className="font-display text-sm font-bold text-foreground">
-          {done ? "List Assembled" : complete ? "Building Your List…" : "Assembling…"}
+          {head.text}
         </span>
       </div>
 
@@ -157,7 +191,8 @@ export function AssistantTrace({
             <span>{label} — Waiting On You</span>
           </li>
         ))}
-        {!done && complete && (
+        {/* Never spin for a run with nothing to build. */}
+        {!done && complete && !blocked && (
           <li className="flex items-center gap-2.5 text-sm text-muted-foreground">
             <span className="ml-0.5 h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
             {thinking ? "Interpreting Your Request…" : "Building Preview…"}
@@ -177,12 +212,16 @@ export function AssistantTraceCard({
   revealed,
   thinking,
   open,
+  coverage,
 }: {
   steps: TraceStep[];
   revealed: number;
   thinking: boolean;
   open?: string[];
+  coverage?: TraceCoverage | null;
 }) {
   if (!steps.length && !thinking) return null;
-  return <AssistantTrace steps={steps} revealed={revealed} thinking={thinking} open={open} />;
+  return (
+    <AssistantTrace steps={steps} revealed={revealed} thinking={thinking} open={open} coverage={coverage} />
+  );
 }
