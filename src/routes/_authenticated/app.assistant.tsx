@@ -800,11 +800,8 @@ function Assistant() {
       setRunning(true);
       try {
         // Same params shape the Upload page queues, so the pipeline is identical.
-        const { data: authUser } = await supabase.auth.getUser();
-        const { id, duplicate } = await queueJob(supabase, {
+        const { id, duplicate } = await queueUploadJob({ data: {
           workspaceId,
-          createdBy: authUser?.user?.id ?? null,
-          sourceType: "upload",
           channel:
             spec.channel ??
             inferChannel({
@@ -820,7 +817,7 @@ function Assistant() {
             skip_trace: spec.skipTrace,
             rows: attachmentRows(upload),
           },
-        });
+        } });
         clearDraft(workspaceId);
         navigate({ to: "/app/lists/$listId", params: { listId: id } });
         if (duplicate) {
