@@ -710,6 +710,24 @@ export type Database = {
           },
         ]
       }
+      cron_locks: {
+        Row: {
+          key: string
+          last_tick_at: string | null
+          locked_at: string
+        }
+        Insert: {
+          key: string
+          last_tick_at?: string | null
+          locked_at?: string
+        }
+        Update: {
+          key?: string
+          last_tick_at?: string | null
+          locked_at?: string
+        }
+        Relationships: []
+      }
       data_sources: {
         Row: {
           county_name: string | null
@@ -2754,6 +2772,21 @@ export type Database = {
           workspace_id: string
           workspace_name: string
         }[]
+      }
+      apply_credit_delta: {
+        Args: {
+          _actor_user_id?: string
+          _delta: number
+          _job_id?: string
+          _kind: string
+          _reason: string
+          _workspace_id: string
+        }
+        Returns: number
+      }
+      claim_cron_tick: {
+        Args: { _key: string; _min_interval?: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
