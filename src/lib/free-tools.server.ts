@@ -49,11 +49,12 @@ export async function lookupLineType(
 
 export async function lookupDnc(
   phone: string,
-): Promise<{ status: "clean" | "dnc" | "litigator"; provider: string; checkedAt: string }> {
+): Promise<{ status: "clean" | "dnc" | "litigator" | "unknown"; provider: string; checkedAt: string }> {
   const scrubber = getDncScrubber();
   const out = await scrubber.scrub([phone]);
   return {
-    status: out.results[0]?.status ?? "clean",
+    // Fail closed: no verdict is reported as unknown, never as clean.
+    status: out.results[0]?.status ?? "unknown",
     provider: out.provider,
     checkedAt: new Date().toISOString(),
   };
