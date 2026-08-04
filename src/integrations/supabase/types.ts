@@ -1233,6 +1233,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           custom_interval_minutes: number | null
+          data_provenance: string
           error: string | null
           failed_at: string | null
           failed_stage: string | null
@@ -1244,6 +1245,7 @@ export type Database = {
           next_run_at: string | null
           params: Json
           parent_job_id: string | null
+          provenance_banner_dismissed: boolean
           record_type: string
           rows_deduped: number | null
           rows_enriched: number | null
@@ -1261,6 +1263,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           custom_interval_minutes?: number | null
+          data_provenance?: string
           error?: string | null
           failed_at?: string | null
           failed_stage?: string | null
@@ -1272,6 +1275,7 @@ export type Database = {
           next_run_at?: string | null
           params?: Json
           parent_job_id?: string | null
+          provenance_banner_dismissed?: boolean
           record_type?: string
           rows_deduped?: number | null
           rows_enriched?: number | null
@@ -1289,6 +1293,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           custom_interval_minutes?: number | null
+          data_provenance?: string
           error?: string | null
           failed_at?: string | null
           failed_stage?: string | null
@@ -1300,6 +1305,7 @@ export type Database = {
           next_run_at?: string | null
           params?: Json
           parent_job_id?: string | null
+          provenance_banner_dismissed?: boolean
           record_type?: string
           rows_deduped?: number | null
           rows_enriched?: number | null
@@ -1596,6 +1602,7 @@ export type Database = {
           business_name: string | null
           city: string | null
           created_at: string
+          data_provenance: string
           email: string | null
           full_name: string | null
           id: string
@@ -1614,6 +1621,7 @@ export type Database = {
           business_name?: string | null
           city?: string | null
           created_at?: string
+          data_provenance?: string
           email?: string | null
           full_name?: string | null
           id?: string
@@ -1632,6 +1640,7 @@ export type Database = {
           business_name?: string | null
           city?: string | null
           created_at?: string
+          data_provenance?: string
           email?: string | null
           full_name?: string | null
           id?: string

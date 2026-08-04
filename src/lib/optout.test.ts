@@ -5,7 +5,10 @@ import { checkCanText } from "./optout.server";
  * Chainable Supabase stub. `leads` answers maybeSingle(); every other table
  * resolves to an empty list so opt-out and suppression checks pass.
  */
-function makeDb(lead: { phone: string | null; scrub_status: string | null } | null) {
+function makeDb(
+  lead: { phone: string | null; scrub_status: string | null; data_provenance?: string } | null,
+) {
+  if (lead && !lead.data_provenance) lead.data_provenance = "verified_source";
   const from = (table: string) => {
     const q: Record<string, unknown> = {};
     const chain = () => q;
@@ -57,6 +60,17 @@ describe("send gate fails closed on scrub status", () => {
     for (const source of ["inbox", "bot:c1"]) {
       const gate = await checkCanText(db, { ...target, source });
       expect(gate.ok).toBe(true);
+    }
+  });
+
+  it("blocks every path for records with no verified provenance", async () => {
+    for (const provenance of ["mock_legacy", "unknown"]) {
+      const db = makeDb({ phone: "+15551234567", scrub_status: "clean", data_provenance: provenance });
+      for (const source of ["inbox", "bot:c1", "campaign:c1", "cadence"]) {
+        const gate = await checkCanText(db, { ...target, source });
+        expect(gate.ok).toBe(false);
+        expect(gate.ok === false && gate.reason).toBe("unverified_source");
+      }
     }
   });
 });

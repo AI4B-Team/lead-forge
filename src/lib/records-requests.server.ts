@@ -329,6 +329,7 @@ async function distributeToSubscribers(args: {
           state: l.state ?? null,
           zip: l.zip ?? null,
           source_meta: (l.source_meta ?? {}) as never,
+          data_provenance: "verified_source",
         })),
       );
     }

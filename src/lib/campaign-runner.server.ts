@@ -7,6 +7,7 @@ import {
   canStartNewDropForRecipient,
   inQuietHoursEverywhere,
 } from "@/lib/tcpa";
+import { TRUSTED_PROVENANCE } from "@/lib/provenance.shared";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
 
@@ -174,6 +175,8 @@ async function tickOne(campaign: {
     .select("id, full_name, phone, phone_type, city, state, address")
     .eq("job_id", campaign.list_job_id)
     .eq("scrub_status", "clean")
+    // Records with no verified provenance are never contactable.
+    .in("data_provenance", TRUSTED_PROVENANCE)
     .limit(take * 4);
   if (!leads?.length) {
     await supabaseAdmin.from("campaigns").update({ status: "completed" }).eq("id", campaign.id);

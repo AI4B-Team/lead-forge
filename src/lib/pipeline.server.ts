@@ -776,6 +776,11 @@ async function runPipelineBody(
   }
 
   // 4) INSERT LEADS ---------------------------------------------------------
+  const { data: jobProvenance } = await supabase
+    .from("jobs")
+    .select("data_provenance")
+    .eq("id", jobId)
+    .maybeSingle();
   const leadRows = verified.map((r) => ({
     workspace_id: workspaceId,
     job_id: jobId,
@@ -790,6 +795,8 @@ async function runPipelineBody(
     zip: r.zip ?? null,
     source_meta: (r.source_meta ?? {}) as never,
     scrub_status: "unscrubbed" as const,
+    data_provenance:
+      (jobProvenance as { data_provenance?: string } | null)?.data_provenance ?? "verified_source",
   }));
   for (let i = 0; i < leadRows.length; i += 500) {
     await supabase.from("leads").insert(leadRows.slice(i, i + 500));

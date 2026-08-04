@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HealthRow, planTone, type WsRow } from "@/components/app/admin-shared";
-import { listAllWorkspaces } from "@/lib/admin.functions";
+import { countLegacyLeads, listAllWorkspaces, purgeLegacyLeads } from "@/lib/admin.functions";
+import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/platform/")({
   head: () => ({
@@ -26,6 +28,9 @@ export const Route = createFileRoute("/_authenticated/platform/")({
 
 function PlatformDashboard() {
   const fetchAll = useServerFn(listAllWorkspaces);
+  const fetchLegacy = useServerFn(countLegacyLeads);
+  const runPurge = useServerFn(purgeLegacyLeads);
+  const legacyQ = useQuery({ queryKey: ["admin-legacy-leads"], queryFn: () => fetchLegacy() });
   const wsQ = useQuery({
     queryKey: ["admin-workspaces"],
     queryFn: () => fetchAll(),
@@ -112,6 +117,35 @@ function PlatformDashboard() {
           hint="All Outbound Segments Ever Sent"
         />
       </div>
+
+      {(legacyQ.data?.leads ?? 0) > 0 && (
+        <Card className="mb-6 border-warn/40 bg-warn/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base font-display">
+              <AlertTriangle className="h-4 w-4 text-warn" /> Unverified Legacy Records
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center gap-4 text-sm">
+            <div className="min-w-[16rem] flex-1 text-muted-foreground">
+              {(legacyQ.data?.leads ?? 0).toLocaleString()} leads across{" "}
+              {(legacyQ.data?.lists ?? 0).toLocaleString()} lists were created before source
+              verification was live. They are already blocked from outreach, export, and the AI
+              agent. Purging removes them permanently.
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={async () => {
+                const res = await runPurge();
+                toast.success(`Purged ${res.purged.toLocaleString()} legacy leads`);
+                await legacyQ.refetch();
+              }}
+            >
+              Purge Legacy Leads
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>

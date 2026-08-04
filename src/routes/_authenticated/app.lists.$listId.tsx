@@ -38,6 +38,7 @@ import { qualityGrade } from "@/lib/quality-grade";
 import { brandedFileName, brandedJobTitle, BUCKET_FILE_TYPE } from "@/lib/download-name";
 import { type ExportFormat } from "@/lib/export-file";
 import { guardedExport } from "@/lib/guarded-export";
+import { isTrustedProvenance, UNTRUSTED_LIST_MESSAGE } from "@/lib/provenance.shared";
 import { useTeamContext } from "@/hooks/use-team-context";
 import { denialMessage } from "@/lib/team-roles.shared";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -75,6 +76,7 @@ function JobDetail() {
   const [browserOpen, setBrowserOpen] = useState(false);
   const [browserBucket, setBrowserBucket] = useState<"clean" | "dnc" | "litigator" | "all">("clean");
   const [logOpen, setLogOpen] = useState(true);
+  const [legacyDismissed, setLegacyDismissed] = useState(false);
   // Nobody rereads the log once the run lands — collapse it on completion.
   const [collapsedOnce, setCollapsedOnce] = useState(false);
 
@@ -305,6 +307,20 @@ function JobDetail() {
           </>
         )}
       </div>
+
+      {!isTrustedProvenance((job as { data_provenance?: string }).data_provenance) &&
+        !legacyDismissed && (
+          <div className="mt-6 flex flex-wrap items-start gap-3 rounded-xl border border-warn/40 bg-warn/10 p-4">
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-warn" />
+            <div className="min-w-[12rem] flex-1">
+              <div className="text-sm font-semibold text-foreground">Unverified Legacy Records</div>
+              <div className="text-sm text-muted-foreground">{UNTRUSTED_LIST_MESSAGE}</div>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setLegacyDismissed(true)}>
+              Dismiss
+            </Button>
+          </div>
+        )}
 
       {coverage && coverage.uncoveredCounties.length > 0 && (
         <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-warn/40 bg-warn/10 p-4">
