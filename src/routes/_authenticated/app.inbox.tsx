@@ -305,7 +305,7 @@ function ConversationsPage() {
         title="Conversations"
         description="Where AI And You Work Leads Together — Summaries, Suggested Replies, And Full Context."
       />
-      <div className="inbox-shell grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[420px_minmax(0,1fr)] xl:grid-cols-[420px_minmax(0,1fr)_288px]">
+      <div className="inbox-shell grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[480px_minmax(0,1fr)] xl:grid-cols-[480px_minmax(0,1fr)_288px]">
         {/* Conversation list */}
         <Card className="flex flex-col min-h-0">
           <div className="shrink-0 p-2 border-b flex items-center gap-0.5 flex-nowrap overflow-hidden">
