@@ -24,6 +24,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { getComplianceState, importSuppression } from "@/lib/compliance.functions";
 import { computeCompliance, removedCount } from "@/lib/compliance.shared";
 import { parseCsv } from "@/lib/csv";
+import { NegativeKeywordsCard } from "@/components/app/negative-keywords-card";
 import {
   SuppressionTable, ContactLookup, BlockedAttemptsLog, BlacklistDialog,
 } from "@/components/app/compliance-suppression";
@@ -257,6 +258,7 @@ function Compliance() {
 
       <ContactLookup workspaceId={workspaceId} />
       <SuppressionTable workspaceId={workspaceId} />
+      <NegativeKeywordsCard workspaceId={workspaceId} />
       <BlockedAttemptsLog workspaceId={workspaceId} />
 
       <Card className="mt-6">

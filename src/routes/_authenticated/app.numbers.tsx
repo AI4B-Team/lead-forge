@@ -28,7 +28,14 @@ import {
 import { Plus, ShieldAlert, Loader2, PhoneForwarded, Voicemail } from "lucide-react";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { listNumbers, buyNumbers, getRegistration, updateInboundSettings } from "@/lib/numbers.functions";
+import {
+  listNumbers,
+  buyNumbers,
+  getRegistration,
+  updateInboundSettings,
+  updateNumberLimits,
+} from "@/lib/numbers.functions";
+import { numberHealth, perNumberDailyCap } from "@/lib/deliverability.shared";
 import { PhoneLink } from "@/components/app/phone-link";
 
 export const Route = createFileRoute("/_authenticated/app/numbers")({
@@ -220,6 +227,8 @@ function Numbers() {
                   <th className="p-4">Region</th>
                   <th className="p-4">Health</th>
                   <th className="p-4">Opt-Out Rate</th>
+                  <th className="p-4">Delivery</th>
+                  <th className="p-4">Daily Cap</th>
                   <th className="p-4">Status</th>
                   <th className="p-4">Inbound Calls</th>
                 </tr>
@@ -228,7 +237,9 @@ function Numbers() {
                 {numbers.map((n) => {
                   const health = n.health_score ?? 0;
                   const optout = n.optout_rate ?? 0;
-                  const status = optout > 5 ? "cooling" : (n.status ?? "active");
+                  const paused = !!(n as { auto_paused_at?: string | null }).auto_paused_at;
+                  const status = paused ? "paused" : optout > 5 ? "cooling" : (n.status ?? "active");
+                  const delivery = numberHealth(n as never);
                   return (
                     <tr key={n.id} className="border-b border-border last:border-0">
                       <td className="p-4 font-medium text-foreground"><PhoneLink phone={n.phone} showIcon={false} /></td>
@@ -242,6 +253,40 @@ function Numbers() {
                         </div>
                       </td>
                       <td className="p-4 text-muted-foreground">{optout.toFixed(1)}%</td>
+                      <td className="p-4">
+                        {delivery.deliveryRate == null ? (
+                          <span className="text-muted-foreground">No receipts yet</span>
+                        ) : (
+                          <span
+                            className={
+                              delivery.status === "poor"
+                                ? "text-danger"
+                                : delivery.status === "watch"
+                                  ? "text-warn"
+                                  : "text-success"
+                            }
+                          >
+                            {(delivery.deliveryRate * 100).toFixed(0)}%
+                            <span className="ml-1 text-xs text-muted-foreground">
+                              of {delivery.sample.toLocaleString()}
+                            </span>
+                          </span>
+                        )}
+                        {(n as { auto_pause_reason?: string | null }).auto_pause_reason ? (
+                          <span className="mt-0.5 block text-xs text-danger">
+                            {(n as { auto_pause_reason?: string | null }).auto_pause_reason}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="p-4">
+                        <DailyCapCell
+                          numberId={n.id}
+                          cap={perNumberDailyCap(n as never)}
+                          override={(n as { daily_cap_override?: number | null }).daily_cap_override ?? null}
+                          paused={paused}
+                          onSaved={() => qc.invalidateQueries({ queryKey: ["numbers", workspaceId] })}
+                        />
+                      </td>
                       <td className="p-4">
                         <Badge variant="outline" className={
                           status === "active" ? "bg-success/10 text-success border-success/20" :
@@ -460,5 +505,69 @@ function StatCard({ label, value, tone }: { label: string; value: string; tone?:
         <div className={`mt-2 font-display text-3xl font-black ${tone === "success" ? "text-success" : "text-foreground"}`}>{value}</div>
       </CardContent>
     </Card>
+  );
+}
+/**
+ * Per-DID daily cap. Rate limiting is enforced per number, not per campaign, so
+ * this throttles the number everywhere it is used. An override can only lower
+ * the warmup ceiling — never raise it.
+ */
+function DailyCapCell({
+  numberId,
+  cap,
+  override,
+  paused,
+  onSaved,
+}: {
+  numberId: string;
+  cap: number;
+  override: number | null;
+  paused: boolean;
+  onSaved: () => void;
+}) {
+  const save = useServerFn(updateNumberLimits);
+  const [value, setValue] = useState(override ? String(override) : "");
+  const [busy, setBusy] = useState(false);
+
+  async function commit(next: string, resume = false) {
+    const parsed = next.trim() === "" ? null : Number(next);
+    if (parsed !== null && (!Number.isFinite(parsed) || parsed < 1)) {
+      toast.error("Enter a daily cap of at least 1, or clear it to use the warm-up limit.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await save({ data: { numberId, dailyCapOverride: parsed, resume } });
+      onSaved();
+      toast.success(resume ? "Number back in rotation." : "Daily cap saved.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={() => {
+          const current = override ? String(override) : "";
+          if (value.trim() !== current) void commit(value);
+        }}
+        placeholder={String(cap)}
+        inputMode="numeric"
+        aria-label="Daily send cap for this number"
+        className="h-8 w-20"
+        disabled={busy}
+      />
+      <span className="text-xs text-muted-foreground">/ {cap.toLocaleString()}</span>
+      {paused ? (
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => void commit(value, true)}>
+          Resume
+        </Button>
+      ) : null}
+    </div>
   );
 }

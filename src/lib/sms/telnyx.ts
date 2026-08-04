@@ -195,7 +195,7 @@ export const telnyxProvider: SmsProvider = {
       data?: {
         payload?: {
           id?: string;
-          to?: Array<{ status?: string }>;
+          to?: Array<{ status?: string; carrier?: string }>;
           errors?: Array<{ code?: string }>;
         };
       };
@@ -210,6 +210,7 @@ export const telnyxProvider: SmsProvider = {
       providerSid: p.id ?? "",
       status,
       errorCode: p.errors?.[0]?.code,
+      carrier: p.to?.[0]?.carrier ?? null,
     };
   },
 

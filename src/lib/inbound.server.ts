@@ -41,6 +41,8 @@ export type InboundContext = {
 export type InboundOutcome = {
   optOut: boolean;
   help: boolean;
+  /** A negative keyword ("attorney", "sue", …) halted the sequence. */
+  negativeKeyword?: string | null;
   bot: "sent" | "handoff" | "blocked" | "disabled" | "skipped";
 };
 
@@ -152,6 +154,14 @@ export async function processInbound(ctx: InboundContext): Promise<InboundOutcom
     return { optOut: true, help: false, bot: "skipped" };
   }
 
+  // Negative keywords: legal-risk language halts the sequence and suppresses
+  // the contact BEFORE the bot can consider a reply. No confirmation is sent —
+  // the last thing a person threatening litigation wants is another text.
+  const negative = await checkNegativeKeywords(ctx);
+  if (negative) {
+    return { optOut: false, help: false, negativeKeyword: negative, bot: "blocked" };
+  }
+
   if (isHelp) {
     try {
       const res = await ctx.send(ctx.toPhone, ctx.fromPhone, HELP_RESPONSE);
@@ -163,4 +173,54 @@ export async function processInbound(ctx: InboundContext): Promise<InboundOutcom
   }
 
   return { optOut: false, help: false, bot: await runBot(ctx) };
+}
+
+/**
+ * Workspace-configurable negative keyword gate. A hit writes a suppression row
+ * (so every send path refuses this number from now on) and logs a compliance
+ * event with the matched word.
+ */
+async function checkNegativeKeywords(ctx: InboundContext): Promise<string | null> {
+  const { matchNegativeKeyword } = await import("@/lib/negative-keywords");
+  const { data: ws } = await ctx.db
+    .from("workspaces")
+    .select("negative_keywords")
+    .eq("id", ctx.workspaceId)
+    .maybeSingle();
+  const hit = matchNegativeKeyword(
+    ctx.body,
+    (ws as { negative_keywords: string[] | null } | null)?.negative_keywords ?? null,
+  );
+  if (!hit) return null;
+
+  await ctx.db.from("suppression").upsert({
+    workspace_id: ctx.workspaceId,
+    phone: ctx.fromPhone,
+    reason: "negative_keyword",
+    source: "inbound",
+    note: `Matched "${hit.matched}"`,
+  });
+
+  try {
+    await ctx.db.from("compliance_events").insert({
+      workspace_id: ctx.workspaceId,
+      phone: ctx.fromPhone,
+      lead_id: ctx.leadId ?? null,
+      path: "manual",
+      reason: "negative_keyword",
+      detail: { matched: hit.matched, campaign_id: ctx.campaignId ?? null },
+    });
+  } catch {
+    /* the suppression is the control; logging is best-effort */
+  }
+
+  if (ctx.inboundMessageId) {
+    await ctx.db
+      .from("messages")
+      .update({ handoff_reason: `negative_keyword:${hit.matched}` })
+      .eq("id", ctx.inboundMessageId);
+  }
+
+  console.warn(`[compliance] negative keyword "${hit.matched}" halted sequence for ${ctx.fromPhone}`);
+  return hit.matched;
 }

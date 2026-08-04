@@ -6,6 +6,7 @@ import { TemplateCard } from "@/components/marketing/template-card";
 import { TEMPLATES, type Template, type TemplateCategory } from "@/lib/templates";
 import { touchRecentTemplate } from "@/lib/recent-templates";
 import { useWorkspaceId } from "@/hooks/use-workspace";
+import { useTemplateHealth } from "@/hooks/use-template-health";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,6 +67,7 @@ export const Route = createFileRoute("/_authenticated/app/templates")({
 function AppTemplates() {
   const navigate = useNavigate();
   const { workspaceId } = useWorkspaceId();
+  const { health } = useTemplateHealth();
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("relevance");
   const [betaOnly, setBetaOnly] = useState(false);
@@ -151,7 +153,14 @@ function AppTemplates() {
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((t) => (
-          <TemplateCard key={t.id} template={t} variant="insert" onSelect={handleSelect} />
+          <TemplateCard
+            key={t.id}
+            template={t}
+            variant="insert"
+            health={health[t.id]?.status ?? null}
+            healthEta={health[t.id]?.eta ?? null}
+            onSelect={handleSelect}
+          />
         ))}
       </div>
     </div>

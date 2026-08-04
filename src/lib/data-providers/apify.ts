@@ -95,6 +95,40 @@ async function apifyFetch(url: string, init: RequestInit = {}): Promise<Response
 
 type Progress = (message: string, count?: number) => Promise<void> | void;
 
+/**
+ * Actor version pinning. A third-party actor update between two canary runs can
+ * silently change field names or drop phone numbers, so every run targets one
+ * exact build number rather than "latest".
+ *
+ * APIFY_GMAPS_ACTOR_BUILD freezes it explicitly. With no override we resolve the
+ * actor's current build number once and reuse that exact number for the process
+ * lifetime, logging it so an operator can freeze the value that was verified.
+ */
+let resolvedBuild: { actor: string; build: string } | null = null;
+
+async function pinnedBuild(token: string, actor: string): Promise<string | null> {
+  const override = process.env.APIFY_GMAPS_ACTOR_BUILD;
+  if (override) return override;
+  if (resolvedBuild?.actor === actor) return resolvedBuild.build;
+  try {
+    const res = await apifyFetch(`${APIFY_BASE}/acts/${encodeURIComponent(actor)}`, {
+      headers: authHeaders(token),
+    });
+    const body = (await res.json()) as {
+      data?: { taggedBuilds?: Record<string, { buildNumber?: string }> };
+    };
+    const build = body.data?.taggedBuilds?.latest?.buildNumber ?? null;
+    if (!build) return null;
+    resolvedBuild = { actor, build };
+    console.info(
+      `[apify] pinned ${actor} to build ${build}. Set APIFY_GMAPS_ACTOR_BUILD=${build} to freeze it.`,
+    );
+    return build;
+  } catch {
+    return null; // never block a run on version resolution
+  }
+}
+
 async function apifyScrape(
   token: string,
   actor: string,
@@ -112,8 +146,9 @@ async function apifyScrape(
   const maxPerSearch = params.max_results && params.max_results > 0 ? params.max_results : 500;
 
   // a) START -----------------------------------------------------------------
+  const build = await pinnedBuild(token, actor);
   const startRes = await apifyFetch(
-    `${APIFY_BASE}/acts/${encodeURIComponent(actor)}/runs`,
+    `${APIFY_BASE}/acts/${encodeURIComponent(actor)}/runs${build ? `?build=${encodeURIComponent(build)}` : ""}`,
     {
       method: "POST",
       headers: authHeaders(token, true),

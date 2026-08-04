@@ -405,3 +405,50 @@ export const updateInboundSettings = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true, forwardCallsTo: forward, scope: data.scope };
   });
+
+/**
+ * Per-number send limits and deliverability floor. The cap is enforced per DID
+ * by the campaign runner, so lowering it here throttles that one number across
+ * every campaign that shares it.
+ */
+export const updateNumberLimits = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      numberId: z.string().uuid(),
+      dailyCapOverride: z.number().int().min(1).max(50_000).nullable().optional(),
+      minDeliveryRate: z.number().min(0).max(1).optional(),
+      /** Clears an automatic pause and puts the number back in rotation. */
+      resume: z.boolean().optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const patch: Record<string, unknown> = {};
+    if (data.dailyCapOverride !== undefined) patch.daily_cap_override = data.dailyCapOverride;
+    if (data.minDeliveryRate !== undefined) patch.min_delivery_rate = data.minDeliveryRate;
+    if (data.resume) {
+      patch.auto_paused_at = null;
+      patch.auto_pause_reason = null;
+      patch.status = "active";
+    }
+    if (Object.keys(patch).length === 0) return { ok: true };
+    const { error } = await context.supabase
+      .from("sending_numbers")
+      .update(patch as never)
+      .eq("id", data.numberId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+/** Per-carrier delivery breakdown for one workspace's numbers. */
+export const listCarrierStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("number_carrier_stats")
+      .select("sending_number_id, carrier, sent_count, delivered_count, failed_count")
+      .eq("workspace_id", data.workspaceId);
+    if (error) throw error;
+    return { rows: rows ?? [] };
+  });

@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.record_dlr_outcome(uuid, uuid, text, boolean) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.record_dlr_outcome(uuid, uuid, text, boolean) TO service_role;

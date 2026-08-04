@@ -95,14 +95,18 @@ async function tickOne(campaign: {
 
   const { data: numbers } = await supabaseAdmin
     .from("sending_numbers")
-    .select("id, phone, status, health_score, activated_at")
+    .select("id, phone, status, health_score, activated_at, daily_cap_override, auto_paused_at")
     .eq("workspace_id", campaign.workspace_id)
     .in("status", ["active"])
+    .is("auto_paused_at", null)
     .order("health_score", { ascending: false });
   if (!numbers?.length) return { dispatched: 0, reason: "no_numbers" };
 
-  // Warmup-aware per-number daily cap (Section 2 of the Telnyx spec).
-  const { warmupCap, getProvider, isProviderConfigured } = await import("@/lib/sms");
+  // Rate limiting is per DID, never per campaign: two campaigns sharing a
+  // number must share its daily budget. Warmup age sets the ceiling and an
+  // operator override can only lower it.
+  const { getProvider, isProviderConfigured } = await import("@/lib/sms");
+  const { perNumberDailyCap } = await import("@/lib/deliverability.server");
   const startOfDayIso = startOfDay.toISOString();
   const numberState = new Map<
     string,
@@ -118,7 +122,7 @@ async function tickOne(campaign: {
     numberState.set(n.id, {
       phone: n.phone,
       sentToday: count ?? 0,
-      cap: warmupCap(n.activated_at ?? new Date()),
+      cap: perNumberDailyCap(n),
     });
   }
 
@@ -155,7 +159,7 @@ async function tickOne(campaign: {
   const take = Math.min(remainingCap, remainingMonthly, dropRoom, 50);
   const { data: leads } = await supabaseAdmin
     .from("leads")
-    .select("id, full_name, phone, city, state, address")
+    .select("id, full_name, phone, phone_type, city, state, address")
     .eq("job_id", campaign.list_job_id)
     .eq("scrub_status", "clean")
     .limit(take * 4);
@@ -186,6 +190,21 @@ async function tickOne(campaign: {
     .filter((l) => canStartNewDropForRecipient(l.phone as string, l.state))
     .slice(0, take);
 
+  // Phone verification pre-drip: the number must be live and mobile NOW, not
+  // just when the list was built. Landlines and VoIP are dropped here rather
+  // than burning a send and eating a carrier failure.
+  const { classifyLineType, isTextable } = await import("@/lib/line-type");
+  const verified: typeof toSend = [];
+  for (const lead of toSend) {
+    const stored = (lead as { phone_type?: string | null }).phone_type;
+    const lineType = stored && stored !== "unknown" ? stored : classifyLineType(lead.phone);
+    if (stored !== lineType) {
+      await supabaseAdmin.from("leads").update({ phone_type: lineType }).eq("id", lead.id);
+    }
+    if (!isTextable(lineType as "mobile" | "landline" | "voip" | "unknown")) continue;
+    verified.push(lead);
+  }
+
   for (const b of blocked.slice(0, 50)) {
     await logBlockedSend(
       supabaseAdmin,
@@ -197,7 +216,7 @@ async function tickOne(campaign: {
   const provider = isProviderConfigured() ? getProvider() : null;
   let dispatched = 0;
 
-  for (const lead of toSend) {
+  for (const lead of verified) {
     // Final per-recipient re-check: an inbound STOP can land mid-batch.
     const { assertCanText } = await import("@/lib/optout.server");
     try {

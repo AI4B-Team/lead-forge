@@ -246,6 +246,46 @@ const uploadAdapter: SourceAdapter = {
   },
 };
 
+/**
+ * Idempotent credit refund for one run. Derives what to give back from the
+ * ledger itself (every debit this job wrote), and refuses to write a second
+ * refund row for the same job + kind + reason — so a retry, a failure handler,
+ * and the Template Health Agent can all call this without double-refunding.
+ */
+export async function refundJobCredits(
+  supabase: AnyClient,
+  args: { jobId: string; workspaceId: string; reason: string; actorUserId?: string | null },
+): Promise<number> {
+  const { data: rows } = await supabase
+    .from("credit_ledger")
+    .select("kind, delta, reason")
+    .eq("job_id", args.jobId);
+  const ledger = (rows ?? []) as Array<{ kind: string; delta: number; reason: string | null }>;
+
+  const owed = new Map<string, number>();
+  for (const row of ledger) {
+    if (row.delta < 0) owed.set(row.kind, (owed.get(row.kind) ?? 0) + Math.abs(row.delta));
+  }
+
+  const { applyCreditDelta } = await import("./credits.server");
+  let refunded = 0;
+  for (const [kind, amount] of owed) {
+    if (amount <= 0) continue;
+    const already = ledger.some((r) => r.kind === kind && r.reason === args.reason);
+    if (already) continue;
+    await applyCreditDelta(supabase, {
+      workspaceId: args.workspaceId,
+      kind,
+      delta: amount,
+      reason: args.reason,
+      jobId: args.jobId,
+      actorUserId: args.actorUserId ?? null,
+    });
+    refunded += amount;
+  }
+  return refunded;
+}
+
 function selectAdapter(sourceType: string): SourceAdapter {
   if (sourceType === "business") return businessAdapter;
   if (sourceType === "records") return recordsAdapter;

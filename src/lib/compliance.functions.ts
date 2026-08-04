@@ -365,3 +365,39 @@ export const lookupContact = createServerFn({ method: "GET" })
       })),
     };
   });
+
+/** Workspace negative keywords — inbound words that halt a sequence outright. */
+export const getNegativeKeywords = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("workspaces")
+      .select("negative_keywords")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    if (error) throw error;
+    const { DEFAULT_NEGATIVE_KEYWORDS } = await import("@/lib/negative-keywords");
+    const stored = (row as { negative_keywords: string[] | null } | null)?.negative_keywords;
+    return { keywords: stored?.length ? stored : DEFAULT_NEGATIVE_KEYWORDS };
+  });
+
+export const setNegativeKeywords = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      workspaceId: z.string().uuid(),
+      keywords: z.array(z.string().trim().min(2).max(40)).max(100),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const cleaned = Array.from(
+      new Set(data.keywords.map((k) => k.toLowerCase()).filter(Boolean)),
+    );
+    const { error } = await context.supabase
+      .from("workspaces")
+      .update({ negative_keywords: cleaned } as never)
+      .eq("id", data.workspaceId);
+    if (error) throw error;
+    return { keywords: cleaned };
+  });

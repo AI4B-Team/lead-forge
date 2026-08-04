@@ -1492,6 +1492,7 @@ export type Database = {
           body: string | null
           call_event: string | null
           campaign_id: string | null
+          carrier: string | null
           channel: string
           created_at: string
           direction: string
@@ -1515,6 +1516,7 @@ export type Database = {
           body?: string | null
           call_event?: string | null
           campaign_id?: string | null
+          carrier?: string | null
           channel?: string
           created_at?: string
           direction: string
@@ -1538,6 +1540,7 @@ export type Database = {
           body?: string | null
           call_event?: string | null
           campaign_id?: string | null
+          carrier?: string | null
           channel?: string
           created_at?: string
           direction?: string
@@ -1717,6 +1720,54 @@ export type Database = {
           },
           {
             foreignKeyName: "notifications_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      number_carrier_stats: {
+        Row: {
+          carrier: string
+          delivered_count: number
+          failed_count: number
+          id: string
+          sending_number_id: string
+          sent_count: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          carrier?: string
+          delivered_count?: number
+          failed_count?: number
+          id?: string
+          sending_number_id: string
+          sent_count?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          carrier?: string
+          delivered_count?: number
+          failed_count?: number
+          id?: string
+          sending_number_id?: string
+          sent_count?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "number_carrier_stats_sending_number_id_fkey"
+            columns: ["sending_number_id"]
+            isOneToOne: false
+            referencedRelation: "sending_numbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "number_carrier_stats_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -2389,10 +2440,17 @@ export type Database = {
         Row: {
           activated_at: string
           area_code: string | null
+          auto_pause_reason: string | null
+          auto_paused_at: string | null
           created_at: string
+          daily_cap_override: number | null
+          delivered_count: number
+          delivery_rate: number | null
+          failed_count: number
           forward_calls_to: string | null
           health_score: number | null
           id: string
+          min_delivery_rate: number
           optout_rate: number | null
           phone: string
           provider_sid: string | null
@@ -2406,10 +2464,17 @@ export type Database = {
         Insert: {
           activated_at?: string
           area_code?: string | null
+          auto_pause_reason?: string | null
+          auto_paused_at?: string | null
           created_at?: string
+          daily_cap_override?: number | null
+          delivered_count?: number
+          delivery_rate?: number | null
+          failed_count?: number
           forward_calls_to?: string | null
           health_score?: number | null
           id?: string
+          min_delivery_rate?: number
           optout_rate?: number | null
           phone: string
           provider_sid?: string | null
@@ -2423,10 +2488,17 @@ export type Database = {
         Update: {
           activated_at?: string
           area_code?: string | null
+          auto_pause_reason?: string | null
+          auto_paused_at?: string | null
           created_at?: string
+          daily_cap_override?: number | null
+          delivered_count?: number
+          delivery_rate?: number | null
+          failed_count?: number
           forward_calls_to?: string | null
           health_score?: number | null
           id?: string
+          min_delivery_rate?: number
           optout_rate?: number | null
           phone?: string
           provider_sid?: string | null
@@ -2513,6 +2585,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      template_health: {
+        Row: {
+          baseline: Json
+          consecutive_failures: number
+          created_at: string
+          eta: string | null
+          field_fill_rates: Json
+          last_check_at: string | null
+          last_healthy_at: string | null
+          notes: string | null
+          row_count: number
+          status: string
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          baseline?: Json
+          consecutive_failures?: number
+          created_at?: string
+          eta?: string | null
+          field_fill_rates?: Json
+          last_check_at?: string | null
+          last_healthy_at?: string | null
+          notes?: string | null
+          row_count?: number
+          status?: string
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          baseline?: Json
+          consecutive_failures?: number
+          created_at?: string
+          eta?: string | null
+          field_fill_rates?: Json
+          last_check_at?: string | null
+          last_healthy_at?: string | null
+          notes?: string | null
+          row_count?: number
+          status?: string
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      template_health_events: {
+        Row: {
+          created_at: string
+          detail: Json
+          from_status: string | null
+          id: string
+          refunded_jobs: number
+          row_count: number | null
+          template_id: string
+          to_status: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          from_status?: string | null
+          id?: string
+          refunded_jobs?: number
+          row_count?: number | null
+          template_id: string
+          to_status: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          from_status?: string | null
+          id?: string
+          refunded_jobs?: number
+          row_count?: number | null
+          template_id?: string
+          to_status?: string
+        }
+        Relationships: []
       }
       user_prefs: {
         Row: {
@@ -2728,6 +2878,7 @@ export type Database = {
           industry: string | null
           monthly_sms_cap: number | null
           name: string
+          negative_keywords: string[]
           plan: string
           real_elite_linked_at: string | null
           real_elite_org_id: string | null
@@ -2739,6 +2890,7 @@ export type Database = {
           industry?: string | null
           monthly_sms_cap?: number | null
           name: string
+          negative_keywords?: string[]
           plan?: string
           real_elite_linked_at?: string | null
           real_elite_org_id?: string | null
@@ -2750,6 +2902,7 @@ export type Database = {
           industry?: string | null
           monthly_sms_cap?: number | null
           name?: string
+          negative_keywords?: string[]
           plan?: string
           real_elite_linked_at?: string | null
           real_elite_org_id?: string | null
@@ -2816,6 +2969,15 @@ export type Database = {
       is_workspace_admin: { Args: { _workspace_id: string }; Returns: boolean }
       is_workspace_member: { Args: { _workspace_id: string }; Returns: boolean }
       is_workspace_owner: { Args: { _workspace_id: string }; Returns: boolean }
+      record_dlr_outcome: {
+        Args: {
+          _carrier: string
+          _delivered: boolean
+          _sending_number_id: string
+          _workspace_id: string
+        }
+        Returns: undefined
+      }
       workspace_role: { Args: { _workspace_id: string }; Returns: string }
     }
     Enums: {
