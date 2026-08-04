@@ -459,6 +459,15 @@ export const sendReply = createServerFn({ method: "POST" })
       thread_key: data.threadKey,
     });
     if (error) throw error;
+    // A teammate is now handling this conversation: hold the automated cadence
+    // for the workspace's pause window instead of talking over them.
+    if (existing.lead_id) {
+      const { pauseSequenceForHuman } = await import("@/lib/sequence-runner.server");
+      await pauseSequenceForHuman(context.supabase as never, {
+        workspaceId: data.workspaceId,
+        leadId: existing.lead_id,
+      });
+    }
     return { ok: true, status };
   });
 
