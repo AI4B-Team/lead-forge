@@ -484,6 +484,32 @@ export function JobSpecCard({
         )}
 
 
+        {/* Location is the primary Street Scan filter, so it comes first — one
+            input that accepts a state, a county, a city, or a ZIP. */}
+        {isScan && (
+          <div>
+            <FieldLabel
+              confidence={96}
+              show={(spec.counties.length > 0 || states.length > 0) && (inf("counties") || inf("state"))}
+              hintTitle="Location"
+              hint="Where you buy. Search a state, a county, a city, or a ZIP and add as many as you want — the scan covers every area you list."
+            >
+              Location
+            </FieldLabel>
+            <LocationSearch
+              value={{ states, counties: spec.counties, city: spec.city, zips: spec.zips }}
+              onChange={(next) =>
+                onChange({
+                  ...withStates(spec, next.states),
+                  counties: next.counties,
+                  city: next.city,
+                  zips: next.zips,
+                })
+              }
+            />
+          </div>
+        )}
+
         {has("buyBox") && (
           <BuyBoxFields value={spec.buyBox} onChange={(v) => set("buyBox", v)} />
         )}
