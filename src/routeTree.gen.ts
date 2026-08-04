@@ -41,6 +41,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as LeadsIndexRouteImport } from './routes/leads.index'
+import { Route as DistressFeedIndexRouteImport } from './routes/distress-feed.index'
 import { Route as ToolsLineTypeCheckerRouteImport } from './routes/tools.line-type-checker'
 import { Route as ToolsDncCheckerRouteImport } from './routes/tools.dnc-checker'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
@@ -255,6 +256,11 @@ const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
 const LeadsIndexRoute = LeadsIndexRouteImport.update({
   id: '/leads/',
   path: '/leads/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DistressFeedIndexRoute = DistressFeedIndexRouteImport.update({
+  id: '/distress-feed/',
+  path: '/distress-feed/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ToolsLineTypeCheckerRoute = ToolsLineTypeCheckerRouteImport.update({
@@ -605,6 +611,7 @@ export interface FileRoutesByFullPath {
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
+  '/distress-feed/': typeof DistressFeedIndexRoute
   '/leads/': typeof LeadsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/tools/': typeof ToolsIndexRoute
@@ -692,6 +699,7 @@ export interface FileRoutesByTo {
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
+  '/distress-feed': typeof DistressFeedIndexRoute
   '/leads': typeof LeadsIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/tools': typeof ToolsIndexRoute
@@ -783,6 +791,7 @@ export interface FileRoutesById {
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
+  '/distress-feed/': typeof DistressFeedIndexRoute
   '/leads/': typeof LeadsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/tools/': typeof ToolsIndexRoute
@@ -874,6 +883,7 @@ export interface FileRouteTypes {
     | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
+    | '/distress-feed/'
     | '/leads/'
     | '/templates/'
     | '/tools/'
@@ -961,6 +971,7 @@ export interface FileRouteTypes {
     | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
+    | '/distress-feed'
     | '/leads'
     | '/templates'
     | '/tools'
@@ -1051,6 +1062,7 @@ export interface FileRouteTypes {
     | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
+    | '/distress-feed/'
     | '/leads/'
     | '/templates/'
     | '/tools/'
@@ -1139,6 +1151,7 @@ export interface RootRouteChildren {
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsDncCheckerRoute: typeof ToolsDncCheckerRoute
   ToolsLineTypeCheckerRoute: typeof ToolsLineTypeCheckerRoute
+  DistressFeedIndexRoute: typeof DistressFeedIndexRoute
   LeadsIndexRoute: typeof LeadsIndexRoute
   TemplatesIndexRoute: typeof TemplatesIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
@@ -1380,6 +1393,13 @@ declare module '@tanstack/react-router' {
       path: '/leads'
       fullPath: '/leads/'
       preLoaderRoute: typeof LeadsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/distress-feed/': {
+      id: '/distress-feed/'
+      path: '/distress-feed'
+      fullPath: '/distress-feed/'
+      preLoaderRoute: typeof DistressFeedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/line-type-checker': {
@@ -1939,6 +1959,7 @@ const rootRouteChildren: RootRouteChildren = {
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsDncCheckerRoute: ToolsDncCheckerRoute,
   ToolsLineTypeCheckerRoute: ToolsLineTypeCheckerRoute,
+  DistressFeedIndexRoute: DistressFeedIndexRoute,
   LeadsIndexRoute: LeadsIndexRoute,
   TemplatesIndexRoute: TemplatesIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
