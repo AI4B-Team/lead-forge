@@ -1,20 +1,20 @@
 // Cron entry point for the Public Records Request scheduler. One request per
-// agency per cycle, sent by LeadTrace — never one per user.
+// agency per cycle, sent by LeadTrace — never one per user. Authenticated with
+// the private cron secret, never the public app key.
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/public/hooks/tick-records-requests")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const key =
-          request.headers.get("apikey") ??
-          request.headers.get("authorization")?.replace(/^Bearer /, "") ??
-          "";
-        const expected =
-          process.env["SUPABASE_ANON_KEY"] ?? process.env["SUPABASE_PUBLISHABLE_KEY"] ?? "";
-        if (!expected || key !== expected) {
-          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        const { requireCronAuth, claimTick } = await import("@/lib/cron-auth.server");
+        const denied = await requireCronAuth(request);
+        if (denied) return denied;
+
+        if (!(await claimTick("tick-records-requests", 3600))) {
+          return Response.json({ ok: true, skipped: "tick_in_progress" }, { status: 202 });
         }
+
         try {
           const { sendDueRequests } = await import("@/lib/records-requests.server");
           return Response.json({ ok: true, ...(await sendDueRequests()) });

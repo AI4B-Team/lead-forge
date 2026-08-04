@@ -348,24 +348,14 @@ export async function executePipeline(
           .eq("reason", "refund:job_failed")
           .maybeSingle();
         if (already) continue;
-        await supabase.from("credit_ledger").insert({
-          workspace_id: ctx.workspaceId,
+        const { applyCreditDelta } = await import("./credits.server");
+        await applyCreditDelta(supabase, {
+          workspaceId: ctx.workspaceId,
           kind: debit.kind,
           delta: debit.amount,
           reason: "refund:job_failed",
-          job_id: jobId,
-          actor_user_id: ctx.actorUserId,
-        });
-        const { data: bal } = await supabase
-          .from("credit_balances")
-          .select("balance")
-          .eq("workspace_id", ctx.workspaceId)
-          .eq("kind", debit.kind)
-          .maybeSingle();
-        await supabase.from("credit_balances").upsert({
-          workspace_id: ctx.workspaceId,
-          kind: debit.kind,
-          balance: (bal?.balance ?? 0) + debit.amount,
+          jobId: jobId,
+          actorUserId: ctx.actorUserId,
         });
       }
     }
@@ -643,24 +633,14 @@ async function runPipelineBody(
       }
     }
     if (skiptraced > 0) {
-      await supabase.from("credit_ledger").insert({
-        workspace_id: workspaceId,
+      const { applyCreditDelta } = await import("./credits.server");
+      await applyCreditDelta(supabase, {
+        workspaceId,
         kind: "skip_trace",
         delta: -skiptraced,
         reason: "skiptrace",
-        job_id: jobId,
-        actor_user_id: actorUserId,
-      });
-      const { data: bal } = await supabase
-        .from("credit_balances")
-        .select("balance")
-        .eq("workspace_id", workspaceId)
-        .eq("kind", "skip_trace")
-        .maybeSingle();
-      await supabase.from("credit_balances").upsert({
-        workspace_id: workspaceId,
-        kind: "skip_trace",
-        balance: Math.max(0, (bal?.balance ?? 0) - skiptraced),
+        jobId,
+        actorUserId,
       });
       ctx.debits.push({ kind: "skip_trace", amount: skiptraced });
     }
@@ -709,25 +689,17 @@ async function runPipelineBody(
 
   // Credits are only ever charged for the records this run actually kept —
   // which, on a recurring run, is the net-new set.
-  await supabase.from("credit_ledger").insert({
-    workspace_id: workspaceId,
-    kind: "scrape",
-    delta: -verified.length,
-    reason: "scrape",
-    job_id: jobId,
-    actor_user_id: actorUserId,
-  });
-  const { data: scrapeBal } = await supabase
-    .from("credit_balances")
-    .select("balance")
-    .eq("workspace_id", workspaceId)
-    .eq("kind", "scrape")
-    .maybeSingle();
-  await supabase.from("credit_balances").upsert({
-    workspace_id: workspaceId,
-    kind: "scrape",
-    balance: Math.max(0, (scrapeBal?.balance ?? 0) - verified.length),
-  });
+  {
+    const { applyCreditDelta } = await import("./credits.server");
+    await applyCreditDelta(supabase, {
+      workspaceId,
+      kind: "scrape",
+      delta: -verified.length,
+      reason: "scrape",
+      jobId,
+      actorUserId,
+    });
+  }
   ctx.debits.push({ kind: "scrape", amount: verified.length });
 
   // 5) SCRUB — SMS only. Email/direct-mail files are not phone campaigns. ----

@@ -3,26 +3,16 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { spinOnce } from "@/lib/spintax";
 import { planDrops, estimateCost } from "@/lib/drops";
-import { canStartNewDrop } from "@/lib/tcpa";
+import {
+  canMessageRecipient,
+  canStartNewDropForRecipient,
+  inQuietHoursEverywhere,
+} from "@/lib/tcpa";
 import { SCRUB_STALE_MESSAGE, isScrubStale, withStopFooter } from "@/lib/compliance-rules";
 import { emptyStats, type CampaignStats } from "@/lib/campaign-stats";
 import { channelEligibility } from "@/lib/contact-channels";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
-
-// Returns "HH:MM" for a Date in the workspace's local TZ (assume ET default).
-function hhmm(d: Date) {
-  return d.toTimeString().slice(0, 5);
-}
-
-function inQuietHours(now: Date, win: SendWindow | null | undefined) {
-  if (!win?.quiet_start || !win?.quiet_end) return false;
-  const cur = hhmm(now);
-  const { quiet_start: qs, quiet_end: qe } = win;
-  // Overnight window: e.g. 21:00 -> 09:00
-  if (qs > qe) return cur >= qs || cur < qe;
-  return cur >= qs && cur < qe;
-}
 
 function renderTemplate(body: string, lead: Record<string, unknown>): string {
   return body.replace(/\{\{\s*([a-zA-Z_][\w]*)\s*\}\}/g, (_, key: string) => {
@@ -412,8 +402,10 @@ export const tickCampaign = createServerFn({ method: "POST" })
       .from("registrations").select("campaign_status").eq("workspace_id", campaign.workspace_id).maybeSingle();
     if (reg?.campaign_status !== "approved") return { dispatched: 0, reason: "10dlc_not_approved" };
 
-    // Quiet hours
-    if (inQuietHours(new Date(), campaign.send_window as SendWindow | null)) {
+    // Quiet hours — coarse pre-filter only (active in every US timezone). The
+    // authoritative per-recipient check runs in the recipient's own timezone.
+    const sendWindow = campaign.send_window as SendWindow | null;
+    if (inQuietHoursEverywhere(sendWindow)) {
       return { dispatched: 0, reason: "quiet_hours" };
     }
 
@@ -517,8 +509,11 @@ export const tickCampaign = createServerFn({ method: "POST" })
         }
         return !skipDupes || !messaged.has(l.id);
       })
+      // TCPA (authoritative): statutory 8am–9pm window plus the campaign quiet
+      // window, evaluated in the recipient's timezone. Unknown zone = blocked.
+      .filter((l) => canMessageRecipient(l.phone as string, l.state, sendWindow))
       // 6pm rule: a first touch never starts after 6pm recipient local time.
-      .filter((l) => canStartNewDrop(l.phone as string))
+      .filter((l) => canStartNewDropForRecipient(l.phone as string, l.state))
       .slice(0, take);
 
     for (const b of blocked.slice(0, 50)) {
