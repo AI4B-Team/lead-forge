@@ -24,6 +24,33 @@ export function coverageKey(county: string, recordType: string): string {
   return `${county.trim().toLowerCase()}::${recordType.trim().toLowerCase()}`;
 }
 
+/** FIPS codes for these county labels, from the verified coverage set. */
+export function fipsForCountyLabels(verified: CoverageRow[], labels: string[]): string[] {
+  const out: string[] = [];
+  for (const label of labels) {
+    const { county, state } = splitCountyLabel(label);
+    for (const r of verified) {
+      if (
+        (r.county_name ?? "").toLowerCase() === county.toLowerCase() &&
+        (!state || r.state.toUpperCase() === state) &&
+        !out.includes(r.fips)
+      ) {
+        out.push(r.fips);
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Is this record type pullable ANYWHERE today? The Record Type picker is driven
+ * off this so it can never offer a filing with no adapter behind it.
+ */
+export function recordTypeCovered(verified: CoverageRow[], recordType: string): boolean {
+  const t = recordType.trim().toLowerCase();
+  return verified.some((r) => r.status === "verified" && r.record_type.toLowerCase() === t);
+}
+
 /** Does this (county label, record type) pair appear in the verified set? */
 export function isCovered(
   verified: CoverageRow[],
