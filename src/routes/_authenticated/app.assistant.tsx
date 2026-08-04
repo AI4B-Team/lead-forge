@@ -1073,6 +1073,35 @@ function Assistant() {
 
   const runFooter = (
     <div className="space-y-3 border-t border-border bg-background pt-4">
+      {/* Coverage refusal comes before any price. No estimate, no Run. */}
+      {coverageBlocked && verdict?.message && (
+        <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 text-xs">
+          <div className="font-medium text-foreground">
+            {verdict.status === "scope_too_broad" ? "Narrow This List" : "Not Covered Yet"}
+          </div>
+          <div className="mt-1 text-muted-foreground">{verdict.message}</div>
+          {verdict.uncoveredCounties.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {verdict.uncoveredCounties.map((c) => (
+                <Button key={c} size="sm" variant="outline" className="rounded-full" onClick={() => request(c)}>
+                  Request {c}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Partial coverage: we price only the counties we can actually reach. */}
+      {verdict?.status === "partial" && verdict.message && (
+        <div className="rounded-xl border border-border p-3 text-xs">
+          <div className="font-medium text-foreground">Partial Coverage</div>
+          <div className="mt-1 text-muted-foreground">
+            {verdict.message} You're only charged for {verdict.coveredCounties.join(", ")}.
+          </div>
+        </div>
+      )}
+
       {uncovered.length > 0 && (
         <div className="rounded-xl border border-border p-3 text-xs">
           <div className="font-medium text-foreground">Not Covered Yet</div>
@@ -1095,7 +1124,7 @@ function Assistant() {
 
       {scanEstimateBlock}
 
-      {estimate && adapterLive && spec.sourceType && geoResolved && (
+      {estimate && adapterLive && spec.sourceType && priceable && (
         <div className="space-y-1.5 text-center text-xs">
           <div className="text-muted-foreground">
             ≈ {estimate.rows.toLocaleString()} Leads ·{" "}
@@ -1135,7 +1164,7 @@ function Assistant() {
         <>
           <Button
             className="w-full rounded-full"
-            disabled={running || !spec.sourceType || !traceComplete}
+            disabled={running || !spec.sourceType || !traceComplete || coverageBlocked}
             onClick={reviewAndRun}
           >
             {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {ctaLabel}
