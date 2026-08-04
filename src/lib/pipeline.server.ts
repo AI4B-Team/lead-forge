@@ -850,6 +850,7 @@ async function runPipelineBody(
   let clean = 0;
   let dnc = 0;
   let litigator = 0;
+  let unknownScrub = 0;
 
   if (phonePipeline) {
     await supabase.from("jobs").update({ status: "scrubbing" }).eq("id", jobId);
@@ -860,10 +861,13 @@ async function runPipelineBody(
     const scrubResult = await scrubber.scrub(phones);
     const byPhone = new Map(scrubResult.results.map((r) => [r.phone, r.status]));
     for (const lead of inserted ?? []) {
-      const status = (lead.phone && byPhone.get(lead.phone)) || "clean";
+      // Fail closed: a phone the provider did not return a verdict for is
+      // 'unknown', never 'clean'. Unknown numbers are not campaignable.
+      const status = (lead.phone ? byPhone.get(lead.phone) : undefined) ?? "unknown";
       if (status === "litigator") litigator++;
       else if (status === "dnc") dnc++;
-      else clean++;
+      else if (status === "clean") clean++;
+      else unknownScrub++;
       await supabase.from("leads").update({ scrub_status: status }).eq("id", lead.id);
     }
     await supabase.from("scrub_runs").insert({
@@ -878,8 +882,11 @@ async function runPipelineBody(
     });
     await say(
       "scrubbing",
-      `${dnc.toLocaleString()} numbers flagged DNC and ${litigator.toLocaleString()} flagged as known litigators.`,
-      dnc + litigator,
+      `${dnc.toLocaleString()} numbers flagged DNC and ${litigator.toLocaleString()} flagged as known litigators.` +
+        (unknownScrub > 0
+          ? ` ${unknownScrub.toLocaleString()} came back without a verdict and are held back from campaigns.`
+          : ""),
+      dnc + litigator + unknownScrub,
     );
   } else {
     clean = inserted?.length ?? 0;
