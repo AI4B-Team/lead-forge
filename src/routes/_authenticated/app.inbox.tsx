@@ -549,6 +549,36 @@ function ConversationsPage() {
                   />
                 </div>
 
+                {/* Where this contact stands. Set here, mirrored onto the lead
+                    record so the Leads library and reporting agree. */}
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Status
+                  </span>
+                  {THREAD_STATUSES.map((s) => {
+                    const active = selectedRow?.status === s.value;
+                    return (
+                      <Button
+                        key={s.value}
+                        size="sm"
+                        variant={active ? "default" : "outline"}
+                        className="h-6 rounded-full px-2 text-[11px]"
+                        onClick={() => void applyStatus(active ? null : s.value)}
+                      >
+                        {s.label}
+                      </Button>
+                    );
+                  })}
+                  {selectedRow?.archived && (
+                    <Badge variant="outline" className="ml-auto h-6 gap-1 text-[10px]">
+                      Archived
+                      {selectedRow.archived_reason && selectedRow.archived_reason !== "manual"
+                        ? ` · ${AUTO_ARCHIVE_REASONS[selectedRow.archived_reason] ?? selectedRow.archived_reason}`
+                        : ""}
+                    </Badge>
+                  )}
+                </div>
+
                 <AiSummary
                   bullets={summaryQ.data?.summary?.bullets ?? []}
                   nextStep={summaryQ.data?.summary?.nextStep ?? null}
