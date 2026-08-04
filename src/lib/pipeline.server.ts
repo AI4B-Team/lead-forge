@@ -530,11 +530,13 @@ async function runPipelineBody(
   // payment method. Checked here so every entry point (assistant, recurring
   // engine, API) hits the same gate.
   const { assertFreeTierAllows } = await import("./free-tier.server");
-  const { templateById } = await import("./templates");
+  const { getTemplate, creditCostPerLead } = await import("./templates");
   const freePlanCtx = await assertFreeTierAllows(supabase, workspaceId, {
     templateId: (params.templateId as string | undefined) ?? null,
-    creditCostPerLead:
-      templateById((params.templateId as string | undefined) ?? "")?.creditCostPerLead ?? 0,
+    creditCostPerLead: (() => {
+      const t = getTemplate((params.templateId as string | undefined) ?? "");
+      return t ? creditCostPerLead(t) : 0;
+    })(),
     skipTrace: Boolean(params.skip_trace),
     recordsRequested: (params.distress_record_ids as string[] | undefined)?.length ?? 0,
   });
