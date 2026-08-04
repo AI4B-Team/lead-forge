@@ -177,6 +177,10 @@ function Assistant() {
   const [running, setRunning] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [revealed, setRevealed] = useState(0);
+  /** True once the assistant has stated the full spec back in prose. */
+  const [specStated, setSpecStated] = useState(false);
+  /** Panel edits waiting to be acknowledged by the next assistant turn. */
+  const [panelEdits, setPanelEdits] = useState<string[]>([]);
   const [recents, setRecents] = useState<RecentTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [convId, setConvId] = useState<string>(() => `c${Date.now()}`);
@@ -235,8 +239,14 @@ function Assistant() {
   /** Honest availability: a non-live adapter can never reach the pipeline. */
   const adapterStatus = selectedTemplate ? templateAdapterStatus(selectedTemplate) : "live";
   const adapterLive = adapterStatus === "live";
+  // The List Assembled card only appears after the assistant has read the spec
+  // back in words, so the operator always gets a turn to correct it first.
   const traceComplete =
-    revealed >= traceSteps.length && !busy && traceSteps.length > 0 && missing.length === 0;
+    revealed >= traceSteps.length &&
+    !busy &&
+    traceSteps.length > 0 &&
+    missing.length === 0 &&
+    (specStated || !hasChat);
   const lastAssistantIndex = useMemo(() => {
     for (let i = thread.length - 1; i >= 0; i -= 1) if (thread[i].role === "assistant") return i;
     return -1;
