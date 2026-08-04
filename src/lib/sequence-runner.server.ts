@@ -48,12 +48,7 @@ export function nextAllowedSlot(
   const probe = new Date(from.getTime());
   for (let i = 0; i < 48 * 2; i += 1) {
     probe.setTime(probe.getTime() + 30 * 60_000);
-    if (canMessageRecipient(phone, state ?? null, window)) {
-      // canMessageRecipient evaluates "now", so re-test against the probe hour
-      // by shifting the clock reference: cheap approximation is to trust the
-      // 30-minute walk and stop at the first slot inside the window.
-      return probe;
-    }
+    if (canMessageRecipient(phone, state ?? null, window, probe)) return new Date(probe.getTime());
   }
   return new Date(from.getTime() + 12 * 60 * 60_000);
 }
