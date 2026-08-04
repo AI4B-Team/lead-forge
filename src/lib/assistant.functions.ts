@@ -238,9 +238,6 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
     if (spec.sourceType === "upload") throw new Error("Uploaded Lists Start On The Upload Page");
     if (spec.sourceType === "business" && !spec.niches.length) throw new Error("Add At Least One Niche");
     if (spec.sourceType === "records" && !spec.recordType) throw new Error("Pick A Record Type");
-    if (spec.sourceType === "street_scan" && !spec.visualCriteria.length) {
-      throw new Error("Add At Least One Visual Criterion");
-    }
 
     const { loadReferenceData } = await import("@/lib/reference-data.server");
     const { coverageForCounty } = await import("@/lib/reference-data.shared");
