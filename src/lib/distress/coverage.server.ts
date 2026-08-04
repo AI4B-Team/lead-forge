@@ -16,6 +16,15 @@ export class NoCoverageError extends Error {
   }
 }
 
+/** Thrown when the request is too vague to price — e.g. a state with no counties. */
+export class ScopeTooBroadError extends Error {
+  readonly code = "scope_too_broad";
+  constructor(message: string) {
+    super(message);
+    this.name = "ScopeTooBroadError";
+  }
+}
+
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
