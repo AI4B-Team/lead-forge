@@ -348,24 +348,14 @@ export async function executePipeline(
           .eq("reason", "refund:job_failed")
           .maybeSingle();
         if (already) continue;
-        await supabase.from("credit_ledger").insert({
-          workspace_id: ctx.workspaceId,
+        const { applyCreditDelta } = await import("./credits.server");
+        await applyCreditDelta(supabase, {
+          workspaceId: ctx.workspaceId,
           kind: debit.kind,
           delta: debit.amount,
           reason: "refund:job_failed",
-          job_id: jobId,
-          actor_user_id: ctx.actorUserId,
-        });
-        const { data: bal } = await supabase
-          .from("credit_balances")
-          .select("balance")
-          .eq("workspace_id", ctx.workspaceId)
-          .eq("kind", debit.kind)
-          .maybeSingle();
-        await supabase.from("credit_balances").upsert({
-          workspace_id: ctx.workspaceId,
-          kind: debit.kind,
-          balance: (bal?.balance ?? 0) + debit.amount,
+          jobId: jobId,
+          actorUserId: ctx.actorUserId,
         });
       }
     }
