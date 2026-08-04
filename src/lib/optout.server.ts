@@ -10,6 +10,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Client = { from: (table: string) => any };
 
+import { isTrustedProvenance, UNTRUSTED_LEAD_MESSAGE } from "./provenance.shared";
+
 export const OPTOUT_ERROR = "Contact has opted out — message not sent";
 export const SUPPRESSED_ERROR = "Number is on your suppression list — message not sent";
 export const DNC_ERROR = "Number is on the National Do Not Call Registry — message not sent";
@@ -22,7 +24,8 @@ export type BlockReason =
   | "suppressed"
   | "dnc_listed"
   | "litigator_listed"
-  | "not_scrubbed";
+  | "not_scrubbed"
+  | "unverified_source";
 
 export type SendGate =
   | { ok: true; phone: string | null }
