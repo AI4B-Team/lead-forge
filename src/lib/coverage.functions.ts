@@ -1,10 +1,69 @@
-// Coverage answers the client needs BEFORE pricing: is this county/record type
-// runnable at all? The same verdict function backs the server-side gate, so the
-// UI can never show a price the runner would refuse.
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/** Public: everything we actually pull, so selectors can mark the rest honestly. */
+export const getVerifiedCoverage = createServerFn({ method: "GET" }).handler(async () => {
+  const { verifiedCoverage } = await import("./distress/coverage.server");
+  return { coverage: await verifiedCoverage() };
+});
+
+/** Public: how many workspaces have asked for this county/record type. */
+export const getCoverageDemand = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({ county: z.string().min(1).max(120), recordType: z.string().min(1).max(120) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { coverageDemand } = await import("./distress/coverage.server");
+    return { requests: await coverageDemand(data.county, data.recordType) };
+  });
+
+/** Log demand for an uncovered county. */
+export const requestCountyCoverage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        county: z.string().min(1).max(120),
+        recordType: z.string().min(1).max(120),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: member } = await context.supabase
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("workspace_id", data.workspaceId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!member) throw new Error("Forbidden");
+
+    const { logCoverageRequests, coverageDemand } = await import("./distress/coverage.server");
+    await logCoverageRequests([{ county: data.county, recordType: data.recordType }], {
+      workspaceId: data.workspaceId,
+      requestedBy: context.userId,
+    });
+    return { ok: true, requests: await coverageDemand(data.county, data.recordType) };
+  });
+
+/** Admin coverage matrix: states down, record types across. */
+export const getCoverageMatrix = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "super_admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden");
+    const { coverageMatrix } = await import("./distress/coverage.server");
+    return await coverageMatrix();
+  });
+/**
+ * Coverage verdict the client needs BEFORE pricing: is this county/record type
+ * runnable at all? Backed by the same function as the server-side gate, so the
+ * UI can never show a price the runner would refuse.
+ */
 export const getJobCoverage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
