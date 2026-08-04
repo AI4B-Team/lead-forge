@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { threadStatusLabel } from "@/lib/thread-states.shared";
 import { cn } from "@/lib/utils";
 import { LeadTagChips } from "@/components/app/lead-tag-picker";
 import { PhoneLink } from "@/components/app/phone-link";
@@ -106,10 +107,13 @@ export function ConversationRow({
   thread,
   active,
   onSelect,
+  onToggleStar,
 }: {
   thread: ThreadRow;
   active: boolean;
   onSelect: () => void;
+  /** Star toggle lives on the row so triage never needs the thread open. */
+  onToggleStar?: () => void;
 }) {
   const name = thread.lead?.full_name || thread.lead?.business_name || thread.lead?.phone || thread.thread_key;
   const statusDot = thread.is_optout
@@ -122,10 +126,18 @@ export function ConversationRow({
           ? "bg-warn"
           : "bg-muted-foreground/40";
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
       className={cn(
-        "w-full text-left px-3 py-4 border-b transition-colors hover:bg-muted/40",
+        "group w-full cursor-pointer text-left px-3 py-4 border-b transition-colors hover:bg-muted/40",
         active && "bg-muted/70 border-l-2 border-l-primary",
       )}
     >
@@ -134,7 +146,27 @@ export function ConversationRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <span className="font-semibold truncate text-sm">{name}</span>
-            <span className="text-[10px] text-muted-foreground shrink-0">{dayLabel(thread.last_at)}</span>
+            <span className="flex shrink-0 items-center gap-1">
+              {onToggleStar && (
+                <button
+                  type="button"
+                  aria-label={thread.starred ? "Remove star" : "Star conversation"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleStar();
+                  }}
+                  className={cn(
+                    "rounded p-0.5 transition-opacity hover:bg-muted",
+                    thread.starred
+                      ? "text-warn opacity-100"
+                      : "text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+                  )}
+                >
+                  <Star className={cn("h-3.5 w-3.5", thread.starred && "fill-current")} />
+                </button>
+              )}
+              <span className="text-[10px] text-muted-foreground">{dayLabel(thread.last_at)}</span>
+            </span>
           </div>
           <p className="text-xs text-muted-foreground truncate mt-1">
             {thread.last_direction === "outbound" ? "You: " : ""}
@@ -166,12 +198,19 @@ export function ConversationRow({
               <LeadTagChips tags={thread.lead_tags} max={3} />
             </div>
           )}
+          {thread.status && (
+            <div className="mt-1.5">
+              <Badge variant="outline" className="h-[18px] px-1.5 py-0 text-[10px]">
+                {threadStatusLabel(thread.status) ?? thread.status}
+              </Badge>
+            </div>
+          )}
           {thread.campaign && (
             <div className="text-[10px] text-muted-foreground mt-1.5 truncate">{thread.campaign.name}</div>
           )}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
