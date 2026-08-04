@@ -375,10 +375,9 @@ export const scheduleCampaignDrops = createServerFn({ method: "POST" })
     return { drops: drops.length };
   });
 
-// Runner: dispatch up to `batchSize` outbound messages for a single campaign.
-// Enforces 10DLC gate, daily cap, quiet hours, suppression list, and round-robin
-// sending-number rotation. Uses a mock provider (writes messages rows only) --
-// real providers plug in via the `sendVia` step below.
+// Runner: dispatch the next batch for a single campaign on user request.
+// Delegates to the shared server-side runner so there is exactly ONE send path
+// (10DLC gate, quiet hours, suppression, DNC, warmup caps, real carrier send).
 export const tickCampaign = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -388,186 +387,17 @@ export const tickCampaign = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
-    const batch = data.batchSize ?? 50;
-
-    const { data: campaign } = await supabase
+    // RLS check: the caller must be able to read this campaign in their workspace.
+    const { data: campaign } = await context.supabase
       .from("campaigns")
-      .select("id, workspace_id, list_job_id, status, daily_cap, send_window, drop_size, duplicate_policy")
-      .eq("id", data.campaignId).maybeSingle();
+      .select("id, status")
+      .eq("id", data.campaignId)
+      .maybeSingle();
     if (!campaign) throw new Error("Campaign Not Found");
     if (campaign.status !== "sending") return { dispatched: 0, reason: "not_sending" };
-    if (!campaign.list_job_id) return { dispatched: 0, reason: "no_list" };
 
-    // 10DLC gate
-    const { data: reg } = await supabase
-      .from("registrations").select("campaign_status").eq("workspace_id", campaign.workspace_id).maybeSingle();
-    if (reg?.campaign_status !== "approved") return { dispatched: 0, reason: "10dlc_not_approved" };
-
-    // Quiet hours — coarse pre-filter only (active in every US timezone). The
-    // authoritative per-recipient check runs in the recipient's own timezone.
-    const sendWindow = campaign.send_window as SendWindow | null;
-    if (inQuietHoursEverywhere(sendWindow)) {
-      return { dispatched: 0, reason: "quiet_hours" };
-    }
-
-    // §6: never send against a list whose scrub is older than 30 days.
-    const { data: lastScrub } = await supabase
-      .from("scrub_runs")
-      .select("created_at")
-      .eq("job_id", campaign.list_job_id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (isScrubStale(lastScrub?.created_at)) {
-      await supabase.from("campaigns").update({ status: "paused" }).eq("id", campaign.id);
-      return { dispatched: 0, reason: "scrub_stale" };
-    }
-
-    // Daily cap: today's outbound count for this campaign
-    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-    const { count: sentToday } = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("campaign_id", campaign.id)
-      .eq("direction", "outbound")
-      .gte("created_at", startOfDay.toISOString());
-    const cap = campaign.daily_cap ?? 500;
-    const remainingCap = Math.max(0, cap - (sentToday ?? 0));
-    if (remainingCap === 0) return { dispatched: 0, reason: "daily_cap_reached" };
-
-    // Steps
-    const { data: steps } = await supabase
-      .from("campaign_steps").select("*").eq("campaign_id", campaign.id).order("step_order");
-    if (!steps?.length) return { dispatched: 0, reason: "no_steps" };
-    const step1 = steps[0];
-
-    // Active sending numbers (healthy)
-    const { data: numbers } = await supabase
-      .from("sending_numbers")
-      .select("id, phone, status, health_score")
-      .eq("workspace_id", campaign.workspace_id)
-      .in("status", ["active"])
-      .order("health_score", { ascending: false });
-    if (!numbers?.length) return { dispatched: 0, reason: "no_numbers" };
-
-    // Suppression + opt-out gate (single source of truth for every send path).
-    const { loadSuppressionSet, loadOptedOutLeadIds, logBlockedSend } = await import("@/lib/optout.server");
-    const suppressed = await loadSuppressionSet(supabase, campaign.workspace_id);
-    const optedOut = await loadOptedOutLeadIds(supabase, campaign.workspace_id);
-
-    // Already messaged lead ids for this campaign (touch 1 dedup)
-    const { data: prevMsgs } = await supabase
-      .from("messages").select("lead_id").eq("campaign_id", campaign.id).eq("direction", "outbound");
-    const messaged = new Set((prevMsgs ?? []).map((m) => m.lead_id).filter(Boolean) as string[]);
-
-    // Drop gating: first touches only leave inside a scheduled, due drop.
-    const { data: dueDrops } = await supabase
-      .from("campaign_drops")
-      .select("id, drop_index, size, sent_count, status")
-      .eq("campaign_id", campaign.id)
-      .in("status", ["pending", "sending"])
-      .lte("scheduled_at", new Date().toISOString())
-      .order("drop_index")
-      .limit(1);
-    const activeDrop = dueDrops?.[0] ?? null;
-    const { count: totalDrops } = await supabase
-      .from("campaign_drops")
-      .select("id", { count: "exact", head: true })
-      .eq("campaign_id", campaign.id);
-    if ((totalDrops ?? 0) > 0 && !activeDrop) return { dispatched: 0, reason: "no_drop_due" };
-    const dropRoom = activeDrop
-      ? Math.max(0, (activeDrop.size ?? 0) - (activeDrop.sent_count ?? 0))
-      : Number.POSITIVE_INFINITY;
-    if (dropRoom === 0) return { dispatched: 0, reason: "drop_complete" };
-
-    // Fetch next clean leads to send (limit conservatively; filter suppressed/messaged in-app)
-    const take = Math.min(remainingCap, dropRoom, batch);
-    const { data: leads } = await supabase
-      .from("leads")
-      .select("id, full_name, phone, city, state, address")
-      .eq("job_id", campaign.list_job_id)
-      .eq("scrub_status", "clean")
-      .limit(take * 4);
-    if (!leads?.length) {
-      await supabase.from("campaigns").update({ status: "completed" }).eq("id", campaign.id);
-      return { dispatched: 0, reason: "list_exhausted" };
-    }
-
-    // duplicate_policy = "skip" (default) never re-messages a lead already
-    // contacted by this campaign.
-    const skipDupes = (campaign.duplicate_policy ?? "skip") === "skip";
-    const blocked: Array<{ id: string; phone: string; reason: "opted_out" | "suppressed" }> = [];
-    const toSend = leads
-      .filter((l) => {
-        if (!l.phone) return false;
-        if (optedOut.has(l.id)) {
-          blocked.push({ id: l.id, phone: l.phone, reason: "opted_out" });
-          return false;
-        }
-        if (suppressed.has(l.phone) || suppressed.has(l.phone.replace(/\D/g, ""))) {
-          blocked.push({ id: l.id, phone: l.phone, reason: "suppressed" });
-          return false;
-        }
-        return !skipDupes || !messaged.has(l.id);
-      })
-      // TCPA (authoritative): statutory 8am–9pm window plus the campaign quiet
-      // window, evaluated in the recipient's timezone. Unknown zone = blocked.
-      .filter((l) => canMessageRecipient(l.phone as string, l.state, sendWindow))
-      // 6pm rule: a first touch never starts after 6pm recipient local time.
-      .filter((l) => canStartNewDropForRecipient(l.phone as string, l.state))
-      .slice(0, take);
-
-    for (const b of blocked.slice(0, 50)) {
-      await logBlockedSend(
-        supabase,
-        { workspaceId: campaign.workspace_id, leadId: b.id, source: `campaign:${campaign.id}`, actorId: context.userId },
-        { ok: false, reason: b.reason, message: "blocked", phone: b.phone },
-      );
-    }
-
-    let dispatched = 0;
-    const rows: Array<Record<string, unknown>> = [];
-    for (let i = 0; i < toSend.length; i++) {
-      const lead = toSend[i];
-      const num = numbers[i % numbers.length];
-      const variants = step1.message_variants;
-      const template = variants[Math.floor(Math.random() * variants.length)];
-      const first_name = (lead.full_name ?? "").trim().split(/\s+/)[0] ?? "there";
-      const spun = spinOnce(template);
-      // Opt-out footer is appended server-side and cannot be removed in the editor.
-      const body = withStopFooter(renderTemplate(spun, { ...lead, first_name }));
-      rows.push({
-        workspace_id: campaign.workspace_id,
-        campaign_id: campaign.id,
-        lead_id: lead.id,
-        sending_number_id: num.id,
-        direction: "outbound",
-        status: "delivered", // mock provider — replace with "queued" when real provider is wired
-        body,
-      });
-      dispatched += 1;
-    }
-
-    if (rows.length) {
-      const { error } = await supabase.from("messages").insert(rows as never);
-      if (error) throw error;
-    }
-
-    if (activeDrop && dispatched > 0) {
-      const nextSent = (activeDrop.sent_count ?? 0) + dispatched;
-      await supabase
-        .from("campaign_drops")
-        .update({ sent_count: nextSent, status: nextSent >= (activeDrop.size ?? 0) ? "complete" : "sending" })
-        .eq("id", activeDrop.id);
-    }
-
-    // If nothing left after this batch, complete campaign.
-    if (!activeDrop && toSend.length < take) {
-      await supabase.from("campaigns").update({ status: "completed" }).eq("id", campaign.id);
-    }
-
-    return { dispatched, reason: dispatched ? "ok" : "no_eligible_leads" };
+    const { tickCampaignById } = await import("@/lib/campaign-runner.server");
+    return tickCampaignById(data.campaignId);
   });
 
 // Handle an inbound reply: append message row, mark opt-out + suppression on STOP.
