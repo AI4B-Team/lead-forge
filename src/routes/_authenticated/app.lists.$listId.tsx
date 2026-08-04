@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { skipSummaryCopy } from "@/lib/refunds.shared";
 import { formatLocation } from "@/lib/location";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -449,6 +450,17 @@ function JobDetail() {
           </div>
         </CardContent>
       </Card>
+
+      {(data.skippedRecords > 0 || (data.refunds?.skipped ?? 0) > 0) && (
+        <div className="mt-4 rounded-xl border border-border bg-surface-muted px-4 py-3 text-sm text-muted-foreground">
+          {skipSummaryCopy({
+            count: data.skippedRecords,
+            noun: params.source_type === "property_scan" ? "properties" : "records",
+            credits: data.refunds?.skipped ?? 0,
+          }) ||
+            `Some records couldn't be checked and weren't charged (${(data.refunds?.skipped ?? 0).toLocaleString()} credits back).`}
+        </div>
+      )}
 
       {params.source_type === "property_scan" && <MonitorListCard jobId={jobId} workspaceId={team.workspaceId} />}
 

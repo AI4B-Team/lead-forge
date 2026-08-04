@@ -2664,6 +2664,66 @@ export type Database = {
         }
         Relationships: []
       }
+      thread_states: {
+        Row: {
+          archived_at: string | null
+          archived_reason: string | null
+          created_at: string
+          id: string
+          lead_id: string | null
+          starred: boolean
+          status: string | null
+          status_set_at: string | null
+          status_set_by: string | null
+          thread_key: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          archived_reason?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          starred?: boolean
+          status?: string | null
+          status_set_at?: string | null
+          status_set_by?: string | null
+          thread_key: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          archived_reason?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          starred?: boolean
+          status?: string | null
+          status_set_at?: string | null
+          status_set_by?: string | null
+          thread_key?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_states_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_states_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_prefs: {
         Row: {
           checklist_collapsed: boolean
@@ -2882,6 +2942,7 @@ export type Database = {
           plan: string
           real_elite_linked_at: string | null
           real_elite_org_id: string | null
+          refund_email_threshold: number
         }
         Insert: {
           billing_plan?: string
@@ -2894,6 +2955,7 @@ export type Database = {
           plan?: string
           real_elite_linked_at?: string | null
           real_elite_org_id?: string | null
+          refund_email_threshold?: number
         }
         Update: {
           billing_plan?: string
@@ -2906,6 +2968,7 @@ export type Database = {
           plan?: string
           real_elite_linked_at?: string | null
           real_elite_org_id?: string | null
+          refund_email_threshold?: number
         }
         Relationships: []
       }

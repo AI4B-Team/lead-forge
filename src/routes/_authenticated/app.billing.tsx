@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ledgerReasonLabel, refundClassOf, DEFAULT_REFUND_EMAIL_THRESHOLD } from "@/lib/refunds.shared";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -13,7 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { getBilling, topUpCredits } from "@/lib/billing.functions";
+import { getBilling, topUpCredits, setRefundEmailThreshold } from "@/lib/billing.functions";
 
 type CreditKind = "scrape" | "skip_trace" | "sms";
 
@@ -34,6 +35,8 @@ function Billing() {
   const runTopUp = useServerFn(topUpCredits);
   const qc = useQueryClient();
   const [topUpKind, setTopUpKind] = useState<CreditKind | null>(null);
+  const saveThreshold = useServerFn(setRefundEmailThreshold);
+  const [threshold, setThreshold] = useState<string>("");
 
   const { data } = useQuery({
     queryKey: ["billing", workspaceId],
@@ -135,8 +138,16 @@ function Billing() {
               {data.ledger.map((row) => (
                 <div key={row.id} className="flex items-center justify-between py-3 text-sm">
                   <div>
-                    <div className="font-medium capitalize">
-                      {row.kind.replace("_", " ")} · {row.reason ?? "usage"}
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        {ledgerReasonLabel(row.kind)} · {ledgerReasonLabel(row.reason)}
+                      </span>
+                      {refundClassOf(row.reason) === "source" && (
+                        <Badge variant="outline" className="text-[10px]">Source Failure</Badge>
+                      )}
+                      {refundClassOf(row.reason) === "skip" && (
+                        <Badge variant="outline" className="text-[10px]">Records Skipped</Badge>
+                      )}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(row.created_at).toLocaleString()}
@@ -156,6 +167,48 @@ function Billing() {
         </div>
 
         <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base font-display">Refund Alerts</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Every refund shows up in your notifications and credit history. Refunds above this
+                size also get an email.
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  className="w-28"
+                  value={
+                    threshold !== ""
+                      ? threshold
+                      : String(data?.workspace?.refund_email_threshold ?? DEFAULT_REFUND_EMAIL_THRESHOLD)
+                  }
+                  onChange={(e) => setThreshold(e.target.value)}
+                />
+                <span className="text-sm text-muted-foreground">credits</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto rounded-full"
+                  onClick={() => {
+                    const n = Number(threshold);
+                    if (!Number.isFinite(n) || n < 1) return toast.error("Enter a credit amount");
+                    saveThreshold({ data: { workspaceId: workspaceId!, threshold: Math.round(n) } })
+                      .then(() => {
+                        toast.success("Refund Email Threshold Saved");
+                        qc.invalidateQueries({ queryKey: ["billing", workspaceId] });
+                      })
+                      .catch((e: Error) => toast.error(e.message));
+                  }}
+                >
+                  Save
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle className="text-base font-display">Payment Method</CardTitle>

@@ -10,7 +10,17 @@ export const listThreads = createServerFn({ method: "GET" })
     z.object({
       workspaceId: z.string().uuid(),
       filter: z
-        .enum(["all", "needs_reply", "interested", "appointments", "ai", "unread", "optouts"])
+        .enum([
+          "all",
+          "needs_reply",
+          "interested",
+          "appointments",
+          "ai",
+          "unread",
+          "optouts",
+          "starred",
+          "archived",
+        ])
         .default("all"),
       // Optional per-contact label filter (inbox-native lead tags).
       tagId: z.string().uuid().optional(),
@@ -147,6 +157,21 @@ export const listThreads = createServerFn({ method: "GET" })
 
     const { computeNeedsReply, urgencyScore } = await import("@/lib/conversation-intel");
 
+    // Workflow state (star / archive / status) for these conversations.
+    const { data: stateRows } = await context.supabase
+      .from("thread_states")
+      .select("thread_key, starred, archived_at, archived_reason, status")
+      .eq("workspace_id", data.workspaceId);
+    const stateByThread = new Map(
+      ((stateRows ?? []) as Array<{
+        thread_key: string;
+        starred: boolean;
+        archived_at: string | null;
+        archived_reason: string | null;
+        status: string | null;
+      }>).map((s) => [s.thread_key, s]),
+    );
+
     const enriched = threads.map((t) => {
       const lead = t.lead_id ? leadMap.get(t.lead_id) ?? null : null;
       const campaign = t.campaign_id ? campaignMap.get(t.campaign_id) ?? null : null;
@@ -171,6 +196,10 @@ export const listThreads = createServerFn({ method: "GET" })
       });
       return {
         ...t,
+        starred: stateByThread.get(t.thread_key)?.starred ?? false,
+        archived: !!stateByThread.get(t.thread_key)?.archived_at,
+        archived_reason: stateByThread.get(t.thread_key)?.archived_reason ?? null,
+        status: stateByThread.get(t.thread_key)?.status ?? null,
         lead,
         lead_tags: t.lead_id ? tagsByLead.get(t.lead_id) ?? [] : [],
         campaign,
@@ -193,9 +222,15 @@ export const listThreads = createServerFn({ method: "GET" })
       : enriched;
 
     let filtered = tagScoped.filter((t) => {
+      // Archived conversations only appear on their own tab, never mixed in.
+      if (t.archived && data.filter !== "archived") return false;
       switch (data.filter) {
         case "unread":
           return t.unread > 0;
+        case "starred":
+          return t.starred;
+        case "archived":
+          return t.archived;
         case "needs_reply":
           return t.needs_reply;
         case "interested":
@@ -218,13 +253,18 @@ export const listThreads = createServerFn({ method: "GET" })
 
     // Counts drive the filter chips so operators see where attention is needed.
     const counts = {
-      all: enriched.length,
-      needs_reply: enriched.filter((t) => t.needs_reply).length,
-      interested: enriched.filter((t) => t.intent === "qualified" || t.intent === "appointment").length,
-      appointments: enriched.filter((t) => t.intent === "appointment").length,
-      ai: enriched.filter((t) => t.bot_active).length,
-      unread: enriched.filter((t) => t.unread > 0).length,
-      optouts: enriched.filter((t) => t.is_optout).length,
+      // Every count except `archived` describes the active inbox.
+      all: enriched.filter((t) => !t.archived).length,
+      needs_reply: enriched.filter((t) => !t.archived && t.needs_reply).length,
+      interested: enriched.filter(
+        (t) => !t.archived && (t.intent === "qualified" || t.intent === "appointment"),
+      ).length,
+      appointments: enriched.filter((t) => !t.archived && t.intent === "appointment").length,
+      ai: enriched.filter((t) => !t.archived && t.bot_active).length,
+      unread: enriched.filter((t) => !t.archived && t.unread > 0).length,
+      optouts: enriched.filter((t) => !t.archived && t.is_optout).length,
+      starred: enriched.filter((t) => !t.archived && t.starred).length,
+      archived: enriched.filter((t) => t.archived).length,
     };
 
     return { threads: filtered, counts };
@@ -547,4 +587,131 @@ export const blacklistThread = createServerFn({ method: "POST" })
       } as never);
     if (error) throw error;
     return { ok: true, phone: lead.phone };
+  });
+
+/* ------------------------------------------------------------------------- *
+ * Thread workflow: star, archive, status.
+ * State lives in `thread_states`, keyed by (workspace, thread_key), so it
+ * survives new messages arriving on the same conversation.
+ * ------------------------------------------------------------------------- */
+
+/** Star or unstar a conversation. */
+export const starThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        threadKey: z.string().min(1),
+        leadId: z.string().uuid().nullish(),
+        starred: z.boolean(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("thread_states").upsert(
+      {
+        workspace_id: data.workspaceId,
+        thread_key: data.threadKey,
+        lead_id: data.leadId ?? null,
+        starred: data.starred,
+      },
+      { onConflict: "workspace_id,thread_key" },
+    );
+    if (error) throw new Error(error.message);
+    return { ok: true, starred: data.starred };
+  });
+
+/** Archive or restore a conversation. Archiving never deletes messages. */
+export const archiveThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        threadKey: z.string().min(1),
+        leadId: z.string().uuid().nullish(),
+        archived: z.boolean(),
+        reason: z.string().max(120).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("thread_states").upsert(
+      {
+        workspace_id: data.workspaceId,
+        thread_key: data.threadKey,
+        lead_id: data.leadId ?? null,
+        archived_at: data.archived ? new Date().toISOString() : null,
+        archived_reason: data.archived ? data.reason ?? "manual" : null,
+      },
+      { onConflict: "workspace_id,thread_key" },
+    );
+    if (error) throw new Error(error.message);
+    return { ok: true, archived: data.archived };
+  });
+
+/**
+ * Set the workflow status on a conversation and mirror it onto the lead record
+ * so the inbox and the Leads library never disagree about where a contact is.
+ */
+export const setThreadStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(async (input) => {
+    const { THREAD_STATUS_VALUES } = await import("@/lib/thread-states.shared");
+    return z
+      .object({
+        workspaceId: z.string().uuid(),
+        threadKey: z.string().min(1),
+        leadId: z.string().uuid().nullish(),
+        status: z.enum(THREAD_STATUS_VALUES).nullable(),
+      })
+      .parse(input);
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase.from("thread_states").upsert(
+      {
+        workspace_id: data.workspaceId,
+        thread_key: data.threadKey,
+        lead_id: data.leadId ?? null,
+        status: data.status,
+        status_set_by: userId,
+        status_set_at: new Date().toISOString(),
+      },
+      { onConflict: "workspace_id,thread_key" },
+    );
+    if (error) throw new Error(error.message);
+
+    // Mirror onto the deduplicated lead record, matched on digits-only phone.
+    if (data.leadId) {
+      const { data: lead } = await supabase
+        .from("leads")
+        .select("phone")
+        .eq("id", data.leadId)
+        .maybeSingle();
+      const digits = (lead?.phone ?? "").replace(/\D/g, "");
+      if (digits) {
+        const { data: record } = await supabase
+          .from("lead_records")
+          .select("id")
+          .eq("workspace_id", data.workspaceId)
+          .eq("dedupe_key", digits)
+          .maybeSingle();
+        if (record?.id) {
+          await supabase.from("lead_outcomes").upsert(
+            {
+              workspace_id: data.workspaceId,
+              lead_record_id: record.id,
+              set_by: userId,
+              status: data.status,
+              reason: "inbox",
+            },
+            { onConflict: "lead_record_id" },
+          );
+        }
+      }
+    }
+
+    return { ok: true, status: data.status };
   });
