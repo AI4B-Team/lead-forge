@@ -519,13 +519,14 @@ export const TEMPLATES: Template[] = [
     shortTitle: "Distress Feed",
     shortSubtitle: "Pulled Nightly",
     title: "Distress Feed",
-    subtitle: "Probate · Foreclosure · Tax · Liens · Evictions",
+    // Honest scope: only the record types with a verified adapter get named.
+    subtitle: "Code Violations · Tax Delinquency · Select Counties",
     categories: ["records", "realestate"],
     prompt:
-      "Show me new probate, pre-foreclosure and tax deed filings in Hillsborough County FL from the Distress Feed",
+      "Show me new code violation and tax delinquency filings in Cook County IL from the Distress Feed",
     icon: Scale,
     tint: "bg-red-500/10 text-red-600",
-    placeholderHint: "e.g. New probate and tax deed filings in Hillsborough County, FL",
+    placeholderHint: "e.g. New tax delinquency filings in Philadelphia County, PA",
     credit_cost_per_lead: 0,
   },
   {
