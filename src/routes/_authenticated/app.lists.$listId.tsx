@@ -306,6 +306,20 @@ function JobDetail() {
         )}
       </div>
 
+      {!isTrustedProvenance((job as { data_provenance?: string }).data_provenance) &&
+        !legacyDismissed && (
+          <div className="mt-6 flex flex-wrap items-start gap-3 rounded-xl border border-warn/40 bg-warn/10 p-4">
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-warn" />
+            <div className="min-w-[12rem] flex-1">
+              <div className="text-sm font-semibold text-foreground">Unverified Legacy Records</div>
+              <div className="text-sm text-muted-foreground">{UNTRUSTED_LIST_MESSAGE}</div>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setLegacyDismissed(true)}>
+              Dismiss
+            </Button>
+          </div>
+        )}
+
       {coverage && coverage.uncoveredCounties.length > 0 && (
         <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-warn/40 bg-warn/10 p-4">
           <AlertTriangle className="h-4 w-4 text-warn" />
