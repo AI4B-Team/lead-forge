@@ -26,14 +26,18 @@ function normalize(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9\s,'.-]/g, " ").replace(/\s+/g, " ");
 }
 
-/** Two-letter codes and full state names mentioned in the text. */
-function statesIn(text: string): string[] {
+/**
+ * Full state names (case-insensitive) and two-letter codes. Codes are matched
+ * case-sensitively against the raw message, so the word "in" is not Indiana.
+ */
+function statesIn(text: string, raw: string): string[] {
   const out: string[] = [];
   for (const s of US_STATES) {
     const name = s.name.toLowerCase();
     if (
       new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(text) ||
-      new RegExp(`\\b${s.code.toLowerCase()}\\b`).test(text)
+      new RegExp(`\\b${s.code}\\b`).test(raw) ||
+      new RegExp(`\\b${s.code.toLowerCase()}\\b`).test(text.replace(/\bin\b/g, " "))
     ) {
       out.push(s.code);
     }
@@ -51,7 +55,7 @@ export function parseGeoIntent(
   opts: { stateHint?: string | null } = {},
 ): GeoIntent {
   const text = normalize(message);
-  const namedStates = statesIn(text);
+  const namedStates = statesIn(text, message);
   const hint = opts.stateHint?.toUpperCase() ?? null;
 
   // Candidate (county, state) pairs whose county name appears in the text.
