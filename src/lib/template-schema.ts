@@ -50,7 +50,7 @@ const VENDOR_REVIEW_TEMPLATES = ["g2", "capterra", "trustpilot", "trustradius"] 
 const SCHEMA_BY_ID: Record<string, BuilderField[]> = {
   // Street Scan reuses State + Counties for its market, adds the buy box and
   // the visual criteria the assistant inferred. No second prompt box.
-  "street-scan": ["state", "counties", "visualCriteria", "buyBox"],
+  "street-scan": ["state", "counties", "buyBox"],
   linkedin: ["keyword", "audienceFilter"],
   crunchbase: ["keyword", "audienceFilter"],
   // Marketplace sellers: keyword + the marketplace's country.
@@ -143,7 +143,7 @@ export function fieldsForSourceType(source: JobSpec["sourceType"]): BuilderField
   if (source === "upload") return BY_CATEGORY.upload;
   if (source === "records") return BY_CATEGORY.records;
   if (source === "business") return BY_CATEGORY.business;
-  if (source === "street_scan") return ["state", "counties", "visualCriteria", "buyBox"];
+  if (source === "street_scan") return ["state", "counties", "buyBox"];
   return [];
 }
 
