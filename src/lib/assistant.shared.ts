@@ -16,6 +16,8 @@ export const jobSpecSchema = z.object({
   counties: z.array(z.string().max(80)).max(20).default([]),
   /** City-shaped geography (Apartments, Foursquare, travel sources). */
   city: z.string().max(80).nullable().default(null),
+  /** ZIP-level farm areas, used by Street Scan's combined location search. */
+  zips: z.array(z.string().regex(/^\d{5}$/)).max(50).default([]),
   /** Country for non-US portals and marketplaces. */
   country: z.string().max(60).nullable().default(null),
   /** US real-estate portals: whose contact details the run targets. */
