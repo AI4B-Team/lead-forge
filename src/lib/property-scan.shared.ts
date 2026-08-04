@@ -236,13 +236,12 @@ export function previewFunnel(parcelsInArea: number, box: BuyBox) {
   const ownership = box.ownership.length ? Math.min(1, 0.22 * box.ownership.length) : 1;
   const tenure = Math.max(0.25, 1 - box.yearsOwnedMin * 0.045);
   const equity = Math.max(0.3, 1 - box.equityMin / 180);
-  const age = box.yearBuiltMax >= 2030 ? 1 : 0.62;
   const signals = box.distressSignals.length ? Math.max(0.12, 0.4 - box.distressSignals.length * 0.04) : 1;
   const permits = box.excludePermitYears > 0 ? 0.88 : 1;
-  const negative = (box.excludeActiveListings ? 0.97 : 1) * (box.excludeSoldLast24mo ? 0.94 : 1);
+  const negative = (box.excludeActiveListings ? 0.97 : 1) * (box.soldWithinMonths > 0 ? 0.97 : 1);
 
   const afterOwnership = Math.round(parcelsInArea * ownership * tenure);
-  const afterFinancial = Math.round(afterOwnership * equity * age);
+  const afterFinancial = Math.round(afterOwnership * equity);
   const afterFilters = Math.round(afterFinancial * signals * permits * negative);
   return {
     parcelsInArea,
