@@ -554,6 +554,95 @@ export type Database = {
           },
         ]
       }
+      case_events: {
+        Row: {
+          case_id: string
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "foreclosure_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_observations: {
+        Row: {
+          case_id: string
+          created_at: string
+          extracted: Json
+          id: string
+          match_confidence: number | null
+          match_key_used: string | null
+          observed_at: string
+          raw: Json
+          source_class: string
+          source_id: string | null
+          source_url: string | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          extracted?: Json
+          id?: string
+          match_confidence?: number | null
+          match_key_used?: string | null
+          observed_at?: string
+          raw?: Json
+          source_class: string
+          source_id?: string | null
+          source_url?: string | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          extracted?: Json
+          id?: string
+          match_confidence?: number | null
+          match_key_used?: string | null
+          observed_at?: string
+          raw?: Json
+          source_class?: string
+          source_id?: string | null
+          source_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_observations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "foreclosure_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_observations_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_events: {
         Row: {
           created_at: string
@@ -748,63 +837,84 @@ export type Database = {
       }
       data_sources: {
         Row: {
+          consecutive_failures: number
           county_name: string | null
+          crawl_interval_minutes: number
           created_at: string
           dataset_id: string | null
           discovered_at: string
           domain: string
+          entity_name: string | null
+          fetch_config: Json
           field_map: Json
           fips: string | null
           id: string
           jurisdiction: string | null
           last_error: string | null
+          last_success_at: string | null
           last_verified_at: string | null
           platform: string
+          precedence: number
           record_type: string
           resource_url: string | null
           row_estimate: number | null
+          source_class: string
           state: string | null
           status: string
           title: string | null
           updated_at: string
         }
         Insert: {
+          consecutive_failures?: number
           county_name?: string | null
+          crawl_interval_minutes?: number
           created_at?: string
           dataset_id?: string | null
           discovered_at?: string
           domain: string
+          entity_name?: string | null
+          fetch_config?: Json
           field_map?: Json
           fips?: string | null
           id?: string
           jurisdiction?: string | null
           last_error?: string | null
+          last_success_at?: string | null
           last_verified_at?: string | null
           platform: string
+          precedence?: number
           record_type: string
           resource_url?: string | null
           row_estimate?: number | null
+          source_class?: string
           state?: string | null
           status?: string
           title?: string | null
           updated_at?: string
         }
         Update: {
+          consecutive_failures?: number
           county_name?: string | null
+          crawl_interval_minutes?: number
           created_at?: string
           dataset_id?: string | null
           discovered_at?: string
           domain?: string
+          entity_name?: string | null
+          fetch_config?: Json
           field_map?: Json
           fips?: string | null
           id?: string
           jurisdiction?: string | null
           last_error?: string | null
+          last_success_at?: string | null
           last_verified_at?: string | null
           platform?: string
+          precedence?: number
           record_type?: string
           resource_url?: string | null
           row_estimate?: number | null
+          source_class?: string
           state?: string | null
           status?: string
           title?: string | null
@@ -1139,6 +1249,128 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      foreclosure_cases: {
+        Row: {
+          address_hash: string
+          attorney_firm: string | null
+          attorney_name: string | null
+          attorney_phone: string | null
+          auction_date: string | null
+          auction_time: string | null
+          case_number: string | null
+          case_number_normalized: string | null
+          case_status: string
+          company_entity: string | null
+          county: string | null
+          created_at: string
+          field_provenance: Json
+          filed_date: string | null
+          fips: string
+          first_seen_at: string
+          first_seen_source_id: string | null
+          id: string
+          last_observed_at: string
+          loan_balance: number | null
+          mortgagee: string | null
+          opening_bid: number | null
+          original_mortgage: number | null
+          owner_first: string | null
+          owner_last: string | null
+          parcel_apn: string | null
+          property_address: string | null
+          property_city: string | null
+          property_state: string | null
+          property_zip: string | null
+          record_type: string
+          servicer: string | null
+          stage: string | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          address_hash: string
+          attorney_firm?: string | null
+          attorney_name?: string | null
+          attorney_phone?: string | null
+          auction_date?: string | null
+          auction_time?: string | null
+          case_number?: string | null
+          case_number_normalized?: string | null
+          case_status?: string
+          company_entity?: string | null
+          county?: string | null
+          created_at?: string
+          field_provenance?: Json
+          filed_date?: string | null
+          fips: string
+          first_seen_at?: string
+          first_seen_source_id?: string | null
+          id?: string
+          last_observed_at?: string
+          loan_balance?: number | null
+          mortgagee?: string | null
+          opening_bid?: number | null
+          original_mortgage?: number | null
+          owner_first?: string | null
+          owner_last?: string | null
+          parcel_apn?: string | null
+          property_address?: string | null
+          property_city?: string | null
+          property_state?: string | null
+          property_zip?: string | null
+          record_type: string
+          servicer?: string | null
+          stage?: string | null
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          address_hash?: string
+          attorney_firm?: string | null
+          attorney_name?: string | null
+          attorney_phone?: string | null
+          auction_date?: string | null
+          auction_time?: string | null
+          case_number?: string | null
+          case_number_normalized?: string | null
+          case_status?: string
+          company_entity?: string | null
+          county?: string | null
+          created_at?: string
+          field_provenance?: Json
+          filed_date?: string | null
+          fips?: string
+          first_seen_at?: string
+          first_seen_source_id?: string | null
+          id?: string
+          last_observed_at?: string
+          loan_balance?: number | null
+          mortgagee?: string | null
+          opening_bid?: number | null
+          original_mortgage?: number | null
+          owner_first?: string | null
+          owner_last?: string | null
+          parcel_apn?: string | null
+          property_address?: string | null
+          property_city?: string | null
+          property_state?: string | null
+          property_zip?: string | null
+          record_type?: string
+          servicer?: string | null
+          stage?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foreclosure_cases_first_seen_source_id_fkey"
+            columns: ["first_seen_source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       industries: {
         Row: {
@@ -1600,6 +1832,7 @@ export type Database = {
         Row: {
           address: string | null
           business_name: string | null
+          case_id: string | null
           city: string | null
           created_at: string
           data_provenance: string
@@ -1619,6 +1852,7 @@ export type Database = {
         Insert: {
           address?: string | null
           business_name?: string | null
+          case_id?: string | null
           city?: string | null
           created_at?: string
           data_provenance?: string
@@ -1638,6 +1872,7 @@ export type Database = {
         Update: {
           address?: string | null
           business_name?: string | null
+          case_id?: string | null
           city?: string | null
           created_at?: string
           data_provenance?: string
@@ -1655,6 +1890,13 @@ export type Database = {
           zip?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "leads_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "foreclosure_cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "leads_job_id_fkey"
             columns: ["job_id"]
@@ -2831,6 +3073,44 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppression_signals: {
+        Row: {
+          case_id: string
+          created_at: string
+          detail: Json
+          detected_at: string
+          id: string
+          signal_type: string
+          source: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          detail?: Json
+          detected_at?: string
+          id?: string
+          signal_type: string
+          source: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          detail?: Json
+          detected_at?: string
+          id?: string
+          signal_type?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppression_signals_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "foreclosure_cases"
             referencedColumns: ["id"]
           },
         ]
