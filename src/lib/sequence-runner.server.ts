@@ -167,7 +167,7 @@ export async function pauseSequenceForInbound(
     })
     .eq("workspace_id", args.workspaceId)
     .eq("lead_id", args.leadId)
-    .in("status", ["active"]);
+    .eq("status", "active");
 }
 
 /** Opt-out is permanent. */
@@ -175,16 +175,18 @@ export async function stopSequenceForOptOut(
   db: Client,
   args: { workspaceId: string; leadId: string; reason?: string },
 ): Promise<void> {
-  await db
-    .from("lead_sequence_state")
-    .update({
-      status: "opted_out",
-      next_send_at: null,
-      paused_reason: args.reason ?? "opted_out",
-    })
-    .eq("workspace_id", args.workspaceId)
-    .eq("lead_id", args.leadId)
-    .not("status", "in", "(opted_out,completed)");
+  for (const status of ["active", "paused_human", "paused_signal"]) {
+    await db
+      .from("lead_sequence_state")
+      .update({
+        status: "opted_out",
+        next_send_at: null,
+        paused_reason: args.reason ?? "opted_out",
+      })
+      .eq("workspace_id", args.workspaceId)
+      .eq("lead_id", args.leadId)
+      .eq("status", status);
+  }
 }
 
 /** A compliance/market signal (bankruptcy, MLS listing) halts the cadence. */
