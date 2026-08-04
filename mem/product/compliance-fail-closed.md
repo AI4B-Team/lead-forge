@@ -5,9 +5,8 @@ type: constraint
 ---
 Scrubbing is a hard gate, never a best-effort step.
 
-- No mock/simulated scrub may ever stand in for a real one. The deterministic mock in
-  `src/lib/data-providers/dnc.ts` runs only when `LEADTRACE_USE_MOCK_DATA === 'true'`
-  and stamps `sample_data: true` in its proof.
+- No mock/simulated scrub may ever stand in for a real one. All mock generators and the
+  `LEADTRACE_USE_MOCK_DATA` flag were deleted; mock data lives only in test files.
 - Unconfigured (`DNC_API_URL`/`DNC_API_KEY` missing) or a provider error throws
   `DncUnavailableError`. The list run fails and credits refund. **Why:** texting an
   unscrubbed list is the most expensive mistake this product can make.
@@ -23,3 +22,8 @@ Send gate (`checkCanText` in `src/lib/optout.server.ts`) — the single chokepoi
 
 **How to apply:** never add a fallback that invents a scrub verdict, and never widen the
 inbound exemption to cold outbound. Locked by `src/lib/optout.test.ts`.
+
+Carrier sends fail closed too: there is exactly ONE dispatch path
+(`tickCampaignById` / `tickAllSendingCampaigns` in `src/lib/campaign-runner.server.ts`).
+When the SMS provider isn't configured it returns `sms_provider_not_configured` and
+writes **no** message rows — never a fabricated `delivered` status.
