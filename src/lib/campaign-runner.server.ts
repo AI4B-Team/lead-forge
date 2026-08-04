@@ -50,7 +50,11 @@ async function tickOne(campaign: {
     .from("registrations").select("campaign_status").eq("workspace_id", campaign.workspace_id).maybeSingle();
   if (reg?.campaign_status !== "approved") return { dispatched: 0, reason: "10dlc_not_approved" };
 
-  if (inQuietHours(new Date(), campaign.send_window as SendWindow | null)) {
+  // Coarse pre-filter only: skip the campaign when the quiet window is active
+  // in EVERY US timezone. The authoritative check is per recipient below, in
+  // the recipient's own timezone.
+  const sendWindow = campaign.send_window as SendWindow | null;
+  if (inQuietHoursEverywhere(sendWindow)) {
     return { dispatched: 0, reason: "quiet_hours" };
   }
 
@@ -174,11 +178,12 @@ async function tickOne(campaign: {
       }
       return !messaged.has(l.id);
     })
-    // TCPA: skip any recipient currently outside their local 8am–9pm window.
-    // They'll be picked up on a later tick when their local time is legal.
-    .filter((l) => isWithinTcpaWindow(l.phone as string))
+    // TCPA (authoritative): the statutory 8am–9pm window AND the campaign's
+    // quiet window, both evaluated in the recipient's timezone resolved from
+    // area code then property state. Unknown timezone = blocked.
+    .filter((l) => canMessageRecipient(l.phone as string, l.state, sendWindow))
     // 6pm rule: never START a first touch after 6pm recipient local time.
-    .filter((l) => canStartNewDrop(l.phone as string))
+    .filter((l) => canStartNewDropForRecipient(l.phone as string, l.state))
     .slice(0, take);
 
   for (const b of blocked.slice(0, 50)) {
