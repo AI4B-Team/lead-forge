@@ -901,9 +901,9 @@ function Assistant() {
   const tradeCount = spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1;
   const searchCount = countyCount * tradeCount;
 
-  const isScan = spec.sourceType === "property_scan";
+  const isScan = spec.sourceType === "street_scan";
   /**
-   * Property Scan quotes from its own buy-box cascade, but it renders in the
+   * Street Scan quotes from its own buy-box cascade, but it renders in the
    * SAME estimate slot as every other source — one estimator, one approve.
    */
   const scanEstimate = useMemo(

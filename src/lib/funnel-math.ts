@@ -100,7 +100,7 @@ export function buildFunnel(input: FunnelInput, opts?: { variant?: FunnelVariant
   ];
 
   if (variant === "scan") {
-    // Property Scan narrows parcels with free data filters BEFORE any imagery
+    // Street Scan narrows parcels with free data filters BEFORE any imagery
     // is bought, so its cascade is the buy box itself, stage by stage.
     return [
       stage("parcels", "Parcels In Area", found, null, { annotation: "Candidate Parcels" }),

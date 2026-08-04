@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { StreetScanPage } from "@/components/marketing/street-scan-page";
 
-export const Route = createFileRoute("/ai-driving-for-dollars")({
+export const Route = createFileRoute("/street-scan")({
   head: () => ({
     meta: [
       { title: "Street Scan — AI Driving For Dollars For Any Market" },

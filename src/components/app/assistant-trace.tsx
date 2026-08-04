@@ -41,7 +41,7 @@ const SOURCE_LABEL: Record<string, string> = {
   business: "Business Search",
   records: "Public Records",
   upload: "Uploaded List",
-  property_scan: "Property Scan",
+  street_scan: "Street Scan",
 };
 
 /** Turns the assembled spec into the human-readable reasoning trail the AI "thought out loud". */

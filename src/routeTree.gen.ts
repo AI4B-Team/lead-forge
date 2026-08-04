@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TutorialsRouteImport } from './routes/tutorials'
+import { Route as StreetScanRouteImport } from './routes/street-scan'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SolarRouteImport } from './routes/solar'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -40,6 +41,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as LeadsIndexRouteImport } from './routes/leads.index'
+import { Route as DistressFeedIndexRouteImport } from './routes/distress-feed.index'
 import { Route as ToolsLineTypeCheckerRouteImport } from './routes/tools.line-type-checker'
 import { Route as ToolsDncCheckerRouteImport } from './routes/tools.dnc-checker'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
@@ -47,6 +49,8 @@ import { Route as LeadsSlugRouteImport } from './routes/leads.$slug'
 import { Route as AuthHubRouteImport } from './routes/auth.hub'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as DistressFeedGuidesIndexRouteImport } from './routes/distress-feed.guides.index'
+import { Route as DistressFeedCountiesIndexRouteImport } from './routes/distress-feed.counties.index'
 import { Route as AuthenticatedPlatformIndexRouteImport } from './routes/_authenticated/platform.index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedPlatformWorkspacesRouteImport } from './routes/_authenticated/platform.workspaces'
@@ -72,11 +76,14 @@ import { Route as AuthenticatedAppAssistantRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppApiRouteImport } from './routes/_authenticated/app.api'
 import { Route as AuthenticatedAppAgentRouteImport } from './routes/_authenticated/app.agent'
 import { Route as AuthenticatedAppAccountRouteImport } from './routes/_authenticated/app.account'
+import { Route as DistressFeedGuidesStateIndexRouteImport } from './routes/distress-feed.guides.$state.index'
+import { Route as DistressFeedCountiesStateIndexRouteImport } from './routes/distress-feed.counties.$state.index'
 import { Route as AuthenticatedAppNewListIndexRouteImport } from './routes/_authenticated/app.new-list.index'
 import { Route as AuthenticatedAppNewJobIndexRouteImport } from './routes/_authenticated/app.new-job.index'
 import { Route as AuthenticatedAppListsIndexRouteImport } from './routes/_authenticated/app.lists.index'
 import { Route as AuthenticatedAppJobsIndexRouteImport } from './routes/_authenticated/app.jobs.index'
 import { Route as AuthenticatedAppCampaignsIndexRouteImport } from './routes/_authenticated/app.campaigns.index'
+import { Route as DistressFeedCountiesStateCountyRouteImport } from './routes/distress-feed.counties.$state.$county'
 import { Route as ApiPublicV1LeadsRouteImport } from './routes/api/public/v1/leads'
 import { Route as ApiPublicV1JobsRouteImport } from './routes/api/public/v1/jobs'
 import { Route as ApiPublicV1CampaignsRouteImport } from './routes/api/public/v1/campaigns'
@@ -84,6 +91,7 @@ import { Route as ApiPublicHubCallbackRouteImport } from './routes/api/public/hu
 import { Route as ApiPublicHooksTickTemplateHealthRouteImport } from './routes/api/public/hooks/tick-template-health'
 import { Route as ApiPublicHooksTickRecordsRequestsRouteImport } from './routes/api/public/hooks/tick-records-requests'
 import { Route as ApiPublicHooksTickJobsRouteImport } from './routes/api/public/hooks/tick-jobs'
+import { Route as ApiPublicHooksTickDistressFeedRouteImport } from './routes/api/public/hooks/tick-distress-feed'
 import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
 import { Route as ApiPublicHooksTelnyxInboundRouteImport } from './routes/api/public/hooks/telnyx-inbound'
 import { Route as ApiPublicHooksTelnyxDlrRouteImport } from './routes/api/public/hooks/telnyx-dlr'
@@ -95,11 +103,17 @@ import { Route as AuthenticatedAppListsListIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppJobsSplatRouteImport } from './routes/_authenticated/app.jobs.$'
 import { Route as AuthenticatedAppCampaignsNewRouteImport } from './routes/_authenticated/app.campaigns.new'
 import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
+import { Route as DistressFeedGuidesStateCountyRecordTypeRouteImport } from './routes/distress-feed.guides.$state.$county.$recordType'
 import { Route as ApiPublicV1JobsJobIdRouteImport } from './routes/api/public/v1/jobs.$jobId'
 
 const TutorialsRoute = TutorialsRouteImport.update({
   id: '/tutorials',
   path: '/tutorials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StreetScanRoute = StreetScanRouteImport.update({
+  id: '/street-scan',
+  path: '/street-scan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StartRoute = StartRouteImport.update({
@@ -251,6 +265,11 @@ const LeadsIndexRoute = LeadsIndexRouteImport.update({
   path: '/leads/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DistressFeedIndexRoute = DistressFeedIndexRouteImport.update({
+  id: '/distress-feed/',
+  path: '/distress-feed/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsLineTypeCheckerRoute = ToolsLineTypeCheckerRouteImport.update({
   id: '/tools/line-type-checker',
   path: '/tools/line-type-checker',
@@ -286,6 +305,17 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const DistressFeedGuidesIndexRoute = DistressFeedGuidesIndexRouteImport.update({
+  id: '/distress-feed/guides/',
+  path: '/distress-feed/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DistressFeedCountiesIndexRoute =
+  DistressFeedCountiesIndexRouteImport.update({
+    id: '/distress-feed/counties/',
+    path: '/distress-feed/counties/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedPlatformIndexRoute =
   AuthenticatedPlatformIndexRouteImport.update({
     id: '/',
@@ -425,6 +455,18 @@ const AuthenticatedAppAccountRoute = AuthenticatedAppAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const DistressFeedGuidesStateIndexRoute =
+  DistressFeedGuidesStateIndexRouteImport.update({
+    id: '/distress-feed/guides/$state/',
+    path: '/distress-feed/guides/$state/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DistressFeedCountiesStateIndexRoute =
+  DistressFeedCountiesStateIndexRouteImport.update({
+    id: '/distress-feed/counties/$state/',
+    path: '/distress-feed/counties/$state/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAppNewListIndexRoute =
   AuthenticatedAppNewListIndexRouteImport.update({
     id: '/new-list/',
@@ -454,6 +496,12 @@ const AuthenticatedAppCampaignsIndexRoute =
     id: '/campaigns/',
     path: '/campaigns/',
     getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const DistressFeedCountiesStateCountyRoute =
+  DistressFeedCountiesStateCountyRouteImport.update({
+    id: '/distress-feed/counties/$state/$county',
+    path: '/distress-feed/counties/$state/$county',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicV1LeadsRoute = ApiPublicV1LeadsRouteImport.update({
   id: '/api/public/v1/leads',
@@ -492,6 +540,12 @@ const ApiPublicHooksTickJobsRoute = ApiPublicHooksTickJobsRouteImport.update({
   path: '/api/public/hooks/tick-jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksTickDistressFeedRoute =
+  ApiPublicHooksTickDistressFeedRouteImport.update({
+    id: '/api/public/hooks/tick-distress-feed',
+    path: '/api/public/hooks/tick-distress-feed',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksTickCampaignsRoute =
   ApiPublicHooksTickCampaignsRouteImport.update({
     id: '/api/public/hooks/tick-campaigns',
@@ -557,6 +611,12 @@ const AuthenticatedAppCampaignsCampaignIdRoute =
     path: '/campaigns/$campaignId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const DistressFeedGuidesStateCountyRecordTypeRoute =
+  DistressFeedGuidesStateCountyRecordTypeRouteImport.update({
+    id: '/distress-feed/guides/$state/$county/$recordType',
+    path: '/distress-feed/guides/$state/$county/$recordType',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1JobsJobIdRoute = ApiPublicV1JobsJobIdRouteImport.update({
   id: '/$jobId',
   path: '/$jobId',
@@ -590,6 +650,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/street-scan': typeof StreetScanRoute
   '/tutorials': typeof TutorialsRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/platform': typeof AuthenticatedPlatformRouteWithChildren
@@ -598,6 +659,7 @@ export interface FileRoutesByFullPath {
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
+  '/distress-feed/': typeof DistressFeedIndexRoute
   '/leads/': typeof LeadsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/tools/': typeof ToolsIndexRoute
@@ -626,6 +688,8 @@ export interface FileRoutesByFullPath {
   '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/platform/': typeof AuthenticatedPlatformIndexRoute
+  '/distress-feed/counties/': typeof DistressFeedCountiesIndexRoute
+  '/distress-feed/guides/': typeof DistressFeedGuidesIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
@@ -637,6 +701,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
@@ -644,12 +709,16 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
+  '/distress-feed/counties/$state/$county': typeof DistressFeedCountiesStateCountyRoute
   '/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
   '/app/jobs/': typeof AuthenticatedAppJobsIndexRoute
   '/app/lists/': typeof AuthenticatedAppListsIndexRoute
   '/app/new-job/': typeof AuthenticatedAppNewJobIndexRoute
   '/app/new-list/': typeof AuthenticatedAppNewListIndexRoute
+  '/distress-feed/counties/$state/': typeof DistressFeedCountiesStateIndexRoute
+  '/distress-feed/guides/$state/': typeof DistressFeedGuidesStateIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
+  '/distress-feed/guides/$state/$county/$recordType': typeof DistressFeedGuidesStateCountyRecordTypeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -678,12 +747,14 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/street-scan': typeof StreetScanRoute
   '/tutorials': typeof TutorialsRoute
   '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
+  '/distress-feed': typeof DistressFeedIndexRoute
   '/leads': typeof LeadsIndexRoute
   '/templates': typeof TemplatesIndexRoute
   '/tools': typeof ToolsIndexRoute
@@ -712,6 +783,8 @@ export interface FileRoutesByTo {
   '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/platform': typeof AuthenticatedPlatformIndexRoute
+  '/distress-feed/counties': typeof DistressFeedCountiesIndexRoute
+  '/distress-feed/guides': typeof DistressFeedGuidesIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
@@ -723,6 +796,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
@@ -730,12 +804,16 @@ export interface FileRoutesByTo {
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
+  '/distress-feed/counties/$state/$county': typeof DistressFeedCountiesStateCountyRoute
   '/app/campaigns': typeof AuthenticatedAppCampaignsIndexRoute
   '/app/jobs': typeof AuthenticatedAppJobsIndexRoute
   '/app/lists': typeof AuthenticatedAppListsIndexRoute
   '/app/new-job': typeof AuthenticatedAppNewJobIndexRoute
   '/app/new-list': typeof AuthenticatedAppNewListIndexRoute
+  '/distress-feed/counties/$state': typeof DistressFeedCountiesStateIndexRoute
+  '/distress-feed/guides/$state': typeof DistressFeedGuidesStateIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
+  '/distress-feed/guides/$state/$county/$recordType': typeof DistressFeedGuidesStateCountyRecordTypeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -766,6 +844,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/street-scan': typeof StreetScanRoute
   '/tutorials': typeof TutorialsRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/platform': typeof AuthenticatedPlatformRouteWithChildren
@@ -774,6 +853,7 @@ export interface FileRoutesById {
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/tools/dnc-checker': typeof ToolsDncCheckerRoute
   '/tools/line-type-checker': typeof ToolsLineTypeCheckerRoute
+  '/distress-feed/': typeof DistressFeedIndexRoute
   '/leads/': typeof LeadsIndexRoute
   '/templates/': typeof TemplatesIndexRoute
   '/tools/': typeof ToolsIndexRoute
@@ -802,6 +882,8 @@ export interface FileRoutesById {
   '/_authenticated/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/platform/': typeof AuthenticatedPlatformIndexRoute
+  '/distress-feed/counties/': typeof DistressFeedCountiesIndexRoute
+  '/distress-feed/guides/': typeof DistressFeedGuidesIndexRoute
   '/_authenticated/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/_authenticated/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/_authenticated/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
@@ -813,6 +895,7 @@ export interface FileRoutesById {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
@@ -820,12 +903,16 @@ export interface FileRoutesById {
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
   '/api/public/v1/leads': typeof ApiPublicV1LeadsRoute
+  '/distress-feed/counties/$state/$county': typeof DistressFeedCountiesStateCountyRoute
   '/_authenticated/app/campaigns/': typeof AuthenticatedAppCampaignsIndexRoute
   '/_authenticated/app/jobs/': typeof AuthenticatedAppJobsIndexRoute
   '/_authenticated/app/lists/': typeof AuthenticatedAppListsIndexRoute
   '/_authenticated/app/new-job/': typeof AuthenticatedAppNewJobIndexRoute
   '/_authenticated/app/new-list/': typeof AuthenticatedAppNewListIndexRoute
+  '/distress-feed/counties/$state/': typeof DistressFeedCountiesStateIndexRoute
+  '/distress-feed/guides/$state/': typeof DistressFeedGuidesStateIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
+  '/distress-feed/guides/$state/$county/$recordType': typeof DistressFeedGuidesStateCountyRecordTypeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -856,6 +943,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/street-scan'
     | '/tutorials'
     | '/app'
     | '/platform'
@@ -864,6 +952,7 @@ export interface FileRouteTypes {
     | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
+    | '/distress-feed/'
     | '/leads/'
     | '/templates/'
     | '/tools/'
@@ -892,6 +981,8 @@ export interface FileRouteTypes {
     | '/platform/workspaces'
     | '/app/'
     | '/platform/'
+    | '/distress-feed/counties/'
+    | '/distress-feed/guides/'
     | '/app/campaigns/$campaignId'
     | '/app/campaigns/new'
     | '/app/jobs/$'
@@ -903,6 +994,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
     | '/api/public/hooks/tick-template-health'
@@ -910,12 +1002,16 @@ export interface FileRouteTypes {
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
+    | '/distress-feed/counties/$state/$county'
     | '/app/campaigns/'
     | '/app/jobs/'
     | '/app/lists/'
     | '/app/new-job/'
     | '/app/new-list/'
+    | '/distress-feed/counties/$state/'
+    | '/distress-feed/guides/$state/'
     | '/api/public/v1/jobs/$jobId'
+    | '/distress-feed/guides/$state/$county/$recordType'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -944,12 +1040,14 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/street-scan'
     | '/tutorials'
     | '/auth/hub'
     | '/leads/$slug'
     | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
+    | '/distress-feed'
     | '/leads'
     | '/templates'
     | '/tools'
@@ -978,6 +1076,8 @@ export interface FileRouteTypes {
     | '/platform/workspaces'
     | '/app'
     | '/platform'
+    | '/distress-feed/counties'
+    | '/distress-feed/guides'
     | '/app/campaigns/$campaignId'
     | '/app/campaigns/new'
     | '/app/jobs/$'
@@ -989,6 +1089,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
     | '/api/public/hooks/tick-template-health'
@@ -996,12 +1097,16 @@ export interface FileRouteTypes {
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
+    | '/distress-feed/counties/$state/$county'
     | '/app/campaigns'
     | '/app/jobs'
     | '/app/lists'
     | '/app/new-job'
     | '/app/new-list'
+    | '/distress-feed/counties/$state'
+    | '/distress-feed/guides/$state'
     | '/api/public/v1/jobs/$jobId'
+    | '/distress-feed/guides/$state/$county/$recordType'
   id:
     | '__root__'
     | '/'
@@ -1031,6 +1136,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/street-scan'
     | '/tutorials'
     | '/_authenticated/app'
     | '/_authenticated/platform'
@@ -1039,6 +1145,7 @@ export interface FileRouteTypes {
     | '/templates/$templateId'
     | '/tools/dnc-checker'
     | '/tools/line-type-checker'
+    | '/distress-feed/'
     | '/leads/'
     | '/templates/'
     | '/tools/'
@@ -1067,6 +1174,8 @@ export interface FileRouteTypes {
     | '/_authenticated/platform/workspaces'
     | '/_authenticated/app/'
     | '/_authenticated/platform/'
+    | '/distress-feed/counties/'
+    | '/distress-feed/guides/'
     | '/_authenticated/app/campaigns/$campaignId'
     | '/_authenticated/app/campaigns/new'
     | '/_authenticated/app/jobs/$'
@@ -1078,6 +1187,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
     | '/api/public/hooks/tick-template-health'
@@ -1085,12 +1195,16 @@ export interface FileRouteTypes {
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
     | '/api/public/v1/leads'
+    | '/distress-feed/counties/$state/$county'
     | '/_authenticated/app/campaigns/'
     | '/_authenticated/app/jobs/'
     | '/_authenticated/app/lists/'
     | '/_authenticated/app/new-job/'
     | '/_authenticated/app/new-list/'
+    | '/distress-feed/counties/$state/'
+    | '/distress-feed/guides/$state/'
     | '/api/public/v1/jobs/$jobId'
+    | '/distress-feed/guides/$state/$county/$recordType'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1121,19 +1235,24 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SolarRoute: typeof SolarRoute
   StartRoute: typeof StartRoute
+  StreetScanRoute: typeof StreetScanRoute
   TutorialsRoute: typeof TutorialsRoute
   LeadsSlugRoute: typeof LeadsSlugRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
   ToolsDncCheckerRoute: typeof ToolsDncCheckerRoute
   ToolsLineTypeCheckerRoute: typeof ToolsLineTypeCheckerRoute
+  DistressFeedIndexRoute: typeof DistressFeedIndexRoute
   LeadsIndexRoute: typeof LeadsIndexRoute
   TemplatesIndexRoute: typeof TemplatesIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
+  DistressFeedCountiesIndexRoute: typeof DistressFeedCountiesIndexRoute
+  DistressFeedGuidesIndexRoute: typeof DistressFeedGuidesIndexRoute
   ApiPublicHooksRecordsInboundRoute: typeof ApiPublicHooksRecordsInboundRoute
   ApiPublicHooksTelnyxCallRoute: typeof ApiPublicHooksTelnyxCallRoute
   ApiPublicHooksTelnyxDlrRoute: typeof ApiPublicHooksTelnyxDlrRoute
   ApiPublicHooksTelnyxInboundRoute: typeof ApiPublicHooksTelnyxInboundRoute
   ApiPublicHooksTickCampaignsRoute: typeof ApiPublicHooksTickCampaignsRoute
+  ApiPublicHooksTickDistressFeedRoute: typeof ApiPublicHooksTickDistressFeedRoute
   ApiPublicHooksTickJobsRoute: typeof ApiPublicHooksTickJobsRoute
   ApiPublicHooksTickRecordsRequestsRoute: typeof ApiPublicHooksTickRecordsRequestsRoute
   ApiPublicHooksTickTemplateHealthRoute: typeof ApiPublicHooksTickTemplateHealthRoute
@@ -1141,6 +1260,10 @@ export interface RootRouteChildren {
   ApiPublicV1CampaignsRoute: typeof ApiPublicV1CampaignsRoute
   ApiPublicV1JobsRoute: typeof ApiPublicV1JobsRouteWithChildren
   ApiPublicV1LeadsRoute: typeof ApiPublicV1LeadsRoute
+  DistressFeedCountiesStateCountyRoute: typeof DistressFeedCountiesStateCountyRoute
+  DistressFeedCountiesStateIndexRoute: typeof DistressFeedCountiesStateIndexRoute
+  DistressFeedGuidesStateIndexRoute: typeof DistressFeedGuidesStateIndexRoute
+  DistressFeedGuidesStateCountyRecordTypeRoute: typeof DistressFeedGuidesStateCountyRecordTypeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1150,6 +1273,13 @@ declare module '@tanstack/react-router' {
       path: '/tutorials'
       fullPath: '/tutorials'
       preLoaderRoute: typeof TutorialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/street-scan': {
+      id: '/street-scan'
+      path: '/street-scan'
+      fullPath: '/street-scan'
+      preLoaderRoute: typeof StreetScanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/start': {
@@ -1362,6 +1492,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeadsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/distress-feed/': {
+      id: '/distress-feed/'
+      path: '/distress-feed'
+      fullPath: '/distress-feed/'
+      preLoaderRoute: typeof DistressFeedIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools/line-type-checker': {
       id: '/tools/line-type-checker'
       path: '/tools/line-type-checker'
@@ -1410,6 +1547,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/app'
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/distress-feed/guides/': {
+      id: '/distress-feed/guides/'
+      path: '/distress-feed/guides'
+      fullPath: '/distress-feed/guides/'
+      preLoaderRoute: typeof DistressFeedGuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/distress-feed/counties/': {
+      id: '/distress-feed/counties/'
+      path: '/distress-feed/counties'
+      fullPath: '/distress-feed/counties/'
+      preLoaderRoute: typeof DistressFeedCountiesIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/platform/': {
       id: '/_authenticated/platform/'
@@ -1586,6 +1737,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAccountRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/distress-feed/guides/$state/': {
+      id: '/distress-feed/guides/$state/'
+      path: '/distress-feed/guides/$state'
+      fullPath: '/distress-feed/guides/$state/'
+      preLoaderRoute: typeof DistressFeedGuidesStateIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/distress-feed/counties/$state/': {
+      id: '/distress-feed/counties/$state/'
+      path: '/distress-feed/counties/$state'
+      fullPath: '/distress-feed/counties/$state/'
+      preLoaderRoute: typeof DistressFeedCountiesStateIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app/new-list/': {
       id: '/_authenticated/app/new-list/'
       path: '/new-list'
@@ -1620,6 +1785,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/campaigns/'
       preLoaderRoute: typeof AuthenticatedAppCampaignsIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/distress-feed/counties/$state/$county': {
+      id: '/distress-feed/counties/$state/$county'
+      path: '/distress-feed/counties/$state/$county'
+      fullPath: '/distress-feed/counties/$state/$county'
+      preLoaderRoute: typeof DistressFeedCountiesStateCountyRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/v1/leads': {
       id: '/api/public/v1/leads'
@@ -1668,6 +1840,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/tick-jobs'
       fullPath: '/api/public/hooks/tick-jobs'
       preLoaderRoute: typeof ApiPublicHooksTickJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/tick-distress-feed': {
+      id: '/api/public/hooks/tick-distress-feed'
+      path: '/api/public/hooks/tick-distress-feed'
+      fullPath: '/api/public/hooks/tick-distress-feed'
+      preLoaderRoute: typeof ApiPublicHooksTickDistressFeedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/tick-campaigns': {
@@ -1746,6 +1925,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/campaigns/$campaignId'
       preLoaderRoute: typeof AuthenticatedAppCampaignsCampaignIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/distress-feed/guides/$state/$county/$recordType': {
+      id: '/distress-feed/guides/$state/$county/$recordType'
+      path: '/distress-feed/guides/$state/$county/$recordType'
+      fullPath: '/distress-feed/guides/$state/$county/$recordType'
+      preLoaderRoute: typeof DistressFeedGuidesStateCountyRecordTypeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/v1/jobs/$jobId': {
       id: '/api/public/v1/jobs/$jobId'
@@ -1913,19 +2099,24 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SolarRoute: SolarRoute,
   StartRoute: StartRoute,
+  StreetScanRoute: StreetScanRoute,
   TutorialsRoute: TutorialsRoute,
   LeadsSlugRoute: LeadsSlugRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
   ToolsDncCheckerRoute: ToolsDncCheckerRoute,
   ToolsLineTypeCheckerRoute: ToolsLineTypeCheckerRoute,
+  DistressFeedIndexRoute: DistressFeedIndexRoute,
   LeadsIndexRoute: LeadsIndexRoute,
   TemplatesIndexRoute: TemplatesIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
+  DistressFeedCountiesIndexRoute: DistressFeedCountiesIndexRoute,
+  DistressFeedGuidesIndexRoute: DistressFeedGuidesIndexRoute,
   ApiPublicHooksRecordsInboundRoute: ApiPublicHooksRecordsInboundRoute,
   ApiPublicHooksTelnyxCallRoute: ApiPublicHooksTelnyxCallRoute,
   ApiPublicHooksTelnyxDlrRoute: ApiPublicHooksTelnyxDlrRoute,
   ApiPublicHooksTelnyxInboundRoute: ApiPublicHooksTelnyxInboundRoute,
   ApiPublicHooksTickCampaignsRoute: ApiPublicHooksTickCampaignsRoute,
+  ApiPublicHooksTickDistressFeedRoute: ApiPublicHooksTickDistressFeedRoute,
   ApiPublicHooksTickJobsRoute: ApiPublicHooksTickJobsRoute,
   ApiPublicHooksTickRecordsRequestsRoute:
     ApiPublicHooksTickRecordsRequestsRoute,
@@ -1934,6 +2125,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV1CampaignsRoute: ApiPublicV1CampaignsRoute,
   ApiPublicV1JobsRoute: ApiPublicV1JobsRouteWithChildren,
   ApiPublicV1LeadsRoute: ApiPublicV1LeadsRoute,
+  DistressFeedCountiesStateCountyRoute: DistressFeedCountiesStateCountyRoute,
+  DistressFeedCountiesStateIndexRoute: DistressFeedCountiesStateIndexRoute,
+  DistressFeedGuidesStateIndexRoute: DistressFeedGuidesStateIndexRoute,
+  DistressFeedGuidesStateCountyRecordTypeRoute:
+    DistressFeedGuidesStateCountyRecordTypeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

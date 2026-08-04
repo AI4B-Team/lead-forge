@@ -455,14 +455,14 @@ function JobDetail() {
         <div className="mt-4 rounded-xl border border-border bg-surface-muted px-4 py-3 text-sm text-muted-foreground">
           {skipSummaryCopy({
             count: data.skippedRecords,
-            noun: params.source_type === "property_scan" ? "properties" : "records",
+            noun: params.source_type === "street_scan" ? "properties" : "records",
             credits: data.refunds?.skipped ?? 0,
           }) ||
             `Some records couldn't be checked and weren't charged (${(data.refunds?.skipped ?? 0).toLocaleString()} credits back).`}
         </div>
       )}
 
-      {params.source_type === "property_scan" && <MonitorListCard jobId={jobId} workspaceId={team.workspaceId} />}
+      {params.source_type === "street_scan" && <MonitorListCard jobId={jobId} workspaceId={team.workspaceId} />}
 
       {isRunning && campaignable && (
         <FirstTouchCard

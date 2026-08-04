@@ -97,6 +97,58 @@ const businessAdapter: SourceAdapter = {
   },
 };
 
+/**
+ * Distress Feed → leads. The feed itself is a maintained dataset that costs
+ * nothing to browse; credits are only charged from here on, when the operator
+ * pulls selected filings into their own leads for enrichment and skip trace.
+ * Parcel APN and address ride along in source_meta so a parcel that also came
+ * back from Street Scan dedupes onto ONE lead with both signals.
+ */
+const distressFeedAdapter: SourceAdapter = {
+  key: "records.distress_feed",
+  coverage: "live",
+  async run(params, onProgress) {
+    const ids = ((params.distress_record_ids as string[] | undefined) ?? []).filter(Boolean);
+    if (!ids.length) return [];
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await onProgress?.(`Pulling ${ids.length} selected filings from the Distress Feed…`, ids.length);
+    const { data, error } = await supabaseAdmin
+      .from("distress_records")
+      .select(
+        "id, state, county, record_type, doc_number, filed_date, owner_first, owner_last, company_entity, property_address, property_city, property_state, property_zip, mailing_address, mailing_city, mailing_state, mailing_zip, amount, auction_date, status, parcel_apn, source_url",
+      )
+      .in("id", ids);
+    if (error) throw new Error(error.message);
+    type Row = Record<string, string | number | null>;
+    return ((data ?? []) as unknown as Row[]).map((r) => ({
+      full_name: [r.owner_first, r.owner_last].filter(Boolean).join(" ") || null,
+      business_name: (r.company_entity as string | null) ?? null,
+      phone: null,
+      email: null,
+      address: (r.property_address as string | null) ?? null,
+      city: (r.property_city as string | null) ?? null,
+      state: (r.property_state as string | null) ?? (r.state as string | null),
+      zip: (r.property_zip as string | null) ?? null,
+      source_meta: {
+        source: "distress_feed",
+        record_type: r.record_type,
+        doc_number: r.doc_number,
+        filed_date: r.filed_date,
+        county: r.county,
+        amount: r.amount,
+        auction_date: r.auction_date,
+        case_status: r.status,
+        parcel_apn: r.parcel_apn,
+        mailing_address: r.mailing_address,
+        mailing_city: r.mailing_city,
+        mailing_state: r.mailing_state,
+        mailing_zip: r.mailing_zip,
+        source_url: r.source_url,
+      },
+    }));
+  },
+};
+
 const recordsAdapter: SourceAdapter = {
   key: "records.county",
   coverage: "live",
@@ -181,12 +233,12 @@ const recordsAdapter: SourceAdapter = {
 };
 
 /**
- * Property Scan. The buy box narrows parcels first (free), and only the
+ * Street Scan. The buy box narrows parcels first (free), and only the
  * survivors get scored from imagery — so the rows this returns are already
  * matched properties, each carrying its condition score and reasoning.
  */
 const propertyScanAdapter: SourceAdapter = {
-  key: "property_scan.parcels",
+  key: "street_scan.parcels",
   coverage: "live",
   async run(params, onProgress) {
     const counties = ((params.counties as string[] | undefined)?.filter(Boolean) ?? ["Hillsborough, FL"]) as string[];
@@ -289,7 +341,8 @@ export async function refundJobCredits(
 function selectAdapter(sourceType: string): SourceAdapter {
   if (sourceType === "business") return businessAdapter;
   if (sourceType === "records") return recordsAdapter;
-  if (sourceType === "property_scan") return propertyScanAdapter;
+  if (sourceType === "street_scan") return propertyScanAdapter;
+  if (sourceType === "distress_feed") return distressFeedAdapter;
   return uploadAdapter;
 }
 
@@ -302,8 +355,19 @@ function leadKeys(r: {
   address?: unknown;
   city?: unknown;
   state?: unknown;
+  zip?: unknown;
+  source_meta?: unknown;
 }): string[] {
   const keys: string[] = [];
+  // Parcel identity first: the same house can arrive from the Distress Feed
+  // (probate filed) and from Street Scan (tarp detected). One parcel is ONE
+  // lead carrying both signals — never two leads, never two charges, never two
+  // campaigns texting the same owner.
+  const meta = (r.source_meta ?? {}) as Record<string, unknown>;
+  const apn = norm(meta.parcel_apn ?? meta.apn);
+  if (apn) keys.push(`apn:${norm(r.state)}|${apn}`);
+  const addr = norm(r.address);
+  if (addr) keys.push(`a:${addr}|${norm(r.zip ?? r.city)}|${norm(r.state)}`);
   const d = digits(r.phone);
   if (d) keys.push(`p:${d}`);
   if (typeof r.email === "string" && r.email.trim()) keys.push(`e:${r.email.trim().toLowerCase()}`);

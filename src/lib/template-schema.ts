@@ -29,9 +29,9 @@ export type BuilderField =
   | "url"
   | "audienceFilter"
   | "listingFilter"
-  /** Plain-language condition criteria scored from imagery (Property Scan). */
+  /** Plain-language condition criteria scored from imagery (Street Scan). */
   | "visualCriteria"
-  /** The data filter that runs before imagery is bought (Property Scan). */
+  /** The data filter that runs before imagery is bought (Street Scan). */
   | "buyBox"
   | "upload";
 
@@ -48,9 +48,9 @@ const VENDOR_REVIEW_TEMPLATES = ["g2", "capterra", "trustpilot", "trustradius"] 
 
 /** Templates whose fields don't follow their catalog category. */
 const SCHEMA_BY_ID: Record<string, BuilderField[]> = {
-  // Property Scan reuses State + Counties for its market, adds the buy box and
+  // Street Scan reuses State + Counties for its market, adds the buy box and
   // the visual criteria the assistant inferred. No second prompt box.
-  propscan: ["state", "counties", "visualCriteria", "buyBox"],
+  "street-scan": ["state", "counties", "buyBox"],
   linkedin: ["keyword", "audienceFilter"],
   crunchbase: ["keyword", "audienceFilter"],
   // Marketplace sellers: keyword + the marketplace's country.
@@ -143,7 +143,7 @@ export function fieldsForSourceType(source: JobSpec["sourceType"]): BuilderField
   if (source === "upload") return BY_CATEGORY.upload;
   if (source === "records") return BY_CATEGORY.records;
   if (source === "business") return BY_CATEGORY.business;
-  if (source === "property_scan") return ["state", "counties", "visualCriteria", "buyBox"];
+  if (source === "street_scan") return ["state", "counties", "buyBox"];
   return [];
 }
 

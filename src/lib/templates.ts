@@ -93,10 +93,10 @@ export const TEMPLATES: Template[] = [
 
   // ---------- Business & Local ----------
   {
-    id: "propscan",
-    shortTitle: "Property Scan",
+    id: "street-scan",
+    shortTitle: "Street Scan",
     shortSubtitle: "AI Driving For Dollars",
-    title: "Property Scan",
+    title: "Street Scan",
     subtitle: "AI Driving For Dollars",
     category: "realestate",
     prompt: "Scan Hillsborough County, FL for rundown single-family homes with roof damage, overgrown yards, or signs of vacancy",
@@ -455,6 +455,22 @@ export const TEMPLATES: Template[] = [
 
   // ---------- Public Records ----------
   {
+    // The maintained feed itself: we pull these counties nightly, so browsing
+    // and filtering costs nothing and only pulling records into leads spends
+    // credits. The record-type templates below are presets over the same feed.
+    id: "distress-feed",
+    shortTitle: "Distress Feed",
+    shortSubtitle: "Pulled Nightly",
+    title: "Distress Feed",
+    subtitle: "Probate · Foreclosure · Tax · Liens · Evictions",
+    category: "records",
+    prompt:
+      "Show me new probate, pre-foreclosure and tax deed filings in Hillsborough County FL from the Distress Feed",
+    icon: Scale,
+    tint: "bg-red-500/10 text-red-600",
+    placeholderHint: "e.g. New probate and tax deed filings in Hillsborough County, FL",
+  },
+  {
     id: "probate",
     shortTitle: "Probate",
     shortSubtitle: "New Filings",
@@ -702,9 +718,9 @@ export function templateFields(t: Template): string[] {
 }
 
 /** The Job Spec source a template already determines on its own. */
-export function templateSourceType(t: Template): "business" | "records" | "upload" | "property_scan" {
-  // Property Scan is its own source kind: parcels + buy box + imagery scoring.
-  if (t.id === "propscan") return "property_scan";
+export function templateSourceType(t: Template): "business" | "records" | "upload" | "street_scan" {
+  // Street Scan is its own source kind: parcels + buy box + imagery scoring.
+  if (t.id === "street-scan") return "street_scan";
   if (t.category === "upload") return "upload";
   if (t.category === "records") return "records";
   return "business";

@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Property Scan (marketed as "AI Driving for Dollars").
+// Street Scan (marketed as "AI Driving for Dollars").
 //
 // Five stages, in this order, and the order is the whole point:
 //   1. parcel set   — pull candidate parcels for the area (cheap, bulk)
@@ -149,22 +149,26 @@ export function freshness(captureDate: string | Date): { label: string; tone: "f
 // ---------------------------------------------------------------------------
 
 export const buyBoxSchema = z.object({
-  ownership: z.array(z.enum(["absentee", "owner_occupied", "entity", "trust"])).default(["absentee"]),
+  /**
+   * Empty = "All". Ownership is free to know from assessor data, so it stays a
+   * pre-filter (that is what keeps a county-wide scan affordable) and is ALSO
+   * surfaced as a result tag.
+   */
+  ownership: z.array(z.enum(["absentee", "owner_occupied", "entity", "trust"])).default([]),
   /** Street imagery is 1–4 years old, so 7+ years owned keeps the owner in the picture. */
   yearsOwnedMin: z.number().int().min(0).max(60).default(7),
   equityMin: z.number().int().min(0).max(100).default(40),
   valueMin: z.number().int().min(0).max(5_000_000).nullable().default(null),
   valueMax: z.number().int().min(0).max(5_000_000).nullable().default(null),
   propertyTypes: z.array(z.enum(["sfr", "multi_2_4", "condo", "mobile"])).default(["sfr"]),
-  yearBuiltMin: z.number().int().min(1800).max(2030).default(1900),
-  yearBuiltMax: z.number().int().min(1800).max(2030).default(1990),
   distressSignals: z
     .array(z.enum(["tax_delinquent", "pre_foreclosure", "probate", "code_violation", "lien", "vacant_usps", "out_of_state_owner"]))
     .default([]),
   /** Our differentiator: a roof permit after the image date invalidates a roof score. */
-  excludePermitYears: z.number().int().min(0).max(20).default(5),
+  excludePermitYears: z.number().int().min(0).max(20).default(1),
   excludeActiveListings: z.boolean().default(false),
-  excludeSoldLast24mo: z.boolean().default(false),
+  /** Months of recent sales to exclude. 0 = keep them all. */
+  soldWithinMonths: z.number().int().min(0).max(12).default(3),
 });
 
 export type BuyBox = z.infer<typeof buyBoxSchema>;
@@ -232,13 +236,12 @@ export function previewFunnel(parcelsInArea: number, box: BuyBox) {
   const ownership = box.ownership.length ? Math.min(1, 0.22 * box.ownership.length) : 1;
   const tenure = Math.max(0.25, 1 - box.yearsOwnedMin * 0.045);
   const equity = Math.max(0.3, 1 - box.equityMin / 180);
-  const age = box.yearBuiltMax >= 2030 ? 1 : 0.62;
   const signals = box.distressSignals.length ? Math.max(0.12, 0.4 - box.distressSignals.length * 0.04) : 1;
   const permits = box.excludePermitYears > 0 ? 0.88 : 1;
-  const negative = (box.excludeActiveListings ? 0.97 : 1) * (box.excludeSoldLast24mo ? 0.94 : 1);
+  const negative = (box.excludeActiveListings ? 0.97 : 1) * (box.soldWithinMonths > 0 ? 0.97 : 1);
 
   const afterOwnership = Math.round(parcelsInArea * ownership * tenure);
-  const afterFinancial = Math.round(afterOwnership * equity * age);
+  const afterFinancial = Math.round(afterOwnership * equity);
   const afterFilters = Math.round(afterFinancial * signals * permits * negative);
   return {
     parcelsInArea,
@@ -275,7 +278,7 @@ export type ScanEstimate = {
 };
 
 /**
- * One estimator for the whole Property Scan flow, quoted from the same buy box
+ * One estimator for the whole Street Scan flow, quoted from the same buy box
  * the rail edits. Charged on scored parcels, so narrowing the box is cheaper.
  */
 export function estimateScan(input: {
@@ -302,7 +305,7 @@ export function estimateScan(input: {
 }
 
 // ---------------------------------------------------------------------------
-// Tiers. Property Scan is available on every paid tier — tiers limit volume,
+// Tiers. Street Scan is available on every paid tier — tiers limit volume,
 // not access. A padlock reads as "they're holding out", which churns; an empty
 // credit pool reads as "I've outgrown my plan", which converts.
 // ---------------------------------------------------------------------------
