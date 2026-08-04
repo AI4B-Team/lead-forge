@@ -27,7 +27,9 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { useCreditBalances } from "@/hooks/use-credit-balances";
 import { FirstRunSetup } from "@/components/app/getting-started";
 import { supabase } from "@/integrations/supabase/client";
-import { queueJob } from "@/lib/job-submit";
+import { useQuery } from "@tanstack/react-query";
+import { queueUploadJob } from "@/lib/upload-jobs.functions";
+import { getJobCoverage } from "@/lib/coverage.functions";
 import { inferChannel } from "@/lib/channels";
 import { ColumnMapperDialog } from "@/components/app/column-mapper";
 import {
