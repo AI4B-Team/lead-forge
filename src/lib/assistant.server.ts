@@ -9,7 +9,6 @@ import { jobSpecSchema, withStates, specStates, type JobSpec, type AssistantMess
 import { enrichmentProfile, isNonUsRun, templateOutputType } from "./pipeline-options";
 import { estimateSpec } from "./estimate.shared";
 import { countiesForState, formatCounty, parseCounty } from "./us-geo";
-import { parseGeoIntent } from "./geo-intent";
 import { speakTurn, stickyCounties, wantsWholeState } from "./assistant-dialogue";
 
 /** Snap model-provided county names onto real counties in the spec's state. */
@@ -180,9 +179,6 @@ export async function askAssistant(opts: {
   // Scope is decided in code, never by the model. If the operator named a
   // county, that county is the run — the assistant may not quietly promote
   // "Hillsborough County" to all 67 counties in Florida.
-  const intent = parseGeoIntent(userTexts.join(" \n "), {
-    stateHint: (out.specPatch?.state as string | undefined) ?? opts.spec.state ?? null,
-  });
   // The model may name one state or several; keep both fields consistent.
   const spec = merged.success
     ? (() => {
@@ -207,7 +203,6 @@ export async function askAssistant(opts: {
         };
       })()
     : opts.spec;
-  void intent;
 
   // A state with no counties is an unanswered question, not "everywhere". Ask.
   const needsCountyChoice =
