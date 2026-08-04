@@ -114,3 +114,133 @@ export function canStartNewDrop(phone: string | null | undefined, now: Date = ne
   const h = localHourForPhone(phone, now);
   return h >= 9 && h < 18;
 }
+// ---------------------------------------------------------------------------
+// Timezone resolution + quiet-hour evaluation in the RECIPIENT's timezone.
+//
+// Quiet hours must never be evaluated against server local time: on a UTC host
+// a 21:00 quiet start would fire at 16:00 Eastern and send for five hours the
+// operator believes are blocked. Every gate below resolves a timezone from the
+// recipient's area code, falling back to their state, and BLOCKS when neither
+// resolves.
+// ---------------------------------------------------------------------------
+
+const STATE_TZ: Record<string, string> = {
+  AL:"America/Chicago",AK:"America/Anchorage",AZ:"America/Phoenix",AR:"America/Chicago",
+  CA:"America/Los_Angeles",CO:"America/Denver",CT:"America/New_York",DE:"America/New_York",
+  DC:"America/New_York",FL:"America/New_York",GA:"America/New_York",HI:"Pacific/Honolulu",
+  ID:"America/Boise",IL:"America/Chicago",IN:"America/Indiana/Indianapolis",IA:"America/Chicago",
+  KS:"America/Chicago",KY:"America/New_York",LA:"America/Chicago",ME:"America/New_York",
+  MD:"America/New_York",MA:"America/New_York",MI:"America/Detroit",MN:"America/Chicago",
+  MS:"America/Chicago",MO:"America/Chicago",MT:"America/Denver",NE:"America/Chicago",
+  NV:"America/Los_Angeles",NH:"America/New_York",NJ:"America/New_York",NM:"America/Denver",
+  NY:"America/New_York",NC:"America/New_York",ND:"America/Chicago",OH:"America/New_York",
+  OK:"America/Chicago",OR:"America/Los_Angeles",PA:"America/New_York",RI:"America/New_York",
+  SC:"America/New_York",SD:"America/Chicago",TN:"America/Chicago",TX:"America/Chicago",
+  UT:"America/Denver",VT:"America/New_York",VA:"America/New_York",WA:"America/Los_Angeles",
+  WV:"America/New_York",WI:"America/Chicago",WY:"America/Denver",
+};
+
+/** All distinct US timezones we may ever send into. */
+export const US_TIME_ZONES = [
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Phoenix",
+  "America/Los_Angeles",
+  "America/Anchorage",
+  "Pacific/Honolulu",
+] as const;
+
+/**
+ * Resolve the recipient's timezone. Returns null when it cannot be determined —
+ * callers MUST treat null as "do not send".
+ */
+export function resolveRecipientTimeZone(
+  phone: string | null | undefined,
+  state?: string | null,
+): string | null {
+  const ac = extractAreaCode(phone);
+  if (ac && AREA_CODE_TZ[ac]) return AREA_CODE_TZ[ac]!;
+  const st = (state ?? "").trim().toUpperCase();
+  if (st && STATE_TZ[st]) return STATE_TZ[st]!;
+  return null;
+}
+
+/** Current HH:MM in the given IANA timezone. */
+export function hhmmInZone(tz: string, now: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(now);
+  const h = parts.find((p) => p.type === "hour")?.value ?? "12";
+  const m = parts.find((p) => p.type === "minute")?.value ?? "00";
+  return `${h === "24" ? "00" : h}:${m}`;
+}
+
+export type QuietWindow = { quiet_start?: string; quiet_end?: string };
+
+/** True when `now` falls inside the configured quiet window for that timezone. */
+export function inQuietHoursForZone(
+  tz: string,
+  win: QuietWindow | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  if (!win?.quiet_start || !win?.quiet_end) return false;
+  const cur = hhmmInZone(tz, now);
+  const { quiet_start: qs, quiet_end: qe } = win;
+  if (qs > qe) return cur >= qs || cur < qe; // window crosses midnight
+  return cur >= qs && cur < qe;
+}
+
+/**
+ * Coarse campaign-level pre-filter: only true when the quiet window is active
+ * in EVERY US timezone, i.e. no recipient anywhere could legally be messaged.
+ * The per-recipient check remains authoritative.
+ */
+export function inQuietHoursEverywhere(
+  win: QuietWindow | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  if (!win?.quiet_start || !win?.quiet_end) return false;
+  return US_TIME_ZONES.every((tz) => inQuietHoursForZone(tz, win, now));
+}
+
+/**
+ * Authoritative per-recipient gate: statutory 8am–9pm TCPA window AND the
+ * campaign's own quiet window, both evaluated in the recipient's timezone.
+ * Unknown timezone → blocked.
+ */
+export function canMessageRecipient(
+  phone: string | null | undefined,
+  state: string | null | undefined,
+  win: QuietWindow | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  const tz = resolveRecipientTimeZone(phone, state);
+  if (!tz) return false;
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", { timeZone: tz, hour12: false, hour: "2-digit" })
+      .formatToParts(now)
+      .find((p) => p.type === "hour")?.value ?? "0",
+  );
+  if (hour < 8 || hour >= 21) return false;
+  return !inQuietHoursForZone(tz, win, now);
+}
+
+/** First-touch 6pm rule, timezone-resolved and blocking on unknown zones. */
+export function canStartNewDropForRecipient(
+  phone: string | null | undefined,
+  state: string | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  const tz = resolveRecipientTimeZone(phone, state);
+  if (!tz) return false;
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", { timeZone: tz, hour12: false, hour: "2-digit" })
+      .formatToParts(now)
+      .find((p) => p.type === "hour")?.value ?? "0",
+  );
+  return hour >= 9 && hour < 18;
+}
