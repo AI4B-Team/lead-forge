@@ -290,6 +290,7 @@ function selectAdapter(sourceType: string): SourceAdapter {
   if (sourceType === "business") return businessAdapter;
   if (sourceType === "records") return recordsAdapter;
   if (sourceType === "street_scan") return propertyScanAdapter;
+  if (sourceType === "distress_feed") return distressFeedAdapter;
   return uploadAdapter;
 }
 
