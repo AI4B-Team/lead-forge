@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { RESCRUB_DAYS, SCRUB_STALE_MESSAGE, isScrubStale, scrubAgeDays } from "@/lib/compliance-rules";
 import { assignJobNames, cadenceBadge, jobSearchKey } from "@/lib/job-naming";
+import { TRUSTED_PROVENANCE, UNTRUSTED_LIST_MESSAGE } from "@/lib/provenance.shared";
 
 // List every job for a workspace with lead-bucket counts for the Lists page.
 export const listJobs = createServerFn({ method: "GET" })
@@ -414,7 +415,14 @@ export const launchCampaignFromJob = createServerFn({ method: "POST" })
       .eq("job_id", data.jobId)
       .eq("scrub_status", "clean")
       .in("data_provenance", TRUSTED_PROVENANCE);
-    if (!cleanCount) throw new Error(UNTRUSTED_LIST_MESSAGE_OR_EMPTY);
+    if (!cleanCount) {
+      const { count: anyClean } = await supabase
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("job_id", data.jobId)
+        .eq("scrub_status", "clean");
+      throw new Error(anyClean ? UNTRUSTED_LIST_MESSAGE : "No Clean Leads Available.");
+    }
 
     const { data: campaign, error: cerr } = await supabase
       .from("campaigns")
