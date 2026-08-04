@@ -577,7 +577,7 @@ function Assistant() {
       });
       setPanelEdits([]);
       setThread((m) => [...m, { role: "assistant", content: res.reply, spec: res.spec }]);
-      setSpecStated(res.specComplete);
+      setSpecStated(Boolean(res.specComplete));
       // Anything the model changed this turn counts as inferred, except fields the
       // template already determined (those are certain and need no badge).
       setInferred((prev) => {
