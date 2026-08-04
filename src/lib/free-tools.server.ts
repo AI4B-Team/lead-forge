@@ -10,19 +10,12 @@ export function normalizePhone(input: string): string | null {
   return null;
 }
 
-/** Deterministic stand-in so the tool works before a carrier key is configured. */
-function mockLineType(phone: string): LineType {
-  const n = Number(phone.replace(/\D/g, "").slice(-4)) % 10;
-  if (n <= 5) return "mobile";
-  if (n <= 8) return "landline";
-  return "voip";
-}
-
 export async function lookupLineType(
   phone: string,
 ): Promise<{ lineType: LineType; carrier: string | null; provider: string }> {
   const key = process.env.TELNYX_API_KEY;
-  if (!key) return { lineType: mockLineType(phone), carrier: null, provider: "estimate" };
+  // No carrier lookup available means no verdict. We never guess a line type.
+  if (!key) return { lineType: "unknown", carrier: null, provider: "unavailable" };
   try {
     const res = await fetch(
       `https://api.telnyx.com/v2/number_lookup/${encodeURIComponent(phone)}?type=carrier`,
@@ -43,7 +36,7 @@ export async function lookupLineType(
             : "unknown";
     return { lineType, carrier: body.data?.carrier?.name ?? null, provider: "telnyx" };
   } catch {
-    return { lineType: mockLineType(phone), carrier: null, provider: "estimate" };
+    return { lineType: "unknown", carrier: null, provider: "unavailable" };
   }
 }
 
