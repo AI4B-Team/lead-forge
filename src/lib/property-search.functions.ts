@@ -76,6 +76,7 @@ export const addPropertyLead = createServerFn({ method: "POST" })
       state: data.state ?? null,
       zip: data.zip ?? null,
       scrub_status: "clean",
+      data_provenance: "verified_source",
       source_meta: {
         rf_hash: data.hash,
         record_type: "Property Search",
