@@ -485,6 +485,7 @@ function ConversationsPage() {
                     setSelected(t.thread_key);
                     suggestM.reset();
                   }}
+                  onToggleStar={() => void toggleStar(t)}
                 />
               ))
             )}
