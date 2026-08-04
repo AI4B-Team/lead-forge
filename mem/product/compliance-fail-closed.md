@@ -1,3 +1,12 @@
+
+## Data provenance (H3 follow-up)
+
+`leads.data_provenance` / `jobs.data_provenance` = `verified_source` | `user_upload` |
+`mock_legacy` | `unknown`; column default is `unknown`. Only `verified_source` and
+`user_upload` are trusted (`src/lib/provenance.shared.ts`). Untrusted rows are blocked
+from campaign enrollment/recipient counts, exports, and every outbound path
+(`checkCanText` returns reason `unverified_source`), so the AI agent can never reach them.
+Affected lists show a dismissible banner; super admins can bulk-purge from /platform.
 ---
 name: Compliance fails closed
 description: DNC/litigator scrubbing must never fail open — unconfigured or failing providers hard-fail the run, and unscrubbed numbers are barred from cold outbound
