@@ -38,6 +38,7 @@ import { qualityGrade } from "@/lib/quality-grade";
 import { brandedFileName, brandedJobTitle, BUCKET_FILE_TYPE } from "@/lib/download-name";
 import { type ExportFormat } from "@/lib/export-file";
 import { guardedExport } from "@/lib/guarded-export";
+import { isTrustedProvenance, UNTRUSTED_LIST_MESSAGE } from "@/lib/provenance.shared";
 import { useTeamContext } from "@/hooks/use-team-context";
 import { denialMessage } from "@/lib/team-roles.shared";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -75,6 +76,7 @@ function JobDetail() {
   const [browserOpen, setBrowserOpen] = useState(false);
   const [browserBucket, setBrowserBucket] = useState<"clean" | "dnc" | "litigator" | "all">("clean");
   const [logOpen, setLogOpen] = useState(true);
+  const [legacyDismissed, setLegacyDismissed] = useState(false);
   // Nobody rereads the log once the run lands — collapse it on completion.
   const [collapsedOnce, setCollapsedOnce] = useState(false);
 
