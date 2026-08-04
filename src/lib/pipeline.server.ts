@@ -526,6 +526,19 @@ async function runPipelineBody(
   };
   await say("queued", "Run accepted — we'll keep working even if you close this tab.");
 
+  // Free plan boundary: sources that cost per lead, and skip trace, need a
+  // payment method. Checked here so every entry point (assistant, recurring
+  // engine, API) hits the same gate.
+  const { assertFreeTierAllows } = await import("./free-tier.server");
+  const { templateById } = await import("./templates");
+  const freePlanCtx = await assertFreeTierAllows(supabase, workspaceId, {
+    templateId: (params.templateId as string | undefined) ?? null,
+    creditCostPerLead:
+      templateById((params.templateId as string | undefined) ?? "")?.creditCostPerLead ?? 0,
+    skipTrace: Boolean(params.skip_trace),
+    recordsRequested: (params.distress_record_ids as string[] | undefined)?.length ?? 0,
+  });
+
   // 1) SOURCE ---------------------------------------------------------------
   await supabase.from("jobs").update({ status: "scraping" }).eq("id", jobId);
   await say("scraping", "Searching the source for matching records…");
