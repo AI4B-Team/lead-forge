@@ -156,10 +156,8 @@ export function ConversationRow({
                     onToggleStar();
                   }}
                   className={cn(
-                    "rounded p-0.5 transition-opacity hover:bg-muted",
-                    thread.starred
-                      ? "text-warn opacity-100"
-                      : "text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+                    "rounded p-0.5 transition-colors hover:bg-muted",
+                    thread.starred ? "text-warn" : "text-muted-foreground/50 hover:text-muted-foreground",
                   )}
                 >
                   <Star className={cn("h-3.5 w-3.5", thread.starred && "fill-current")} />
