@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HealthRow, planTone, type WsRow } from "@/components/app/admin-shared";
-import { listAllWorkspaces } from "@/lib/admin.functions";
+import { countLegacyLeads, listAllWorkspaces, purgeLegacyLeads } from "@/lib/admin.functions";
+import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/platform/")({
   head: () => ({
@@ -26,6 +28,9 @@ export const Route = createFileRoute("/_authenticated/platform/")({
 
 function PlatformDashboard() {
   const fetchAll = useServerFn(listAllWorkspaces);
+  const fetchLegacy = useServerFn(countLegacyLeads);
+  const runPurge = useServerFn(purgeLegacyLeads);
+  const legacyQ = useQuery({ queryKey: ["admin-legacy-leads"], queryFn: () => fetchLegacy() });
   const wsQ = useQuery({
     queryKey: ["admin-workspaces"],
     queryFn: () => fetchAll(),
