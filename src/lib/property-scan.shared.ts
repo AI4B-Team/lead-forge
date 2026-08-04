@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Property Scan (marketed as "AI Driving for Dollars").
+// Street Scan (marketed as "AI Driving for Dollars").
 //
 // Five stages, in this order, and the order is the whole point:
 //   1. parcel set   — pull candidate parcels for the area (cheap, bulk)
@@ -275,7 +275,7 @@ export type ScanEstimate = {
 };
 
 /**
- * One estimator for the whole Property Scan flow, quoted from the same buy box
+ * One estimator for the whole Street Scan flow, quoted from the same buy box
  * the rail edits. Charged on scored parcels, so narrowing the box is cheaper.
  */
 export function estimateScan(input: {
@@ -302,7 +302,7 @@ export function estimateScan(input: {
 }
 
 // ---------------------------------------------------------------------------
-// Tiers. Property Scan is available on every paid tier — tiers limit volume,
+// Tiers. Street Scan is available on every paid tier — tiers limit volume,
 // not access. A padlock reads as "they're holding out", which churns; an empty
 // credit pool reads as "I've outgrown my plan", which converts.
 // ---------------------------------------------------------------------------

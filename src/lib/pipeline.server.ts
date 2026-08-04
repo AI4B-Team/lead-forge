@@ -181,7 +181,7 @@ const recordsAdapter: SourceAdapter = {
 };
 
 /**
- * Property Scan. The buy box narrows parcels first (free), and only the
+ * Street Scan. The buy box narrows parcels first (free), and only the
  * survivors get scored from imagery — so the rows this returns are already
  * matched properties, each carrying its condition score and reasoning.
  */

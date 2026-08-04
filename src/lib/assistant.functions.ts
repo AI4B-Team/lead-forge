@@ -263,7 +263,7 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
       (spec.sourceType === "records"
         ? `${spec.recordType} · ${geoLabel}`
         : spec.sourceType === "street_scan"
-          ? `Property Scan · ${geoLabel}`
+          ? `Street Scan · ${geoLabel}`
           : `${spec.niches.join(", ")} · ${geoLabel}`);
 
     const { queueJob } = await import("@/lib/job-submit");
@@ -301,7 +301,7 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
         scrape_target_kind: spec.scrapeTargetKind,
         upload_intent: spec.uploadIntent,
         suppression_file: spec.suppressionFile,
-        // Property Scan: the buy box runs before imagery, and the visual
+        // Street Scan: the buy box runs before imagery, and the visual
         // criteria are what the imagery model scores against.
         visual_criteria: spec.visualCriteria,
         buy_box: spec.buyBox,

@@ -29,9 +29,9 @@ export type BuilderField =
   | "url"
   | "audienceFilter"
   | "listingFilter"
-  /** Plain-language condition criteria scored from imagery (Property Scan). */
+  /** Plain-language condition criteria scored from imagery (Street Scan). */
   | "visualCriteria"
-  /** The data filter that runs before imagery is bought (Property Scan). */
+  /** The data filter that runs before imagery is bought (Street Scan). */
   | "buyBox"
   | "upload";
 
@@ -48,7 +48,7 @@ const VENDOR_REVIEW_TEMPLATES = ["g2", "capterra", "trustpilot", "trustradius"] 
 
 /** Templates whose fields don't follow their catalog category. */
 const SCHEMA_BY_ID: Record<string, BuilderField[]> = {
-  // Property Scan reuses State + Counties for its market, adds the buy box and
+  // Street Scan reuses State + Counties for its market, adds the buy box and
   // the visual criteria the assistant inferred. No second prompt box.
   "street-scan": ["state", "counties", "visualCriteria", "buyBox"],
   linkedin: ["keyword", "audienceFilter"],

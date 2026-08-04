@@ -903,7 +903,7 @@ function Assistant() {
 
   const isScan = spec.sourceType === "street_scan";
   /**
-   * Property Scan quotes from its own buy-box cascade, but it renders in the
+   * Street Scan quotes from its own buy-box cascade, but it renders in the
    * SAME estimate slot as every other source — one estimator, one approve.
    */
   const scanEstimate = useMemo(

@@ -55,7 +55,7 @@ export const jobSpecSchema = z.object({
   scrapeTargetKind: z.enum(["keywords", "areas", "urls"]).nullable().default(null),
   /** Workspace suppression file applied to this run (informational). */
   suppressionFile: z.string().max(160).nullable().default(null),
-  // ---- Property Scan (AI Driving For Dollars) ----
+  // ---- Street Scan (AI Driving For Dollars) ----
   /**
    * Plain-language condition criteria the imagery model scores against. The
    * assistant infers these from the operator's prompt; the rail edits them the
@@ -111,7 +111,7 @@ export function describeSpec(spec: JobSpec): string {
     spec.country ||
     "No Geography";
   if (spec.sourceType === "street_scan") {
-    return ["Property Scan", geo].join(" · ");
+    return ["Street Scan", geo].join(" · ");
   }
   if (spec.sourceType === "records") {
     return [spec.recordType ?? "Public Records", geo]

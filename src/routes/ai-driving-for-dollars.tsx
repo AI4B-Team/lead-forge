@@ -18,7 +18,7 @@ export const Route = createFileRoute("/ai-driving-for-dollars")({
         content:
           "Scan an entire market for visibly distressed properties in minutes. Scored, confirmed against county records, enriched and skip traced. Free scan of your first ZIP.",
       },
-      { property: "og:title", content: "AI Driving For Dollars — Property Scan by LeadTrace" },
+      { property: "og:title", content: "AI Driving For Dollars — Street Scan by LeadTrace" },
       {
         property: "og:description",
         content:
@@ -141,7 +141,7 @@ function AiDrivingForDollars() {
               Every Rundown House In Your Market. Found Overnight.
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-              Property Scan reads street-level imagery across an entire market, scores what it sees,
+              Street Scan reads street-level imagery across an entire market, scores what it sees,
               then checks county records to confirm the house is still in that condition. You get a
               ranked, skip-traced list — not a pile of addresses to go verify yourself.
             </p>
@@ -314,7 +314,7 @@ function AiDrivingForDollars() {
                 <tr>
                   <th className="px-4 py-3 font-display font-bold text-foreground">What You've Run Into</th>
                   <th className="px-4 py-3 font-display font-bold text-muted-foreground">With Other Tools</th>
-                  <th className="px-4 py-3 font-display font-bold text-primary">With Property Scan</th>
+                  <th className="px-4 py-3 font-display font-bold text-primary">With Street Scan</th>
                 </tr>
               </thead>
               <tbody>
