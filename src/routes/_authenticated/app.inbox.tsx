@@ -26,7 +26,15 @@ import {
   summarizeThread,
   suggestThreadReplies,
   blacklistThread,
+  starThread,
+  archiveThread,
+  setThreadStatus,
 } from "@/lib/inbox.functions";
+import {
+  THREAD_STATUSES,
+  threadStatusLabel,
+  type ThreadStatus,
+} from "@/lib/thread-states.shared";
 import { listQuickReplies, createQuickReply, listTags } from "@/lib/tags.functions";
 import { LeadTagBar } from "@/components/app/lead-tag-picker";
 import { VoiceMessageItem } from "@/components/app/voice-message-item";
@@ -529,7 +537,7 @@ function ConversationsPage() {
                     onArchive={toggleArchive}
                     onTag={() => setTagPickerOpen(true)}
                     onBlacklist={doBlacklist}
-                    archived={!!selected && archived.includes(selected)}
+                    archived={!!selectedRow?.archived}
                     blacklisting={false}
                   />
                   <LeadTagBar

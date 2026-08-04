@@ -93,6 +93,12 @@ export type ThreadRow = {
   lead: { full_name: string | null; business_name: string | null; phone: string | null; city: string | null; state: string | null } | null;
   lead_tags?: Array<{ id: string; name: string; color: string }>;
   campaign: { name: string; status: string | null } | null;
+  lead_id?: string | null;
+  /** Inbox workflow state, stored server-side per conversation. */
+  starred?: boolean;
+  archived?: boolean;
+  archived_reason?: string | null;
+  status?: string | null;
 };
 
 /** Rich conversation row — who, what they want, how hot, and when. */
