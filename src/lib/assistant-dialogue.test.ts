@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_SPEC, withStates, type JobSpec } from "./assistant.shared";
-import { nextQuestion, speakTurn, stickyCounties } from "./assistant-dialogue";
+import { nextQuestion, pruneUnbackedFallbacks, speakTurn, stickyCounties } from "./assistant-dialogue";
 
 const records = (over: Partial<JobSpec> = {}): JobSpec => ({
   ...EMPTY_SPEC,
