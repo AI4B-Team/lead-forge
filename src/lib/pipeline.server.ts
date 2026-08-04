@@ -541,6 +541,14 @@ async function runPipelineBody(
     recordsRequested: (params.distress_record_ids as string[] | undefined)?.length ?? 0,
   });
 
+  // Distress Feed pulls draw down the Free allowance as soon as they are
+  // accepted, so two parallel runs can't both slip past the 50-record ceiling.
+  const pulledRecordIds = (params.distress_record_ids as string[] | undefined) ?? [];
+  if (pulledRecordIds.length > 0) {
+    const { consumeFreeRecords } = await import("./free-tier.server");
+    await consumeFreeRecords(supabase, workspaceId, pulledRecordIds.length, freePlanCtx);
+  }
+
   // 1) SOURCE ---------------------------------------------------------------
   await supabase.from("jobs").update({ status: "scraping" }).eq("id", jobId);
   await say("scraping", "Searching the source for matching records…");
