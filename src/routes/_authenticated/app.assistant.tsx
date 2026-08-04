@@ -1534,7 +1534,7 @@ function Assistant() {
                         Build it in the List Builder on the right, or type below and I'll fill it in for you.
                       </div>
                       <div className="mt-3">
-                        <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
+                        <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} coverage={traceCoverage} />
                       </div>
                     </div>
                   )}
@@ -1564,7 +1564,7 @@ function Assistant() {
                             {m.role === "assistant" && (
                               <div className="mt-3">
                                 {i === lastAssistantIndex ? (
-                                  <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
+                                  <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} coverage={traceCoverage} />
                                 ) : (
                                   <AssistantTrace
                                     steps={buildTraceSteps(m.spec ?? EMPTY_SPEC)}
