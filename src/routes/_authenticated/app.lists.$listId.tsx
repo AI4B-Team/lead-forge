@@ -296,16 +296,19 @@ function JobDetail() {
         )}
       </div>
 
-      {params.sample_data === true && (
+      {coverage && coverage.uncoveredCounties.length > 0 && (
         <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-warn/40 bg-warn/10 p-4">
           <AlertTriangle className="h-4 w-4 text-warn" />
-          <span className="text-sm font-semibold text-foreground">
-            SAMPLE DATA — NOT REAL LEADS.
-          </span>
-          <span className="text-sm text-muted-foreground">
-            This run used mock records because live data credentials are not connected. Do not text
-            these numbers.
-          </span>
+          <div className="min-w-[12rem] flex-1">
+            <div className="text-sm font-semibold text-foreground">
+              Ran {coverage.ran} of {coverage.requested} selected counties
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {coverage.uncoveredCounties.length} not yet covered — we've logged your request.
+              Contributing counties: {coverage.coveredCounties.join(", ") || "none"}. Not covered:{" "}
+              {coverage.uncoveredCounties.join(", ")}.
+            </div>
+          </div>
         </div>
       )}
 
