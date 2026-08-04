@@ -32,7 +32,25 @@ export interface BusinessScraper {
   scrape(params: BusinessScrapeParams): Promise<RawLead[]>;
 }
 
-export type ScrubStatus = "clean" | "dnc" | "litigator";
+/**
+ * `unknown` is a first-class, FAIL-CLOSED outcome: the provider returned a
+ * result set that did not cover this phone. It is never treated as clean.
+ */
+export type ScrubStatus = "clean" | "dnc" | "litigator" | "unknown";
+
+/**
+ * Thrown when no DNC/litigator provider is configured, or the configured
+ * provider could not be reached. Callers must FAIL the run — never fabricate
+ * a clean result. Texting an unscrubbed list is the most expensive mistake
+ * this product can make.
+ */
+export class DncUnavailableError extends Error {
+  readonly code = "dnc_unavailable";
+  constructor(message: string) {
+    super(message);
+    this.name = "DncUnavailableError";
+  }
+}
 
 export type ScrubResult = {
   provider: string;

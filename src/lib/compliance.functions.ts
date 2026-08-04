@@ -29,7 +29,7 @@ function normalizePhone(v: string): string {
 
 const REASON_BUCKETS = {
   opt_out: ["optout", "opt_out", "opt-out", "stop"],
-  dnc: ["dnc", "litigator"],
+  dnc: ["dnc", "litigator", "not_scrubbed"],
 } as const;
 
 export function reasonBucket(reason: string | null | undefined): "opt_out" | "dnc" | "manual" {

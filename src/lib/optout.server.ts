@@ -12,8 +12,17 @@ type Client = { from: (table: string) => any };
 
 export const OPTOUT_ERROR = "Contact has opted out — message not sent";
 export const SUPPRESSED_ERROR = "Number is on your suppression list — message not sent";
+export const DNC_ERROR = "Number is on the National Do Not Call Registry — message not sent";
+export const LITIGATOR_ERROR = "Number is on a known-litigator list — message not sent";
+export const NOT_SCRUBBED_ERROR =
+  "Number has not passed DNC and litigator scrubbing — message not sent";
 
-export type BlockReason = "opted_out" | "suppressed";
+export type BlockReason =
+  | "opted_out"
+  | "suppressed"
+  | "dnc_listed"
+  | "litigator_listed"
+  | "not_scrubbed";
 
 export type SendGate =
   | { ok: true; phone: string | null }
@@ -27,6 +36,13 @@ export type GateTarget = {
   /** Free-form context for the audit log (campaign id, "inbox", "cadence"). */
   source?: string;
   actorId?: string | null;
+  /**
+   * Fail-closed strictness. When true, only a lead with scrub_status 'clean'
+   * may be texted. Defaults by send path: cold outbound (campaign, cadence)
+   * requires a clean scrub; manual replies and bot replies on consumer-
+   * initiated threads do not, though DNC and litigator hits still hard-block.
+   */
+  requireScrubbed?: boolean;
 };
 
 /** Which send path attempted the blocked message — used by the compliance log. */
@@ -76,12 +92,22 @@ export async function loadOptedOutLeadIds(db: Client, workspaceId: string): Prom
   );
 }
 
+/** Cold outbound must be scrubbed; consumer-initiated conversation need not be. */
+function requiresCleanScrub(t: GateTarget): boolean {
+  if (typeof t.requireScrubbed === "boolean") return t.requireScrubbed;
+  const path = sendPathFromSource(t.source);
+  return path === "campaign" || path === "cadence";
+}
+
 /** Non-throwing check. Resolves the phone from the lead when not supplied. */
 export async function checkCanText(db: Client, t: GateTarget): Promise<SendGate> {
   let phone = t.phone ?? null;
-  if (!phone && t.leadId) {
-    const { data } = await db.from("leads").select("phone").eq("id", t.leadId).maybeSingle();
-    phone = (data as { phone: string | null } | null)?.phone ?? null;
+  let scrubStatus: string | null = null;
+  if (t.leadId) {
+    const { data } = await db.from("leads").select("phone, scrub_status").eq("id", t.leadId).maybeSingle();
+    const lead = data as { phone: string | null; scrub_status: string | null } | null;
+    phone = phone ?? lead?.phone ?? null;
+    scrubStatus = lead?.scrub_status ?? null;
   }
 
   // 1. Did this contact reply STOP? (thread- and lead-scoped)
@@ -105,6 +131,19 @@ export async function checkCanText(db: Client, t: GateTarget): Promise<SendGate>
     if ((data ?? []).length > 0) {
       return { ok: false, reason: "suppressed", message: SUPPRESSED_ERROR, phone };
     }
+  }
+
+  // 3. Scrub verdict. DNC and litigator hits block EVERY path, inbound
+  //    included. An absent or unknown verdict blocks cold outbound only —
+  //    a list that was never scrubbed must not be campaignable.
+  if (scrubStatus === "dnc") {
+    return { ok: false, reason: "dnc_listed", message: DNC_ERROR, phone };
+  }
+  if (scrubStatus === "litigator") {
+    return { ok: false, reason: "litigator_listed", message: LITIGATOR_ERROR, phone };
+  }
+  if (t.leadId && scrubStatus !== "clean" && requiresCleanScrub(t)) {
+    return { ok: false, reason: "not_scrubbed", message: NOT_SCRUBBED_ERROR, phone };
   }
 
   return { ok: true, phone };
