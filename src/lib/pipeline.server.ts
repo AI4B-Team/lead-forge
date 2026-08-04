@@ -524,6 +524,22 @@ async function runPipelineBody(
     await supabase.from("jobs").update({ rows_in: raw.length }).eq("id", jobId);
   }
   await say("scraping", `Found ${raw.length.toLocaleString()} records.`, raw.length);
+  if (raw.length === 0 && cov && cov.ran > 0) {
+    // Covered, just nothing new. Say so, and prove the pipe is alive.
+    const { verifiedCoverage } = await import("./distress/coverage.server");
+    const rows = await verifiedCoverage();
+    const last = rows
+      .map((r) => r.last_success_at)
+      .filter(Boolean)
+      .sort()
+      .pop();
+    await say(
+      "scraping",
+      `No new records in ${cov.coveredCounties.join(", ")} for this date range.${
+        last ? ` Last successful pull ${new Date(last).toLocaleString()}.` : ""
+      }`,
+    );
+  }
 
   // 2) DEDUPE — in-batch, workspace-wide, and against every prior run --------
   await supabase.from("jobs").update({ status: "enriching" }).eq("id", jobId);
