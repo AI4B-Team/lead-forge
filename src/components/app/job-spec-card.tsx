@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getVerifiedCoverage, requestCountyCoverage } from "@/lib/coverage.functions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { splitCountyLabel } from "@/lib/coverage.shared";
+import { isCovered, recordTypeCovered, splitCountyLabel } from "@/lib/coverage.shared";
 import { toast } from "sonner";
 import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
@@ -319,6 +319,19 @@ export function JobSpecCard({
   });
   const verified = coverageQ.data?.coverage ?? [];
   const recordTypeNow = spec.recordType ?? null;
+  // The Record Type picker reads coverage through the SAME helpers as the
+  // server gate, scoped to the counties currently selected. A label can never
+  // say "available" for a pair assertJobCoverage would refuse.
+  const scopeLabel = (() => {
+    const list = spec.counties;
+    if (!list.length) return null;
+    return list.length <= 2 ? list.join(" and ") : `${list.slice(0, 2).join(", ")} and ${list.length - 2} more`;
+  })();
+  const recordTypeAvailable = (label: string) => {
+    if (coverageQ.isPending) return true;
+    if (spec.counties.length) return spec.counties.some((c) => isCovered(verified, c, label));
+    return recordTypeCovered(verified, label);
+  };
   const countyVerified = (label: string) => {
     const { county, state } = splitCountyLabel(label);
     return verified.some(
@@ -480,15 +493,15 @@ export function JobSpecCard({
                 </PopoverTrigger>
                 <SelectContent>
                   {RECORD_TYPE_OPTIONS.map((r) => {
-                    // A record type with no verified adapter anywhere cannot be
-                    // pulled, so it is never selectable — it's a request instead.
-                    const buildable = coverageQ.isPending || verified.some((v) => v.record_type === r.label);
+                    const buildable = recordTypeAvailable(r.label);
                     return (
                       <SelectItem key={r.id} value={r.label} disabled={!buildable}>
                         <span className="flex w-full items-center justify-between gap-3">
                           <span>{r.label}</span>
                           {!buildable && (
-                            <span className="text-[11px] text-muted-foreground">Not covered yet</span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {scopeLabel ? `Not covered in ${scopeLabel}` : "Not covered anywhere yet"}
+                            </span>
                           )}
                         </span>
                       </SelectItem>
@@ -781,7 +794,14 @@ export function JobSpecCard({
                 renderBadgeClassName={(c) => COVERAGE_STYLE[covFor(c)]}
                 renderBadgeLabel={(c) => `${c} · ${COVERAGE_LABEL[covFor(c)]}`}
               />
-              {recordsSource && <UncoveredNotice counties={spec.counties.filter((c) => !countyVerified(c))} recordType={recordTypeNow} />}
+              {/* Only the PARTIAL case is stated here — when nothing is covered the
+                  run footer owns that message, so one Request button renders, not three. */}
+              {recordsSource && spec.counties.some((c) => countyVerified(c)) && (
+                <UncoveredNotice
+                  counties={spec.counties.filter((c) => !countyVerified(c))}
+                  recordType={recordTypeNow}
+                />
+              )}
               {!spec.counties.length && (
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   {states.length

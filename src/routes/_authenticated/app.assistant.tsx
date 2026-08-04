@@ -902,14 +902,6 @@ function Assistant() {
     : []
   ).slice(0, 4);
 
-  const ctaLabel = running
-    ? "Queueing…"
-    : !traceComplete
-      ? "Building Preview…"
-      : confirmed
-        ? "Generate List"
-        : "Looks Good";
-
   // No spec yet → show an example. Spec assembled or assembling → refine copy.
   // Run queued → the conversation moves on to the next list.
   const composerPlaceholder = running
@@ -939,6 +931,29 @@ function Assistant() {
     verdict?.gated && (verdict.status === "none" || verdict.status === "scope_too_broad"),
   );
   const priceable = geoResolved && !coverageBlocked;
+
+  /** Terminal CTA states — never a loading label when there is nothing to load. */
+  const coveragePartial = verdict?.status === "partial";
+  const ctaLabel = running
+    ? "Queueing…"
+    : coverageBlocked
+      ? "Not Available — Request Coverage"
+      : !traceComplete
+        ? "Building Preview…"
+        : coveragePartial
+          ? `Run ${verdict?.coveredCounties.length ?? 0} Covered ${
+              (verdict?.coveredCounties.length ?? 0) === 1 ? "County" : "Counties"
+            }`
+          : confirmed
+            ? "Generate List"
+            : "Looks Good";
+  const traceCoverage = verdict?.gated
+    ? {
+        status: verdict.status,
+        covered: verdict.coveredCounties.length,
+        requested: verdict.requestedCounties.length,
+      }
+    : null;
 
   /** Last row cap this workspace used, so it isn't re-entered every run. */
   useEffect(() => {
@@ -1143,7 +1158,9 @@ function Assistant() {
         </div>
       )}
 
-      {uncovered.length > 0 && (
+      {/* The coverage verdict above is the only place a Request button renders —
+          one button per uncovered county, not one per UI layer that noticed. */}
+      {!verdict?.gated && uncovered.length > 0 && (
         <div className="rounded-xl border border-border p-3 text-xs">
           <div className="font-medium text-foreground">Not Covered Yet</div>
           <div className="mt-1 text-muted-foreground">
@@ -1519,7 +1536,7 @@ function Assistant() {
                         Build it in the List Builder on the right, or type below and I'll fill it in for you.
                       </div>
                       <div className="mt-3">
-                        <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
+                        <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} coverage={traceCoverage} />
                       </div>
                     </div>
                   )}
@@ -1549,7 +1566,7 @@ function Assistant() {
                             {m.role === "assistant" && (
                               <div className="mt-3">
                                 {i === lastAssistantIndex ? (
-                                  <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} />
+                                  <AssistantTrace steps={traceSteps} revealed={revealed} thinking={busy} open={missing} coverage={traceCoverage} />
                                 ) : (
                                   <AssistantTrace
                                     steps={buildTraceSteps(m.spec ?? EMPTY_SPEC)}

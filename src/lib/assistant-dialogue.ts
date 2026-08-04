@@ -167,6 +167,23 @@ export function nextQuestion(spec: JobSpec): string | null {
 }
 
 /**
+ * The model sometimes suggests a step the spec already has ("you'd need to add
+ * skip tracing") which reads as a contradiction next to the panel. Drop any
+ * sentence whose suggestion is already true in the spec.
+ */
+export function reconcileWithSpec(reply: string, spec: JobSpec): string {
+  const contradictions: Array<{ on: boolean; re: RegExp }> = [
+    { on: spec.skipTrace, re: /\b(add|enable|turn on|need)\b[^.!?]*\bskip[- ]?trac/i },
+    { on: spec.mobileOnly, re: /\b(add|enable|turn on|need)\b[^.!?]*\bmobile[- ]?(only|verif)/i },
+  ];
+  return reply
+    .split(/(?<=[.!?])\s+/)
+    .filter((sentence) => !contradictions.some((c) => c.on && c.re.test(sentence)))
+    .join(" ")
+    .trim();
+}
+
+/**
  * The spoken part of the turn. Always non-empty when the spec changed, so the
  * panel can never move without the assistant saying so.
  */
@@ -188,7 +205,7 @@ export function speakTurn(opts: {
   if (opts.panelEdits?.length) {
     lines.push(`I see you changed ${opts.panelEdits.join(", ")} in the List Builder — I'm working from that.`);
   }
-  const model = opts.modelReply.trim();
+  const model = reconcileWithSpec(opts.modelReply, opts.spec).trim();
   if (model) lines.push(model);
 
   if (captured.length) lines.push(`Got it — ${captured.join(", ")}.`);
