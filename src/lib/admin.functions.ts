@@ -217,3 +217,42 @@ export const listSourceRequesters = createServerFn({ method: "POST" })
     if (error) throw error;
     return { requesters: rows ?? [] };
   });
+
+// ---------------------------------------------------------------------------
+// Legacy unverified records. Rows created before source verification was live
+// are already blocked from outreach and export; this lets an admin review the
+// remaining volume and purge it for good.
+// ---------------------------------------------------------------------------
+
+export const countLegacyLeads = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { count: leads } = await supabaseAdmin
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .in("data_provenance", ["mock_legacy", "unknown"]);
+    const { count: lists } = await supabaseAdmin
+      .from("jobs")
+      .select("id", { count: "exact", head: true })
+      .in("data_provenance", ["mock_legacy", "unknown"]);
+    return { leads: leads ?? 0, lists: lists ?? 0 };
+  });
+
+export const purgeLegacyLeads = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { count: before } = await supabaseAdmin
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .in("data_provenance", ["mock_legacy", "unknown"]);
+    const { error } = await supabaseAdmin
+      .from("leads")
+      .delete()
+      .in("data_provenance", ["mock_legacy", "unknown"]);
+    if (error) throw error;
+    return { purged: before ?? 0 };
+  });
