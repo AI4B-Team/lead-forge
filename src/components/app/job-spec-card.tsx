@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getVerifiedCoverage, requestCountyCoverage } from "@/lib/coverage.functions";
 import { useWorkspaceId } from "@/hooks/use-workspace";
-import { splitCountyLabel } from "@/lib/coverage.shared";
+import { isCovered, recordTypeCovered, splitCountyLabel } from "@/lib/coverage.shared";
 import { toast } from "sonner";
 import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
