@@ -167,6 +167,35 @@ export function nextQuestion(spec: JobSpec): string | null {
 }
 
 /**
+ * The model may only offer a market we can actually run. Any sentence that
+ * proposes an alternative market is dropped unless the market it names appears
+ * in the verified coverage list. A replacement line is supplied by the caller,
+ * derived from source_coverage, so the operator still gets an honest answer.
+ */
+const FALLBACK_RE =
+  /\b(nearby|near by|closest|instead|alternative|another|other)\b[^.!?]*\b(covered|coverage|market|count(y|ies)|state)\b|\bwould you like (me )?to (search|look|run)\b[^.!?]*\b(instead|nearby|another|other)\b/i;
+
+export function pruneUnbackedFallbacks(
+  reply: string,
+  coveredLabels: string[],
+): { reply: string; removed: boolean } {
+  const labels = coveredLabels.map((l) => l.toLowerCase());
+  const sentences = reply.split(/(?<=[.!?])\s+/);
+  let removed = false;
+  const kept = sentences.filter((s) => {
+    if (!FALLBACK_RE.test(s)) return true;
+    const backed = labels.some((label) => {
+      const [county, state] = label.split(/[—,]/).map((p) => p.trim());
+      return (county && county.length > 3 && s.toLowerCase().includes(county)) ||
+        (state && new RegExp(`\\b${state}\\b`, "i").test(s));
+    });
+    if (!backed) removed = true;
+    return backed;
+  });
+  return { reply: kept.join(" ").trim(), removed };
+}
+
+/**
  * The model sometimes suggests a step the spec already has ("you'd need to add
  * skip tracing") which reads as a contradiction next to the panel. Drop any
  * sentence whose suggestion is already true in the spec.
@@ -194,6 +223,8 @@ export function speakTurn(opts: {
   userTexts: string[];
   /** Plain-language list of fields the operator hand-edited in the panel. */
   panelEdits?: string[];
+  /** "County, ST — Record Type" rows from source_coverage where verified. */
+  coveredLabels?: string[];
 }): { reply: string; complete: boolean; question: string | null } {
   const { captured, inferred, question } = turnFields({
     spec: opts.spec,
@@ -205,8 +236,20 @@ export function speakTurn(opts: {
   if (opts.panelEdits?.length) {
     lines.push(`I see you changed ${opts.panelEdits.join(", ")} in the List Builder — I'm working from that.`);
   }
-  const model = reconcileWithSpec(opts.modelReply, opts.spec).trim();
+  const pruned = pruneUnbackedFallbacks(
+    reconcileWithSpec(opts.modelReply, opts.spec),
+    opts.coveredLabels ?? [],
+  );
+  const model = pruned.reply.trim();
   if (model) lines.push(model);
+  // Never leave a removed suggestion as silence — say what is actually covered.
+  if (pruned.removed) {
+    lines.push(
+      opts.coveredLabels?.length
+        ? `The only markets I can run today are ${opts.coveredLabels.join("; ")}. Anything else I'd have to build first.`
+        : "We don't cover this record type anywhere yet — I've logged your request.",
+    );
+  }
 
   if (captured.length) lines.push(`Got it — ${captured.join(", ")}.`);
   if (inferred.length) {
