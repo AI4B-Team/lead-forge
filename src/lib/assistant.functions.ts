@@ -289,6 +289,8 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
         states: specStates(spec),
         counties: spec.counties,
         county: spec.counties[0] ?? null,
+        city: spec.city,
+        zips: spec.zips,
         recency_days: spec.recencyDays,
         // Per-search row cap — reaches the Apify actor input, not a post-fetch slice.
         max_results: spec.maxResults,

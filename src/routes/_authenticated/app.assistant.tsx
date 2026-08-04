@@ -44,7 +44,9 @@ import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { DEFAULT_MATCH_THRESHOLD, estimateScan } from "@/lib/property-scan.shared";
 import { DEFAULT_MAX_ROWS, loadMaxRows, saveMaxRows } from "@/lib/max-rows";
 import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
-import { TEMPLATES, templateSourceType, type Template } from "@/lib/templates";
+import { TEMPLATES, creditCostPerLead, featuredTemplates, getTemplate, hasCategory, templateSourceType, type Template } from "@/lib/templates";
+import { FreeTierNotice } from "@/components/app/free-tier-notice";
+import { usePlanContext } from "@/hooks/use-plan-context";
 import { TemplateCard } from "@/components/marketing/template-card";
 import { TemplatePickerDialog } from "@/components/app/template-picker-dialog";
 import { templateAdapterStatus } from "@/lib/template-schema";
@@ -77,13 +79,9 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
   component: Assistant,
 });
 
-/** Default grid order mirrors the homepage template teaser (first 6 non-upload templates). */
-const DEFAULT_GRID_IDS = [
-  "gmaps", "probate", "contact-details",
-  "yelp", "vacancy", "universal-crawl",
-  "glocal", "code", "gserp",
-];
-const GRID_SLOTS = 9;
+/** The starter grid is curated, not array order: featured templates only. */
+const DEFAULT_GRID_IDS = featuredTemplates().map((t) => t.id);
+const GRID_SLOTS = DEFAULT_GRID_IDS.length;
 
 const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   sourceType: "Source",
@@ -526,11 +524,11 @@ function Assistant() {
       const miss = missingSlots(body, spec);
       if (!body || miss.geo || miss.subject) {
         const ask = miss.subject && miss.geo
-          ? selectedTemplate.category === "records"
+          ? hasCategory(selectedTemplate, "records")
             ? "which record type should I pull, and in which county or state?"
             : "what should I look for, and where?"
           : miss.subject
-            ? selectedTemplate.category === "records"
+            ? hasCategory(selectedTemplate, "records")
               ? "which record type should I pull?"
               : "what should I look for?"
             : "which county or state should I cover?";
@@ -896,6 +894,8 @@ function Assistant() {
   };
 
   const { balances: creditBalances } = useCreditBalances();
+  const { plan } = usePlanContext();
+  const activeTemplate = spec.templateId ? getTemplate(spec.templateId) : undefined;
 
   const countyCount = Math.max(1, spec.counties.length || 1);
   const tradeCount = spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1;
@@ -1098,6 +1098,18 @@ function Assistant() {
             </div>
           )}
         </div>
+      )}
+
+      {/* The Free plan boundary, shown only when this exact run needs a card. */}
+      {spec.sourceType && (
+        <FreeTierNotice
+          plan={plan}
+          action={{
+            templateId: spec.templateId,
+            creditCostPerLead: activeTemplate ? creditCostPerLead(activeTemplate) : 0,
+            skipTrace: spec.skipTrace,
+          }}
+        />
       )}
 
       {adapterLive ? (

@@ -3152,7 +3152,9 @@ export type Database = {
       workspaces: {
         Row: {
           billing_plan: string
+          card_on_file: boolean
           created_at: string
+          free_records_used: number
           id: string
           industry: string | null
           monthly_sms_cap: number | null
@@ -3165,7 +3167,9 @@ export type Database = {
         }
         Insert: {
           billing_plan?: string
+          card_on_file?: boolean
           created_at?: string
+          free_records_used?: number
           id?: string
           industry?: string | null
           monthly_sms_cap?: number | null
@@ -3178,7 +3182,9 @@ export type Database = {
         }
         Update: {
           billing_plan?: string
+          card_on_file?: boolean
           created_at?: string
+          free_records_used?: number
           id?: string
           industry?: string | null
           monthly_sms_cap?: number | null

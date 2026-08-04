@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TEMPLATES, type Template, type TemplateCategory } from "@/lib/templates";
+import { TEMPLATES, hasCategory, primaryCategory, type Template, type TemplateCategory } from "@/lib/templates";
 import { TemplateLogo } from "@/components/marketing/template-logo";
 import { TemplateCostBadge } from "@/components/marketing/template-card";
 import { cn } from "@/lib/utils";
@@ -19,8 +19,8 @@ const TABS: Array<{ key: TabKey; label: string; match: TemplateCategory[] }> = [
 
 /** Deep-links into New Job with the record type preselected (spec §18). */
 function templateLink(t: Template) {
-  if (t.category === "upload") return { to: "/app/assistant", search: { source: "upload" } } as const;
-  if (t.category === "records") return { to: "/app/assistant", search: { source: "records" } } as const;
+  if (hasCategory(t, "upload")) return { to: "/app/assistant", search: { source: "upload" } } as const;
+  if (hasCategory(t, "records")) return { to: "/app/assistant", search: { source: "records" } } as const;
   return { to: "/app/assistant", search: { source: "business", niche: t.title } } as const;
 }
 
@@ -46,7 +46,7 @@ export function DashboardTemplates() {
   const [tab, setTab] = useState<TabKey>("all");
   const active = TABS.find((t) => t.key === tab)!;
   // 9 keeps the grid a full 3×3 at xl.
-  const items = (tab === "all" ? TEMPLATES : TEMPLATES.filter((t) => active.match.includes(t.category))).slice(0, 9);
+  const items = (tab === "all" ? TEMPLATES : TEMPLATES.filter((t) => t.categories.some((c) => active.match.includes(c)))).slice(0, 9);
 
   return (
     <Card className="mt-6">
@@ -98,7 +98,7 @@ export function DashboardTemplates() {
                   <span className="mt-0.5 block truncate text-xs text-muted-foreground">{t.subtitle}</span>
                   <span className="mt-2 flex items-center gap-2">
                     <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                      {CATEGORY_LABEL[t.category] ?? "Template"}
+                      {CATEGORY_LABEL[primaryCategory(t)] ?? "Template"}
                     </span>
                     <TemplateCostBadge template={t} />
                     {i < 3 && (

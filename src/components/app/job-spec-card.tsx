@@ -13,6 +13,7 @@ import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
 import { StateMultiSelect } from "@/components/app/state-multi-select";
+import { LocationSearch } from "@/components/app/location-search";
 import { countiesForState, parseCounty } from "@/lib/us-geo";
 import { UploadCloud, X, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -260,7 +261,10 @@ export function JobSpecCard({
   const has = (f: BuilderField) => fields.includes(f);
   const isUpload = has("upload");
   const isRecords = has("recordType");
-  const hasGeo = has("state") || has("counties");
+  const isScan = spec.sourceType === "street_scan";
+  // Street Scan resolves geography through the combined Location search that
+  // renders first, so it never shows the separate State + Counties block.
+  const hasGeo = (has("state") || has("counties")) && !isScan;
   const dataOnly = isDataSource(spec.templateId);
   const nonUs = isNonUsRun({ templateId: spec.templateId, country: spec.country });
   const filterLabel = filterFieldLabel(spec.templateId);
@@ -480,6 +484,32 @@ export function JobSpecCard({
           </div>
         )}
 
+
+        {/* Location is the primary Street Scan filter, so it comes first — one
+            input that accepts a state, a county, a city, or a ZIP. */}
+        {isScan && (
+          <div>
+            <FieldLabel
+              confidence={96}
+              show={(spec.counties.length > 0 || states.length > 0) && (inf("counties") || inf("state"))}
+              hintTitle="Location"
+              hint="Where you buy. Search a state, a county, a city, or a ZIP and add as many as you want — the scan covers every area you list."
+            >
+              Location
+            </FieldLabel>
+            <LocationSearch
+              value={{ states, counties: spec.counties, city: spec.city, zips: spec.zips }}
+              onChange={(next) =>
+                onChange({
+                  ...withStates(spec, next.states),
+                  counties: next.counties,
+                  city: next.city,
+                  zips: next.zips,
+                })
+              }
+            />
+          </div>
+        )}
 
         {has("buyBox") && (
           <BuyBoxFields value={spec.buyBox} onChange={(v) => set("buyBox", v)} />

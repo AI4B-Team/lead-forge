@@ -8,7 +8,7 @@
 // "waiting on you" always matches the fields that template actually needs.
 // ---------------------------------------------------------------------------
 
-import { templateSourceType, type Template, type TemplateCategory } from "@/lib/templates";
+import { primaryCategory, templateSourceType, type Template, type TemplateCategory } from "@/lib/templates";
 import type { JobSpec } from "@/lib/assistant.shared";
 import {
   INTERNATIONAL_TEMPLATE_COUNTRY, JOB_BOARD_TEMPLATE_IDS, US_REALESTATE_PORTAL_IDS,
@@ -127,7 +127,7 @@ export function templateAdapterStatus(t: Template): AdapterStatus {
   // Anything already flagged Beta in the catalog has no live adapter either,
   // and site scrapers aren't wired to the pipeline yet.
   if (t.beta || URL_TEMPLATES.has(t.id)) return "beta";
-  if (LIVE_CATEGORIES.has(t.category)) return "live";
+  if (t.categories.some((c) => LIVE_CATEGORIES.has(c))) return "live";
   return "beta";
 }
 
@@ -135,7 +135,7 @@ export function templateFieldSchema(t: Template): BuilderField[] {
   if (t.fieldSchema?.length) return t.fieldSchema as BuilderField[];
   if (URL_TEMPLATES.has(t.id)) return ["url"];
   if (SCHEMA_BY_ID[t.id]) return SCHEMA_BY_ID[t.id];
-  return BY_CATEGORY[t.category] ?? ["keyword", "state", "counties"];
+  return BY_CATEGORY[primaryCategory(t)] ?? ["keyword", "state", "counties"];
 }
 
 /** Fields for a spec with no template selected (the ?source= panel path). */

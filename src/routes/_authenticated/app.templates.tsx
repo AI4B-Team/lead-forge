@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ChevronDown, Check, SlidersHorizontal } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { TemplateCard } from "@/components/marketing/template-card";
-import { TEMPLATES, type Template, type TemplateCategory } from "@/lib/templates";
+import { TEMPLATES, hasCategory, type Template, type TemplateCategory } from "@/lib/templates";
 import { touchRecentTemplate } from "@/lib/recent-templates";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { useTemplateHealth } from "@/hooks/use-template-health";
@@ -76,7 +76,7 @@ function AppTemplates() {
   const overflow = FILTERS.slice(PRIMARY_COUNT);
   const activeOverflow = overflow.find((f) => f.key === filter);
 
-  let items = filter === "all" ? TEMPLATES : TEMPLATES.filter((t) => t.category === filter);
+  let items = filter === "all" ? TEMPLATES : TEMPLATES.filter((t) => hasCategory(t, filter));
   if (betaOnly) items = items.filter((t) => t.beta);
   if (sort === "alpha") {
     items = [...items].sort((a, b) => a.title.localeCompare(b.title));

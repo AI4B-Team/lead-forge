@@ -199,6 +199,8 @@ export const updateCampaignStatus = createServerFn({ method: "POST" })
       if (reg?.campaign_status !== "approved") {
         throw new Error("10DLC Registration Must Be Approved Before Sending.");
       }
+      const { assertFreeTierAllows } = await import("./free-tier.server");
+      await assertFreeTierAllows(context.supabase, c.workspace_id, { sendingSms: true });
       const { assertSpendAllowed } = await import("./accountability.server");
       await assertSpendAllowed(context.supabase, c.workspace_id, context.userId, {
         amount: 0,

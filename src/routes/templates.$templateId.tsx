@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   CATEGORY_LABELS,
   getTemplate,
+  primaryCategory,
   relatedTemplates,
   templateFields,
 } from "@/lib/templates";
@@ -75,7 +76,7 @@ function TemplateDetailPage() {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {CATEGORY_LABELS[template.category]}
+                  {CATEGORY_LABELS[primaryCategory(template)]}
                 </span>
                 {template.beta ? (
                   <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -160,7 +161,7 @@ function TemplateDetailPage() {
           {related.length > 0 ? (
             <section className="mt-12">
               <h2 className="font-display text-2xl font-bold text-foreground">
-                More {CATEGORY_LABELS[template.category]} Templates
+                More {CATEGORY_LABELS[primaryCategory(template)]} Templates
               </h2>
               <div className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {related.map((t) => (

@@ -10,7 +10,7 @@
  * change in the source (not in our request) is what moves the needle.
  */
 
-import { TEMPLATES, type Template } from "@/lib/templates";
+import { TEMPLATES, hasCategory, type Template } from "@/lib/templates";
 import {
   assess,
   computeFillRates,
@@ -35,11 +35,11 @@ const RECORDS_PROBE = { county: "Hillsborough, FL", recordType: "code_violations
 /** Templates that route through the business (Apify) adapter. */
 function businessTemplateIds(): string[] {
   const categories = new Set(["business", "directories", "search", "reviews"]);
-  return TEMPLATES.filter((t: Template) => categories.has(t.category)).map((t) => t.id);
+  return TEMPLATES.filter((t: Template) => t.categories.some((c) => categories.has(c))).map((t) => t.id);
 }
 
 function recordsTemplateIds(): string[] {
-  return TEMPLATES.filter((t: Template) => t.category === "records").map((t) => t.id);
+  return TEMPLATES.filter((t: Template) => hasCategory(t, "records")).map((t) => t.id);
 }
 
 function canaries(): Canary[] {

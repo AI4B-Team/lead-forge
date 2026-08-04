@@ -242,6 +242,8 @@ const propertyScanAdapter: SourceAdapter = {
   coverage: "live",
   async run(params, onProgress) {
     const counties = ((params.counties as string[] | undefined)?.filter(Boolean) ?? ["Hillsborough, FL"]) as string[];
+    // ZIP farm areas from the combined location search narrow inside the county.
+    const zips = ((params.zips as string[] | undefined) ?? []).filter(Boolean);
     const criteria = ((params.visual_criteria as string[] | undefined) ?? ["Deferred maintenance"]).filter(Boolean);
     const threshold = Number(params.match_threshold) > 0 ? Number(params.match_threshold) : 75;
     const cap = Number(params.max_results) > 0 ? Number(params.max_results) : 500;
@@ -260,6 +262,7 @@ const propertyScanAdapter: SourceAdapter = {
           address: `${200 + i} ${pick(["Oak", "Palm", "Cedar", "Magnolia"], i)} St`,
           city: county.split(",")[0],
           state: "FL",
+          zip: zips.length ? zips[i % zips.length] : null,
           source_meta: {
             county,
             distress_score: score,
@@ -522,6 +525,29 @@ async function runPipelineBody(
     });
   };
   await say("queued", "Run accepted — we'll keep working even if you close this tab.");
+
+  // Free plan boundary: sources that cost per lead, and skip trace, need a
+  // payment method. Checked here so every entry point (assistant, recurring
+  // engine, API) hits the same gate.
+  const { assertFreeTierAllows } = await import("./free-tier.server");
+  const { getTemplate, creditCostPerLead } = await import("./templates");
+  const freePlanCtx = await assertFreeTierAllows(supabase, workspaceId, {
+    templateId: (params.templateId as string | undefined) ?? null,
+    creditCostPerLead: (() => {
+      const t = getTemplate((params.templateId as string | undefined) ?? "");
+      return t ? creditCostPerLead(t) : 0;
+    })(),
+    skipTrace: Boolean(params.skip_trace),
+    recordsRequested: (params.distress_record_ids as string[] | undefined)?.length ?? 0,
+  });
+
+  // Distress Feed pulls draw down the Free allowance as soon as they are
+  // accepted, so two parallel runs can't both slip past the 50-record ceiling.
+  const pulledRecordIds = (params.distress_record_ids as string[] | undefined) ?? [];
+  if (pulledRecordIds.length > 0) {
+    const { consumeFreeRecords } = await import("./free-tier.server");
+    await consumeFreeRecords(supabase, workspaceId, pulledRecordIds.length, freePlanCtx);
+  }
 
   // 1) SOURCE ---------------------------------------------------------------
   await supabase.from("jobs").update({ status: "scraping" }).eq("id", jobId);
