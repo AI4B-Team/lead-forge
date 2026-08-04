@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { getCountyPage } from "@/lib/distress-feed.functions";
 import {
   countyDescription, countySlug, countyFromSlug, countyTitle, formatAmount, formatDate,
-  recordTypeBySlug, recordTypeById, recordTypeLabel, RECORD_TYPES,
+  recordTypeById, recordTypeLabel, RECORD_TYPES,
 } from "@/lib/distress-feed.shared";
 import { US_STATES } from "@/lib/us-geo";
 
