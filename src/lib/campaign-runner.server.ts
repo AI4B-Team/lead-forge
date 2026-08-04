@@ -7,6 +7,7 @@ import {
   canStartNewDropForRecipient,
   inQuietHoursEverywhere,
 } from "@/lib/tcpa";
+import { TRUSTED_PROVENANCE } from "@/lib/provenance.shared";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
 
