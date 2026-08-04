@@ -715,9 +715,11 @@ export function JobSpecCard({
                 states={states}
                 value={spec.counties}
                 onChange={(next) => set("counties", next)}
+                isCovered={recordsSource ? (c) => countyVerified(c) : undefined}
                 renderBadgeClassName={(c) => COVERAGE_STYLE[covFor(c)]}
                 renderBadgeLabel={(c) => `${c} · ${COVERAGE_LABEL[covFor(c)]}`}
               />
+              {recordsSource && <UncoveredNotice counties={spec.counties.filter((c) => !countyVerified(c))} recordType={recordTypeNow} />}
               {!spec.counties.length && (
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   {states.length
