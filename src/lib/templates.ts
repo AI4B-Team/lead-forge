@@ -749,6 +749,13 @@ export const CATEGORY_LABELS: Record<TemplateCategory, string> = {
   upload: "Upload",
 };
 
+/** Curated starter set, ordered by `featuredOrder`. */
+export function featuredTemplates(): Template[] {
+  return TEMPLATES.filter((t) => t.featured).sort(
+    (a, b) => (a.featuredOrder ?? 99) - (b.featuredOrder ?? 99),
+  );
+}
+
 /** Look up a template by its id. */
 export function getTemplate(id: string): Template | undefined {
   return TEMPLATES.find((t) => t.id === id);

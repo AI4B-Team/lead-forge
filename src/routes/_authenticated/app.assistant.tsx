@@ -44,7 +44,7 @@ import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { DEFAULT_MATCH_THRESHOLD, estimateScan } from "@/lib/property-scan.shared";
 import { DEFAULT_MAX_ROWS, loadMaxRows, saveMaxRows } from "@/lib/max-rows";
 import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
-import { TEMPLATES, hasCategory, templateSourceType, type Template } from "@/lib/templates";
+import { TEMPLATES, featuredTemplates, hasCategory, templateSourceType, type Template } from "@/lib/templates";
 import { TemplateCard } from "@/components/marketing/template-card";
 import { TemplatePickerDialog } from "@/components/app/template-picker-dialog";
 import { templateAdapterStatus } from "@/lib/template-schema";
@@ -77,13 +77,9 @@ export const Route = createFileRoute("/_authenticated/app/assistant")({
   component: Assistant,
 });
 
-/** Default grid order mirrors the homepage template teaser (first 6 non-upload templates). */
-const DEFAULT_GRID_IDS = [
-  "gmaps", "probate", "contact-details",
-  "yelp", "vacancy", "universal-crawl",
-  "glocal", "code", "gserp",
-];
-const GRID_SLOTS = 9;
+/** The starter grid is curated, not array order: featured templates only. */
+const DEFAULT_GRID_IDS = featuredTemplates().map((t) => t.id);
+const GRID_SLOTS = DEFAULT_GRID_IDS.length;
 
 const FIELD_LABELS: Partial<Record<keyof JobSpec, string>> = {
   sourceType: "Source",
