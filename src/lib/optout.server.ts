@@ -103,11 +103,25 @@ function requiresCleanScrub(t: GateTarget): boolean {
 export async function checkCanText(db: Client, t: GateTarget): Promise<SendGate> {
   let phone = t.phone ?? null;
   let scrubStatus: string | null = null;
+  let provenance: string | null = null;
   if (t.leadId) {
-    const { data } = await db.from("leads").select("phone, scrub_status").eq("id", t.leadId).maybeSingle();
-    const lead = data as { phone: string | null; scrub_status: string | null } | null;
+    const { data } = await db
+      .from("leads")
+      .select("phone, scrub_status, data_provenance")
+      .eq("id", t.leadId)
+      .maybeSingle();
+    const lead = data as
+      | { phone: string | null; scrub_status: string | null; data_provenance: string | null }
+      | null;
     phone = phone ?? lead?.phone ?? null;
     scrubStatus = lead?.scrub_status ?? null;
+    provenance = lead?.data_provenance ?? null;
+  }
+
+  // 0. Provenance: records we cannot trace to a verified source (or the
+  // customer's own upload) are never contactable, in any direction.
+  if (t.leadId && !isTrustedProvenance(provenance)) {
+    return { ok: false, reason: "unverified_source", message: UNTRUSTED_LEAD_MESSAGE, phone };
   }
 
   // 1. Did this contact reply STOP? (thread- and lead-scoped)
