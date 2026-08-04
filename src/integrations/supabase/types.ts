@@ -812,6 +812,225 @@ export type Database = {
         }
         Relationships: []
       }
+      distress_feed_views: {
+        Row: {
+          created_at: string
+          fips: string
+          id: string
+          last_viewed_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fips: string
+          id?: string
+          last_viewed_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fips?: string
+          id?: string
+          last_viewed_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      distress_guides: {
+        Row: {
+          county: string
+          created_at: string
+          created_by: string | null
+          fields: Json
+          fips: string
+          id: string
+          intro: string | null
+          notes: string | null
+          portal_url: string
+          published: boolean
+          record_type: string
+          slug: string
+          state: string
+          steps: Json
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          county: string
+          created_at?: string
+          created_by?: string | null
+          fields?: Json
+          fips: string
+          id?: string
+          intro?: string | null
+          notes?: string | null
+          portal_url: string
+          published?: boolean
+          record_type: string
+          slug: string
+          state: string
+          steps?: Json
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          county?: string
+          created_at?: string
+          created_by?: string | null
+          fields?: Json
+          fips?: string
+          id?: string
+          intro?: string | null
+          notes?: string | null
+          portal_url?: string
+          published?: boolean
+          record_type?: string
+          slug?: string
+          state?: string
+          steps?: Json
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      distress_pulls: {
+        Row: {
+          county: string
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          fips: string
+          id: string
+          record_type: string
+          records_added: number
+          records_found: number
+          started_at: string
+          state: string
+          status: string
+        }
+        Insert: {
+          county: string
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          fips: string
+          id?: string
+          record_type: string
+          records_added?: number
+          records_found?: number
+          started_at?: string
+          state: string
+          status?: string
+        }
+        Update: {
+          county?: string
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          fips?: string
+          id?: string
+          record_type?: string
+          records_added?: number
+          records_found?: number
+          started_at?: string
+          state?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      distress_records: {
+        Row: {
+          amount: number | null
+          auction_date: string | null
+          company_entity: string | null
+          county: string
+          created_at: string
+          doc_number: string
+          filed_date: string | null
+          fips: string
+          id: string
+          mailing_address: string | null
+          mailing_city: string | null
+          mailing_state: string | null
+          mailing_zip: string | null
+          owner_first: string | null
+          owner_last: string | null
+          parcel_apn: string | null
+          property_address: string | null
+          property_city: string | null
+          property_state: string | null
+          property_zip: string | null
+          pulled_date: string
+          raw: Json
+          record_type: string
+          source_url: string | null
+          state: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          auction_date?: string | null
+          company_entity?: string | null
+          county: string
+          created_at?: string
+          doc_number: string
+          filed_date?: string | null
+          fips: string
+          id?: string
+          mailing_address?: string | null
+          mailing_city?: string | null
+          mailing_state?: string | null
+          mailing_zip?: string | null
+          owner_first?: string | null
+          owner_last?: string | null
+          parcel_apn?: string | null
+          property_address?: string | null
+          property_city?: string | null
+          property_state?: string | null
+          property_zip?: string | null
+          pulled_date?: string
+          raw?: Json
+          record_type: string
+          source_url?: string | null
+          state: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          auction_date?: string | null
+          company_entity?: string | null
+          county?: string
+          created_at?: string
+          doc_number?: string
+          filed_date?: string | null
+          fips?: string
+          id?: string
+          mailing_address?: string | null
+          mailing_city?: string | null
+          mailing_state?: string | null
+          mailing_zip?: string | null
+          owner_first?: string | null
+          owner_last?: string | null
+          parcel_apn?: string | null
+          property_address?: string | null
+          property_city?: string | null
+          property_state?: string | null
+          property_zip?: string | null
+          pulled_date?: string
+          raw?: Json
+          record_type?: string
+          source_url?: string | null
+          state?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string
@@ -3021,6 +3240,57 @@ export type Database = {
       claim_cron_tick: {
         Args: { _key: string; _min_interval?: string }
         Returns: boolean
+      }
+      distress_county_preview: {
+        Args: { _county: string; _limit?: number; _state: string }
+        Returns: {
+          amount: number
+          filed_date: string
+          owner_masked: string
+          property_city: string
+          property_zip: string
+          record_type: string
+          status: string
+        }[]
+      }
+      distress_county_summary: {
+        Args: { _state: string }
+        Returns: {
+          county: string
+          fips: string
+          last_pull_at: string
+          new_this_week: number
+          record_types: string[]
+          total_records: number
+        }[]
+      }
+      distress_feed_totals: {
+        Args: never
+        Returns: {
+          added_this_week: number
+          counties: number
+          last_pull_at: string
+          states: number
+          total_records: number
+        }[]
+      }
+      distress_state_summary: {
+        Args: never
+        Returns: {
+          counties: number
+          last_pull_at: string
+          new_this_week: number
+          state: string
+          total_records: number
+        }[]
+      }
+      distress_top_counties: {
+        Args: { _limit?: number }
+        Returns: {
+          county: string
+          state: string
+          total_records: number
+        }[]
       }
       has_role: {
         Args: {
