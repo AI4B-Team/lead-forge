@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { getFeedCounties } from "@/lib/distress-feed.functions";
-import { countySlug, formatDate } from "@/lib/distress-feed.shared";
+import { countySlug, formatDate, type FeedCountyRow } from "@/lib/distress-feed.shared";
 import { US_STATES } from "@/lib/us-geo";
 
 export const Route = createFileRoute("/distress-feed/counties/$state/")({
@@ -83,7 +83,7 @@ function StateCounties() {
         </p>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
-          {counties.map((c) => (
+          {counties.map((c: FeedCountyRow) => (
             <Link
               key={c.county}
               to="/distress-feed/counties/$state/$county"

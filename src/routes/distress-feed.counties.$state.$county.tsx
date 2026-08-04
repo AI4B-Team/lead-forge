@@ -6,6 +6,7 @@ import { getCountyPage } from "@/lib/distress-feed.functions";
 import {
   countyDescription, countySlug, countyFromSlug, countyTitle, formatAmount, formatDate,
   recordTypeById, recordTypeLabel, RECORD_TYPES,
+  type FeedPreviewRow, type FeedCountyRow, type FeedGuideRow,
 } from "@/lib/distress-feed.shared";
 import { US_STATES } from "@/lib/us-geo";
 
@@ -123,7 +124,7 @@ function CountyPage() {
 
         {available.length ? (
           <div className="mt-6 flex flex-wrap gap-2">
-            {available.map((t) => (
+            {available.map((t: string) => (
               <span
                 key={t}
                 className="rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-medium text-muted-foreground"
@@ -150,7 +151,7 @@ function CountyPage() {
                 </tr>
               </thead>
               <tbody className="font-mono text-xs">
-                {preview.map((r, i) => (
+                {preview.map((r: FeedPreviewRow, i: number) => (
                   <tr key={i} className="border-t border-border">
                     <td className="px-5 py-2 text-foreground">{recordTypeLabel(r.record_type)}</td>
                     <td className="px-5 py-2 text-muted-foreground">{formatDate(r.filed_date)}</td>
@@ -188,7 +189,7 @@ function CountyPage() {
               How To Pull These Records Yourself
             </h2>
             <ul className="mt-4 space-y-2 text-sm">
-              {guides.map((g) => (
+              {guides.map((g: FeedGuideRow) => (
                 <li key={g.record_type}>
                   <Link
                     to="/distress-feed/guides/$state/$county/$recordType"
@@ -211,7 +212,7 @@ function CountyPage() {
           <section className="mt-12">
             <h2 className="font-display text-2xl font-bold text-foreground">Nearby Counties In {stateName}</h2>
             <div className="mt-4 flex flex-wrap gap-2">
-              {siblings.map((c) => (
+              {siblings.map((c: FeedCountyRow) => (
                 <Link
                   key={c.county}
                   to="/distress-feed/counties/$state/$county"

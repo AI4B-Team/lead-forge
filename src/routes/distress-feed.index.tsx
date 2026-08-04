@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getFeedLanding } from "@/lib/distress-feed.functions";
 import {
   RECORD_TYPES, countyPath, statePath, formatDate, formatAmount, recordTypeLabel, FEED_PATH,
+  type FeedPreviewRow, type FeedStateRow,
 } from "@/lib/distress-feed.shared";
 
 export const Route = createFileRoute("/distress-feed/")({
@@ -106,7 +107,7 @@ function DistressFeedLanding() {
                 </tr>
               </thead>
               <tbody className="font-mono text-xs">
-                {sample.map((r, i) => (
+                {sample.map((r: FeedPreviewRow, i: number) => (
                   <tr key={i} className="border-t border-border">
                     <td className="px-5 py-2 text-foreground">{recordTypeLabel(r.record_type)}</td>
                     <td className="px-5 py-2 text-muted-foreground">{formatDate(r.filed_date)}</td>
@@ -248,7 +249,7 @@ function DistressFeedLanding() {
           <div>
             <h3 className="font-display font-bold text-foreground">Browse Coverage By State</h3>
             <ul className="mt-3 space-y-1.5 text-sm">
-              {states.map((s) => (
+              {states.map((s: FeedStateRow) => (
                 <li key={s.state}>
                   <Link to={statePath(s.state)} className="text-muted-foreground hover:text-primary">
                     {s.state} — {s.counties} counties
@@ -266,7 +267,7 @@ function DistressFeedLanding() {
             <h3 className="font-display font-bold text-foreground">Popular Counties</h3>
             <ul className="mt-3 space-y-1.5 text-sm">
               {top.length ? (
-                top.map((c) => (
+                top.map((c: { state: string; county: string; total_records: number }) => (
                   <li key={`${c.state}-${c.county}`}>
                     <Link to={countyPath(c.state, c.county)} className="text-muted-foreground hover:text-primary">
                       {c.county} County, {c.state}

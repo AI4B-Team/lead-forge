@@ -4,7 +4,7 @@ import { Search, ArrowRight } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { Input } from "@/components/ui/input";
 import { getFeedStates } from "@/lib/distress-feed.functions";
-import { formatDate } from "@/lib/distress-feed.shared";
+import { formatDate, type FeedStateRow } from "@/lib/distress-feed.shared";
 
 export const Route = createFileRoute("/distress-feed/counties/")({
   loader: () => getFeedStates(),
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/distress-feed/counties/")({
 function CountiesIndex() {
   const { states } = Route.useLoaderData();
   const [q, setQ] = useState("");
-  const filtered = states.filter((s) => s.state.toLowerCase().includes(q.trim().toLowerCase()));
+  const filtered = states.filter((s: FeedStateRow) => s.state.toLowerCase().includes(q.trim().toLowerCase()));
 
   return (
     <MarketingLayout>
@@ -54,7 +54,7 @@ function CountiesIndex() {
         </div>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
-          {filtered.map((s) => (
+          {filtered.map((s: FeedStateRow) => (
             <Link
               key={s.state}
               to="/distress-feed/counties/$state"

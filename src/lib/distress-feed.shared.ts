@@ -112,3 +112,42 @@ export function formatAmount(value: number | null | undefined): string {
   if (value == null) return "—";
   return `$${Math.round(value).toLocaleString()}`;
 }
+
+/** Row shapes returned by the public feed reads (kept here so route files can
+ * annotate loader data without importing a server-only module). */
+export type FeedPreviewRow = {
+  record_type: string;
+  filed_date: string | null;
+  owner_masked: string;
+  property_city: string | null;
+  property_zip: string | null;
+  amount: number | null;
+  status: string | null;
+};
+export type FeedStateRow = {
+  state: string;
+  counties: number;
+  total_records: number;
+  new_this_week: number;
+  last_pull_at: string | null;
+};
+export type FeedCountyRow = {
+  county: string;
+  fips: string | null;
+  total_records: number;
+  new_this_week: number;
+  record_types: string[];
+  last_pull_at: string | null;
+};
+export type FeedGuideRow = {
+  fips: string;
+  state: string;
+  county: string;
+  record_type: string;
+  title: string | null;
+  portal_url: string;
+  intro: string | null;
+  steps: Array<{ heading?: string; body: string }>;
+  fields: string[];
+  notes: string | null;
+};

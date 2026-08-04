@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { getGuideIndex } from "@/lib/distress-feed.functions";
-import { countySlug, recordTypeById, recordTypeLabel } from "@/lib/distress-feed.shared";
+import { countySlug, recordTypeById, recordTypeLabel, type FeedGuideRow } from "@/lib/distress-feed.shared";
 
 export const Route = createFileRoute("/distress-feed/guides/")({
   loader: () => getGuideIndex({ data: {} }),
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/distress-feed/guides/")({
 
 function GuidesIndex() {
   const { guides } = Route.useLoaderData();
-  const states = [...new Set(guides.map((g) => g.state))];
+  const states = [...new Set(guides.map((g: FeedGuideRow) => g.state))];
   return (
     <MarketingLayout>
       <div className="mx-auto max-w-4xl px-6 py-14">
@@ -38,7 +38,7 @@ function GuidesIndex() {
           or let the Distress Feed do it every morning.
         </p>
 
-        {states.map((st) => (
+        {states.map((st: string) => (
           <section key={st} className="mt-10">
             <h2 className="font-display text-2xl font-bold text-foreground">
               <Link to="/distress-feed/guides/$state" params={{ state: st.toLowerCase() }} className="hover:text-primary">
@@ -47,8 +47,8 @@ function GuidesIndex() {
             </h2>
             <ul className="mt-3 space-y-2 text-sm">
               {guides
-                .filter((g) => g.state === st)
-                .map((g) => (
+                .filter((g: FeedGuideRow) => g.state === st)
+                .map((g: FeedGuideRow) => (
                   <li key={`${g.county}-${g.record_type}`}>
                     <Link
                       to="/distress-feed/guides/$state/$county/$recordType"

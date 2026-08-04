@@ -53,7 +53,7 @@ export const Route = createFileRoute("/distress-feed/guides/$state/$county/$reco
             name: title,
             description,
             tool: [{ "@type": "HowToTool", name: guide.portal_url }],
-            step: guide.steps.map((s, i) => ({
+            step: guide.steps.map((s: { heading?: string; body: string }, i: number) => ({
               "@type": "HowToStep",
               position: i + 1,
               name: s.heading ?? `Step ${i + 1}`,
@@ -107,7 +107,7 @@ function GuideDetail() {
         </a>
 
         <ol className="mt-10 space-y-6">
-          {guide.steps.map((s, i) => (
+          {guide.steps.map((s: { heading?: string; body: string }, i: number) => (
             <li key={i} className="flex gap-4">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 font-mono text-sm font-bold text-primary">
                 {i + 1}
@@ -124,7 +124,7 @@ function GuideDetail() {
           <section className="mt-10">
             <h2 className="font-display text-2xl font-bold text-foreground">Fields You'll Get</h2>
             <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-              {guide.fields.map((f) => (
+              {guide.fields.map((f: string) => (
                 <li key={f} className="rounded-xl border border-border bg-surface px-4 py-2 text-sm text-muted-foreground">
                   {f}
                 </li>

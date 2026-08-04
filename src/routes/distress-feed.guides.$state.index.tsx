@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { getGuideIndex } from "@/lib/distress-feed.functions";
-import { countySlug, recordTypeById, recordTypeLabel } from "@/lib/distress-feed.shared";
+import { countySlug, recordTypeById, recordTypeLabel, type FeedGuideRow } from "@/lib/distress-feed.shared";
 import { US_STATES } from "@/lib/us-geo";
 
 export const Route = createFileRoute("/distress-feed/guides/$state/")({
@@ -53,7 +53,7 @@ function StateGuides() {
         </nav>
         <h1 className="mt-4 font-display text-4xl font-bold text-foreground">{stateName} County Records Guides</h1>
         <ul className="mt-8 space-y-2 text-sm">
-          {guides.map((g) => (
+          {guides.map((g: FeedGuideRow) => (
             <li key={`${g.county}-${g.record_type}`}>
               <Link
                 to="/distress-feed/guides/$state/$county/$recordType"
