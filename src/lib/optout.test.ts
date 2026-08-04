@@ -62,4 +62,15 @@ describe("send gate fails closed on scrub status", () => {
       expect(gate.ok).toBe(true);
     }
   });
+
+  it("blocks every path for records with no verified provenance", async () => {
+    for (const provenance of ["mock_legacy", "unknown"]) {
+      const db = makeDb({ phone: "+15551234567", scrub_status: "clean", data_provenance: provenance });
+      for (const source of ["inbox", "bot:c1", "campaign:c1", "cadence"]) {
+        const gate = await checkCanText(db, { ...target, source });
+        expect(gate.ok).toBe(false);
+        expect(gate.ok === false && gate.reason).toBe("unverified_source");
+      }
+    }
+  });
 });
