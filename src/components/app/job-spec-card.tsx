@@ -319,6 +319,19 @@ export function JobSpecCard({
   });
   const verified = coverageQ.data?.coverage ?? [];
   const recordTypeNow = spec.recordType ?? null;
+  // The Record Type picker reads coverage through the SAME helpers as the
+  // server gate, scoped to the counties currently selected. A label can never
+  // say "available" for a pair assertJobCoverage would refuse.
+  const scopeLabel = (() => {
+    const list = spec.counties;
+    if (!list.length) return null;
+    return list.length <= 2 ? list.join(" and ") : `${list.slice(0, 2).join(", ")} and ${list.length - 2} more`;
+  })();
+  const recordTypeAvailable = (label: string) => {
+    if (coverageQ.isPending) return true;
+    if (spec.counties.length) return spec.counties.some((c) => isCovered(verified, c, label));
+    return recordTypeCovered(verified, label);
+  };
   const countyVerified = (label: string) => {
     const { county, state } = splitCountyLabel(label);
     return verified.some(
