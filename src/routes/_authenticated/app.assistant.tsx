@@ -1096,6 +1096,18 @@ function Assistant() {
         </div>
       )}
 
+      {/* The Free plan boundary, shown only when this exact run needs a card. */}
+      {spec.sourceType && (
+        <FreeTierNotice
+          plan={plan}
+          action={{
+            templateId: spec.templateId,
+            creditCostPerLead: activeTemplate ? creditCostPerLead(activeTemplate) : 0,
+            skipTrace: spec.skipTrace,
+          }}
+        />
+      )}
+
       {adapterLive ? (
         <>
           <Button
