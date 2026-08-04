@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner";
 import {
   Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal,
-  Paperclip, Mic, Send, BellPlus, Loader2, Check,
+  Paperclip, Mic, Send, BellPlus, Loader2, Check, CreditCard,
 } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { useCreditBalances } from "@/hooks/use-credit-balances";
