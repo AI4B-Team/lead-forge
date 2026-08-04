@@ -2,45 +2,8 @@ import type { BusinessScraper, BusinessScrapeParams, RawLead } from "./index";
 
 // Apify Google Maps scraper adapter. Reads APIFY_TOKEN (and optional
 // APIFY_GMAPS_ACTOR override) at call time from process.env — never at module
-// scope. Real failures propagate to the pipeline's failure path; mock data only
-// ever runs when LEADTRACE_USE_MOCK_DATA === 'true'.
-
-const FRANCHISE_MARKERS = ["ServPro", "Roto-Rooter", "Mr Rooter", "Aire Serv"];
-const LAST_NAMES = ["Nguyen", "Patel", "Garcia", "Smith", "Johnson", "Lopez", "Kim", "Davis", "Martinez", "Chen"];
-function pick<T>(arr: T[], i: number) { return arr[i % arr.length]!; }
-function fakePhone(i: number) {
-  const area = 813 + (i % 5);
-  const mid = 200 + (i % 799);
-  const last = 1000 + (i * 37) % 8999;
-  return `+1${area}${mid}${last}`;
-}
-
-async function mockScrape(params: BusinessScrapeParams): Promise<RawLead[]> {
-  const rows: RawLead[] = [];
-  let i = 0;
-  const targetCounties = params.counties.length ? params.counties : ["Hillsborough", "Pasco", "Pinellas"];
-  const niches = params.niches.length ? params.niches : ["HVAC"];
-  for (const niche of niches) {
-    for (const county of targetCounties) {
-      const count = 60 + ((niche.length * county.length) % 40);
-      for (let n = 0; n < count; n++) {
-        const isFranchise = n % 17 === 0;
-        const nameBase = isFranchise ? pick(FRANCHISE_MARKERS, n) : `${pick(LAST_NAMES, n + i)} ${niche}`;
-        rows.push({
-          business_name: `${nameBase} · ${county}`,
-          phone: fakePhone(i),
-          email: `contact${i}@example.com`,
-          city: county,
-          state: params.state,
-          // Mock rows are always stamped so results UI can flag them.
-          source_meta: { niche, county, franchise: isFranchise, provider: "mock", sample_data: true },
-        });
-        i++;
-      }
-    }
-  }
-  return rows;
-}
+// scope. Real failures propagate to the pipeline's failure path. There is no
+// mock path: an unconfigured or failing scraper surfaces as an error.
 
 const APIFY_BASE = "https://api.apify.com/v2";
 const POLL_TIMEOUT_MS = 20 * 60 * 1000;
@@ -242,10 +205,6 @@ async function apifyScrape(
   });
 }
 
-export function useMockData(): boolean {
-  return process.env.LEADTRACE_USE_MOCK_DATA === "true";
-}
-
 export function getBusinessScraper(): BusinessScraper {
   return {
     key: "apify.gmaps",
@@ -255,7 +214,6 @@ export function getBusinessScraper(): BusinessScraper {
     async scrape(params) {
       const token = process.env.APIFY_TOKEN;
       if (!token) {
-        if (useMockData()) return mockScrape(params);
         throw new Error("Apify is not connected. Add credentials in Settings → Integrations.");
       }
       const actor = process.env.APIFY_GMAPS_ACTOR ?? "compass~crawler-google-places";

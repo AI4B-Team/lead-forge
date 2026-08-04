@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { listSourceDemand, listSourceRequesters } from "@/lib/admin.functions";
+import { getCoverageMatrix } from "@/lib/coverage.functions";
 import { FREQUENCY_LABEL, LOGIN_LABEL } from "@/lib/source-request.shared";
 
 export const Route = createFileRoute("/_authenticated/platform/sources")({
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/_authenticated/platform/sources")({
 function SourceRequestsPage() {
   const fetchDemand = useServerFn(listSourceDemand);
   const fetchRequesters = useServerFn(listSourceRequesters);
+  const fetchMatrix = useServerFn(getCoverageMatrix);
   const [openKey, setOpenKey] = useState<string | null>(null);
 
   const demandQ = useQuery({
@@ -48,6 +50,10 @@ function SourceRequestsPage() {
   });
 
   const rows = demandQ.data?.demand ?? [];
+  const matrixQ = useQuery({ queryKey: ["admin-coverage-matrix"], queryFn: () => fetchMatrix() });
+  const matrix = matrixQ.data;
+  const cellFor = (state: string, recordType: string) =>
+    matrix?.cells.find((c) => c.state === state && c.record_type === recordType);
 
   return (
     <div className="mx-auto max-w-[1400px]">
@@ -57,6 +63,70 @@ function SourceRequestsPage() {
       />
 
       <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base font-display">
+            <Layers className="h-4 w-4 text-primary" /> Coverage Matrix
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          {matrixQ.isLoading ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              <Loader2 className="mr-1 inline h-4 w-4 animate-spin" /> Loading…
+            </div>
+          ) : !matrix || matrix.states.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              No verified coverage recorded yet.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>State</TableHead>
+                  {matrix.recordTypes.map((t) => (
+                    <TableHead key={t} className="whitespace-nowrap text-xs">
+                      {t}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {matrix.states.map((s) => (
+                  <TableRow key={s}>
+                    <TableCell className="font-medium">{s}</TableCell>
+                    {matrix.recordTypes.map((t) => {
+                      const cell = cellFor(s, t);
+                      return (
+                        <TableCell key={t} className="text-xs tabular-nums">
+                          {cell ? (
+                            <>
+                              <span
+                                className={
+                                  cell.verified_counties > 0 ? "text-foreground" : "text-muted-foreground"
+                                }
+                              >
+                                {cell.verified_counties} / {cell.total_counties}
+                              </span>
+                              <div className="text-[10px] text-muted-foreground">
+                                {cell.last_success_at
+                                  ? new Date(cell.last_success_at).toLocaleDateString()
+                                  : "no pull yet"}
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base font-display">
             <Layers className="h-4 w-4 text-primary" /> Requested Sources

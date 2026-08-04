@@ -18,12 +18,18 @@ export function CountyMultiSelect({
   onChange,
   renderBadgeClassName,
   renderBadgeLabel,
+  isCovered,
 }: {
   states: string[];
   value: string[];
   onChange: (next: string[]) => void;
   renderBadgeClassName?: (county: string) => string;
   renderBadgeLabel?: (county: string) => string;
+  /**
+   * Coverage verdict per county label. Uncovered counties stay selectable so the
+   * request flow still captures demand — they are only marked, never blocked.
+   */
+  isCovered?: (countyLabel: string) => boolean;
 }) {
   const [open, setOpen] = useState(false);
   const groups = useMemo(
@@ -79,7 +85,21 @@ export function CountyMultiSelect({
                         onSelect={() => toggle(county, g.state)}
                       >
                         <Check className={`mr-2 h-4 w-4 ${isSelected(county, g.state) ? "opacity-100" : "opacity-0"}`} />
-                        {county}
+                        {(() => {
+                          const covered = isCovered?.(formatCounty(county, g.state)) ?? true;
+                          return (
+                            <span
+                              className={`flex flex-1 items-center justify-between gap-2 ${covered ? "" : "opacity-50"}`}
+                            >
+                              {county}
+                              {!covered && (
+                                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                                  No Coverage
+                                </span>
+                              )}
+                            </span>
+                          );
+                        })()}
                       </CommandItem>
                     ))}
                   </CommandGroup>

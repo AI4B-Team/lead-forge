@@ -2738,6 +2738,59 @@ export type Database = {
           },
         ]
       }
+      source_coverage: {
+        Row: {
+          county_name: string | null
+          created_at: string
+          fips: string
+          id: string
+          last_success_at: string | null
+          record_type: string
+          sample_row_count: number | null
+          source_id: string | null
+          state: string
+          status: string
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          county_name?: string | null
+          created_at?: string
+          fips: string
+          id?: string
+          last_success_at?: string | null
+          record_type: string
+          sample_row_count?: number | null
+          source_id?: string | null
+          state: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          county_name?: string | null
+          created_at?: string
+          fips?: string
+          id?: string
+          last_success_at?: string | null
+          record_type?: string
+          sample_row_count?: number | null
+          source_id?: string | null
+          state?: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_coverage_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppression: {
         Row: {
           created_at: string
@@ -3157,6 +3210,7 @@ export type Database = {
           free_records_used: number
           id: string
           industry: string | null
+          is_demo_workspace: boolean
           monthly_sms_cap: number | null
           name: string
           negative_keywords: string[]
@@ -3172,6 +3226,7 @@ export type Database = {
           free_records_used?: number
           id?: string
           industry?: string | null
+          is_demo_workspace?: boolean
           monthly_sms_cap?: number | null
           name: string
           negative_keywords?: string[]
@@ -3187,6 +3242,7 @@ export type Database = {
           free_records_used?: number
           id?: string
           industry?: string | null
+          is_demo_workspace?: boolean
           monthly_sms_cap?: number | null
           name?: string
           negative_keywords?: string[]
