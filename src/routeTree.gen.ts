@@ -49,6 +49,7 @@ import { Route as LeadsSlugRouteImport } from './routes/leads.$slug'
 import { Route as AuthHubRouteImport } from './routes/auth.hub'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as DistressFeedGuidesIndexRouteImport } from './routes/distress-feed.guides.index'
 import { Route as DistressFeedCountiesIndexRouteImport } from './routes/distress-feed.counties.index'
 import { Route as AuthenticatedPlatformIndexRouteImport } from './routes/_authenticated/platform.index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
@@ -75,6 +76,7 @@ import { Route as AuthenticatedAppAssistantRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppApiRouteImport } from './routes/_authenticated/app.api'
 import { Route as AuthenticatedAppAgentRouteImport } from './routes/_authenticated/app.agent'
 import { Route as AuthenticatedAppAccountRouteImport } from './routes/_authenticated/app.account'
+import { Route as DistressFeedGuidesStateIndexRouteImport } from './routes/distress-feed.guides.$state.index'
 import { Route as DistressFeedCountiesStateIndexRouteImport } from './routes/distress-feed.counties.$state.index'
 import { Route as AuthenticatedAppNewListIndexRouteImport } from './routes/_authenticated/app.new-list.index'
 import { Route as AuthenticatedAppNewJobIndexRouteImport } from './routes/_authenticated/app.new-job.index'
@@ -100,6 +102,7 @@ import { Route as AuthenticatedAppListsListIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppJobsSplatRouteImport } from './routes/_authenticated/app.jobs.$'
 import { Route as AuthenticatedAppCampaignsNewRouteImport } from './routes/_authenticated/app.campaigns.new'
 import { Route as AuthenticatedAppCampaignsCampaignIdRouteImport } from './routes/_authenticated/app.campaigns.$campaignId'
+import { Route as DistressFeedGuidesStateCountyRecordTypeRouteImport } from './routes/distress-feed.guides.$state.$county.$recordType'
 import { Route as ApiPublicV1JobsJobIdRouteImport } from './routes/api/public/v1/jobs.$jobId'
 
 const TutorialsRoute = TutorialsRouteImport.update({
@@ -301,6 +304,11 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const DistressFeedGuidesIndexRoute = DistressFeedGuidesIndexRouteImport.update({
+  id: '/distress-feed/guides/',
+  path: '/distress-feed/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DistressFeedCountiesIndexRoute =
   DistressFeedCountiesIndexRouteImport.update({
     id: '/distress-feed/counties/',
@@ -446,6 +454,12 @@ const AuthenticatedAppAccountRoute = AuthenticatedAppAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const DistressFeedGuidesStateIndexRoute =
+  DistressFeedGuidesStateIndexRouteImport.update({
+    id: '/distress-feed/guides/$state/',
+    path: '/distress-feed/guides/$state/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DistressFeedCountiesStateIndexRoute =
   DistressFeedCountiesStateIndexRouteImport.update({
     id: '/distress-feed/counties/$state/',
@@ -590,6 +604,12 @@ const AuthenticatedAppCampaignsCampaignIdRoute =
     path: '/campaigns/$campaignId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const DistressFeedGuidesStateCountyRecordTypeRoute =
+  DistressFeedGuidesStateCountyRecordTypeRouteImport.update({
+    id: '/distress-feed/guides/$state/$county/$recordType',
+    path: '/distress-feed/guides/$state/$county/$recordType',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1JobsJobIdRoute = ApiPublicV1JobsJobIdRouteImport.update({
   id: '/$jobId',
   path: '/$jobId',
@@ -662,6 +682,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AuthenticatedAppIndexRoute
   '/platform/': typeof AuthenticatedPlatformIndexRoute
   '/distress-feed/counties/': typeof DistressFeedCountiesIndexRoute
+  '/distress-feed/guides/': typeof DistressFeedGuidesIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
@@ -687,7 +708,9 @@ export interface FileRoutesByFullPath {
   '/app/new-job/': typeof AuthenticatedAppNewJobIndexRoute
   '/app/new-list/': typeof AuthenticatedAppNewListIndexRoute
   '/distress-feed/counties/$state/': typeof DistressFeedCountiesStateIndexRoute
+  '/distress-feed/guides/$state/': typeof DistressFeedGuidesStateIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
+  '/distress-feed/guides/$state/$county/$recordType': typeof DistressFeedGuidesStateCountyRecordTypeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -753,6 +776,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppIndexRoute
   '/platform': typeof AuthenticatedPlatformIndexRoute
   '/distress-feed/counties': typeof DistressFeedCountiesIndexRoute
+  '/distress-feed/guides': typeof DistressFeedGuidesIndexRoute
   '/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
@@ -778,7 +802,9 @@ export interface FileRoutesByTo {
   '/app/new-job': typeof AuthenticatedAppNewJobIndexRoute
   '/app/new-list': typeof AuthenticatedAppNewListIndexRoute
   '/distress-feed/counties/$state': typeof DistressFeedCountiesStateIndexRoute
+  '/distress-feed/guides/$state': typeof DistressFeedGuidesStateIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
+  '/distress-feed/guides/$state/$county/$recordType': typeof DistressFeedGuidesStateCountyRecordTypeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -848,6 +874,7 @@ export interface FileRoutesById {
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/platform/': typeof AuthenticatedPlatformIndexRoute
   '/distress-feed/counties/': typeof DistressFeedCountiesIndexRoute
+  '/distress-feed/guides/': typeof DistressFeedGuidesIndexRoute
   '/_authenticated/app/campaigns/$campaignId': typeof AuthenticatedAppCampaignsCampaignIdRoute
   '/_authenticated/app/campaigns/new': typeof AuthenticatedAppCampaignsNewRoute
   '/_authenticated/app/jobs/$': typeof AuthenticatedAppJobsSplatRoute
@@ -873,7 +900,9 @@ export interface FileRoutesById {
   '/_authenticated/app/new-job/': typeof AuthenticatedAppNewJobIndexRoute
   '/_authenticated/app/new-list/': typeof AuthenticatedAppNewListIndexRoute
   '/distress-feed/counties/$state/': typeof DistressFeedCountiesStateIndexRoute
+  '/distress-feed/guides/$state/': typeof DistressFeedGuidesStateIndexRoute
   '/api/public/v1/jobs/$jobId': typeof ApiPublicV1JobsJobIdRoute
+  '/distress-feed/guides/$state/$county/$recordType': typeof DistressFeedGuidesStateCountyRecordTypeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -943,6 +972,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/platform/'
     | '/distress-feed/counties/'
+    | '/distress-feed/guides/'
     | '/app/campaigns/$campaignId'
     | '/app/campaigns/new'
     | '/app/jobs/$'
@@ -968,7 +998,9 @@ export interface FileRouteTypes {
     | '/app/new-job/'
     | '/app/new-list/'
     | '/distress-feed/counties/$state/'
+    | '/distress-feed/guides/$state/'
     | '/api/public/v1/jobs/$jobId'
+    | '/distress-feed/guides/$state/$county/$recordType'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1034,6 +1066,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/platform'
     | '/distress-feed/counties'
+    | '/distress-feed/guides'
     | '/app/campaigns/$campaignId'
     | '/app/campaigns/new'
     | '/app/jobs/$'
@@ -1059,7 +1092,9 @@ export interface FileRouteTypes {
     | '/app/new-job'
     | '/app/new-list'
     | '/distress-feed/counties/$state'
+    | '/distress-feed/guides/$state'
     | '/api/public/v1/jobs/$jobId'
+    | '/distress-feed/guides/$state/$county/$recordType'
   id:
     | '__root__'
     | '/'
@@ -1128,6 +1163,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/'
     | '/_authenticated/platform/'
     | '/distress-feed/counties/'
+    | '/distress-feed/guides/'
     | '/_authenticated/app/campaigns/$campaignId'
     | '/_authenticated/app/campaigns/new'
     | '/_authenticated/app/jobs/$'
@@ -1153,7 +1189,9 @@ export interface FileRouteTypes {
     | '/_authenticated/app/new-job/'
     | '/_authenticated/app/new-list/'
     | '/distress-feed/counties/$state/'
+    | '/distress-feed/guides/$state/'
     | '/api/public/v1/jobs/$jobId'
+    | '/distress-feed/guides/$state/$county/$recordType'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1195,6 +1233,7 @@ export interface RootRouteChildren {
   TemplatesIndexRoute: typeof TemplatesIndexRoute
   ToolsIndexRoute: typeof ToolsIndexRoute
   DistressFeedCountiesIndexRoute: typeof DistressFeedCountiesIndexRoute
+  DistressFeedGuidesIndexRoute: typeof DistressFeedGuidesIndexRoute
   ApiPublicHooksRecordsInboundRoute: typeof ApiPublicHooksRecordsInboundRoute
   ApiPublicHooksTelnyxCallRoute: typeof ApiPublicHooksTelnyxCallRoute
   ApiPublicHooksTelnyxDlrRoute: typeof ApiPublicHooksTelnyxDlrRoute
@@ -1209,6 +1248,8 @@ export interface RootRouteChildren {
   ApiPublicV1LeadsRoute: typeof ApiPublicV1LeadsRoute
   DistressFeedCountiesStateCountyRoute: typeof DistressFeedCountiesStateCountyRoute
   DistressFeedCountiesStateIndexRoute: typeof DistressFeedCountiesStateIndexRoute
+  DistressFeedGuidesStateIndexRoute: typeof DistressFeedGuidesStateIndexRoute
+  DistressFeedGuidesStateCountyRecordTypeRoute: typeof DistressFeedGuidesStateCountyRecordTypeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1493,6 +1534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/distress-feed/guides/': {
+      id: '/distress-feed/guides/'
+      path: '/distress-feed/guides'
+      fullPath: '/distress-feed/guides/'
+      preLoaderRoute: typeof DistressFeedGuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/distress-feed/counties/': {
       id: '/distress-feed/counties/'
       path: '/distress-feed/counties'
@@ -1675,6 +1723,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAccountRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/distress-feed/guides/$state/': {
+      id: '/distress-feed/guides/$state/'
+      path: '/distress-feed/guides/$state'
+      fullPath: '/distress-feed/guides/$state/'
+      preLoaderRoute: typeof DistressFeedGuidesStateIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/distress-feed/counties/$state/': {
       id: '/distress-feed/counties/$state/'
       path: '/distress-feed/counties/$state'
@@ -1849,6 +1904,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/campaigns/$campaignId'
       preLoaderRoute: typeof AuthenticatedAppCampaignsCampaignIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/distress-feed/guides/$state/$county/$recordType': {
+      id: '/distress-feed/guides/$state/$county/$recordType'
+      path: '/distress-feed/guides/$state/$county/$recordType'
+      fullPath: '/distress-feed/guides/$state/$county/$recordType'
+      preLoaderRoute: typeof DistressFeedGuidesStateCountyRecordTypeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/v1/jobs/$jobId': {
       id: '/api/public/v1/jobs/$jobId'
@@ -2027,6 +2089,7 @@ const rootRouteChildren: RootRouteChildren = {
   TemplatesIndexRoute: TemplatesIndexRoute,
   ToolsIndexRoute: ToolsIndexRoute,
   DistressFeedCountiesIndexRoute: DistressFeedCountiesIndexRoute,
+  DistressFeedGuidesIndexRoute: DistressFeedGuidesIndexRoute,
   ApiPublicHooksRecordsInboundRoute: ApiPublicHooksRecordsInboundRoute,
   ApiPublicHooksTelnyxCallRoute: ApiPublicHooksTelnyxCallRoute,
   ApiPublicHooksTelnyxDlrRoute: ApiPublicHooksTelnyxDlrRoute,
@@ -2042,6 +2105,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV1LeadsRoute: ApiPublicV1LeadsRoute,
   DistressFeedCountiesStateCountyRoute: DistressFeedCountiesStateCountyRoute,
   DistressFeedCountiesStateIndexRoute: DistressFeedCountiesStateIndexRoute,
+  DistressFeedGuidesStateIndexRoute: DistressFeedGuidesStateIndexRoute,
+  DistressFeedGuidesStateCountyRecordTypeRoute:
+    DistressFeedGuidesStateCountyRecordTypeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
