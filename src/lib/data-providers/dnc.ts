@@ -1,9 +1,13 @@
-import type { DncScrubber, ScrubResult, ScrubStatus } from "./index";
+import { DncUnavailableError, type DncScrubber, type ScrubResult, type ScrubStatus } from "./index";
 
-// DNC + litigator scrubber abstraction. Uses RealPhoneValidation or Blacklist
-// Alliance style HTTP API when DNC_API_URL + DNC_API_KEY are configured;
-// otherwise falls back to a deterministic mock split so the pipeline still
-// runs end-to-end.
+// DNC + litigator scrubber abstraction. Uses a RealPhoneValidation or
+// Blacklist Alliance style HTTP API when DNC_API_URL + DNC_API_KEY are set.
+//
+// FAIL-CLOSED CONTRACT: if no provider is configured, or the provider errors,
+// this module THROWS. It never invents a clean/dnc split. The deterministic
+// mock exists only for local development and runs solely when
+// LEADTRACE_USE_MOCK_DATA === 'true', and every row it returns is stamped
+// sample_data so no surface can mistake it for a real scrub.
 
 function mockScrub(phones: string[]): ScrubResult {
   const results = phones.map((phone, i) => {
@@ -17,8 +21,15 @@ function mockScrub(phones: string[]): ScrubResult {
   return {
     provider: "mock-scrubber-v1",
     results,
-    proof: { note: "Mock scrub. Configure DNC_API_URL + DNC_API_KEY for real scrubbing." },
+    proof: {
+      sample_data: true,
+      note: "Development mock scrub (LEADTRACE_USE_MOCK_DATA). NOT a compliance record.",
+    },
   };
+}
+
+function useMockScrub(): boolean {
+  return process.env.LEADTRACE_USE_MOCK_DATA === "true";
 }
 
 async function httpScrub(url: string, apiKey: string, phones: string[]): Promise<ScrubResult> {
@@ -62,12 +73,28 @@ export function getDncScrubber(): DncScrubber {
     async scrub(phones) {
       const url = process.env.DNC_API_URL;
       const apiKey = process.env.DNC_API_KEY;
-      if (!url || !apiKey || phones.length === 0) return mockScrub(phones);
+      if (phones.length === 0) {
+        return {
+          provider: url ? new URL(url).hostname : "none",
+          results: [],
+          proof: { count: 0, scrubbed_at: new Date().toISOString() },
+        };
+      }
+      if (!url || !apiKey) {
+        if (useMockScrub()) return mockScrub(phones);
+        throw new DncUnavailableError(
+          "DNC and litigator scrubbing is not configured. Add DNC_API_URL and DNC_API_KEY before any list is scrubbed or sent.",
+        );
+      }
       try {
         return await httpScrub(url, apiKey, phones);
       } catch (err) {
-        console.error("[dnc] scrub failed, falling back to mock:", err);
-        return mockScrub(phones);
+        // Deliberately NO mock fallback: a scrub that did not happen must
+        // never look like a scrub that came back clean.
+        console.error("[dnc] scrub failed — failing closed:", err);
+        throw new DncUnavailableError(
+          `DNC and litigator scrubbing could not be completed: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     },
   };
