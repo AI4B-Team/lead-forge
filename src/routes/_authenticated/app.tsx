@@ -1,5 +1,5 @@
-import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -13,73 +13,90 @@ import { ProductTour, useProductTour } from "@/components/app/product-tour";
 import { CreditMenu } from "@/components/app/credit-menu";
 import { SeatGuard } from "@/components/app/seat-guard";
 import { InboxNavButton } from "@/components/app/needs-reply";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
 });
 
 function AppLayout() {
-  const tour = useProductTour();
-  const navigate = useNavigate();
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-surface-muted">
-        <SeatGuard />
-        <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center justify-between border-b border-border bg-background px-4">
-            <div className="flex items-center gap-2">
-              <div className="hidden md:block"><WorkspaceSwitcher /></div>
-            </div>
-            <TooltipProvider delayDuration={150}>
-              <div className="flex items-center gap-1">
-                {/* Credits + Build List sit together: having credits nudges using them. */}
-                <div className="mr-2 flex items-center gap-2">
-                  <CreditMenu />
-                  <Button
-                    size="sm"
-                    className="rounded-full"
-                    onClick={() => navigate({ to: "/app/assistant" })}
-                  >
-                    <Plus className="mr-1 h-3.5 w-3.5" /> Build List
-                  </Button>
-                </div>
-                <InboxNavButton />
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex"><ActivityPanel /></span>
-                  </TooltipTrigger>
-                  <TooltipContent>Activity</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex"><NotificationBell /></span>
-                  </TooltipTrigger>
-                  <TooltipContent>Notifications</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex"><HelpMenu onStartTour={tour.start} /></span>
-                  </TooltipTrigger>
-                  <TooltipContent>Help</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex ml-1.5"><ProfileDropdown /></span>
-                  </TooltipTrigger>
-                  <TooltipContent>Account</TooltipContent>
-                </Tooltip>
+      <AppLayoutInner />
+    </SidebarProvider>
+  );
+}
+
+function AppLayoutInner() {
+  const tour = useProductTour();
+  const navigate = useNavigate();
+  const { setOpen } = useSidebar();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isInbox = pathname === "/app/inbox";
+
+  // On the Conversations page every pixel counts for the three-panel layout,
+  // so we collapse the sidebar automatically when the user lands there.
+  useEffect(() => {
+    if (isInbox) setOpen(false);
+  }, [isInbox, setOpen]);
+
+  return (
+    <div className="min-h-screen flex w-full bg-surface-muted">
+      <SeatGuard />
+      <AppSidebar />
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="h-14 flex items-center justify-between border-b border-border bg-background px-4">
+          <div className="flex items-center gap-2">
+            <div className="hidden md:block"><WorkspaceSwitcher /></div>
+          </div>
+          <TooltipProvider delayDuration={150}>
+            <div className="flex items-center gap-1">
+              {/* Credits + Build List sit together: having credits nudges using them. */}
+              <div className="mr-2 flex items-center gap-2">
+                <CreditMenu />
+                <Button
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => navigate({ to: "/app/assistant" })}
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" /> Build List
+                </Button>
               </div>
-            </TooltipProvider>
-          </header>
-          <main className="flex-1 overflow-auto">
-            <div className="app-density p-6 md:p-8">
-              <Outlet />
+              <InboxNavButton />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex"><ActivityPanel /></span>
+                </TooltipTrigger>
+                <TooltipContent>Activity</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex"><NotificationBell /></span>
+                </TooltipTrigger>
+                <TooltipContent>Notifications</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex"><HelpMenu onStartTour={tour.start} /></span>
+                </TooltipTrigger>
+                <TooltipContent>Help</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex ml-1.5"><ProfileDropdown /></span>
+                </TooltipTrigger>
+                <TooltipContent>Account</TooltipContent>
+              </Tooltip>
             </div>
-          </main>
-        </div>
+          </TooltipProvider>
+        </header>
+        <main className="flex-1 overflow-auto">
+          <div className="app-density p-6 md:p-8">
+            <Outlet />
+          </div>
+        </main>
       </div>
       <ProductTour open={tour.open} onClose={tour.close} />
-    </SidebarProvider>
+    </div>
   );
 }
