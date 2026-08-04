@@ -222,13 +222,15 @@ async function refundRunsSinceHealthy(templateId: string, lastHealthyAt: string 
     });
     if (amount <= 0) continue;
     count += 1;
-    await supabaseAdmin.from("notifications").insert({
-      workspace_id: job.workspace_id,
-      kind: "credits_refunded",
-      title: "Credits Refunded",
-      body: `A source we rely on stopped returning data, so we refunded ${amount.toLocaleString()} credits from this list.`,
-      job_id: job.id,
-    } as never);
+    // Proactive: we caught it before they did, and the copy should say so.
+    const { notifyRefund } = await import("@/lib/refunds.server");
+    await notifyRefund(supabaseAdmin, {
+      workspaceId: job.workspace_id,
+      amount,
+      reason: "refund:template_broken",
+      jobId: job.id,
+      proactive: true,
+    });
   }
   return count;
 }

@@ -226,10 +226,34 @@ export const getJobReview = createServerFn({ method: "GET" })
     // Credits burned by this job (ledger debits are negative deltas).
     const { data: ledger } = await supabase
       .from("credit_ledger")
-      .select("delta")
+      .select("delta, reason")
       .eq("job_id", data.jobId);
     const creditsUsed = (ledger ?? []).reduce(
       (sum, row) => sum + Math.max(0, -(row.delta ?? 0)),
+      0,
+    );
+
+    // Refunds this run made, split by class. Source failures are announced
+    // separately; per-record skips only ever show up as this roll-up line.
+    const { refundClassOf } = await import("@/lib/refunds.shared");
+    const refunds = { source: 0, skipped: 0 };
+    for (const row of (ledger ?? []) as Array<{ delta: number | null; reason: string | null }>) {
+      const amount = Math.max(0, row.delta ?? 0);
+      if (amount <= 0) continue;
+      const cls = refundClassOf(row.reason);
+      if (cls === "source") refunds.source += amount;
+      else if (cls === "skip") refunds.skipped += amount;
+    }
+
+    // Records the source couldn't check — normal on most runs, never charged.
+    // The pipeline logs these as a single `skipped` event per run.
+    const { data: skipEvents } = await supabase
+      .from("job_events")
+      .select("count")
+      .eq("job_id", data.jobId)
+      .eq("stage", "skipped");
+    const skippedRecords = (skipEvents ?? []).reduce(
+      (sum, e) => sum + ((e as { count: number | null }).count ?? 0),
       0,
     );
 
@@ -284,6 +308,8 @@ export const getJobReview = createServerFn({ method: "GET" })
       counts: { total: t, clean: clean ?? 0, dnc: dnc ?? 0, litigator: litigator ?? 0, mobile: mobile ?? 0 },
       quality,
       creditsUsed,
+      refunds,
+      skippedRecords,
       messageTemplates,
       scrubFreshness: {
         scrubbedAt: scrub?.created_at ?? null,

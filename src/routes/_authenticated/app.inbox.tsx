@@ -60,33 +60,37 @@ export const Route = createFileRoute("/_authenticated/app/inbox")({
   component: ConversationsPage,
 });
 
-type Filter = "all" | "needs_reply" | "interested" | "appointments" | "ai" | "unread" | "optouts";
+type Filter =
+  | "all"
+  | "needs_reply"
+  | "interested"
+  | "appointments"
+  | "ai"
+  | "unread"
+  | "optouts"
+  | "starred"
+  | "archived";
 
+/**
+ * Tab order is deliberate — it walks from "what needs me right now" to
+ * "everything": Unread · Needs Reply · Starred · Archived · All.
+ */
 const PRIMARY_FILTERS: Array<{ key: Filter; label: string; short: string }> = [
-  { key: "all", label: "All", short: "All" },
+  { key: "unread", label: "Unread", short: "Unread" },
   { key: "needs_reply", label: "Needs Reply", short: "Replies" },
-  { key: "interested", label: "Interested", short: "Interest" },
-  { key: "appointments", label: "Appointments", short: "Appts" },
+  { key: "starred", label: "Starred", short: "Starred" },
+  { key: "archived", label: "Archived", short: "Archive" },
+  { key: "all", label: "All", short: "All" },
 ];
 
-const OVERFLOW_FILTERS: Array<{ key: Filter | "archive"; label: string }> = [
+const OVERFLOW_FILTERS: Array<{ key: Filter; label: string }> = [
+  { key: "interested", label: "Interested" },
+  { key: "appointments", label: "Appointments" },
   { key: "optouts", label: "STOP" },
   { key: "ai", label: "AI" },
-  { key: "unread", label: "Unread" },
-  { key: "archive", label: "Archive" },
 ];
 
 const notesKey = (t: string) => `leadtrace:notes:${t}`;
-const ARCHIVE_KEY = "leadtrace:archived-threads";
-
-function readArchive(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(window.localStorage.getItem(ARCHIVE_KEY) ?? "[]") as string[];
-  } catch {
-    return [];
-  }
-}
 
 function ConversationsPage() {
   const { workspaceId } = useWorkspaceId();
@@ -94,13 +98,11 @@ function ConversationsPage() {
   const [filter, setFilter] = useState<Filter>(
     (search.filter as Filter | undefined) ?? "all",
   );
-  const [showArchived, setShowArchived] = useState(false);
   const [selected, setSelected] = useState<string | null>(search.thread ?? null);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
-  const [archived, setArchived] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [slashOpen, setSlashOpen] = useState(false);
   const qc = useQueryClient();
@@ -117,8 +119,9 @@ function ConversationsPage() {
   const runBlacklist = useServerFn(blacklistThread);
   const fetchNumbers = useServerFn(listNumbers);
   const fetchWorkspaceTags = useServerFn(listTags);
-
-  useEffect(() => setArchived(readArchive()), []);
+  const setStarredFn = useServerFn(starThread);
+  const setArchivedFn = useServerFn(archiveThread);
+  const setStatusFn = useServerFn(setThreadStatus);
 
   // A reply can only leave the building from an active sending number. Without
   // one every send path fails server-side, so we surface it instead of letting
@@ -186,10 +189,12 @@ function ConversationsPage() {
   });
   const suggestions = suggestM.data?.suggestions ?? [];
 
-  const threads = useMemo(() => {
-    const rows = (threadsQ.data?.threads ?? []) as unknown as ThreadRow[];
-    return rows.filter((t) => (showArchived ? archived.includes(t.thread_key) : !archived.includes(t.thread_key)));
-  }, [threadsQ.data, archived, showArchived]);
+  // Archive/star/status now live server-side, so the filter tab is the whole
+  // story — no client-side re-filtering that could disagree with the counts.
+  const threads = useMemo(
+    () => (threadsQ.data?.threads ?? []) as unknown as ThreadRow[],
+    [threadsQ.data],
+  );
 
   useEffect(() => {
     if (!selected && threads[0]) setSelected(threads[0].thread_key);
@@ -270,12 +275,65 @@ function ConversationsPage() {
     }
   };
 
-  const toggleArchive = () => {
-    if (!selected) return;
-    const next = archived.includes(selected) ? archived.filter((t) => t !== selected) : [...archived, selected];
-    setArchived(next);
-    if (typeof window !== "undefined") window.localStorage.setItem(ARCHIVE_KEY, JSON.stringify(next));
-    toast.success(archived.includes(selected) ? "Conversation Restored" : "Conversation Archived");
+  const selectedRow = threads.find((t) => t.thread_key === selected) ?? null;
+
+  const refreshInbox = () => {
+    qc.invalidateQueries({ queryKey: ["inbox-threads", workspaceId] });
+    qc.invalidateQueries({ queryKey: ["inbox-thread", workspaceId, selected] });
+  };
+
+  const toggleArchive = async () => {
+    if (!workspaceId || !selected) return;
+    const nowArchived = !selectedRow?.archived;
+    try {
+      await setArchivedFn({
+        data: {
+          workspaceId,
+          threadKey: selected,
+          leadId: selectedRow?.lead_id ?? null,
+          archived: nowArchived,
+        },
+      });
+      refreshInbox();
+      toast.success(nowArchived ? "Conversation Archived" : "Conversation Restored");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Archive");
+    }
+  };
+
+  const toggleStar = async (row: ThreadRow) => {
+    if (!workspaceId) return;
+    try {
+      await setStarredFn({
+        data: {
+          workspaceId,
+          threadKey: row.thread_key,
+          leadId: row.lead_id ?? null,
+          starred: !row.starred,
+        },
+      });
+      refreshInbox();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Star");
+    }
+  };
+
+  const applyStatus = async (status: ThreadStatus | null) => {
+    if (!workspaceId || !selected) return;
+    try {
+      await setStatusFn({
+        data: {
+          workspaceId,
+          threadKey: selected,
+          leadId: selectedRow?.lead_id ?? null,
+          status,
+        },
+      });
+      refreshInbox();
+      toast.success(status ? `Marked ${threadStatusLabel(status)}` : "Status Cleared");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could Not Update Status");
+    }
   };
 
   const doBlacklist = async () => {
@@ -310,7 +368,7 @@ function ConversationsPage() {
         <Card className="flex flex-col min-h-0">
           <div className="shrink-0 p-2 border-b flex items-center gap-0.5 flex-nowrap overflow-hidden">
             {PRIMARY_FILTERS.map((f) => {
-              const active = filter === f.key && !showArchived;
+              const active = filter === f.key;
               const count = counts ? counts[f.key] : 0;
               return (
                 <Button
@@ -318,10 +376,7 @@ function ConversationsPage() {
                   size="sm"
                   variant={active ? "default" : "ghost"}
                   className="rounded-full text-xs h-7 px-2 shrink-0 min-w-0"
-                  onClick={() => {
-                    setFilter(f.key);
-                    setShowArchived(false);
-                  }}
+                  onClick={() => setFilter(f.key)}
                 >
                   <span className="truncate">
                     <span className="hidden 2xl:inline">{f.label}</span>
@@ -345,7 +400,7 @@ function ConversationsPage() {
                 <Button
                   size="sm"
                   variant={
-                    showArchived || tagFilter || !PRIMARY_FILTERS.some((f) => f.key === filter)
+                    tagFilter || !PRIMARY_FILTERS.some((f) => f.key === filter)
                       ? "default"
                       : "ghost"
                   }
@@ -357,20 +412,12 @@ function ConversationsPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
                 {OVERFLOW_FILTERS.map((f) => {
-                  const isArchive = f.key === "archive";
-                  const count = !isArchive && counts ? counts[f.key as Filter] : 0;
-                  const active = isArchive ? showArchived : filter === f.key && !showArchived;
+                  const count = counts ? counts[f.key] ?? 0 : 0;
+                  const active = filter === f.key;
                   return (
                     <DropdownMenuItem
                       key={f.key}
-                      onClick={() => {
-                        if (isArchive) {
-                          setShowArchived(true);
-                        } else {
-                          setFilter(f.key as Filter);
-                          setShowArchived(false);
-                        }
-                      }}
+                      onClick={() => setFilter(f.key)}
                       className={cn("text-xs justify-between", active && "font-semibold")}
                     >
                       <span>{f.label}</span>
@@ -398,7 +445,6 @@ function ConversationsPage() {
                         key={t.id}
                         onClick={() => {
                           setTagFilter(tagFilter === t.id ? null : t.id);
-                          setShowArchived(false);
                         }}
                         className={cn("text-xs gap-2", tagFilter === t.id && "font-semibold")}
                       >

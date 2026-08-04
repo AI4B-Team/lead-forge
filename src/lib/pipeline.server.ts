@@ -378,6 +378,7 @@ export async function executePipeline(
 
       // Refund every debit this run made. Keyed on job + kind + reason so a
       // retry can never double-refund.
+      let refundedTotal = 0;
       for (const debit of ctx.debits) {
         if (debit.amount <= 0) continue;
         const { data: already } = await supabase
@@ -396,6 +397,18 @@ export async function executePipeline(
           reason: "refund:job_failed",
           jobId: jobId,
           actorUserId: ctx.actorUserId,
+        });
+        refundedTotal += debit.amount;
+      }
+
+      // Never refund silently: tell the customer what broke and what we gave back.
+      if (refundedTotal > 0) {
+        const { notifyRefund } = await import("./refunds.server");
+        await notifyRefund(supabase, {
+          workspaceId: ctx.workspaceId,
+          amount: refundedTotal,
+          reason: "refund:job_failed",
+          jobId,
         });
       }
     }

@@ -36,6 +36,11 @@ export type InboundContext = {
   campaignId?: string | null;
   /** Row id of the stored inbound message, for handoff annotation. */
   inboundMessageId?: string | null;
+  /**
+   * Conversation key for inbox state. Matches `messages.thread_key`, which is
+   * the lead id when known and the provider SID otherwise.
+   */
+  threadKey?: string | null;
 };
 
 export type InboundOutcome = {
@@ -151,6 +156,8 @@ export async function processInbound(ctx: InboundContext): Promise<InboundOutcom
     } catch {
       /* delivery is best-effort; suppression is already recorded */
     }
+    // Nothing left to do on this conversation — get it out of the active inbox.
+    await autoArchive(ctx, "optout");
     return { optOut: true, help: false, bot: "skipped" };
   }
 
@@ -159,6 +166,7 @@ export async function processInbound(ctx: InboundContext): Promise<InboundOutcom
   // the last thing a person threatening litigation wants is another text.
   const negative = await checkNegativeKeywords(ctx);
   if (negative) {
+    await autoArchive(ctx, "negative_keyword");
     return { optOut: false, help: false, negativeKeyword: negative, bot: "blocked" };
   }
 
@@ -223,4 +231,32 @@ async function checkNegativeKeywords(ctx: InboundContext): Promise<string | null
 
   console.warn(`[compliance] negative keyword "${hit.matched}" halted sequence for ${ctx.fromPhone}`);
   return hit.matched;
+}
+
+/**
+ * Archive a conversation the system has decided is closed (opt-out, negative
+ * keyword, suppression). The operator can still find it on the Archived tab —
+ * this only clears it from the queue of things needing attention.
+ */
+async function autoArchive(
+  ctx: InboundContext,
+  reason: "optout" | "negative_keyword" | "suppressed",
+): Promise<void> {
+  const threadKey = ctx.threadKey ?? ctx.leadId ?? null;
+  if (!threadKey) return;
+  try {
+    await ctx.db.from("thread_states").upsert(
+      {
+        workspace_id: ctx.workspaceId,
+        thread_key: threadKey,
+        lead_id: ctx.leadId ?? null,
+        archived_at: new Date().toISOString(),
+        archived_reason: reason,
+        status: reason === "optout" ? "do_not_contact" : "not_interested",
+      },
+      { onConflict: "workspace_id,thread_key" },
+    );
+  } catch (err) {
+    console.error("[inbound] auto-archive failed:", err);
+  }
 }

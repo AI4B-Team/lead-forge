@@ -89,6 +89,8 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
           leadId: lead?.id ?? null,
           campaignId,
           inboundMessageId: inboundRow?.id ?? null,
+          // Mirrors the thread_key trigger: lead id when known, else the SID.
+          threadKey: lead?.id ?? inbound.providerSid ?? null,
         });
 
         return Response.json({ ok: true, optOut: outcome.optOut, help: outcome.help, bot: outcome.bot });
