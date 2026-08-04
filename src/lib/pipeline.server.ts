@@ -242,6 +242,8 @@ const propertyScanAdapter: SourceAdapter = {
   coverage: "live",
   async run(params, onProgress) {
     const counties = ((params.counties as string[] | undefined)?.filter(Boolean) ?? ["Hillsborough, FL"]) as string[];
+    // ZIP farm areas from the combined location search narrow inside the county.
+    const zips = ((params.zips as string[] | undefined) ?? []).filter(Boolean);
     const criteria = ((params.visual_criteria as string[] | undefined) ?? ["Deferred maintenance"]).filter(Boolean);
     const threshold = Number(params.match_threshold) > 0 ? Number(params.match_threshold) : 75;
     const cap = Number(params.max_results) > 0 ? Number(params.max_results) : 500;
@@ -260,6 +262,7 @@ const propertyScanAdapter: SourceAdapter = {
           address: `${200 + i} ${pick(["Oak", "Palm", "Cedar", "Magnolia"], i)} St`,
           city: county.split(",")[0],
           state: "FL",
+          zip: zips.length ? zips[i % zips.length] : null,
           source_meta: {
             county,
             distress_score: score,
