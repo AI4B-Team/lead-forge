@@ -31,6 +31,7 @@ import {
   setThreadStatus,
 } from "@/lib/inbox.functions";
 import {
+  AUTO_ARCHIVE_REASONS,
   THREAD_STATUSES,
   threadStatusLabel,
   type ThreadStatus,
