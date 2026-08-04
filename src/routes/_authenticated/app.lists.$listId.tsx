@@ -105,6 +105,16 @@ function JobDetail() {
   const lastEventAt = (eventData?.events ?? []).at(-1)?.created_at ?? null;
   const stalled = isStalled({ status: job.status, lastEventAt, createdAt: job.created_at as string });
   const params = (job.params ?? {}) as Record<string, unknown>;
+  // Coverage report the pipeline stamped on the run: which counties actually
+  // contributed rows, and which we don't cover yet.
+  const coverage = params.coverage as
+    | {
+        requested: number;
+        ran: number;
+        coveredCounties: string[];
+        uncoveredCounties: string[];
+      }
+    | undefined;
   const jobName =
     data.displayName ??
     String(params.name ?? params.file_name ?? `${job.source_type} · ${job.id.slice(0, 8)}`);
