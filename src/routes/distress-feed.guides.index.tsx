@@ -25,7 +25,7 @@ export const Route = createFileRoute("/distress-feed/guides/")({
 
 function GuidesIndex() {
   const { guides } = Route.useLoaderData();
-  const states = [...new Set(guides.map((g: FeedGuideRow) => g.state))];
+  const states: string[] = [...new Set(guides.map((g: FeedGuideRow) => g.state))] as string[];
   return (
     <MarketingLayout>
       <div className="mx-auto max-w-4xl px-6 py-14">
