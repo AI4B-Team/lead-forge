@@ -621,6 +621,8 @@ function Assistant() {
     setSuggested([]);
     setConfirmed(false);
     setRevealed(0);
+    setSpecStated(false);
+    setPanelEdits([]);
     setInferred(new Set());
     setUpload(null);
     setConvId(`c${Date.now()}`);
@@ -642,6 +644,8 @@ function Assistant() {
     setSuggested([]);
     setConfirmed(false);
     setRevealed(0);
+    setSpecStated(false);
+    setPanelEdits([]);
     setInferred(new Set());
     setUpload(null);
     setSpec({ ...EMPTY_SPEC, sourceType: source, niches: niche ? [niche] : [] });
@@ -654,6 +658,12 @@ function Assistant() {
     const changed = diffSpec(spec, next);
     setSpec(next);
     setConfirmed(false);
+    if (changed.length) {
+      // A hand edit un-confirms the spoken spec: the assistant must read the new
+      // version back before the List Assembled card can return.
+      setSpecStated(false);
+      setPanelEdits((prev) => Array.from(new Set([...prev, ...changed])));
+    }
     if (changed.length) {
       // A hand-edited value is the operator's choice, not an inference.
       setInferred((prev) => {
