@@ -894,6 +894,8 @@ function Assistant() {
   };
 
   const { balances: creditBalances } = useCreditBalances();
+  const { plan } = usePlanContext();
+  const activeTemplate = spec.templateId ? getTemplate(spec.templateId) : undefined;
 
   const countyCount = Math.max(1, spec.counties.length || 1);
   const tradeCount = spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1;
