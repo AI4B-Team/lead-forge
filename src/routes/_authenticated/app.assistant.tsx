@@ -687,6 +687,23 @@ function Assistant() {
         }
         return [...m, { role: "system", content }];
       });
+      // A widened county list multiplies the credit cost, so the assistant says
+      // it out loud immediately instead of leaving it to a silent chip.
+      const wasNarrow = spec.counties.length > 0;
+      const nowStatewide = next.counties.length === 0 && specStates(next).length > 0;
+      if (wasNarrow && nowStatewide) {
+        const dropped = spec.counties.join(", ");
+        const states = specStates(next);
+        const total = states.reduce((n, s) => n + countiesForState(s).length, 0);
+        setThread((m) => [
+          ...m,
+          {
+            role: "assistant",
+            content: `I see you switched to all of ${states.join(", ")} — that's ${total} counties, which multiplies your credit cost by roughly ${total}×. Want me to keep it to ${dropped}?`,
+            spec: next,
+          },
+        ]);
+      }
     }
   };
 
