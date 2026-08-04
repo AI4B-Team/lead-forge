@@ -9,6 +9,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { HelpHint } from "@/components/app/help-hint";
 import { coverageForCounty } from "@/lib/reference-data.shared";
 import { useReferenceData } from "@/hooks/use-reference-data";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getVerifiedCoverage, requestCountyCoverage } from "@/lib/coverage.functions";
+import { useWorkspaceId } from "@/hooks/use-workspace";
+import { splitCountyLabel } from "@/lib/coverage.shared";
+import { toast } from "sonner";
 import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
@@ -251,11 +257,36 @@ export function JobSpecCard({
   const set = <K extends keyof JobSpec>(key: K, value: JobSpec[K]) => onChange({ ...spec, [key]: value });
   const inf = (key: keyof JobSpec) => Boolean(inferred?.has(key));
   const { countyCoverage } = useReferenceData();
+  const fields0: BuilderField[] = template ? templateFieldSchema(template) : fieldsForSourceType(spec.sourceType);
+  const recordsSource = fields0.includes("recordType");
+  // Public-records geography is gated on verified sources, so the selector shows
+  // exactly where we actually look — not a national promise.
+  const coverageQ = useQuery({
+    queryKey: ["verified-coverage"],
+    queryFn: () => getVerifiedCoverage(),
+    enabled: recordsSource,
+    staleTime: 5 * 60_000,
+  });
+  const verified = coverageQ.data?.coverage ?? [];
+  const recordTypeNow = spec.recordType ?? null;
+  const countyVerified = (label: string) => {
+    const { county, state } = splitCountyLabel(label);
+    return verified.some(
+      (r) =>
+        (r.county_name ?? "").toLowerCase() === county.toLowerCase() &&
+        (!state || r.state.toUpperCase() === state) &&
+        (!recordTypeNow || r.record_type === recordTypeNow),
+    );
+  };
   // Business / local scrapes have no geo whitelist, so fall back to the
   // source-aware verdict instead of assuming "Not Covered".
-  const covFor = (county: string): Coverage =>
-    coverage.find((c) => c.county.toLowerCase() === county.toLowerCase())?.coverage ??
-    coverageForCounty(countyCoverage, county, spec.sourceType);
+  const covFor = (county: string): Coverage => {
+    if (recordsSource) return countyVerified(county) ? "live" : "unknown";
+    return (
+      coverage.find((c) => c.county.toLowerCase() === county.toLowerCase())?.coverage ??
+      coverageForCounty(countyCoverage, county, spec.sourceType)
+    );
+  };
 
   const fields: BuilderField[] = template ? templateFieldSchema(template) : fieldsForSourceType(spec.sourceType);
   const has = (f: BuilderField) => fields.includes(f);
