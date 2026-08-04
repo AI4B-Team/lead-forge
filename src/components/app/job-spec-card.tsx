@@ -128,6 +128,56 @@ const COVERAGE_LABEL: Record<Coverage, string> = {
   unknown: "Not Covered",
 };
 
+/**
+ * "We don't look here yet" — stated plainly, with a one-click way to register
+ * demand. Never a spinner that resolves to an empty table.
+ */
+function UncoveredNotice({
+  counties,
+  recordType,
+}: {
+  counties: string[];
+  recordType: string | null;
+}) {
+  const { workspaceId } = useWorkspaceId();
+  const request = useServerFn(requestCountyCoverage);
+  const [sent, setSent] = useState(false);
+  if (!counties.length) return null;
+
+  const send = async () => {
+    if (!workspaceId || !recordType) return;
+    try {
+      for (const county of counties) {
+        await request({ data: { workspaceId, county, recordType } });
+      }
+      setSent(true);
+      toast.success("Request logged. We'll email you when these counties go live.");
+    } catch {
+      toast.error("We couldn't log that request. Try again in a moment.");
+    }
+  };
+
+  return (
+    <div className="mt-2 rounded-xl border border-warning/40 bg-warning/5 p-3">
+      <p className="text-[11px] leading-snug text-muted-foreground">
+        We don't cover {counties.join(", ")} for {recordType ?? "this record type"} yet. This run
+        will skip {counties.length === 1 ? "it" : "them"} and report exactly which counties
+        contributed.
+      </p>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="mt-2 rounded-full text-[11px]"
+        disabled={sent || !workspaceId || !recordType}
+        onClick={send}
+      >
+        {sent ? "Request Logged" : counties.length === 1 ? "Request This County" : "Request These Counties"}
+      </Button>
+    </div>
+  );
+}
+
 /** Panel opened via ?source= with no template selected yet. */
 const SOURCE_FALLBACK_LABEL: Record<string, string> = {
   business: "Business Search",
