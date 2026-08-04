@@ -989,7 +989,7 @@ function Assistant() {
     </div>
   );
 
-  const scanEstimateBlock = scanEstimate && adapterLive && geoResolved && (
+  const scanEstimateBlock = scanEstimate && adapterLive && priceable && (
     <div className="space-y-2">
       <PipelineFunnel
         size="sm"
