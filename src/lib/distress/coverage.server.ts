@@ -229,7 +229,9 @@ export type JobCoverageVerdict = {
 };
 
 /** Sources whose geography is served by a county-level public-records adapter. */
-const GATED_SOURCES = new Set(["records", "distress_feed", "street_scan"]);
+// distress_feed pulls from filings that were already paid for and verified at
+// pull time, so it is not re-gated here.
+const GATED_SOURCES = new Set(["records", "street_scan"]);
 
 function partialMessage(v: { ran: number; requested: number; uncovered: number }): string {
   return `Ran ${v.ran} of ${v.requested} counties. ${v.uncovered} not yet covered — we've logged your request.`;
