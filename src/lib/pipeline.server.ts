@@ -97,14 +97,6 @@ const businessAdapter: SourceAdapter = {
   },
 };
 
-const recordsAdapter: SourceAdapter = {
-  key: "records.county",
-  coverage: "live",
-  async run(params, onProgress) {
-    return recordsRun(params, onProgress);
-  },
-};
-
 /**
  * Distress Feed → leads. The feed itself is a maintained dataset that costs
  * nothing to browse; credits are only charged from here on, when the operator
@@ -157,7 +149,9 @@ const distressFeedAdapter: SourceAdapter = {
   },
 };
 
-const recordsAdapterRunHolder = {
+const recordsAdapter: SourceAdapter = {
+  key: "records.county",
+  coverage: "live",
   async run(params, onProgress) {
     // Multi-select support (both axes): `counties`/`record_types` arrays are
     // the new shape; single `county`/`record_type` kept for backwards compat
