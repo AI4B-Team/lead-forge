@@ -932,21 +932,7 @@ function Assistant() {
   );
   const priceable = geoResolved && !coverageBlocked;
 
-  /** Terminal CTA states — never a loading label when there is nothing to load. */
   const coveragePartial = verdict?.status === "partial";
-  const ctaLabel = running
-    ? "Queueing…"
-    : coverageBlocked
-      ? "Not Available — Request Coverage"
-      : !traceComplete
-        ? "Building Preview…"
-        : coveragePartial
-          ? `Run ${verdict?.coveredCounties.length ?? 0} Covered ${
-              (verdict?.coveredCounties.length ?? 0) === 1 ? "County" : "Counties"
-            }`
-          : confirmed
-            ? "Generate List"
-            : "Looks Good";
   const traceCoverage = verdict?.gated
     ? {
         status: verdict.status,
