@@ -402,8 +402,10 @@ export const tickCampaign = createServerFn({ method: "POST" })
       .from("registrations").select("campaign_status").eq("workspace_id", campaign.workspace_id).maybeSingle();
     if (reg?.campaign_status !== "approved") return { dispatched: 0, reason: "10dlc_not_approved" };
 
-    // Quiet hours
-    if (inQuietHours(new Date(), campaign.send_window as SendWindow | null)) {
+    // Quiet hours — coarse pre-filter only (active in every US timezone). The
+    // authoritative per-recipient check runs in the recipient's own timezone.
+    const sendWindow = campaign.send_window as SendWindow | null;
+    if (inQuietHoursEverywhere(sendWindow)) {
       return { dispatched: 0, reason: "quiet_hours" };
     }
 
@@ -507,8 +509,11 @@ export const tickCampaign = createServerFn({ method: "POST" })
         }
         return !skipDupes || !messaged.has(l.id);
       })
+      // TCPA (authoritative): statutory 8am–9pm window plus the campaign quiet
+      // window, evaluated in the recipient's timezone. Unknown zone = blocked.
+      .filter((l) => canMessageRecipient(l.phone as string, l.state, sendWindow))
       // 6pm rule: a first touch never starts after 6pm recipient local time.
-      .filter((l) => canStartNewDrop(l.phone as string))
+      .filter((l) => canStartNewDropForRecipient(l.phone as string, l.state))
       .slice(0, take);
 
     for (const b of blocked.slice(0, 50)) {
