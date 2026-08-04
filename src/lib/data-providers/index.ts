@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Data provider abstraction. Real providers plug in behind the same shape so
 // the pipeline orchestrator stays clean. Every provider gracefully falls back
-// to the deterministic mock when its credentials aren't configured.
+// with an explicit error when its credentials aren't configured.
 // ---------------------------------------------------------------------------
 
 export type RawLead = {
