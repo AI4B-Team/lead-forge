@@ -64,6 +64,9 @@ export async function queueJob(
     status: "queued",
     params: input.params,
     idempotency_key: key,
+    // Uploads are the customer's own data; every other path runs behind the
+    // coverage gate, so anything that reaches here is a verified source.
+    data_provenance: input.sourceType === "upload" ? "user_upload" : "verified_source",
   };
   if (input.recordType) row.record_type = input.recordType;
   if (input.channel) row.channel = input.channel;
