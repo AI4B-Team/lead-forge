@@ -53,7 +53,7 @@ import { TemplateCard } from "@/components/marketing/template-card";
 import { TemplatePickerDialog } from "@/components/app/template-picker-dialog";
 import { templateAdapterStatus } from "@/lib/template-schema";
 import { useOverflow } from "@/hooks/use-overflow";
-import { US_STATES } from "@/lib/us-geo";
+import { US_STATES, countiesForState } from "@/lib/us-geo";
 import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@/lib/recent-templates";
 import { takeStashedHandoff, clearStashedPrompt } from "@/lib/prompt-handoff";
 import { useTeamContext } from "@/hooks/use-team-context";
