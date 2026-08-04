@@ -175,7 +175,6 @@ export function reconcileWithSpec(reply: string, spec: JobSpec): string {
   const contradictions: Array<{ on: boolean; re: RegExp }> = [
     { on: spec.skipTrace, re: /\b(add|enable|turn on|need)\b[^.!?]*\bskip[- ]?trac/i },
     { on: spec.mobileOnly, re: /\b(add|enable|turn on|need)\b[^.!?]*\bmobile[- ]?(only|verif)/i },
-    { on: spec.dncScrub, re: /\b(add|enable|turn on|need)\b[^.!?]*\b(dnc|scrub)/i },
   ];
   return reply
     .split(/(?<=[.!?])\s+/)
