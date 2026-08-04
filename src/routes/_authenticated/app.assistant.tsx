@@ -1232,13 +1232,21 @@ function Assistant() {
 
       {adapterLive ? (
         <>
-          <Button
-            className="w-full rounded-full"
-            disabled={running || !spec.sourceType || !traceComplete || coverageBlocked}
-            onClick={reviewAndRun}
-          >
-            {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {ctaLabel}
-          </Button>
+          {cta.to ? (
+            <Button asChild className="w-full rounded-full">
+              <Link to={cta.to}>
+                <CreditCard className="mr-1 h-4 w-4" /> {cta.label}
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              className="w-full rounded-full"
+              disabled={cta.disabled || !spec.sourceType}
+              onClick={reviewAndRun}
+            >
+              {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {cta.label}
+            </Button>
+          )}
           <div className="text-center text-[11px] text-muted-foreground pb-4">
             The Assistant Assembles. You Run. Nothing Sends Without You.
           </div>
