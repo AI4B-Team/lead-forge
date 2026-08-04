@@ -122,7 +122,7 @@ export async function askAssistant(opts: {
   recordTypes: string[];
   /** "id — Title — live|beta" lines so the model can match a named source. */
   templateCatalog?: string;
-}): Promise<{ reply: string; spec: JobSpec; suggestedTemplates: string[] }> {
+}): Promise<{ reply: string; spec: JobSpec; suggestedTemplates: string[]; needsCountyChoice?: boolean }> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) {
     return {
