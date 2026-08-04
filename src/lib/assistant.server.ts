@@ -10,6 +10,7 @@ import { enrichmentProfile, isNonUsRun, templateOutputType } from "./pipeline-op
 import { estimateSpec } from "./estimate.shared";
 import { countiesForState, formatCounty, parseCounty } from "./us-geo";
 import { speakTurn, stickyCounties, wantsWholeState } from "./assistant-dialogue";
+import { templateForRecordType } from "./record-types";
 
 /** Snap model-provided county names onto real counties in the spec's state. */
 function normalizeCounties(counties: string[], state: string | null): string[] {
@@ -196,9 +197,21 @@ export async function askAssistant(opts: {
           ? sticky.counties
           : normalizeCounties(synced.counties, synced.state);
         const state = counties[0]?.split(",")[1]?.trim() ?? synced.state;
+        // Keep the Source row honest: if the record type moved to one served by
+        // a different records template, move the template with it.
+        const wanted = templateForRecordType(synced.recordType);
+        const currentServes = templateForRecordType(
+          // reverse-check: is the current template a record-type preset?
+          synced.recordType,
+        );
+        const templateId =
+          synced.sourceType === "records" && wanted && synced.templateId !== "distress-feed" && currentServes
+            ? wanted
+            : synced.templateId;
         return {
           ...synced,
           state,
+          templateId,
           // Franchise removal is business-only and off unless the operator
           // turns it on; never carry it onto other sources.
           removeFranchises: synced.sourceType === "business" ? synced.removeFranchises : false,
