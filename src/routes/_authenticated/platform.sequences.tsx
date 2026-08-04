@@ -57,7 +57,6 @@ function SequencesPage() {
   return (
     <div className="mx-auto max-w-[1400px]">
       <PageHeader
-        icon={Repeat}
         title="Sequences"
         description="Every enrolled contact after touch one, and what the runner sends next."
       />
