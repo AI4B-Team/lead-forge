@@ -260,7 +260,10 @@ export function JobSpecCard({
   const has = (f: BuilderField) => fields.includes(f);
   const isUpload = has("upload");
   const isRecords = has("recordType");
-  const hasGeo = has("state") || has("counties");
+  const isScan = spec.sourceType === "street_scan";
+  // Street Scan resolves geography through the combined Location search that
+  // renders first, so it never shows the separate State + Counties block.
+  const hasGeo = (has("state") || has("counties")) && !isScan;
   const dataOnly = isDataSource(spec.templateId);
   const nonUs = isNonUsRun({ templateId: spec.templateId, country: spec.country });
   const filterLabel = filterFieldLabel(spec.templateId);
