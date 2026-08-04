@@ -1,3 +1,5 @@
+const STATE_NAMES = new Set(US_STATES.map((s) => s.name.toLowerCase()));
+
 // ---------------------------------------------------------------------------
 // Geographic intent parsing. The model is good at prose and bad at scope: it
 // answered "hillsborough county" with `state: FL, counties: []`, which the
@@ -58,7 +60,13 @@ export function parseGeoIntent(
     for (const county of counties) {
       const bare = county.toLowerCase();
       if (bare.length < 4) continue;
-      const re = new RegExp(`\\b${bare.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`);
+      const escaped = bare.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // A county that shares its name with a state (Florida, PR) only counts
+      // when the operator actually said "county" — otherwise "in Florida"
+      // would silently target a Puerto Rican municipality.
+      const re = STATE_NAMES.has(bare)
+        ? new RegExp(`\\b${escaped}\\s+(county|parish|borough|municipio)\\b`)
+        : new RegExp(`\\b${escaped}\\b`);
       if (re.test(text)) hits.push({ county, state });
     }
   }
