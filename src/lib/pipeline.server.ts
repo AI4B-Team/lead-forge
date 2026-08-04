@@ -31,44 +31,27 @@ interface SourceAdapter {
   run(
     params: JobParams,
     onProgress?: (message: string, count?: number) => Promise<void> | void,
+    out?: AdapterOut,
   ): Promise<RawLead[]>;
 }
 
-const FIRST_NAMES = [
-  "Alex",
-  "Jordan",
-  "Taylor",
-  "Casey",
-  "Morgan",
-  "Riley",
-  "Sam",
-  "Jamie",
-  "Drew",
-  "Reese",
-];
-const LAST_NAMES = [
-  "Nguyen",
-  "Patel",
-  "Garcia",
-  "Smith",
-  "Johnson",
-  "Lopez",
-  "Kim",
-  "Davis",
-  "Martinez",
-  "Chen",
-];
+/**
+ * Side channel for what an adapter could and could not reach. The pipeline
+ * reports it verbatim so a partially covered run never looks complete.
+ */
+type AdapterOut = {
+  coverage?: {
+    requested: number;
+    ran: number;
+    coveredCounties: string[];
+    uncoveredCounties: string[];
+    uncoveredPairs: Array<{ county: string; recordType: string }>;
+  };
+};
 
-function pick<T>(arr: T[], i: number) {
-  return arr[i % arr.length]!;
-}
-
-function fakePhone(i: number) {
-  const area = 813 + (i % 5);
-  const mid = 200 + (i % 799);
-  const last = 1000 + ((i * 37) % 8999);
-  return `+1${area}${mid}${last}`;
-}
+// No synthetic record generators live here. A source either returns real rows
+// or the run fails with a reason the operator can act on. Sample data exists
+// only in tests.
 
 const businessAdapter: SourceAdapter = {
   key: "business.apify",
@@ -152,7 +135,7 @@ const distressFeedAdapter: SourceAdapter = {
 const recordsAdapter: SourceAdapter = {
   key: "records.county",
   coverage: "live",
-  async run(params, onProgress) {
+  async run(params, onProgress, out) {
     // Multi-select support (both axes): `counties`/`record_types` arrays are
     // the new shape; single `county`/`record_type` kept for backwards compat
     // with older queued/scheduled jobs.
@@ -162,25 +145,44 @@ const recordsAdapter: SourceAdapter = {
       (params.record_types as string[] | undefined)?.filter(Boolean) ??
       [(params.record_type as string | undefined) ?? "Probate"];
 
-    // Access-path preference: hand-coded open-data scrapers first (Cook IL,
-    // Philadelphia PA, NYC NY), then any catalogued Socrata / ArcGIS / bulk
-    // file source discovered for that county, then the deterministic mock for
-    // counties still waiting on a records request.
+    // Coverage gate first: a county/record type without a verified source is
+    // never run and never faked. It is reported back and logged as demand.
+    const { splitSelections } = await import("./distress/coverage.server");
+    const split = await splitSelections(counties, recordTypes);
+    if (out) {
+      out.coverage = {
+        requested: counties.length,
+        ran: split.coveredCounties.length,
+        coveredCounties: split.coveredCounties,
+        uncoveredCounties: split.uncoveredCounties,
+        uncoveredPairs: split.uncovered,
+      };
+    }
+    if (!split.covered.length) {
+      const { NoCoverageError } = await import("./distress/coverage.server");
+      throw new NoCoverageError(
+        `We don't cover ${counties.join(", ")} for ${recordTypes.join(", ")} yet. Your request is logged and no credits were spent.`,
+      );
+    }
+
+    // Access-path preference for covered selections: hand-coded open-data
+    // scrapers first, then any catalogued Socrata / ArcGIS / bulk file source.
     const { hasLiveCountyScraper, scrapeCountyRecords } = await import(
       "./data-providers/county-records"
     );
     const { fetchCatalogedRecords } = await import("./data-providers/source-registry.server");
 
     const all: RawLead[] = [];
-    for (const county of counties) {
+    for (const county of split.coveredCounties) {
+      const typesHere = split.covered.filter((p) => p.county === county).map((p) => p.recordType);
       if (hasLiveCountyScraper(county)) {
         await onProgress?.(`Pulling live public records for ${county}…`);
         // One slice per record type (offset pagination) so multi-select pulls
         // distinct rows per type instead of the same page N times.
-        for (let t = 0; t < recordTypes.length; t++) {
+        for (let t = 0; t < typesHere.length; t++) {
           const slice = await scrapeCountyRecords({
             county,
-            recordType: recordTypes[t]!,
+            recordType: typesHere[t]!,
             offset: t * 25,
             dateFrom: (params.date_from as string | null | undefined) ?? null,
             dateTo: (params.date_to as string | null | undefined) ?? null,
@@ -192,10 +194,10 @@ const recordsAdapter: SourceAdapter = {
 
       // Catalogued source for this county?
       let cataloged = 0;
-      for (let t = 0; t < recordTypes.length; t++) {
+      for (let t = 0; t < typesHere.length; t++) {
         const rows = await fetchCatalogedRecords({
           county,
-          recordType: recordTypes[t]!,
+          recordType: typesHere[t]!,
           offset: t * 25,
           dateFrom: (params.date_from as string | null | undefined) ?? null,
           dateTo: (params.date_to as string | null | undefined) ?? null,
@@ -206,98 +208,38 @@ const recordsAdapter: SourceAdapter = {
           cataloged += rows.length;
         }
       }
-      if (cataloged > 0) continue;
-
-      // A rescan of a records feed should mostly return the same filings plus
-      // a few genuinely new ones, so the net-new number means something.
-      const drift = Math.floor(Date.now() / 3_600_000) % 40;
-      for (const record of recordTypes) {
-        const count = 200 + county.length * 3 + drift;
-        for (let i = 0; i < count; i++) {
-          const hasPhone = i % 3 !== 0; // records door often lacks phones -> skiptrace
-          all.push({
-            full_name: `${pick(FIRST_NAMES, i)} ${pick(LAST_NAMES, i + 3)}`,
-            phone: hasPhone ? fakePhone(i) : null,
-            email: `owner${i}@example.com`,
-            address: `${100 + i} Main St`,
-            city: county.split(",")[0],
-            state: "FL",
-            zip: `336${String(10 + (i % 89))}`,
-            source_meta: { record_type: record, county },
-          });
-        }
-      }
     }
     return all;
   },
 };
 
 /**
- * Street Scan. The buy box narrows parcels first (free), and only the
- * survivors get scored from imagery — so the rows this returns are already
- * matched properties, each carrying its condition score and reasoning.
+ * Street Scan. Parcel imagery scoring has no verified provider wired yet, so it
+ * refuses to run rather than invent scored parcels.
  */
 const propertyScanAdapter: SourceAdapter = {
   key: "street_scan.parcels",
-  coverage: "live",
-  async run(params, onProgress) {
-    const counties = ((params.counties as string[] | undefined)?.filter(Boolean) ?? ["Hillsborough, FL"]) as string[];
-    // ZIP farm areas from the combined location search narrow inside the county.
-    const zips = ((params.zips as string[] | undefined) ?? []).filter(Boolean);
-    const criteria = ((params.visual_criteria as string[] | undefined) ?? ["Deferred maintenance"]).filter(Boolean);
-    const threshold = Number(params.match_threshold) > 0 ? Number(params.match_threshold) : 75;
-    const cap = Number(params.max_results) > 0 ? Number(params.max_results) : 500;
-    const perCounty = Math.max(1, Math.floor(cap / counties.length));
-
-    const all: RawLead[] = [];
-    for (const county of counties) {
-      await onProgress?.(`Applying your buy box across ${county}…`);
-      for (let i = 0; i < perCounty; i++) {
-        const score = threshold + ((i * 7) % Math.max(1, 100 - threshold));
-        all.push({
-          full_name: `${pick(FIRST_NAMES, i)} ${pick(LAST_NAMES, i + 5)}`,
-          // Owners of distressed parcels rarely publish a phone — most get traced.
-          phone: i % 4 === 0 ? fakePhone(i) : null,
-          email: null,
-          address: `${200 + i} ${pick(["Oak", "Palm", "Cedar", "Magnolia"], i)} St`,
-          city: county.split(",")[0],
-          state: "FL",
-          zip: zips.length ? zips[i % zips.length] : null,
-          source_meta: {
-            county,
-            distress_score: score,
-            match_threshold: threshold,
-            matched_criteria: criteria.slice(0, 3),
-            images_per: Number(params.images_per) === 1 ? 1 : 3,
-          },
-        });
-      }
-    }
-    return all;
+  coverage: "requested",
+  async run(params) {
+    const counties = ((params.counties as string[] | undefined)?.filter(Boolean) ?? []) as string[];
+    const { NoCoverageError } = await import("./distress/coverage.server");
+    throw new NoCoverageError(
+      counties.length
+        ? `Street Scan has no verified parcel imagery coverage for ${counties.join(", ")} yet. Your request is logged and no credits were spent.`
+        : "Street Scan has no verified parcel imagery coverage yet. Your request is logged and no credits were spent.",
+    );
   },
 };
 
 const uploadAdapter: SourceAdapter = {
-  key: "upload.csv.mock",
+  key: "upload.csv",
   coverage: "live",
   async run(params) {
     const parsed = params.rows as RawLead[] | undefined;
     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-
-    const size = Number(params.file_size ?? 0);
-    const count = Math.max(80, Math.min(2000, Math.round(size / 120)));
-    const rows: RawLead[] = [];
-    for (let i = 0; i < count; i++) {
-      rows.push({
-        full_name: `${pick(FIRST_NAMES, i)} ${pick(LAST_NAMES, i)}`,
-        phone: i % 5 === 0 ? null : fakePhone(i),
-        email: `lead${i}@example.com`,
-        city: "Tampa",
-        state: "FL",
-        source_meta: { imported_from: params.file_name ?? "upload.csv" },
-      });
-    }
-    return rows;
+    throw new Error(
+      "We couldn't read any rows from that file. Check the column mapping and upload it again — no credits were spent.",
+    );
   },
 };
 
@@ -553,20 +495,34 @@ async function runPipelineBody(
   await supabase.from("jobs").update({ status: "scraping" }).eq("id", jobId);
   await say("scraping", "Searching the source for matching records…");
   const adapter = selectAdapter(job.source_type as string);
-  const sourced = await adapter.run(params, (message, count) => say("scraping", message, count));
+  const out: AdapterOut = {};
+  const sourced = await adapter.run(
+    params,
+    (message, count) => say("scraping", message, count),
+    out,
+  );
   const maxResults = Number(params.max_results) > 0 ? Number(params.max_results) : null;
   const raw = maxResults ? sourced.slice(0, maxResults) : sourced;
-  const isSampleData = raw.some(
-    (r) => (r.source_meta as { provider?: string } | undefined)?.provider === "mock",
-  );
-  await supabase
-    .from("jobs")
-    .update(
-      isSampleData
-        ? { rows_in: raw.length, params: { ...params, sample_data: true } as never }
-        : { rows_in: raw.length },
-    )
-    .eq("id", jobId);
+
+  // Partial coverage is stated outright, and the gap is logged as demand so the
+  // roadmap is driven by what operators actually asked for.
+  const cov = out.coverage;
+  if (cov) {
+    await supabase
+      .from("jobs")
+      .update({ rows_in: raw.length, params: { ...params, coverage: cov } as never })
+      .eq("id", jobId);
+    if (cov.uncoveredPairs.length > 0) {
+      const { logCoverageRequests } = await import("./distress/coverage.server");
+      await logCoverageRequests(cov.uncoveredPairs, { workspaceId, requestedBy: actorUserId });
+      await say(
+        "scraping",
+        `Ran ${cov.ran} of ${cov.requested} selected counties. ${cov.uncoveredCounties.length} not yet covered — we've logged your request.`,
+      );
+    }
+  } else {
+    await supabase.from("jobs").update({ rows_in: raw.length }).eq("id", jobId);
+  }
   await say("scraping", `Found ${raw.length.toLocaleString()} records.`, raw.length);
 
   // 2) DEDUPE — in-batch, workspace-wide, and against every prior run --------
@@ -766,14 +722,7 @@ async function runPipelineBody(
           }
         }
       }
-      for (let i = 0; i < verified.length; i++) {
-        if (!verified[i]!.phone) {
-          const filled = fakePhone(1_000_000 + i);
-          verified[i]!.phone = filled;
-          verified[i]!.line_type = classifyLineType(filled);
-          skiptraced++;
-        }
-      }
+      // Records with no trace match keep no phone. We never invent one.
     }
     if (skiptraced > 0) {
       const { applyCreditDelta } = await import("./credits.server");
