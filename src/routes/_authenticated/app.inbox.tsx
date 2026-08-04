@@ -311,7 +311,6 @@ function ConversationsPage() {
   };
 
   const toggleStar = async (row: ThreadRow) => {
-    console.log("[dbg] toggleStar", workspaceId, row.thread_key, row.starred);
     if (!workspaceId) return;
     try {
       await setStarredFn({
