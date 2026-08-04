@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, ChevronDown, Check, SlidersHorizontal } from "lucide-react";
 import { MarketingNav, MarketingFooter } from "@/components/marketing/marketing-layout";
 import { TemplateCard } from "@/components/marketing/template-card";
-import { TEMPLATES, type TemplateCategory } from "@/lib/templates";
+import { TEMPLATES, hasCategory, type TemplateCategory } from "@/lib/templates";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,7 +70,7 @@ function TemplatesPage() {
   const overflow = FILTERS.slice(PRIMARY_COUNT);
   const activeOverflow = overflow.find((f) => f.key === filter);
 
-  let items = filter === "all" ? TEMPLATES : TEMPLATES.filter((t) => t.category === filter);
+  let items = filter === "all" ? TEMPLATES : TEMPLATES.filter((t) => hasCategory(t, filter));
   if (betaOnly) items = items.filter((t) => t.beta);
   if (sort === "alpha") {
     items = [...items].sort((a, b) => a.title.localeCompare(b.title));

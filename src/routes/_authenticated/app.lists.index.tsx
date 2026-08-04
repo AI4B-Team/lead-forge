@@ -60,7 +60,7 @@ import { JobStageFlow } from "@/components/app/job-stage-flow";
 import { StatTile } from "@/components/app/stat-tile";
 import { buildPipelineStages } from "@/lib/pipeline-stages";
 import { isStalled, isRunningStatus, stallReason, STALL_HOURS } from "@/lib/job-watchdog";
-import { getTemplate, CATEGORY_LABELS, type Template, type TemplateCategory } from "@/lib/templates";
+import { getTemplate, CATEGORY_LABELS, primaryCategory, type Template, type TemplateCategory } from "@/lib/templates";
 import { TemplateLogo } from "@/components/marketing/template-logo";
 
 export const Route = createFileRoute("/_authenticated/app/lists/")({
@@ -116,8 +116,8 @@ function sourceIdentity(job: { template_id?: string | null; source_type: string 
     return {
       key: `tpl:${tpl.id}`,
       label: tpl.title,
-      group: tpl.category as SourceGroup,
-      categoryLabel: CATEGORY_LABELS[tpl.category],
+      group: primaryCategory(tpl) as SourceGroup,
+      categoryLabel: CATEGORY_LABELS[primaryCategory(tpl)],
       template: tpl as Template | undefined,
     };
   const meta = SOURCE_META[job.source_type];

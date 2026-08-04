@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 import { TemplateCard } from "@/components/marketing/template-card";
-import { TEMPLATES, CATEGORY_LABELS, creditCostPerLead, type Template, type TemplateCategory } from "@/lib/templates";
+import { TEMPLATES, CATEGORY_LABELS, creditCostPerLead, hasCategory, primaryCategory, type Template, type TemplateCategory } from "@/lib/templates";
 /** Included (0-credit) sources first, then ascending by credit draw. */
 function byCost(list: Template[]) {
   return [...list].sort((a, b) => creditCostPerLead(a) - creditCostPerLead(b));
@@ -47,19 +47,19 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
   }, [open]);
 
   const categories = useMemo(() => {
-    const present = new Set(TEMPLATES.map((t) => t.category));
+    const present = new Set(TEMPLATES.flatMap((t) => t.categories));
     return CHIP_ORDER.filter((c) => present.has(c));
   }, []);
 
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
     return byCost(TEMPLATES.filter((t) => {
-      if (category !== "all" && t.category !== category) return false;
+      if (category !== "all" && !hasCategory(t, category)) return false;
       if (!q) return true;
       return (
         t.title.toLowerCase().includes(q) ||
         t.subtitle.toLowerCase().includes(q) ||
-        CATEGORY_LABELS[t.category].toLowerCase().includes(q)
+        t.categories.some((c) => CATEGORY_LABELS[c].toLowerCase().includes(q))
       );
     }));
   }, [query, category]);
@@ -67,9 +67,9 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
   const grouped = useMemo(() => {
     const groups = new Map<TemplateCategory, Template[]>();
     for (const t of matches) {
-      const list = groups.get(t.category) ?? [];
+      const list = groups.get(primaryCategory(t)) ?? [];
       list.push(t);
-      groups.set(t.category, list);
+      groups.set(primaryCategory(t), list);
     }
     return Array.from(groups.entries()).map(([cat, list]) => [cat, byCost(list)] as const);
   }, [matches]);

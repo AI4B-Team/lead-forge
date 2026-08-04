@@ -23,7 +23,7 @@ import {
 import { MarketingNav, ComplianceStrip, MarketingFooter } from "@/components/marketing/marketing-layout";
 import { PromptHero } from "@/components/marketing/prompt-hero";
 import { TemplateCard } from "@/components/marketing/template-card";
-import { TEMPLATES, getTemplate, type Template } from "@/lib/templates";
+import { TEMPLATES, getTemplate, hasCategory, type Template } from "@/lib/templates";
 import { IndustryPreview } from "@/components/marketing/industry-preview";
 
 export const Route = createFileRoute("/")({
@@ -79,7 +79,7 @@ function TemplateTeaser({
   onSelect: (t: Template) => void;
 }) {
   const [offset, setOffset] = useState(0);
-  const displayTemplates = useMemo(() => TEMPLATES.filter((t) => t.category !== "upload"), []);
+  const displayTemplates = useMemo(() => TEMPLATES.filter((t) => !hasCategory(t, "upload")), []);
   const [order, setOrder] = useState(() => displayTemplates.map((_, i) => i));
   const pageSize = 6;
   const visible = useMemo(() => {

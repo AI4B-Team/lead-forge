@@ -44,7 +44,7 @@ import { PipelineFunnel } from "@/components/app/pipeline-funnel";
 import { DEFAULT_MATCH_THRESHOLD, estimateScan } from "@/lib/property-scan.shared";
 import { DEFAULT_MAX_ROWS, loadMaxRows, saveMaxRows } from "@/lib/max-rows";
 import { clearDraft, loadDraft, saveDraft, type ThreadItem } from "@/lib/assistant-draft";
-import { TEMPLATES, templateSourceType, type Template } from "@/lib/templates";
+import { TEMPLATES, hasCategory, templateSourceType, type Template } from "@/lib/templates";
 import { TemplateCard } from "@/components/marketing/template-card";
 import { TemplatePickerDialog } from "@/components/app/template-picker-dialog";
 import { templateAdapterStatus } from "@/lib/template-schema";
@@ -526,11 +526,11 @@ function Assistant() {
       const miss = missingSlots(body, spec);
       if (!body || miss.geo || miss.subject) {
         const ask = miss.subject && miss.geo
-          ? selectedTemplate.category === "records"
+          ? hasCategory(selectedTemplate, "records")
             ? "which record type should I pull, and in which county or state?"
             : "what should I look for, and where?"
           : miss.subject
-            ? selectedTemplate.category === "records"
+            ? hasCategory(selectedTemplate, "records")
               ? "which record type should I pull?"
               : "what should I look for?"
             : "which county or state should I cover?";
