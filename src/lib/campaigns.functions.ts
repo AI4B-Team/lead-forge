@@ -10,6 +10,7 @@ import {
 } from "@/lib/tcpa";
 import { SCRUB_STALE_MESSAGE, isScrubStale, withStopFooter } from "@/lib/compliance-rules";
 import { emptyStats, type CampaignStats } from "@/lib/campaign-stats";
+import { TRUSTED_PROVENANCE } from "@/lib/provenance.shared";
 import { channelEligibility } from "@/lib/contact-channels";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
@@ -96,7 +97,8 @@ export const listCampaigns = createServerFn({ method: "GET" })
           .from("leads")
           .select("id", { count: "exact", head: true })
           .eq("job_id", c.list_job_id)
-          .eq("scrub_status", "clean");
+          .eq("scrub_status", "clean")
+          .in("data_provenance", TRUSTED_PROVENANCE);
         stats[c.id].recipients = count ?? 0;
       }
     }
@@ -165,7 +167,8 @@ export const getCampaignDetail = createServerFn({ method: "GET" })
         .from("leads")
         .select("id", { count: "exact", head: true })
         .eq("job_id", campaign.list_job_id)
-        .eq("scrub_status", "clean");
+        .eq("scrub_status", "clean")
+        .in("data_provenance", TRUSTED_PROVENANCE);
       recipients = count ?? 0;
     }
 
@@ -307,7 +310,8 @@ export const previewCampaign = createServerFn({ method: "GET" })
       .from("leads")
       .select("phone, phone_type, email, address, scrub_status")
       .eq("job_id", data.jobId)
-      .eq("scrub_status", "clean");
+      .eq("scrub_status", "clean")
+      .in("data_provenance", TRUSTED_PROVENANCE);
     const phones = (leads ?? []).map((l) => l.phone).filter((p): p is string => !!p);
     const unique = new Set(phones);
     const duplicates = phones.length - unique.size;
