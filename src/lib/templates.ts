@@ -99,6 +99,8 @@ export const TEMPLATES: Template[] = [
   // ---------- Upload (pinned first) ----------
   {
     id: "upload",
+    featured: true,
+    featuredOrder: 6,
     title: "Upload My List",
     subtitle: "Drop A CSV, Skip Trace And Scrub It.",
     categories: ["upload"],
@@ -112,6 +114,8 @@ export const TEMPLATES: Template[] = [
   // ---------- Business & Local ----------
   {
     id: "street-scan",
+    featured: true,
+    featuredOrder: 2,
     shortTitle: "Street Scan",
     shortSubtitle: "AI Driving For Dollars",
     title: "Street Scan",
@@ -126,6 +130,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "gmaps",
+    featured: true,
+    featuredOrder: 3,
     shortTitle: "Google Maps",
     shortSubtitle: "Business Listings",
     title: "Google Maps Businesses",
@@ -168,6 +174,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "contact-details",
+    featured: true,
+    featuredOrder: 4,
     shortTitle: "Contact Details",
     shortSubtitle: "Any Website",
     title: "Contact Details Scraper (Any Site)",
@@ -466,6 +474,8 @@ export const TEMPLATES: Template[] = [
   // ---------- Real Estate ----------
   {
     id: "zillow",
+    featured: true,
+    featuredOrder: 5,
     title: "Zillow FSBOs",
     subtitle: "For-Sale-By-Owner Listings + Owners.",
     categories: ["realestate"],
@@ -504,6 +514,8 @@ export const TEMPLATES: Template[] = [
     // and filtering costs nothing and only pulling records into leads spends
     // credits. The record-type templates below are presets over the same feed.
     id: "distress-feed",
+    featured: true,
+    featuredOrder: 1,
     shortTitle: "Distress Feed",
     shortSubtitle: "Pulled Nightly",
     title: "Distress Feed",
@@ -744,13 +756,14 @@ export function getTemplate(id: string): Template | undefined {
 
 /** Other templates in the same category (excluding the given one). */
 export function relatedTemplates(t: Template, limit = 6): Template[] {
-  return TEMPLATES.filter((x) => x.category === t.category && x.id !== t.id).slice(0, limit);
+  const primary = primaryCategory(t);
+  return TEMPLATES.filter((x) => x.id !== t.id && hasCategory(x, primary)).slice(0, limit);
 }
 
 /** Fields the pipeline returns for a template's category. */
 export function templateFields(t: Template): string[] {
   const base = ["Name", "Phone", "Email", "Website", "Source URL"];
-  switch (t.category) {
+  switch (primaryCategory(t)) {
     case "business":
     case "directories":
       return ["Business Name", "Owner / Contact", "Phone", "Email", "Address", "Category", "Website", "Rating"];
@@ -777,7 +790,7 @@ export function templateFields(t: Template): string[] {
 export function templateSourceType(t: Template): "business" | "records" | "upload" | "street_scan" {
   // Street Scan is its own source kind: parcels + buy box + imagery scoring.
   if (t.id === "street-scan") return "street_scan";
-  if (t.category === "upload") return "upload";
-  if (t.category === "records") return "records";
+  if (hasCategory(t, "upload")) return "upload";
+  if (primaryCategory(t) === "records") return "records";
   return "business";
 }

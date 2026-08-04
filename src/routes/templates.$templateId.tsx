@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   CATEGORY_LABELS,
   getTemplate,
+  primaryCategory,
   relatedTemplates,
   templateFields,
 } from "@/lib/templates";
