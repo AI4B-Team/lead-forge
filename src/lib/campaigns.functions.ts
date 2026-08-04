@@ -3,26 +3,16 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { spinOnce } from "@/lib/spintax";
 import { planDrops, estimateCost } from "@/lib/drops";
-import { canStartNewDrop } from "@/lib/tcpa";
+import {
+  canMessageRecipient,
+  canStartNewDropForRecipient,
+  inQuietHoursEverywhere,
+} from "@/lib/tcpa";
 import { SCRUB_STALE_MESSAGE, isScrubStale, withStopFooter } from "@/lib/compliance-rules";
 import { emptyStats, type CampaignStats } from "@/lib/campaign-stats";
 import { channelEligibility } from "@/lib/contact-channels";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
-
-// Returns "HH:MM" for a Date in the workspace's local TZ (assume ET default).
-function hhmm(d: Date) {
-  return d.toTimeString().slice(0, 5);
-}
-
-function inQuietHours(now: Date, win: SendWindow | null | undefined) {
-  if (!win?.quiet_start || !win?.quiet_end) return false;
-  const cur = hhmm(now);
-  const { quiet_start: qs, quiet_end: qe } = win;
-  // Overnight window: e.g. 21:00 -> 09:00
-  if (qs > qe) return cur >= qs || cur < qe;
-  return cur >= qs && cur < qe;
-}
 
 function renderTemplate(body: string, lead: Record<string, unknown>): string {
   return body.replace(/\{\{\s*([a-zA-Z_][\w]*)\s*\}\}/g, (_, key: string) => {
