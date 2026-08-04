@@ -1074,6 +1074,32 @@ function Assistant() {
   const overSkip = Boolean(estimate && estimate.skipTraceCredits > creditBalances.skip_trace);
   const overBudget = overLead || overSkip;
 
+  /**
+   * Terminal CTA states. The loading label is allowed ONLY while something is
+   * genuinely in flight (model turn, trace reveal, coverage lookup) — every
+   * other combination resolves to a label the operator can act on.
+   */
+  const previewInFlight =
+    busy || jobCoverageQ.isLoading || (traceSteps.length > 0 && revealed < traceSteps.length);
+  const creditsShort = overBudget || overScan || overScanSkip;
+  const coveredCount = verdict?.coveredCounties.length ?? 0;
+  const cta: { label: string; disabled: boolean; to?: string } = running
+    ? { label: "Queueing…", disabled: true }
+    : coverageBlocked
+      ? { label: "Not Available — Request Coverage", disabled: true }
+      : previewInFlight
+        ? { label: "Building Preview…", disabled: true }
+        : !traceComplete
+          ? { label: "Add The Missing Details", disabled: true }
+          : creditsShort
+            ? { label: "Add Credits to Continue", disabled: false, to: "/app/billing" }
+            : coveragePartial
+              ? {
+                  label: `Run ${coveredCount} Covered ${coveredCount === 1 ? "County" : "Counties"}`,
+                  disabled: false,
+                }
+              : { label: confirmed ? "Generate List" : "Looks Good", disabled: false };
+
   const rowCapControl = adapterLive && spec.sourceType && spec.sourceType !== "upload" && (
     <div className="rounded-xl border border-border p-3">
       <div className="text-xs font-medium text-foreground">Max Leads</div>
