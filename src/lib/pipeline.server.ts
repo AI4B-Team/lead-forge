@@ -355,8 +355,18 @@ function leadKeys(r: {
   address?: unknown;
   city?: unknown;
   state?: unknown;
+  source_meta?: unknown;
 }): string[] {
   const keys: string[] = [];
+  // Parcel identity first: the same house can arrive from the Distress Feed
+  // (probate filed) and from Street Scan (tarp detected). One parcel is ONE
+  // lead carrying both signals — never two leads, never two charges, never two
+  // campaigns texting the same owner.
+  const meta = (r.source_meta ?? {}) as Record<string, unknown>;
+  const apn = norm(meta.parcel_apn ?? meta.apn);
+  if (apn) keys.push(`apn:${norm(r.state)}|${apn}`);
+  const addr = norm(r.address);
+  if (addr) keys.push(`a:${addr}|${norm(r.zip ?? r.city)}|${norm(r.state)}`);
   const d = digits(r.phone);
   if (d) keys.push(`p:${d}`);
   if (typeof r.email === "string" && r.email.trim()) keys.push(`e:${r.email.trim().toLowerCase()}`);
