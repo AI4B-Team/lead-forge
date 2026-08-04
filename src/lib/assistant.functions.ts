@@ -218,6 +218,25 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const spec = data.spec;
     if (!spec.sourceType) throw new Error("Pick A Source First");
+    if (spec.sourceType === "upload") throw new Error("Uploaded Lists Start On The Upload Page");
+    if (spec.sourceType === "business" && !spec.niches.length) throw new Error("Add At Least One Niche");
+    if (spec.sourceType === "records" && !spec.recordType) throw new Error("Pick A Record Type");
+
+    // Coverage is settled BEFORE spend is checked or priced: a run with no
+    // verified county never reaches the cap check, the estimate, or the queue.
+    // Same function `queueJob` enforces, so the two can never disagree.
+    const { assertJobCoverage } = await import("./distress/coverage.server");
+    const coverage = await assertJobCoverage({
+      sourceType: spec.sourceType,
+      recordType: spec.recordType,
+      counties: spec.counties,
+      states: specStates(spec),
+      workspaceId: data.workspaceId,
+      requestedBy: context.userId,
+    });
+    // Partial coverage is priced on the verified counties only.
+    const runCounties = coverage.gated ? coverage.coveredCounties : spec.counties;
+
     // Role + cap enforcement lives server-side: a client that skips the
     // pre-flight check still cannot spend past its cap.
     {
@@ -226,7 +245,7 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
       // per niche × county. This is what the credit cap must be checked against.
       const perSearch = Math.max(0, Number(spec.maxResults ?? 0));
       const searches =
-        Math.max(1, spec.counties.length || 1) *
+        Math.max(1, runCounties.length || 1) *
         (spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1);
       const estimated = perSearch * searches;
       await assertSpendAllowed(context.supabase, data.workspaceId, context.userId, {
@@ -235,26 +254,7 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
         summary: `Build List · ${spec.name ?? spec.templateId ?? spec.sourceType}`,
       });
     }
-    if (spec.sourceType === "upload") throw new Error("Uploaded Lists Start On The Upload Page");
-    if (spec.sourceType === "business" && !spec.niches.length) throw new Error("Add At Least One Niche");
-    if (spec.sourceType === "records" && !spec.recordType) throw new Error("Pick A Record Type");
-
-    const { loadReferenceData } = await import("@/lib/reference-data.server");
-    const { coverageForCounty } = await import("@/lib/reference-data.shared");
-    const ref = await loadReferenceData(context.supabase);
-    // Geo gating applies to public records only — business scrapes are nationwide.
-    const blocked =
-      spec.sourceType === "records"
-        ? spec.counties.filter((c) => {
-            const cov = coverageForCounty(ref.countyCoverage, c, "records");
-            return cov === "requested" || cov === "unknown";
-          })
-        : [];
-    if (blocked.length) {
-      throw new Error(`Not Covered Yet: ${blocked.join(", ")}. Request It And We'll Add It.`);
-    }
-
-    const geoLabel = spec.counties.join(", ") || specStates(spec).join(", ") || "All";
+    const geoLabel = runCounties.join(", ") || specStates(spec).join(", ") || "All";
     const name =
       spec.name ??
       (spec.sourceType === "records"
@@ -287,8 +287,8 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
         record_type: spec.recordType,
         state: specStates(spec)[0] ?? null,
         states: specStates(spec),
-        counties: spec.counties,
-        county: spec.counties[0] ?? null,
+        counties: runCounties,
+        county: runCounties[0] ?? null,
         city: spec.city,
         zips: spec.zips,
         recency_days: spec.recencyDays,
