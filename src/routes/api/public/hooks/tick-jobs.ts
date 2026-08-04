@@ -1,22 +1,18 @@
-// Cron entry point for the recurring-run engine. pg_cron posts here; the
-// handler finds every list whose next run is due and pipelines it net-new.
+// Cron entry point for the recurring-run engine. pg_cron posts here with the
+// private cron secret; the handler finds every list whose next run is due and
+// pipelines it net-new.
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/public/hooks/tick-jobs")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const key =
-          request.headers.get("apikey") ??
-          request.headers.get("authorization")?.replace(/^Bearer /, "") ??
-          "";
-        const expected =
-          process.env["SUPABASE_ANON_KEY"] ?? process.env["SUPABASE_PUBLISHABLE_KEY"] ?? "";
-        if (!expected || key !== expected) {
-          return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
+        const { requireCronAuth, claimTick } = await import("@/lib/cron-auth.server");
+        const denied = await requireCronAuth(request);
+        if (denied) return denied;
+
+        if (!(await claimTick("tick-jobs", 300))) {
+          return Response.json({ ok: true, skipped: "tick_in_progress" }, { status: 202 });
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
