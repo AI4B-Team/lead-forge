@@ -17,6 +17,18 @@ function renderTemplate(body: string, lead: Record<string, unknown>): string {
   });
 }
 
+export async function tickCampaignById(campaignId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: campaign } = await supabaseAdmin
+    .from("campaigns")
+    .select("id, workspace_id, list_job_id, status, daily_cap, send_window, drop_size")
+    .eq("id", campaignId)
+    .maybeSingle();
+  if (!campaign) return { dispatched: 0, reason: "not_found" };
+  if (campaign.status !== "sending") return { dispatched: 0, reason: "not_sending" };
+  return tickOne(campaign);
+}
+
 export async function tickAllSendingCampaigns() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -214,6 +226,9 @@ async function tickOne(campaign: {
   }
 
   const provider = isProviderConfigured() ? getProvider() : null;
+  // Fail closed: with no configured carrier we do NOT write fake "delivered"
+  // rows. Nothing was sent, so nothing is recorded.
+  if (!provider) return { dispatched: 0, reason: "sms_provider_not_configured" };
   let dispatched = 0;
 
   for (const lead of verified) {
@@ -263,9 +278,6 @@ async function tickOne(campaign: {
         } as never);
         continue;
       }
-    } else {
-      // Stub mode — mark as delivered so demo UI progresses.
-      status = "delivered";
     }
 
     await supabaseAdmin.from("messages").insert({
