@@ -149,22 +149,26 @@ export function freshness(captureDate: string | Date): { label: string; tone: "f
 // ---------------------------------------------------------------------------
 
 export const buyBoxSchema = z.object({
-  ownership: z.array(z.enum(["absentee", "owner_occupied", "entity", "trust"])).default(["absentee"]),
+  /**
+   * Empty = "All". Ownership is free to know from assessor data, so it stays a
+   * pre-filter (that is what keeps a county-wide scan affordable) and is ALSO
+   * surfaced as a result tag.
+   */
+  ownership: z.array(z.enum(["absentee", "owner_occupied", "entity", "trust"])).default([]),
   /** Street imagery is 1–4 years old, so 7+ years owned keeps the owner in the picture. */
   yearsOwnedMin: z.number().int().min(0).max(60).default(7),
   equityMin: z.number().int().min(0).max(100).default(40),
   valueMin: z.number().int().min(0).max(5_000_000).nullable().default(null),
   valueMax: z.number().int().min(0).max(5_000_000).nullable().default(null),
   propertyTypes: z.array(z.enum(["sfr", "multi_2_4", "condo", "mobile"])).default(["sfr"]),
-  yearBuiltMin: z.number().int().min(1800).max(2030).default(1900),
-  yearBuiltMax: z.number().int().min(1800).max(2030).default(1990),
   distressSignals: z
     .array(z.enum(["tax_delinquent", "pre_foreclosure", "probate", "code_violation", "lien", "vacant_usps", "out_of_state_owner"]))
     .default([]),
   /** Our differentiator: a roof permit after the image date invalidates a roof score. */
-  excludePermitYears: z.number().int().min(0).max(20).default(5),
+  excludePermitYears: z.number().int().min(0).max(20).default(1),
   excludeActiveListings: z.boolean().default(false),
-  excludeSoldLast24mo: z.boolean().default(false),
+  /** Months of recent sales to exclude. 0 = keep them all. */
+  soldWithinMonths: z.number().int().min(0).max(12).default(3),
 });
 
 export type BuyBox = z.infer<typeof buyBoxSchema>;
