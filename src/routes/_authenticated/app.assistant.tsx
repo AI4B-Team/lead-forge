@@ -53,7 +53,7 @@ import { TemplateCard } from "@/components/marketing/template-card";
 import { TemplatePickerDialog } from "@/components/app/template-picker-dialog";
 import { templateAdapterStatus } from "@/lib/template-schema";
 import { useOverflow } from "@/hooks/use-overflow";
-import { US_STATES } from "@/lib/us-geo";
+import { US_STATES, countiesForState } from "@/lib/us-geo";
 import { loadRecentTemplates, touchRecentTemplate, type RecentTemplate } from "@/lib/recent-templates";
 import { takeStashedHandoff, clearStashedPrompt } from "@/lib/prompt-handoff";
 import { useTeamContext } from "@/hooks/use-team-context";
@@ -177,6 +177,10 @@ function Assistant() {
   const [running, setRunning] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [revealed, setRevealed] = useState(0);
+  /** True once the assistant has stated the full spec back in prose. */
+  const [specStated, setSpecStated] = useState(false);
+  /** Panel edits waiting to be acknowledged by the next assistant turn. */
+  const [panelEdits, setPanelEdits] = useState<string[]>([]);
   const [recents, setRecents] = useState<RecentTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [convId, setConvId] = useState<string>(() => `c${Date.now()}`);
@@ -235,8 +239,14 @@ function Assistant() {
   /** Honest availability: a non-live adapter can never reach the pipeline. */
   const adapterStatus = selectedTemplate ? templateAdapterStatus(selectedTemplate) : "live";
   const adapterLive = adapterStatus === "live";
+  // The List Assembled card only appears after the assistant has read the spec
+  // back in words, so the operator always gets a turn to correct it first.
   const traceComplete =
-    revealed >= traceSteps.length && !busy && traceSteps.length > 0 && missing.length === 0;
+    revealed >= traceSteps.length &&
+    !busy &&
+    traceSteps.length > 0 &&
+    missing.length === 0 &&
+    (specStated || !hasChat);
   const lastAssistantIndex = useMemo(() => {
     for (let i = thread.length - 1; i >= 0; i -= 1) if (thread[i].role === "assistant") return i;
     return -1;
@@ -520,11 +530,13 @@ function Assistant() {
       return;
     }
     if (spec.sourceType === "upload" && !body) return;
-    // Template selected but slots still missing: the assistant opens the
-    // conversation itself and asks only for what it doesn't have.
-    if (selectedTemplate && templateSourceType(selectedTemplate) !== "upload") {
+    // Template selected and nothing typed yet: the assistant opens the
+    // conversation itself. Once the operator HAS typed something it always goes
+    // to the server — a local shortcut here is how "hillsborough county" got
+    // swallowed before it ever reached the Counties field.
+    if (!body && selectedTemplate && templateSourceType(selectedTemplate) !== "upload") {
       const miss = missingSlots(body, spec);
-      if (!body || miss.geo || miss.subject) {
+      if (miss.geo || miss.subject) {
         const ask = miss.subject && miss.geo
           ? hasCategory(selectedTemplate, "records")
             ? "which record type should I pull, and in which county or state?"
@@ -534,12 +546,10 @@ function Assistant() {
               ? "which record type should I pull?"
               : "what should I look for?"
             : "which county or state should I cover?";
-        if (body) setThread((m) => [...m, { role: "user", content: body }]);
         setThread((m) => [
           ...m,
           { role: "assistant", content: `You picked ${selectedTemplate.title} — ${ask}`, spec },
         ]);
-        if (body && !firstPrompt) setFirstPrompt(body);
         setInput("");
         setRevealed(0);
         return;
@@ -562,8 +572,12 @@ function Assistant() {
     setConfirmed(false);
     setRevealed(0);
     try {
-      const res = await chat({ data: { workspaceId, message: body, history: history.slice(-12), spec } });
+      const res = await chat({
+        data: { workspaceId, message: body, history: history.slice(-12), spec, panelEdits },
+      });
+      setPanelEdits([]);
       setThread((m) => [...m, { role: "assistant", content: res.reply, spec: res.spec }]);
+      setSpecStated(Boolean(res.specComplete));
       // Anything the model changed this turn counts as inferred, except fields the
       // template already determined (those are certain and need no badge).
       setInferred((prev) => {
@@ -607,6 +621,8 @@ function Assistant() {
     setSuggested([]);
     setConfirmed(false);
     setRevealed(0);
+    setSpecStated(false);
+    setPanelEdits([]);
     setInferred(new Set());
     setUpload(null);
     setConvId(`c${Date.now()}`);
@@ -628,6 +644,8 @@ function Assistant() {
     setSuggested([]);
     setConfirmed(false);
     setRevealed(0);
+    setSpecStated(false);
+    setPanelEdits([]);
     setInferred(new Set());
     setUpload(null);
     setSpec({ ...EMPTY_SPEC, sourceType: source, niches: niche ? [niche] : [] });
@@ -640,6 +658,12 @@ function Assistant() {
     const changed = diffSpec(spec, next);
     setSpec(next);
     setConfirmed(false);
+    if (changed.length) {
+      // A hand edit un-confirms the spoken spec: the assistant must read the new
+      // version back before the List Assembled card can return.
+      setSpecStated(false);
+      setPanelEdits((prev) => Array.from(new Set([...prev, ...changed])));
+    }
     if (changed.length) {
       // A hand-edited value is the operator's choice, not an inference.
       setInferred((prev) => {
@@ -663,6 +687,23 @@ function Assistant() {
         }
         return [...m, { role: "system", content }];
       });
+      // A widened county list multiplies the credit cost, so the assistant says
+      // it out loud immediately instead of leaving it to a silent chip.
+      const wasNarrow = spec.counties.length > 0;
+      const nowStatewide = next.counties.length === 0 && specStates(next).length > 0;
+      if (wasNarrow && nowStatewide) {
+        const dropped = spec.counties.join(", ");
+        const states = specStates(next);
+        const total = states.reduce((n, s) => n + countiesForState(s).length, 0);
+        setThread((m) => [
+          ...m,
+          {
+            role: "assistant",
+            content: `I see you switched to all of ${states.join(", ")} — that's ${total} counties, which multiplies your credit cost by roughly ${total}×. Want me to keep it to ${dropped}?`,
+            spec: next,
+          },
+        ]);
+      }
     }
   };
 

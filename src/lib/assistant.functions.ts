@@ -19,6 +19,8 @@ export const assistantChat = createServerFn({ method: "POST" })
         message: z.string().min(1).max(2000),
         history: z.array(messageSchema).max(24).default([]),
         spec: jobSpecSchema,
+        /** Fields the operator hand-edited in the panel since the last turn. */
+        panelEdits: z.array(z.string().max(60)).max(20).default([]),
       })
       .parse(input),
   )
@@ -53,6 +55,7 @@ export const assistantChat = createServerFn({ method: "POST" })
       niches: ref.niches.map((n) => n.name),
       recordTypes: ref.recordTypes.map((r) => r.name),
       templateCatalog: TEMPLATES.map((t) => `${t.id} — ${t.title} — ${templateAdapterStatus(t)}`).join("\n"),
+      panelEdits: data.panelEdits,
     });
 
     // Coverage is decided by real adapter data, never by the model. Only
@@ -68,6 +71,7 @@ export const assistantChat = createServerFn({ method: "POST" })
       coverage,
       suggestedTemplates: result.suggestedTemplates,
       estimate: estimate(result.spec),
+      specComplete: Boolean(result.specComplete),
     };
   });
 
