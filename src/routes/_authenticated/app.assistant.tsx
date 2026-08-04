@@ -902,14 +902,6 @@ function Assistant() {
     : []
   ).slice(0, 4);
 
-  const ctaLabel = running
-    ? "Queueing…"
-    : !traceComplete
-      ? "Building Preview…"
-      : confirmed
-        ? "Generate List"
-        : "Looks Good";
-
   // No spec yet → show an example. Spec assembled or assembling → refine copy.
   // Run queued → the conversation moves on to the next list.
   const composerPlaceholder = running
