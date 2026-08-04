@@ -19,6 +19,8 @@ export interface Dlr {
   providerSid: string;
   status: "delivered" | "failed" | "sent" | "queued";
   errorCode?: string;
+  /** Destination carrier, when the provider reports it. Drives per-carrier rates. */
+  carrier?: string | null;
 }
 
 export interface BoughtNumber {

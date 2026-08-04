@@ -11,6 +11,7 @@ function byCost(list: Template[]) {
 }
 
 import { useOverflow } from "@/hooks/use-overflow";
+import { useTemplateHealth } from "@/hooks/use-template-health";
 
 type Props = {
   open: boolean;
@@ -35,6 +36,7 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
   const [category, setCategory] = useState<TemplateCategory | "all">("all");
   const searchRef = useRef<HTMLInputElement | null>(null);
   const scroll = useOverflow<HTMLDivElement>();
+  const { health } = useTemplateHealth();
 
   useEffect(() => {
     if (!open) return;
@@ -80,6 +82,8 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
           template={t}
           variant="insert"
           selected={selectedId === t.id}
+          health={health[t.id]?.status ?? null}
+          healthEta={health[t.id]?.eta ?? null}
           onSelect={onSelect}
         />
       ))}

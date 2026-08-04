@@ -81,6 +81,7 @@ import { Route as ApiPublicV1LeadsRouteImport } from './routes/api/public/v1/lea
 import { Route as ApiPublicV1JobsRouteImport } from './routes/api/public/v1/jobs'
 import { Route as ApiPublicV1CampaignsRouteImport } from './routes/api/public/v1/campaigns'
 import { Route as ApiPublicHubCallbackRouteImport } from './routes/api/public/hub/callback'
+import { Route as ApiPublicHooksTickTemplateHealthRouteImport } from './routes/api/public/hooks/tick-template-health'
 import { Route as ApiPublicHooksTickRecordsRequestsRouteImport } from './routes/api/public/hooks/tick-records-requests'
 import { Route as ApiPublicHooksTickJobsRouteImport } from './routes/api/public/hooks/tick-jobs'
 import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
@@ -474,6 +475,12 @@ const ApiPublicHubCallbackRoute = ApiPublicHubCallbackRouteImport.update({
   path: '/api/public/hub/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksTickTemplateHealthRoute =
+  ApiPublicHooksTickTemplateHealthRouteImport.update({
+    id: '/api/public/hooks/tick-template-health',
+    path: '/api/public/hooks/tick-template-health',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksTickRecordsRequestsRoute =
   ApiPublicHooksTickRecordsRequestsRouteImport.update({
     id: '/api/public/hooks/tick-records-requests',
@@ -632,6 +639,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
+  '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
@@ -717,6 +725,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
+  '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
@@ -806,6 +815,7 @@ export interface FileRoutesById {
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
+  '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
   '/api/public/v1/jobs': typeof ApiPublicV1JobsRouteWithChildren
@@ -895,6 +905,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
+    | '/api/public/hooks/tick-template-health'
     | '/api/public/hub/callback'
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
@@ -980,6 +991,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
+    | '/api/public/hooks/tick-template-health'
     | '/api/public/hub/callback'
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
@@ -1068,6 +1080,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
+    | '/api/public/hooks/tick-template-health'
     | '/api/public/hub/callback'
     | '/api/public/v1/campaigns'
     | '/api/public/v1/jobs'
@@ -1123,6 +1136,7 @@ export interface RootRouteChildren {
   ApiPublicHooksTickCampaignsRoute: typeof ApiPublicHooksTickCampaignsRoute
   ApiPublicHooksTickJobsRoute: typeof ApiPublicHooksTickJobsRoute
   ApiPublicHooksTickRecordsRequestsRoute: typeof ApiPublicHooksTickRecordsRequestsRoute
+  ApiPublicHooksTickTemplateHealthRoute: typeof ApiPublicHooksTickTemplateHealthRoute
   ApiPublicHubCallbackRoute: typeof ApiPublicHubCallbackRoute
   ApiPublicV1CampaignsRoute: typeof ApiPublicV1CampaignsRoute
   ApiPublicV1JobsRoute: typeof ApiPublicV1JobsRouteWithChildren
@@ -1635,6 +1649,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHubCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/tick-template-health': {
+      id: '/api/public/hooks/tick-template-health'
+      path: '/api/public/hooks/tick-template-health'
+      fullPath: '/api/public/hooks/tick-template-health'
+      preLoaderRoute: typeof ApiPublicHooksTickTemplateHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/tick-records-requests': {
       id: '/api/public/hooks/tick-records-requests'
       path: '/api/public/hooks/tick-records-requests'
@@ -1908,6 +1929,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksTickJobsRoute: ApiPublicHooksTickJobsRoute,
   ApiPublicHooksTickRecordsRequestsRoute:
     ApiPublicHooksTickRecordsRequestsRoute,
+  ApiPublicHooksTickTemplateHealthRoute: ApiPublicHooksTickTemplateHealthRoute,
   ApiPublicHubCallbackRoute: ApiPublicHubCallbackRoute,
   ApiPublicV1CampaignsRoute: ApiPublicV1CampaignsRoute,
   ApiPublicV1JobsRoute: ApiPublicV1JobsRouteWithChildren,

@@ -15,14 +15,9 @@ export function isProviderConfigured(): boolean {
   );
 }
 
-// Age-based warmup cap. Section 2 of the Telnyx build spec.
-export function warmupCap(activatedAt: string | Date): number {
-  const ageDays = Math.floor((Date.now() - new Date(activatedAt).getTime()) / 86_400_000);
-  if (ageDays <= 1) return 200;
-  if (ageDays <= 4) return 500;
-  if (ageDays <= 9) return 1500;
-  return 8000;
-}
+// Warmup cap lives in deliverability.shared so the browser and the runner
+// enforce one identical ceiling.
+export { warmupCap } from "@/lib/deliverability.shared";
 
 // Standard opt-out / help keyword matchers. Platform-standard, not user-configurable.
 export const OPTOUT_RE = /^\s*(stop|stopall|unsubscribe|cancel|end|quit|remove)\b/i;

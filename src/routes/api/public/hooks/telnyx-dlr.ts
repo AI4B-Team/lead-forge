@@ -33,10 +33,27 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-dlr")({
 
         await admin
           .from("messages")
-          .update({ status: dlr.status, error_code: dlr.errorCode ?? null })
+          .update({
+            status: dlr.status,
+            error_code: dlr.errorCode ?? null,
+            ...(dlr.carrier ? { carrier: dlr.carrier } : {}),
+          })
           .eq("provider_sid", dlr.providerSid);
 
-        return Response.json({ ok: true, status: dlr.status });
+        // Terminal receipts feed per-number and per-carrier delivery rates and
+        // can auto-pause a number that stops landing messages.
+        let paused = false;
+        if (dlr.status === "delivered" || dlr.status === "failed") {
+          const { recordDeliveryOutcome } = await import("@/lib/deliverability.server");
+          const outcome = await recordDeliveryOutcome({
+            providerSid: dlr.providerSid,
+            delivered: dlr.status === "delivered",
+            carrier: dlr.carrier ?? null,
+          });
+          paused = outcome.paused;
+        }
+
+        return Response.json({ ok: true, status: dlr.status, paused });
       },
     },
   },

@@ -2,6 +2,27 @@ import { Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { templateCostBadge, type Template } from "@/lib/templates";
 import { TemplateLogo } from "@/components/marketing/template-logo";
+import {
+  HEALTH_DOT,
+  HEALTH_LABEL,
+  unavailableMessage,
+  type HealthStatus,
+} from "@/lib/template-health.shared";
+
+/**
+ * Source health dot. Absent health data means "never checked" — we show
+ * nothing rather than implying a green light we haven't verified.
+ */
+export function TemplateHealthDot({ status }: { status?: HealthStatus | null }) {
+  if (!status) return null;
+  return (
+    <span
+      title={HEALTH_LABEL[status]}
+      aria-label={HEALTH_LABEL[status]}
+      className={`inline-block h-2 w-2 shrink-0 rounded-full ${HEALTH_DOT[status]}`}
+    />
+  );
+}
 
 /**
  * What this source draws from the plan's single credit pool — never an extra
@@ -33,6 +54,8 @@ export function TemplateCard({
   onSelect,
   selected = false,
   compact = false,
+  health,
+  healthEta,
 }: {
   template: Template;
   variant?: "detail" | "prompt" | "insert";
@@ -41,9 +64,16 @@ export function TemplateCard({
   selected?: boolean;
   /** Uses the template's short two-line labels for dense grids. */
   compact?: boolean;
+  /** Live source health. `broken` disables selection with an honest message. */
+  health?: HealthStatus | null;
+  /** Operator-supplied "expected back" note shown on broken sources. */
+  healthEta?: string | null;
 }) {
+  const broken = health === "broken";
   const className =
-    `group relative flex items-center gap-3 rounded-2xl border ${compact ? "p-3" : "p-4"} hover:border-primary hover:shadow-sm transition text-left w-full ${
+    `group relative flex items-center gap-3 rounded-2xl border ${compact ? "p-3" : "p-4"} transition text-left w-full ${
+      broken ? "cursor-not-allowed opacity-60" : "hover:border-primary hover:shadow-sm"
+    } ${
       selected ? "border-primary bg-primary/5" : "border-border bg-surface"
     }`;
   const title = compact ? template.shortTitle ?? template.title : template.title;
@@ -58,6 +88,7 @@ export function TemplateCard({
       <TemplateLogo template={template} />
       <span className="min-w-0">
         <span className="flex items-center gap-2">
+          <TemplateHealthDot status={health} />
           <span className={`font-display font-bold text-foreground truncate ${compact ? "text-sm" : ""}`}>{title}</span>
           {template.beta ? (
             <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -66,6 +97,13 @@ export function TemplateCard({
           ) : null}
         </span>
         <span className="block text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</span>
+        {health && health !== "healthy" ? (
+          <span
+            className={`mt-1 block text-xs ${broken ? "text-destructive" : "text-warning"}`}
+          >
+            {unavailableMessage(health, healthEta)}
+          </span>
+        ) : null}
         <span className="mt-1.5 flex items-center gap-2">
           <TemplateCostBadge template={template} />
         </span>
@@ -78,6 +116,7 @@ export function TemplateCard({
       <button
         type="button"
         aria-pressed={selected}
+        disabled={broken}
         onClick={() => onSelect?.(template)}
         className={className}
       >
