@@ -150,6 +150,10 @@ export async function processInbound(ctx: InboundContext): Promise<InboundOutcom
     await ctx.db
       .from("suppression")
       .upsert({ workspace_id: ctx.workspaceId, phone: ctx.fromPhone, reason: "optout" });
+    if (ctx.leadId) {
+      const { stopSequenceForOptOut } = await import("@/lib/sequence-runner.server");
+      await stopSequenceForOptOut(ctx.db, { workspaceId: ctx.workspaceId, leadId: ctx.leadId });
+    }
     try {
       const res = await ctx.send(ctx.toPhone, ctx.fromPhone, OPTOUT_CONFIRMATION);
       await logOutbound(ctx, OPTOUT_CONFIRMATION, res);
@@ -166,6 +170,14 @@ export async function processInbound(ctx: InboundContext): Promise<InboundOutcom
   // the last thing a person threatening litigation wants is another text.
   const negative = await checkNegativeKeywords(ctx);
   if (negative) {
+    if (ctx.leadId) {
+      const { pauseSequenceForSignal } = await import("@/lib/sequence-runner.server");
+      await pauseSequenceForSignal(ctx.db, {
+        workspaceId: ctx.workspaceId,
+        leadId: ctx.leadId,
+        reason: `negative_keyword:${negative}`,
+      });
+    }
     await autoArchive(ctx, "negative_keyword");
     return { optOut: false, help: false, negativeKeyword: negative, bot: "blocked" };
   }
@@ -178,6 +190,17 @@ export async function processInbound(ctx: InboundContext): Promise<InboundOutcom
       /* best-effort */
     }
     return { optOut: false, help: true, bot: "skipped" };
+  }
+
+  // A real reply from the lead hands the thread to the bot / a human. The
+  // scheduled cadence pauses so we never talk over a live conversation.
+  if (ctx.leadId) {
+    const { pauseSequenceForInbound } = await import("@/lib/sequence-runner.server");
+    await pauseSequenceForInbound(ctx.db, {
+      workspaceId: ctx.workspaceId,
+      leadId: ctx.leadId,
+      reason: "lead_reply",
+    });
   }
 
   return { optOut: false, help: false, bot: await runBot(ctx) };
