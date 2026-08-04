@@ -10,6 +10,7 @@ import { enrichmentProfile, isNonUsRun, templateOutputType } from "./pipeline-op
 import { estimateSpec } from "./estimate.shared";
 import { countiesForState, formatCounty, parseCounty } from "./us-geo";
 import { parseGeoIntent } from "./geo-intent";
+import { speakTurn, stickyCounties, wantsWholeState } from "./assistant-dialogue";
 
 /** Snap model-provided county names onto real counties in the spec's state. */
 function normalizeCounties(counties: string[], state: string | null): string[] {
@@ -122,7 +123,15 @@ export async function askAssistant(opts: {
   recordTypes: string[];
   /** "id — Title — live|beta" lines so the model can match a named source. */
   templateCatalog?: string;
-}): Promise<{ reply: string; spec: JobSpec; suggestedTemplates: string[]; needsCountyChoice?: boolean }> {
+  /** Fields the operator hand-edited in the List Builder since the last turn. */
+  panelEdits?: string[];
+}): Promise<{
+  reply: string;
+  spec: JobSpec;
+  suggestedTemplates: string[];
+  needsCountyChoice?: boolean;
+  specComplete?: boolean;
+}> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) {
     return {
@@ -131,6 +140,13 @@ export async function askAssistant(opts: {
       suggestedTemplates: [],
     };
   }
+
+  // Every user turn, oldest first. Constraints are additive: the county named in
+  // the first message must survive an answer about record type ten turns later.
+  const userTexts = [
+    ...opts.history.filter((m) => m.role === "user").map((m) => m.content),
+    opts.message,
+  ];
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -164,19 +180,23 @@ export async function askAssistant(opts: {
   // Scope is decided in code, never by the model. If the operator named a
   // county, that county is the run — the assistant may not quietly promote
   // "Hillsborough County" to all 67 counties in Florida.
-  const intent = parseGeoIntent(opts.message, {
+  const intent = parseGeoIntent(userTexts.join(" \n "), {
     stateHint: (out.specPatch?.state as string | undefined) ?? opts.spec.state ?? null,
   });
   // The model may name one state or several; keep both fields consistent.
   const spec = merged.success
     ? (() => {
         const synced = withStates(merged.data, specStates(merged.data));
-        const state = intent.namedCounty
-          ? (intent.counties[0]?.split(",")[1]?.trim() ?? synced.state)
-          : synced.state;
-        const counties = intent.namedCounty
-          ? intent.counties
+        // Accumulate across the conversation, and never let a later model patch
+        // silently discard a county the operator already named.
+        const sticky = stickyCounties(userTexts, {
+          stateHint: synced.state,
+          existing: wantsWholeState(opts.message) ? [] : normalizeCounties(opts.spec.counties, synced.state),
+        });
+        const counties = sticky.counties.length
+          ? sticky.counties
           : normalizeCounties(synced.counties, synced.state);
+        const state = counties[0]?.split(",")[1]?.trim() ?? synced.state;
         return {
           ...synced,
           state,
@@ -187,6 +207,7 @@ export async function askAssistant(opts: {
         };
       })()
     : opts.spec;
+  void intent;
 
   // A state with no counties is an unanswered question, not "everywhere". Ask.
   const needsCountyChoice =
@@ -194,18 +215,22 @@ export async function askAssistant(opts: {
     !spec.counties.length &&
     specStates(spec).length > 0;
 
+  // The spoken turn is assembled in code from the spec itself, so the panel can
+  // never move without the assistant echoing what it captured and inferred.
+  const spoken = speakTurn({
+    modelReply: out.reply ?? "",
+    spec,
+    priorSpec: opts.spec,
+    userTexts,
+    panelEdits: opts.panelEdits,
+  });
+
   return {
-    reply: [
-      out.reply?.trim() || "Updated The List Builder On The Right.",
-      needsCountyChoice
-        ? `Which counties in ${specStates(spec).join(", ")}? I never widen a run to a whole state on your behalf — pick the counties and I'll price only those.`
-        : null,
-    ]
-      .filter(Boolean)
-      .join("\n\n"),
+    reply: spoken.reply,
     spec,
     suggestedTemplates: (out.suggestedTemplates ?? []).slice(0, 4),
     needsCountyChoice,
+    specComplete: spoken.complete,
   };
 }
 
