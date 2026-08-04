@@ -6,6 +6,7 @@ import {
   Layers,
   LayoutDashboard,
   Radar,
+  Repeat,
   ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: "/platform", label: "Overview", icon: LayoutDashboard },
   { to: "/platform/workspaces", label: "Workspaces", icon: Building2 },
   { to: "/platform/sources", label: "Source Requests", icon: Layers },
+  { to: "/platform/sequences", label: "Sequences", icon: Repeat },
   { to: "/platform/records", label: "Public Records", icon: Database },
   { to: "/platform/access", label: "Admin Access", icon: ShieldCheck },
 ];

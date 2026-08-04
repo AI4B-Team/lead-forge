@@ -55,6 +55,7 @@ import { Route as AuthenticatedPlatformIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedPlatformWorkspacesRouteImport } from './routes/_authenticated/platform.workspaces'
 import { Route as AuthenticatedPlatformSourcesRouteImport } from './routes/_authenticated/platform.sources'
+import { Route as AuthenticatedPlatformSequencesRouteImport } from './routes/_authenticated/platform.sequences'
 import { Route as AuthenticatedPlatformRecordsRouteImport } from './routes/_authenticated/platform.records'
 import { Route as AuthenticatedPlatformAccessRouteImport } from './routes/_authenticated/platform.access'
 import { Route as AuthenticatedAppWorkspaceRouteImport } from './routes/_authenticated/app.workspace'
@@ -89,6 +90,7 @@ import { Route as ApiPublicV1JobsRouteImport } from './routes/api/public/v1/jobs
 import { Route as ApiPublicV1CampaignsRouteImport } from './routes/api/public/v1/campaigns'
 import { Route as ApiPublicHubCallbackRouteImport } from './routes/api/public/hub/callback'
 import { Route as ApiPublicHooksTickTemplateHealthRouteImport } from './routes/api/public/hooks/tick-template-health'
+import { Route as ApiPublicHooksTickSequencesRouteImport } from './routes/api/public/hooks/tick-sequences'
 import { Route as ApiPublicHooksTickRecordsRequestsRouteImport } from './routes/api/public/hooks/tick-records-requests'
 import { Route as ApiPublicHooksTickJobsRouteImport } from './routes/api/public/hooks/tick-jobs'
 import { Route as ApiPublicHooksTickDistressFeedRouteImport } from './routes/api/public/hooks/tick-distress-feed'
@@ -339,6 +341,12 @@ const AuthenticatedPlatformSourcesRoute =
     path: '/sources',
     getParentRoute: () => AuthenticatedPlatformRoute,
   } as any)
+const AuthenticatedPlatformSequencesRoute =
+  AuthenticatedPlatformSequencesRouteImport.update({
+    id: '/sequences',
+    path: '/sequences',
+    getParentRoute: () => AuthenticatedPlatformRoute,
+  } as any)
 const AuthenticatedPlatformRecordsRoute =
   AuthenticatedPlatformRecordsRouteImport.update({
     id: '/records',
@@ -529,6 +537,12 @@ const ApiPublicHooksTickTemplateHealthRoute =
     path: '/api/public/hooks/tick-template-health',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksTickSequencesRoute =
+  ApiPublicHooksTickSequencesRouteImport.update({
+    id: '/api/public/hooks/tick-sequences',
+    path: '/api/public/hooks/tick-sequences',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksTickRecordsRequestsRoute =
   ApiPublicHooksTickRecordsRequestsRouteImport.update({
     id: '/api/public/hooks/tick-records-requests',
@@ -684,6 +698,7 @@ export interface FileRoutesByFullPath {
   '/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/platform/access': typeof AuthenticatedPlatformAccessRoute
   '/platform/records': typeof AuthenticatedPlatformRecordsRoute
+  '/platform/sequences': typeof AuthenticatedPlatformSequencesRoute
   '/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -704,6 +719,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
+  '/api/public/hooks/tick-sequences': typeof ApiPublicHooksTickSequencesRoute
   '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
@@ -779,6 +795,7 @@ export interface FileRoutesByTo {
   '/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/platform/access': typeof AuthenticatedPlatformAccessRoute
   '/platform/records': typeof AuthenticatedPlatformRecordsRoute
+  '/platform/sequences': typeof AuthenticatedPlatformSequencesRoute
   '/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -799,6 +816,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
+  '/api/public/hooks/tick-sequences': typeof ApiPublicHooksTickSequencesRoute
   '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
@@ -878,6 +896,7 @@ export interface FileRoutesById {
   '/_authenticated/app/workspace': typeof AuthenticatedAppWorkspaceRoute
   '/_authenticated/platform/access': typeof AuthenticatedPlatformAccessRoute
   '/_authenticated/platform/records': typeof AuthenticatedPlatformRecordsRoute
+  '/_authenticated/platform/sequences': typeof AuthenticatedPlatformSequencesRoute
   '/_authenticated/platform/sources': typeof AuthenticatedPlatformSourcesRoute
   '/_authenticated/platform/workspaces': typeof AuthenticatedPlatformWorkspacesRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -898,6 +917,7 @@ export interface FileRoutesById {
   '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
+  '/api/public/hooks/tick-sequences': typeof ApiPublicHooksTickSequencesRoute
   '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
   '/api/public/hub/callback': typeof ApiPublicHubCallbackRoute
   '/api/public/v1/campaigns': typeof ApiPublicV1CampaignsRoute
@@ -977,6 +997,7 @@ export interface FileRouteTypes {
     | '/app/workspace'
     | '/platform/access'
     | '/platform/records'
+    | '/platform/sequences'
     | '/platform/sources'
     | '/platform/workspaces'
     | '/app/'
@@ -997,6 +1018,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
+    | '/api/public/hooks/tick-sequences'
     | '/api/public/hooks/tick-template-health'
     | '/api/public/hub/callback'
     | '/api/public/v1/campaigns'
@@ -1072,6 +1094,7 @@ export interface FileRouteTypes {
     | '/app/workspace'
     | '/platform/access'
     | '/platform/records'
+    | '/platform/sequences'
     | '/platform/sources'
     | '/platform/workspaces'
     | '/app'
@@ -1092,6 +1115,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
+    | '/api/public/hooks/tick-sequences'
     | '/api/public/hooks/tick-template-health'
     | '/api/public/hub/callback'
     | '/api/public/v1/campaigns'
@@ -1170,6 +1194,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/workspace'
     | '/_authenticated/platform/access'
     | '/_authenticated/platform/records'
+    | '/_authenticated/platform/sequences'
     | '/_authenticated/platform/sources'
     | '/_authenticated/platform/workspaces'
     | '/_authenticated/app/'
@@ -1190,6 +1215,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
+    | '/api/public/hooks/tick-sequences'
     | '/api/public/hooks/tick-template-health'
     | '/api/public/hub/callback'
     | '/api/public/v1/campaigns'
@@ -1255,6 +1281,7 @@ export interface RootRouteChildren {
   ApiPublicHooksTickDistressFeedRoute: typeof ApiPublicHooksTickDistressFeedRoute
   ApiPublicHooksTickJobsRoute: typeof ApiPublicHooksTickJobsRoute
   ApiPublicHooksTickRecordsRequestsRoute: typeof ApiPublicHooksTickRecordsRequestsRoute
+  ApiPublicHooksTickSequencesRoute: typeof ApiPublicHooksTickSequencesRoute
   ApiPublicHooksTickTemplateHealthRoute: typeof ApiPublicHooksTickTemplateHealthRoute
   ApiPublicHubCallbackRoute: typeof ApiPublicHubCallbackRoute
   ApiPublicV1CampaignsRoute: typeof ApiPublicV1CampaignsRoute
@@ -1590,6 +1617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlatformSourcesRouteImport
       parentRoute: typeof AuthenticatedPlatformRoute
     }
+    '/_authenticated/platform/sequences': {
+      id: '/_authenticated/platform/sequences'
+      path: '/sequences'
+      fullPath: '/platform/sequences'
+      preLoaderRoute: typeof AuthenticatedPlatformSequencesRouteImport
+      parentRoute: typeof AuthenticatedPlatformRoute
+    }
     '/_authenticated/platform/records': {
       id: '/_authenticated/platform/records'
       path: '/records'
@@ -1828,6 +1862,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksTickTemplateHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/tick-sequences': {
+      id: '/api/public/hooks/tick-sequences'
+      path: '/api/public/hooks/tick-sequences'
+      fullPath: '/api/public/hooks/tick-sequences'
+      preLoaderRoute: typeof ApiPublicHooksTickSequencesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/tick-records-requests': {
       id: '/api/public/hooks/tick-records-requests'
       path: '/api/public/hooks/tick-records-requests'
@@ -2018,6 +2059,7 @@ const AuthenticatedAppRouteWithChildren =
 interface AuthenticatedPlatformRouteChildren {
   AuthenticatedPlatformAccessRoute: typeof AuthenticatedPlatformAccessRoute
   AuthenticatedPlatformRecordsRoute: typeof AuthenticatedPlatformRecordsRoute
+  AuthenticatedPlatformSequencesRoute: typeof AuthenticatedPlatformSequencesRoute
   AuthenticatedPlatformSourcesRoute: typeof AuthenticatedPlatformSourcesRoute
   AuthenticatedPlatformWorkspacesRoute: typeof AuthenticatedPlatformWorkspacesRoute
   AuthenticatedPlatformIndexRoute: typeof AuthenticatedPlatformIndexRoute
@@ -2026,6 +2068,7 @@ interface AuthenticatedPlatformRouteChildren {
 const AuthenticatedPlatformRouteChildren: AuthenticatedPlatformRouteChildren = {
   AuthenticatedPlatformAccessRoute: AuthenticatedPlatformAccessRoute,
   AuthenticatedPlatformRecordsRoute: AuthenticatedPlatformRecordsRoute,
+  AuthenticatedPlatformSequencesRoute: AuthenticatedPlatformSequencesRoute,
   AuthenticatedPlatformSourcesRoute: AuthenticatedPlatformSourcesRoute,
   AuthenticatedPlatformWorkspacesRoute: AuthenticatedPlatformWorkspacesRoute,
   AuthenticatedPlatformIndexRoute: AuthenticatedPlatformIndexRoute,
@@ -2120,6 +2163,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksTickJobsRoute: ApiPublicHooksTickJobsRoute,
   ApiPublicHooksTickRecordsRequestsRoute:
     ApiPublicHooksTickRecordsRequestsRoute,
+  ApiPublicHooksTickSequencesRoute: ApiPublicHooksTickSequencesRoute,
   ApiPublicHooksTickTemplateHealthRoute: ApiPublicHooksTickTemplateHealthRoute,
   ApiPublicHubCallbackRoute: ApiPublicHubCallbackRoute,
   ApiPublicV1CampaignsRoute: ApiPublicV1CampaignsRoute,
