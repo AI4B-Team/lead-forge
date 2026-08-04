@@ -9,6 +9,7 @@ import { jobSpecSchema, withStates, specStates, type JobSpec, type AssistantMess
 import { enrichmentProfile, isNonUsRun, templateOutputType } from "./pipeline-options";
 import { estimateSpec } from "./estimate.shared";
 import { countiesForState, formatCounty, parseCounty } from "./us-geo";
+import { parseGeoIntent } from "./geo-intent";
 
 /** Snap model-provided county names onto real counties in the spec's state. */
 function normalizeCounties(counties: string[], state: string | null): string[] {
@@ -160,23 +161,51 @@ export async function askAssistant(opts: {
   }
 
   const merged = jobSpecSchema.safeParse({ ...opts.spec, ...(out.specPatch ?? {}) });
+  // Scope is decided in code, never by the model. If the operator named a
+  // county, that county is the run — the assistant may not quietly promote
+  // "Hillsborough County" to all 67 counties in Florida.
+  const intent = parseGeoIntent(opts.message, {
+    stateHint: (out.specPatch?.state as string | undefined) ?? opts.spec.state ?? null,
+  });
   // The model may name one state or several; keep both fields consistent.
   const spec = merged.success
     ? (() => {
         const synced = withStates(merged.data, specStates(merged.data));
+        const state = intent.namedCounty
+          ? (intent.counties[0]?.split(",")[1]?.trim() ?? synced.state)
+          : synced.state;
+        const counties = intent.namedCounty
+          ? intent.counties
+          : normalizeCounties(synced.counties, synced.state);
         return {
           ...synced,
+          state,
           // Franchise removal is business-only and off unless the operator
           // turns it on; never carry it onto other sources.
           removeFranchises: synced.sourceType === "business" ? synced.removeFranchises : false,
-          counties: normalizeCounties(synced.counties, synced.state),
+          counties,
         };
       })()
     : opts.spec;
+
+  // A state with no counties is an unanswered question, not "everywhere". Ask.
+  const needsCountyChoice =
+    (spec.sourceType === "records" || spec.sourceType === "street_scan") &&
+    !spec.counties.length &&
+    specStates(spec).length > 0;
+
   return {
-    reply: out.reply?.trim() || "Updated The List Builder On The Right.",
+    reply: [
+      out.reply?.trim() || "Updated The List Builder On The Right.",
+      needsCountyChoice
+        ? `Which counties in ${specStates(spec).join(", ")}? I never widen a run to a whole state on your behalf — pick the counties and I'll price only those.`
+        : null,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
     spec,
     suggestedTemplates: (out.suggestedTemplates ?? []).slice(0, 4),
+    needsCountyChoice,
   };
 }
 
