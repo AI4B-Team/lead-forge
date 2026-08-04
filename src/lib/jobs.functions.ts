@@ -371,6 +371,8 @@ export const getLeadsByBucket = createServerFn({ method: "GET" })
       .select("full_name, business_name, phone, phone_type, email, address, city, state, zip, scrub_status")
       .eq("job_id", data.jobId)
       .eq("scrub_status", data.bucket)
+      // Unverified legacy records are never exportable.
+      .in("data_provenance", TRUSTED_PROVENANCE)
       .limit(50000);
     if (error) throw error;
     return { rows: rows ?? [] };
@@ -410,8 +412,9 @@ export const launchCampaignFromJob = createServerFn({ method: "POST" })
       .from("leads")
       .select("id", { count: "exact", head: true })
       .eq("job_id", data.jobId)
-      .eq("scrub_status", "clean");
-    if (!cleanCount) throw new Error("No Clean Leads Available.");
+      .eq("scrub_status", "clean")
+      .in("data_provenance", TRUSTED_PROVENANCE);
+    if (!cleanCount) throw new Error(UNTRUSTED_LIST_MESSAGE_OR_EMPTY);
 
     const { data: campaign, error: cerr } = await supabase
       .from("campaigns")
