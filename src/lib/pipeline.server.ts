@@ -355,6 +355,7 @@ function leadKeys(r: {
   address?: unknown;
   city?: unknown;
   state?: unknown;
+  zip?: unknown;
   source_meta?: unknown;
 }): string[] {
   const keys: string[] = [];
