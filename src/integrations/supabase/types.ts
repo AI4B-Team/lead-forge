@@ -1782,6 +1782,85 @@ export type Database = {
           },
         ]
       }
+      lead_sequence_state: {
+        Row: {
+          anchor_date: string | null
+          anchor_type: string
+          campaign_id: string
+          created_at: string
+          current_step: number
+          disposition: string | null
+          id: string
+          last_sent_at: string | null
+          lead_id: string
+          next_send_at: string | null
+          paused_reason: string | null
+          paused_until: string | null
+          sends_count: number
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          anchor_date?: string | null
+          anchor_type?: string
+          campaign_id: string
+          created_at?: string
+          current_step?: number
+          disposition?: string | null
+          id?: string
+          last_sent_at?: string | null
+          lead_id: string
+          next_send_at?: string | null
+          paused_reason?: string | null
+          paused_until?: string | null
+          sends_count?: number
+          status?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          anchor_date?: string | null
+          anchor_type?: string
+          campaign_id?: string
+          created_at?: string
+          current_step?: number
+          disposition?: string | null
+          id?: string
+          last_sent_at?: string | null
+          lead_id?: string
+          next_send_at?: string | null
+          paused_reason?: string | null
+          paused_until?: string | null
+          sends_count?: number
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_sequence_state_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_sequence_state_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_sequence_state_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_tags: {
         Row: {
           created_at: string
@@ -3497,6 +3576,7 @@ export type Database = {
           card_on_file: boolean
           created_at: string
           free_records_used: number
+          human_pause_days: number
           id: string
           industry: string | null
           is_demo_workspace: boolean
@@ -3513,6 +3593,7 @@ export type Database = {
           card_on_file?: boolean
           created_at?: string
           free_records_used?: number
+          human_pause_days?: number
           id?: string
           industry?: string | null
           is_demo_workspace?: boolean
@@ -3529,6 +3610,7 @@ export type Database = {
           card_on_file?: boolean
           created_at?: string
           free_records_used?: number
+          human_pause_days?: number
           id?: string
           industry?: string | null
           is_demo_workspace?: boolean
