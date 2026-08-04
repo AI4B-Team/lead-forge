@@ -710,6 +710,24 @@ export type Database = {
           },
         ]
       }
+      cron_credentials: {
+        Row: {
+          created_at: string
+          key: string
+          secret: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          secret?: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          secret?: string
+        }
+        Relationships: []
+      }
       cron_locks: {
         Row: {
           key: string
