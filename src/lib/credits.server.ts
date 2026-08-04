@@ -24,8 +24,8 @@ export async function applyCreditDelta(
     _kind: args.kind,
     _delta: args.delta,
     _reason: args.reason,
-    _job_id: args.jobId ?? null,
-    _actor_user_id: args.actorUserId ?? null,
+    _job_id: args.jobId ?? undefined,
+    _actor_user_id: args.actorUserId ?? undefined,
   });
   if (error) throw new Error(error.message);
   return (data as number) ?? 0;
