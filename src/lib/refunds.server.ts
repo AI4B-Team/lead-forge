@@ -52,7 +52,7 @@ export async function sourceLabelForJob(db: Client, jobId: string | null | undef
       business: "Business listings",
       local: "Local search",
       records: "County records",
-      property_scan: "Property scanning",
+      street_scan: "Property scanning",
       upload: "Your uploaded file",
     };
     return { label: bySource[job?.source_type ?? ""] ?? "A source we rely on", listName: job?.name ?? null };

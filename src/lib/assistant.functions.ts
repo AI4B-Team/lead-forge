@@ -238,7 +238,7 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
     if (spec.sourceType === "upload") throw new Error("Uploaded Lists Start On The Upload Page");
     if (spec.sourceType === "business" && !spec.niches.length) throw new Error("Add At Least One Niche");
     if (spec.sourceType === "records" && !spec.recordType) throw new Error("Pick A Record Type");
-    if (spec.sourceType === "property_scan" && !spec.visualCriteria.length) {
+    if (spec.sourceType === "street_scan" && !spec.visualCriteria.length) {
       throw new Error("Add At Least One Visual Criterion");
     }
 
@@ -262,7 +262,7 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
       spec.name ??
       (spec.sourceType === "records"
         ? `${spec.recordType} · ${geoLabel}`
-        : spec.sourceType === "property_scan"
+        : spec.sourceType === "street_scan"
           ? `Property Scan · ${geoLabel}`
           : `${spec.niches.join(", ")} · ${geoLabel}`);
 

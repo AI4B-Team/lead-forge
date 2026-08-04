@@ -93,7 +93,7 @@ export const TEMPLATES: Template[] = [
 
   // ---------- Business & Local ----------
   {
-    id: "propscan",
+    id: "street-scan",
     shortTitle: "Property Scan",
     shortSubtitle: "AI Driving For Dollars",
     title: "Property Scan",
@@ -702,9 +702,9 @@ export function templateFields(t: Template): string[] {
 }
 
 /** The Job Spec source a template already determines on its own. */
-export function templateSourceType(t: Template): "business" | "records" | "upload" | "property_scan" {
+export function templateSourceType(t: Template): "business" | "records" | "upload" | "street_scan" {
   // Property Scan is its own source kind: parcels + buy box + imagery scoring.
-  if (t.id === "propscan") return "property_scan";
+  if (t.id === "street-scan") return "street_scan";
   if (t.category === "upload") return "upload";
   if (t.category === "records") return "records";
   return "business";

@@ -24,7 +24,7 @@ export const MAX_ROWS_PRESETS = [25, 100, 500, 1000, 5000] as const;
 export function estimateSpec(spec: JobSpec): SpecEstimate | null {
   // Property Scan quotes from its own buy-box funnel (see estimateScan), and
   // uploads have nothing to quote until the file is mapped.
-  if (!spec.sourceType || spec.sourceType === "upload" || spec.sourceType === "property_scan") return null;
+  if (!spec.sourceType || spec.sourceType === "upload" || spec.sourceType === "street_scan") return null;
   // Sources that never skip trace never quote skip-trace credits: creators and
   // marketplace sellers are email-first, datasets have no enrichment at all,
   // and non-US runs are email-only because SMS is US-only.

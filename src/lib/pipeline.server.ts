@@ -186,7 +186,7 @@ const recordsAdapter: SourceAdapter = {
  * matched properties, each carrying its condition score and reasoning.
  */
 const propertyScanAdapter: SourceAdapter = {
-  key: "property_scan.parcels",
+  key: "street_scan.parcels",
   coverage: "live",
   async run(params, onProgress) {
     const counties = ((params.counties as string[] | undefined)?.filter(Boolean) ?? ["Hillsborough, FL"]) as string[];
@@ -289,7 +289,7 @@ export async function refundJobCredits(
 function selectAdapter(sourceType: string): SourceAdapter {
   if (sourceType === "business") return businessAdapter;
   if (sourceType === "records") return recordsAdapter;
-  if (sourceType === "property_scan") return propertyScanAdapter;
+  if (sourceType === "street_scan") return propertyScanAdapter;
   return uploadAdapter;
 }
 
