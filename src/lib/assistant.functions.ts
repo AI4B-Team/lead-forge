@@ -44,14 +44,21 @@ export const assistantChat = createServerFn({ method: "POST" })
     }
 
     const ref = await loadReferenceData(context.supabase);
-    const covered = ref.countyCoverage
-      .filter((c) => c.source_type === "records" && c.status !== "requested")
-      .map(coverageLabel);
+    // The single source of truth for what can run is source_coverage where
+    // status='verified' — the same rows the coverage gate reads. The assistant
+    // may only speak about, and suggest, these county/record-type pairs.
+    const { verifiedCoverage } = await import("@/lib/distress/coverage.server");
+    const verified = await verifiedCoverage();
+    const coveredPairs = [
+      ...new Set(
+        verified.map((r) => `${r.county_name ?? r.fips}, ${r.state} — ${r.record_type}`),
+      ),
+    ].sort();
     const result = await askAssistant({
       history: data.history,
       message: data.message,
       spec: data.spec,
-      coveredCounties: covered,
+      coveredPairs,
       niches: ref.niches.map((n) => n.name),
       recordTypes: ref.recordTypes.map((r) => r.name),
       templateCatalog: TEMPLATES.map((t) => `${t.id} — ${t.title} — ${templateAdapterStatus(t)}`).join("\n"),
