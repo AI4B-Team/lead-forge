@@ -205,10 +205,6 @@ async function apifyScrape(
   });
 }
 
-export function useMockData(): boolean {
-  return process.env.LEADTRACE_USE_MOCK_DATA === "true";
-}
-
 export function getBusinessScraper(): BusinessScraper {
   return {
     key: "apify.gmaps",
@@ -218,7 +214,6 @@ export function getBusinessScraper(): BusinessScraper {
     async scrape(params) {
       const token = process.env.APIFY_TOKEN;
       if (!token) {
-        if (useMockData()) return mockScrape(params);
         throw new Error("Apify is not connected. Add credentials in Settings → Integrations.");
       }
       const actor = process.env.APIFY_GMAPS_ACTOR ?? "compass~crawler-google-places";
