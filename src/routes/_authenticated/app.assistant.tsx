@@ -880,6 +880,26 @@ function Assistant() {
 
   const geoResolved = Boolean(specStates(spec).length || spec.counties.length || spec.sourceType === "upload");
 
+  // Coverage verdict from the same server function the queue gate uses, so the
+  // panel can never price geography the runner would refuse.
+  const coverageInput = {
+    sourceType: spec.sourceType,
+    recordType: spec.recordType ?? null,
+    counties: spec.counties,
+    states: specStates(spec),
+  };
+  const jobCoverageQ = useQuery({
+    queryKey: ["job-coverage", coverageInput],
+    queryFn: () => getJobCoverage({ data: coverageInput }),
+    enabled: Boolean(spec.sourceType),
+    staleTime: 60_000,
+  });
+  const verdict = jobCoverageQ.data ?? null;
+  const coverageBlocked = Boolean(
+    verdict?.gated && (verdict.status === "none" || verdict.status === "scope_too_broad"),
+  );
+  const priceable = geoResolved && !coverageBlocked;
+
   /** Last row cap this workspace used, so it isn't re-entered every run. */
   useEffect(() => {
     if (!workspaceId) return;
