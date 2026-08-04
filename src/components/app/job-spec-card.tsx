@@ -794,7 +794,14 @@ export function JobSpecCard({
                 renderBadgeClassName={(c) => COVERAGE_STYLE[covFor(c)]}
                 renderBadgeLabel={(c) => `${c} · ${COVERAGE_LABEL[covFor(c)]}`}
               />
-              {recordsSource && <UncoveredNotice counties={spec.counties.filter((c) => !countyVerified(c))} recordType={recordTypeNow} />}
+              {/* Only the PARTIAL case is stated here — when nothing is covered the
+                  run footer owns that message, so one Request button renders, not three. */}
+              {recordsSource && spec.counties.some((c) => countyVerified(c)) && (
+                <UncoveredNotice
+                  counties={spec.counties.filter((c) => !countyVerified(c))}
+                  recordType={recordTypeNow}
+                />
+              )}
               {!spec.counties.length && (
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   {states.length
