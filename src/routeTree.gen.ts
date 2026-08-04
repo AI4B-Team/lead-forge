@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TutorialsRouteImport } from './routes/tutorials'
+import { Route as StreetScanRouteImport } from './routes/street-scan'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SolarRouteImport } from './routes/solar'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -100,6 +101,11 @@ import { Route as ApiPublicV1JobsJobIdRouteImport } from './routes/api/public/v1
 const TutorialsRoute = TutorialsRouteImport.update({
   id: '/tutorials',
   path: '/tutorials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StreetScanRoute = StreetScanRouteImport.update({
+  id: '/street-scan',
+  path: '/street-scan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StartRoute = StartRouteImport.update({
@@ -590,6 +596,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/street-scan': typeof StreetScanRoute
   '/tutorials': typeof TutorialsRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/platform': typeof AuthenticatedPlatformRouteWithChildren
@@ -678,6 +685,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/street-scan': typeof StreetScanRoute
   '/tutorials': typeof TutorialsRoute
   '/auth/hub': typeof AuthHubRoute
   '/leads/$slug': typeof LeadsSlugRoute
@@ -766,6 +774,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solar': typeof SolarRoute
   '/start': typeof StartRoute
+  '/street-scan': typeof StreetScanRoute
   '/tutorials': typeof TutorialsRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/platform': typeof AuthenticatedPlatformRouteWithChildren
@@ -856,6 +865,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/street-scan'
     | '/tutorials'
     | '/app'
     | '/platform'
@@ -944,6 +954,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/street-scan'
     | '/tutorials'
     | '/auth/hub'
     | '/leads/$slug'
@@ -1031,6 +1042,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solar'
     | '/start'
+    | '/street-scan'
     | '/tutorials'
     | '/_authenticated/app'
     | '/_authenticated/platform'
@@ -1121,6 +1133,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SolarRoute: typeof SolarRoute
   StartRoute: typeof StartRoute
+  StreetScanRoute: typeof StreetScanRoute
   TutorialsRoute: typeof TutorialsRoute
   LeadsSlugRoute: typeof LeadsSlugRoute
   TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
@@ -1150,6 +1163,13 @@ declare module '@tanstack/react-router' {
       path: '/tutorials'
       fullPath: '/tutorials'
       preLoaderRoute: typeof TutorialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/street-scan': {
+      id: '/street-scan'
+      path: '/street-scan'
+      fullPath: '/street-scan'
+      preLoaderRoute: typeof StreetScanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/start': {
@@ -1913,6 +1933,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SolarRoute: SolarRoute,
   StartRoute: StartRoute,
+  StreetScanRoute: StreetScanRoute,
   TutorialsRoute: TutorialsRoute,
   LeadsSlugRoute: LeadsSlugRoute,
   TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
