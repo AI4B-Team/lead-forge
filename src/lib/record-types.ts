@@ -25,3 +25,20 @@ export const RECORD_TYPE_LABELS: readonly string[] = RECORD_TYPE_OPTIONS.map((r)
 
 /** Sentinel value used by the dropdown's "Request A Record Type…" affordance. */
 export const REQUEST_RECORD_TYPE = "__request_record_type__";
+
+/**
+ * The source template that actually serves each record type. The Source row and
+ * the Record Type row describe the SAME job, so changing one must move the
+ * other — otherwise the spec reads as two different jobs.
+ */
+const TEMPLATE_BY_RECORD_TYPE: Record<string, string> = {
+  Probate: "probate",
+  "Code Violation": "code",
+  "Pre-Foreclosure / Lis Pendens": "prefc",
+  "Tax Default / Delinquency": "tax",
+  "Vacancy / Demolition Notice": "vacancy",
+};
+
+export function templateForRecordType(label: string | null | undefined): string | null {
+  return (label && TEMPLATE_BY_RECORD_TYPE[label]) || null;
+}

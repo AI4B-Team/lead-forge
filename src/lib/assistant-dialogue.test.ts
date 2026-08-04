@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_SPEC, withStates, type JobSpec } from "./assistant.shared";
-import { nextQuestion, speakTurn, stickyCounties } from "./assistant-dialogue";
+import { nextQuestion, pruneUnbackedFallbacks, speakTurn, stickyCounties } from "./assistant-dialogue";
 
 const records = (over: Partial<JobSpec> = {}): JobSpec => ({
   ...EMPTY_SPEC,
@@ -63,5 +63,22 @@ describe("assistant dialogue", () => {
       panelEdits: ["Counties"],
     });
     expect(out.reply).toMatch(/I see you changed Counties/);
+  });
+});
+
+describe("pruneUnbackedFallbacks", () => {
+  const covered = ["Cook, IL — Code Violation"];
+  it("drops a fallback market we cannot actually run", () => {
+    const out = pruneUnbackedFallbacks(
+      "Hillsborough isn't covered. Would you like to search in a nearby covered market, such as any of the Florida counties?",
+      covered,
+    );
+    expect(out.removed).toBe(true);
+    expect(out.reply).not.toMatch(/Florida/);
+  });
+  it("keeps a fallback that names a verified market", () => {
+    const out = pruneUnbackedFallbacks("Want me to run the nearest covered market, Cook County IL, instead?", covered);
+    expect(out.removed).toBe(false);
+    expect(out.reply).toMatch(/Cook/);
   });
 });

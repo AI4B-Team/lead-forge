@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner";
 import {
   Sparkles, ChevronDown, Play, CornerDownLeft, CheckCircle2, RotateCcw, SlidersHorizontal,
-  Paperclip, Mic, Send, BellPlus, Loader2, Check,
+  Paperclip, Mic, Send, BellPlus, Loader2, Check, CreditCard,
 } from "lucide-react";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { useCreditBalances } from "@/hooks/use-credit-balances";
@@ -932,21 +932,7 @@ function Assistant() {
   );
   const priceable = geoResolved && !coverageBlocked;
 
-  /** Terminal CTA states — never a loading label when there is nothing to load. */
   const coveragePartial = verdict?.status === "partial";
-  const ctaLabel = running
-    ? "Queueing…"
-    : coverageBlocked
-      ? "Not Available — Request Coverage"
-      : !traceComplete
-        ? "Building Preview…"
-        : coveragePartial
-          ? `Run ${verdict?.coveredCounties.length ?? 0} Covered ${
-              (verdict?.coveredCounties.length ?? 0) === 1 ? "County" : "Counties"
-            }`
-          : confirmed
-            ? "Generate List"
-            : "Looks Good";
   const traceCoverage = verdict?.gated
     ? {
         status: verdict.status,
@@ -1088,6 +1074,32 @@ function Assistant() {
   const overSkip = Boolean(estimate && estimate.skipTraceCredits > creditBalances.skip_trace);
   const overBudget = overLead || overSkip;
 
+  /**
+   * Terminal CTA states. The loading label is allowed ONLY while something is
+   * genuinely in flight (model turn, trace reveal, coverage lookup) — every
+   * other combination resolves to a label the operator can act on.
+   */
+  const previewInFlight =
+    busy || jobCoverageQ.isLoading || (traceSteps.length > 0 && revealed < traceSteps.length);
+  const creditsShort = overBudget || overScan || overScanSkip;
+  const coveredCount = verdict?.coveredCounties.length ?? 0;
+  const cta: { label: string; disabled: boolean; to?: string } = running
+    ? { label: "Queueing…", disabled: true }
+    : coverageBlocked
+      ? { label: "Not Available — Request Coverage", disabled: true }
+      : previewInFlight
+        ? { label: "Building Preview…", disabled: true }
+        : !traceComplete
+          ? { label: "Add The Missing Details", disabled: true }
+          : creditsShort
+            ? { label: "Add Credits to Continue", disabled: false, to: "/app/billing" }
+            : coveragePartial
+              ? {
+                  label: `Run ${coveredCount} Covered ${coveredCount === 1 ? "County" : "Counties"}`,
+                  disabled: false,
+                }
+              : { label: confirmed ? "Generate List" : "Looks Good", disabled: false };
+
   const rowCapControl = adapterLive && spec.sourceType && spec.sourceType !== "upload" && (
     <div className="rounded-xl border border-border p-3">
       <div className="text-xs font-medium text-foreground">Max Leads</div>
@@ -1220,13 +1232,21 @@ function Assistant() {
 
       {adapterLive ? (
         <>
-          <Button
-            className="w-full rounded-full"
-            disabled={running || !spec.sourceType || !traceComplete || coverageBlocked}
-            onClick={reviewAndRun}
-          >
-            {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {ctaLabel}
-          </Button>
+          {cta.to ? (
+            <Button asChild className="w-full rounded-full">
+              <Link to={cta.to}>
+                <CreditCard className="mr-1 h-4 w-4" /> {cta.label}
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              className="w-full rounded-full"
+              disabled={cta.disabled || !spec.sourceType}
+              onClick={reviewAndRun}
+            >
+              {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {cta.label}
+            </Button>
+          )}
           <div className="text-center text-[11px] text-muted-foreground pb-4">
             The Assistant Assembles. You Run. Nothing Sends Without You.
           </div>

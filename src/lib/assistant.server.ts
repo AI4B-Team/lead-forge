@@ -10,6 +10,7 @@ import { enrichmentProfile, isNonUsRun, templateOutputType } from "./pipeline-op
 import { estimateSpec } from "./estimate.shared";
 import { countiesForState, formatCounty, parseCounty } from "./us-geo";
 import { speakTurn, stickyCounties, wantsWholeState } from "./assistant-dialogue";
+import { templateForRecordType } from "./record-types";
 
 /** Snap model-provided county names onto real counties in the spec's state. */
 function normalizeCounties(counties: string[], state: string | null): string[] {
@@ -36,7 +37,7 @@ export function precheckCompliance(message: string): string | null {
   return null;
 }
 
-function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: string[], templates: string): string {
+function systemPrompt(coveredPairs: string[], niches: string[], recordTypes: string[], templates: string): string {
   return [
     "You are the LeadTrace AI Lead Assistant. You turn a plain-English lead goal into a concrete, runnable pipeline List Spec.",
     "You ASSEMBLE and PROPOSE lists. You never run, launch, or send anything — a human clicks Run.",
@@ -51,7 +52,8 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "- Scoring a list the operator ALREADY has (a CSV, or a saved list) is the upload source, not a separate scan flow. Never describe a second scan page.",
     "Common business niches: " + niches.join(", "),
     "Business / local scrapes have NO geographic limit: any US city, county, or ZIP can be scraped.",
-    "Counties with PUBLIC-RECORDS adapter coverage (records source only): " + (coveredCounties.join(", ") || "none configured"),
+    "VERIFIED public-records coverage (county — record type pairs; records source only). This is the complete list; nothing else can run: " +
+      (coveredPairs.join("; ") || "none configured"),
     "",
     "Source templates (id — name — availability):",
     templates,
@@ -70,7 +72,7 @@ function systemPrompt(coveredCounties: string[], niches: string[], recordTypes: 
     "- Never propose messaging DNC, litigator, suppressed, or opted-out leads. Only Clean-file leads are campaignable.",
     "- Never draft hidden or mid-message opt-out traps, and never guarantee outcomes.",
     "- You may select any real county in the chosen state, and select several at once when the operator asks for a region or metro. Always set state (2-letter) plus counties[] using plain county names.",
-    "- Coverage caveats apply ONLY to the records source. For a records county not listed above, select it if asked but say plainly it is not covered yet, offer to log a county request, and suggest the closest covered market. For business / local scrapes never mention coverage limits — every US county works.",
+    "- Coverage caveats apply ONLY to the records source. For a county/record-type pair not in the verified list above, select it if asked but say plainly it is not covered yet and offer to log a request. NEVER invent or imply a fallback market: you may only offer an alternative that appears verbatim in the verified pairs list, matched to the record type in play. If nothing is verified for that record type, say \"We don't cover this record type anywhere yet — I've logged your request.\" Do not suggest a state or county just because it is geographically nearby. For business / local scrapes never mention coverage limits — every US county works.",
     "- Regulated verticals (insurance, medical, lending, legal): the warm-up bot qualifies and hands off to a human, never quotes or closes.",
     "- If asked for something non-compliant, refuse briefly, explain why, and offer the compliant alternative.",
     "- removeFranchises is a minor filter, OFF by default everywhere. NEVER mention franchises, chains, \"remove franchises\", or which sources support it unless the operator explicitly raises it (\"franchise\", \"no franchises\", \"no chains\", \"independents only\", \"local mom-and-pop only\") or has already toggled it on. Do not list it among source capabilities, do not suggest it, and never volunteer caveats about it. Only change removeFranchises when explicitly asked, and only for the business source.",
@@ -118,7 +120,8 @@ export async function askAssistant(opts: {
   history: AssistantMessage[];
   message: string;
   spec: JobSpec;
-  coveredCounties: string[];
+  /** "County, ST — Record Type" rows from source_coverage where verified. */
+  coveredPairs: string[];
   niches: string[];
   recordTypes: string[];
   /** "id — Title — live|beta" lines so the model can match a named source. */
@@ -154,7 +157,7 @@ export async function askAssistant(opts: {
     body: JSON.stringify({
       model: "google/gemini-2.5-flash",
       messages: [
-        { role: "system", content: systemPrompt(opts.coveredCounties, opts.niches, opts.recordTypes, opts.templateCatalog ?? "none") },
+        { role: "system", content: systemPrompt(opts.coveredPairs, opts.niches, opts.recordTypes, opts.templateCatalog ?? "none") },
         { role: "system", content: `Current List Spec (JSON): ${JSON.stringify(opts.spec)}` },
         ...opts.history.slice(-12),
         { role: "user", content: opts.message },
@@ -194,9 +197,18 @@ export async function askAssistant(opts: {
           ? sticky.counties
           : normalizeCounties(synced.counties, synced.state);
         const state = counties[0]?.split(",")[1]?.trim() ?? synced.state;
+        // Keep the Source row honest: a records run whose record type is served
+        // by a specific preset must show that preset as its Source. The
+        // maintained Distress Feed serves every type, so it is left alone.
+        const wanted = templateForRecordType(synced.recordType);
+        const templateId =
+          synced.sourceType === "records" && wanted && synced.templateId !== "distress-feed"
+            ? wanted
+            : synced.templateId;
         return {
           ...synced,
           state,
+          templateId,
           // Franchise removal is business-only and off unless the operator
           // turns it on; never carry it onto other sources.
           removeFranchises: synced.sourceType === "business" ? synced.removeFranchises : false,
@@ -219,6 +231,7 @@ export async function askAssistant(opts: {
     priorSpec: opts.spec,
     userTexts,
     panelEdits: opts.panelEdits,
+    coveredLabels: opts.coveredPairs,
   });
 
   return {
