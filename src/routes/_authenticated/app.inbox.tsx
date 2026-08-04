@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Bot, ChevronDown, Inbox as InboxIcon, Loader2, PhoneOff, Plus, Send, Sparkles, X } from "lucide-react";
+import { Bot, Inbox as InboxIcon, Loader2, MoreVertical, PhoneOff, Plus, Send, Sparkles, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -305,7 +305,7 @@ function ConversationsPage() {
         title="Conversations"
         description="Where AI And You Work Leads Together — Summaries, Suggested Replies, And Full Context."
       />
-      <div className="inbox-shell grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[520px_minmax(0,1fr)] xl:grid-cols-[520px_minmax(0,1fr)_288px]">
+      <div className="inbox-shell grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[400px_minmax(0,1fr)] xl:grid-cols-[400px_minmax(0,1fr)_288px]">
         {/* Conversation list */}
         <Card className="flex flex-col min-h-0">
           <div className="shrink-0 p-2 border-b flex items-center gap-0.5 flex-nowrap overflow-hidden">
@@ -349,9 +349,10 @@ function ConversationsPage() {
                       ? "default"
                       : "ghost"
                   }
-                  className="rounded-full text-xs h-7 px-2 shrink-0 ml-auto"
+                  className="rounded-full h-7 w-7 p-0 shrink-0 ml-auto"
+                  aria-label="More filters"
                 >
-                  More <ChevronDown className="h-3 w-3" />
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
