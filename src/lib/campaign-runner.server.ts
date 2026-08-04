@@ -2,21 +2,13 @@
 // dispatch logic from tickCampaign but runs under the service role so pg_cron
 // can drive it without a user session.
 
-import { isWithinTcpaWindow, canStartNewDrop } from "@/lib/tcpa";
+import {
+  canMessageRecipient,
+  canStartNewDropForRecipient,
+  inQuietHoursEverywhere,
+} from "@/lib/tcpa";
 
 type SendWindow = { quiet_start?: string; quiet_end?: string };
-
-function hhmm(d: Date) {
-  return d.toTimeString().slice(0, 5);
-}
-
-function inQuietHours(now: Date, win: SendWindow | null | undefined) {
-  if (!win?.quiet_start || !win?.quiet_end) return false;
-  const cur = hhmm(now);
-  const { quiet_start: qs, quiet_end: qe } = win;
-  if (qs > qe) return cur >= qs || cur < qe;
-  return cur >= qs && cur < qe;
-}
 
 function renderTemplate(body: string, lead: Record<string, unknown>): string {
   return body.replace(/\{\{\s*([a-zA-Z_][\w]*)\s*\}\}/g, (_, key: string) => {
