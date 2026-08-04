@@ -13,6 +13,7 @@ import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
 import { StateMultiSelect } from "@/components/app/state-multi-select";
+import { LocationSearch } from "@/components/app/location-search";
 import { countiesForState, parseCounty } from "@/lib/us-geo";
 import { UploadCloud, X, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
