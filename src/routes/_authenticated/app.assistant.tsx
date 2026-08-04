@@ -1158,7 +1158,9 @@ function Assistant() {
         </div>
       )}
 
-      {uncovered.length > 0 && (
+      {/* The coverage verdict above is the only place a Request button renders —
+          one button per uncovered county, not one per UI layer that noticed. */}
+      {!verdict?.gated && uncovered.length > 0 && (
         <div className="rounded-xl border border-border p-3 text-xs">
           <div className="font-medium text-foreground">Not Covered Yet</div>
           <div className="mt-1 text-muted-foreground">
