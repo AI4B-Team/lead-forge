@@ -12,6 +12,8 @@ Public records: never solve CAPTCHAs; one records request per agency per cycle, 
 
 Platform-wide metrics and admin tools live only in Platform Admin (/platform), never in the customer app.
 
+Compliance fails closed: unconfigured/failing DNC provider hard-fails a run; unscrubbed or unknown numbers never enter cold outbound.
+
 ## Memories
 - [Public records sourcing](mem://product/public-records-sourcing.md) — Access-path order, no-CAPTCHA rule, one-request-per-agency throttle, free credit cost
 - [Product positioning](mem://product/positioning.md) — Copy rules: multi-source data, uploaded lists, optional skip trace, outcome-first messaging
