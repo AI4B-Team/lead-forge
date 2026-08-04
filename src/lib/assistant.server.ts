@@ -197,15 +197,12 @@ export async function askAssistant(opts: {
           ? sticky.counties
           : normalizeCounties(synced.counties, synced.state);
         const state = counties[0]?.split(",")[1]?.trim() ?? synced.state;
-        // Keep the Source row honest: if the record type moved to one served by
-        // a different records template, move the template with it.
+        // Keep the Source row honest: a records run whose record type is served
+        // by a specific preset must show that preset as its Source. The
+        // maintained Distress Feed serves every type, so it is left alone.
         const wanted = templateForRecordType(synced.recordType);
-        const currentServes = templateForRecordType(
-          // reverse-check: is the current template a record-type preset?
-          synced.recordType,
-        );
         const templateId =
-          synced.sourceType === "records" && wanted && synced.templateId !== "distress-feed" && currentServes
+          synced.sourceType === "records" && wanted && synced.templateId !== "distress-feed"
             ? wanted
             : synced.templateId;
         return {
