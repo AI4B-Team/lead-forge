@@ -163,7 +163,8 @@ export function LocationSearch({
 
       {chips.length === 0 && (
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Start with where you buy. A county covers the whole county; add ZIPs to work a tighter farm area.
+          Start with where you buy. A county covers the whole county; add ZIPs to work a tighter
+          farm area.
         </p>
       )}
     </div>

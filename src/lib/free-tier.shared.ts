@@ -16,11 +16,7 @@ export const FREE_RECORD_ALLOWANCE = 50;
 /** Templates a Free workspace can run without limit (0 credits per lead). */
 export const FREE_TEMPLATE_IDS = ["contact-details", "universal-crawl"] as const;
 
-export type FreeGate =
-  | "paid_template"
-  | "skip_trace"
-  | "sms_sending"
-  | "record_allowance";
+export type FreeGate = "paid_template" | "skip_trace" | "sms_sending" | "record_allowance";
 
 export type PlanContext = {
   plan: string;
@@ -51,8 +47,7 @@ export const GATE_MESSAGE: Record<FreeGate, string> = {
     "This source costs credits per lead, so it needs a payment method on file. The Distress Feed, Contact Details Scraper and Universal Site Crawler stay free.",
   skip_trace:
     "Skip trace is billed per hit, so it needs a payment method on file. You can still build and export the list without it.",
-  sms_sending:
-    "Sending SMS needs a payment method on file — carriers bill us per message.",
+  sms_sending: "Sending SMS needs a payment method on file — carriers bill us per message.",
   record_allowance: `The Free plan includes ${FREE_RECORD_ALLOWANCE} Distress Feed records. Add a payment method to keep pulling.`,
 };
 

@@ -8,10 +8,7 @@ import { freeGate, needsCard, type PlanContext } from "./free-tier.shared";
 
 type AnyClient = Pick<SupabaseClient<any, any, any>, "from">;
 
-export async function planContext(
-  supabase: AnyClient,
-  workspaceId: string,
-): Promise<PlanContext> {
+export async function planContext(supabase: AnyClient, workspaceId: string): Promise<PlanContext> {
   const { data } = await supabase
     .from("workspaces")
     .select("billing_plan, card_on_file, free_records_used")

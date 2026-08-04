@@ -31,7 +31,10 @@ export function FreeTierNotice({
         <div>
           <p className="font-semibold">Payment Method Needed</p>
           <p className="mt-1 text-muted-foreground">{blocked.message}</p>
-          <Link to="/app/billing" className="mt-2 inline-block font-semibold text-primary hover:underline">
+          <Link
+            to="/app/billing"
+            className="mt-2 inline-block font-semibold text-primary hover:underline"
+          >
             Add Payment Method
           </Link>
         </div>
