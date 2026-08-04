@@ -5,7 +5,10 @@ import { checkCanText } from "./optout.server";
  * Chainable Supabase stub. `leads` answers maybeSingle(); every other table
  * resolves to an empty list so opt-out and suppression checks pass.
  */
-function makeDb(lead: { phone: string | null; scrub_status: string | null } | null) {
+function makeDb(
+  lead: { phone: string | null; scrub_status: string | null; data_provenance?: string } | null,
+) {
+  if (lead && !lead.data_provenance) lead.data_provenance = "verified_source";
   const from = (table: string) => {
     const q: Record<string, unknown> = {};
     const chain = () => q;
