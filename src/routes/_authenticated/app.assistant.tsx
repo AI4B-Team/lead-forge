@@ -27,7 +27,9 @@ import { useWorkspaceId } from "@/hooks/use-workspace";
 import { useCreditBalances } from "@/hooks/use-credit-balances";
 import { FirstRunSetup } from "@/components/app/getting-started";
 import { supabase } from "@/integrations/supabase/client";
-import { queueJob } from "@/lib/job-submit";
+import { useQuery } from "@tanstack/react-query";
+import { queueUploadJob } from "@/lib/upload-jobs.functions";
+import { getJobCoverage } from "@/lib/coverage.functions";
 import { inferChannel } from "@/lib/channels";
 import { ColumnMapperDialog } from "@/components/app/column-mapper";
 import {
@@ -798,11 +800,8 @@ function Assistant() {
       setRunning(true);
       try {
         // Same params shape the Upload page queues, so the pipeline is identical.
-        const { data: authUser } = await supabase.auth.getUser();
-        const { id, duplicate } = await queueJob(supabase, {
+        const { id, duplicate } = await queueUploadJob({ data: {
           workspaceId,
-          createdBy: authUser?.user?.id ?? null,
-          sourceType: "upload",
           channel:
             spec.channel ??
             inferChannel({
@@ -818,7 +817,7 @@ function Assistant() {
             skip_trace: spec.skipTrace,
             rows: attachmentRows(upload),
           },
-        });
+        } });
         clearDraft(workspaceId);
         navigate({ to: "/app/lists/$listId", params: { listId: id } });
         if (duplicate) {
@@ -879,6 +878,26 @@ function Assistant() {
       : selectedTemplate?.placeholderHint ?? GENERIC_PLACEHOLDER;
 
   const geoResolved = Boolean(specStates(spec).length || spec.counties.length || spec.sourceType === "upload");
+
+  // Coverage verdict from the same server function the queue gate uses, so the
+  // panel can never price geography the runner would refuse.
+  const coverageInput = {
+    sourceType: spec.sourceType,
+    recordType: spec.recordType ?? null,
+    counties: spec.counties,
+    states: specStates(spec),
+  };
+  const jobCoverageQ = useQuery({
+    queryKey: ["job-coverage", coverageInput],
+    queryFn: () => getJobCoverage({ data: coverageInput }),
+    enabled: Boolean(spec.sourceType),
+    staleTime: 60_000,
+  });
+  const verdict = jobCoverageQ.data ?? null;
+  const coverageBlocked = Boolean(
+    verdict?.gated && (verdict.status === "none" || verdict.status === "scope_too_broad"),
+  );
+  const priceable = geoResolved && !coverageBlocked;
 
   /** Last row cap this workspace used, so it isn't re-entered every run. */
   useEffect(() => {
@@ -970,7 +989,7 @@ function Assistant() {
     </div>
   );
 
-  const scanEstimateBlock = scanEstimate && adapterLive && geoResolved && (
+  const scanEstimateBlock = scanEstimate && adapterLive && priceable && (
     <div className="space-y-2">
       <PipelineFunnel
         size="sm"
@@ -1054,6 +1073,35 @@ function Assistant() {
 
   const runFooter = (
     <div className="space-y-3 border-t border-border bg-background pt-4">
+      {/* Coverage refusal comes before any price. No estimate, no Run. */}
+      {coverageBlocked && verdict?.message && (
+        <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 text-xs">
+          <div className="font-medium text-foreground">
+            {verdict.status === "scope_too_broad" ? "Narrow This List" : "Not Covered Yet"}
+          </div>
+          <div className="mt-1 text-muted-foreground">{verdict.message}</div>
+          {verdict.uncoveredCounties.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {verdict.uncoveredCounties.map((c) => (
+                <Button key={c} size="sm" variant="outline" className="rounded-full" onClick={() => request(c)}>
+                  Request {c}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Partial coverage: we price only the counties we can actually reach. */}
+      {verdict?.status === "partial" && verdict.message && (
+        <div className="rounded-xl border border-border p-3 text-xs">
+          <div className="font-medium text-foreground">Partial Coverage</div>
+          <div className="mt-1 text-muted-foreground">
+            {verdict.message} You're only charged for {verdict.coveredCounties.join(", ")}.
+          </div>
+        </div>
+      )}
+
       {uncovered.length > 0 && (
         <div className="rounded-xl border border-border p-3 text-xs">
           <div className="font-medium text-foreground">Not Covered Yet</div>
@@ -1076,7 +1124,7 @@ function Assistant() {
 
       {scanEstimateBlock}
 
-      {estimate && adapterLive && spec.sourceType && geoResolved && (
+      {estimate && adapterLive && spec.sourceType && priceable && (
         <div className="space-y-1.5 text-center text-xs">
           <div className="text-muted-foreground">
             ≈ {estimate.rows.toLocaleString()} Leads ·{" "}
@@ -1116,7 +1164,7 @@ function Assistant() {
         <>
           <Button
             className="w-full rounded-full"
-            disabled={running || !spec.sourceType || !traceComplete}
+            disabled={running || !spec.sourceType || !traceComplete || coverageBlocked}
             onClick={reviewAndRun}
           >
             {confirmed ? <Play className="mr-1 h-4 w-4" /> : <CheckCircle2 className="mr-1 h-4 w-4" />} {ctaLabel}

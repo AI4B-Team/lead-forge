@@ -479,9 +479,21 @@ export function JobSpecCard({
                   <SelectTrigger className="mt-1"><SelectValue placeholder="Pick A Record Type" /></SelectTrigger>
                 </PopoverTrigger>
                 <SelectContent>
-                  {RECORD_TYPE_OPTIONS.map((r) => (
-                    <SelectItem key={r.id} value={r.label}>{r.label}</SelectItem>
-                  ))}
+                  {RECORD_TYPE_OPTIONS.map((r) => {
+                    // A record type with no verified adapter anywhere cannot be
+                    // pulled, so it is never selectable — it's a request instead.
+                    const buildable = coverageQ.isPending || verified.some((v) => v.record_type === r.label);
+                    return (
+                      <SelectItem key={r.id} value={r.label} disabled={!buildable}>
+                        <span className="flex w-full items-center justify-between gap-3">
+                          <span>{r.label}</span>
+                          {!buildable && (
+                            <span className="text-[11px] text-muted-foreground">Not covered yet</span>
+                          )}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                   {onRequestRecordType && (
                     <>
                       <SelectSeparator />

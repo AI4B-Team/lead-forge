@@ -57,12 +57,36 @@ export async function queueJob(
     createdBy?: string | null;
   },
 ): Promise<QueuedJob> {
+  // THE coverage chokepoint. Every path — assistant, List Builder, templates,
+  // recurring runs, the public API — lands here, so a county we don't actually
+  // cover can never be priced, queued or charged for, no matter which surface
+  // asked for it. Throws NoCoverageError / ScopeTooBroadError.
+  const { assertJobCoverage } = await import("./distress/coverage.server");
+  const coverage = await assertJobCoverage({
+    sourceType: input.sourceType,
+    recordType: input.recordType ?? null,
+    recordTypes: (input.params["record_types"] as string[] | undefined) ?? null,
+    counties: (input.params["counties"] as string[] | undefined) ?? null,
+    states: (input.params["states"] as string[] | undefined) ?? null,
+    workspaceId: input.workspaceId,
+    requestedBy: input.createdBy ?? null,
+  });
+  // Partial coverage runs only the verified counties — the operator is never
+  // charged for geography we can't reach.
+  const params = coverage.gated
+    ? { ...input.params, counties: coverage.coveredCounties, coverage: {
+        requested: coverage.requestedCounties.length,
+        ran: coverage.coveredCounties.length,
+        uncoveredCounties: coverage.uncoveredCounties,
+      } }
+    : input.params;
+
   const key = await buildIdempotencyKey({ sourceType: input.sourceType, params: input.params });
   const row: Record<string, unknown> = {
     workspace_id: input.workspaceId,
     source_type: input.sourceType,
     status: "queued",
-    params: input.params,
+    params,
     idempotency_key: key,
     // Uploads are the customer's own data; every other path runs behind the
     // coverage gate, so anything that reaches here is a verified source.

@@ -59,3 +59,30 @@ export const getCoverageMatrix = createServerFn({ method: "GET" })
     const { coverageMatrix } = await import("./distress/coverage.server");
     return await coverageMatrix();
   });
+/**
+ * Coverage verdict the client needs BEFORE pricing: is this county/record type
+ * runnable at all? Backed by the same function as the server-side gate, so the
+ * UI can never show a price the runner would refuse.
+ */
+export const getJobCoverage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        sourceType: z.string().nullable(),
+        recordType: z.string().nullable().default(null),
+        counties: z.array(z.string()).max(300).default([]),
+        states: z.array(z.string()).max(60).default([]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { jobCoverage } = await import("./distress/coverage.server");
+    return jobCoverage(data);
+  });
+
+/** Record types with at least one verified adapter — drives the picker. */
+export const getCoveredRecordTypes = createServerFn({ method: "GET" }).handler(async () => {
+  const { coveredRecordTypes } = await import("./distress/coverage.server");
+  return { recordTypes: await coveredRecordTypes() };
+});

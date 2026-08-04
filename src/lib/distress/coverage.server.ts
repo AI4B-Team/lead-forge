@@ -16,6 +16,15 @@ export class NoCoverageError extends Error {
   }
 }
 
+/** Thrown when the request is too vague to price — e.g. a state with no counties. */
+export class ScopeTooBroadError extends Error {
+  readonly code = "scope_too_broad";
+  constructor(message: string) {
+    super(message);
+    this.name = "ScopeTooBroadError";
+  }
+}
+
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
@@ -191,4 +200,152 @@ export async function coverageMatrix(): Promise<{
   const states = [...new Set(cells.map((c) => c.state))].sort();
   const extra = [...new Set(cells.map((c) => c.record_type))].filter((t) => !recordTypes.includes(t));
   return { cells, states, recordTypes: [...recordTypes, ...extra] };
+}
+// ---------------------------------------------------------------------------
+// The chokepoint. Every path that creates or runs a list crosses this: the AI
+// assistant, the manual List Builder, template presets, feed subscriptions,
+// recurring runs and the public API. Same shape as assertCanText in
+// optout.server.ts — one function, it throws, everything inherits it.
+// ---------------------------------------------------------------------------
+
+export type JobCoverageInput = {
+  sourceType: string | null | undefined;
+  recordType?: string | null;
+  recordTypes?: string[] | null;
+  counties?: string[] | null;
+  states?: string[] | null;
+};
+
+export type JobCoverageVerdict = {
+  /** Does coverage even apply? Business scrapes and uploads are nationwide. */
+  gated: boolean;
+  status: "covered" | "partial" | "none" | "scope_too_broad";
+  requestedCounties: string[];
+  coveredCounties: string[];
+  uncoveredCounties: string[];
+  recordTypes: string[];
+  /** Copy the UI shows verbatim — one source of truth for the wording. */
+  message: string | null;
+};
+
+/** Sources whose geography is served by a county-level public-records adapter. */
+// distress_feed pulls from filings that were already paid for and verified at
+// pull time, so it is not re-gated here.
+const GATED_SOURCES = new Set(["records", "street_scan"]);
+
+function partialMessage(v: { ran: number; requested: number; uncovered: number }): string {
+  return `Ran ${v.ran} of ${v.requested} counties. ${v.uncovered} not yet covered — we've logged your request.`;
+}
+
+/** Read-only verdict. Used by the UI before pricing and by the gate below. */
+export async function jobCoverage(input: JobCoverageInput): Promise<JobCoverageVerdict> {
+  const counties = (input.counties ?? []).filter(Boolean);
+  const recordTypes = (
+    input.recordTypes?.length ? input.recordTypes : [input.recordType]
+  ).filter((t): t is string => Boolean(t));
+
+  if (!input.sourceType || !GATED_SOURCES.has(input.sourceType)) {
+    return {
+      gated: false,
+      status: "covered",
+      requestedCounties: counties,
+      coveredCounties: counties,
+      uncoveredCounties: [],
+      recordTypes,
+      message: null,
+    };
+  }
+
+  if (input.sourceType === "records" && !recordTypes.length) {
+    return {
+      gated: true,
+      status: "scope_too_broad",
+      requestedCounties: counties,
+      coveredCounties: [],
+      uncoveredCounties: counties,
+      recordTypes,
+      message: "Pick a record type before we can price this list.",
+    };
+  }
+
+  // A state with no counties is not "all counties" — it's an unanswered
+  // question. Assuming all of them silently multiplies the credit estimate.
+  if (!counties.length) {
+    return {
+      gated: true,
+      status: "scope_too_broad",
+      requestedCounties: [],
+      coveredCounties: [],
+      uncoveredCounties: [],
+      recordTypes,
+      message:
+        "Which counties? Pick the counties you want — we never widen a run to an entire state on your behalf.",
+    };
+  }
+
+  const split = await splitSelections(counties, recordTypes.length ? recordTypes : ["*"]);
+  const covered = split.coveredCounties;
+  const uncovered = split.uncoveredCounties;
+
+  if (!covered.length) {
+    return {
+      gated: true,
+      status: "none",
+      requestedCounties: counties,
+      coveredCounties: [],
+      uncoveredCounties: uncovered,
+      recordTypes,
+      message: `We don't cover ${uncovered.join(", ")} for ${recordTypes.join(", ") || "this record type"} yet. Nothing was priced and no credits were spent — request it and we'll add it to the build queue.`,
+    };
+  }
+
+  return {
+    gated: true,
+    status: uncovered.length ? "partial" : "covered",
+    requestedCounties: counties,
+    coveredCounties: covered,
+    uncoveredCounties: uncovered,
+    recordTypes,
+    message: uncovered.length
+      ? partialMessage({ ran: covered.length, requested: counties.length, uncovered: uncovered.length })
+      : null,
+  };
+}
+
+/**
+ * Hard gate. Refuses a run with zero covered county/record-type combinations,
+ * and logs the gap as demand so the request the operator just made is not lost.
+ */
+export async function assertJobCoverage(
+  input: JobCoverageInput & { workspaceId?: string | null; requestedBy?: string | null },
+): Promise<JobCoverageVerdict> {
+  const verdict = await jobCoverage(input);
+  if (!verdict.gated) return verdict;
+
+  if (verdict.status === "scope_too_broad") {
+    throw new ScopeTooBroadError(verdict.message ?? "Narrow this list before running it.");
+  }
+
+  if (verdict.uncoveredCounties.length && input.workspaceId) {
+    await logCoverageRequests(
+      verdict.uncoveredCounties.flatMap((county) =>
+        (verdict.recordTypes.length ? verdict.recordTypes : ["Public Records"]).map((recordType) => ({
+          county,
+          recordType,
+        })),
+      ),
+      { workspaceId: input.workspaceId, requestedBy: input.requestedBy ?? null },
+    );
+  }
+
+  if (verdict.status === "none") {
+    throw new NoCoverageError(verdict.message ?? "No verified coverage for this selection.");
+  }
+  return verdict;
+}
+
+/** Every record type with at least one verified source, for the picker. */
+export async function coveredRecordTypes(): Promise<string[]> {
+  const rows = await verifiedCoverage();
+  return [...new Set(rows.map((r) => r.record_type))].sort();
 }
