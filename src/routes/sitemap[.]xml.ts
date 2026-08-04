@@ -21,7 +21,10 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/features", changefreq: "monthly", priority: "0.8" },
           { path: "/industries", changefreq: "monthly", priority: "0.7" },
           { path: "/pricing", changefreq: "monthly", priority: "0.9" },
-          { path: "/ai-driving-for-dollars", changefreq: "monthly", priority: "0.9" },
+          { path: "/street-scan", changefreq: "monthly", priority: "0.9" },
+          { path: "/distress-feed", changefreq: "weekly", priority: "0.9" },
+          { path: "/distress-feed/counties", changefreq: "weekly", priority: "0.8" },
+          { path: "/distress-feed/guides", changefreq: "weekly", priority: "0.8" },
           { path: "/compliance", changefreq: "monthly", priority: "0.7" },
           { path: "/leads", changefreq: "weekly", priority: "0.9" },
           { path: "/tools", changefreq: "monthly", priority: "0.8" },
@@ -38,6 +41,39 @@ export const Route = createFileRoute("/sitemap.xml")({
             priority: "0.8",
           })),
         ];
+        // Coverage and guide pages are data-driven, so the sitemap regenerates
+        // itself whenever coverage or the guide library changes.
+        try {
+          const { stateSummaries, countySummaries, listGuides } = await import(
+            "@/lib/distress-feed.server"
+          );
+          const { countySlug, recordTypeById } = await import("@/lib/distress-feed.shared");
+          const states = await stateSummaries();
+          for (const s of states) {
+            const code = s.state.toLowerCase();
+            entries.push({ path: `/distress-feed/counties/${code}`, changefreq: "weekly", priority: "0.7" });
+            entries.push({ path: `/distress-feed/guides/${code}`, changefreq: "monthly", priority: "0.6" });
+            for (const c of await countySummaries(s.state)) {
+              entries.push({
+                path: `/distress-feed/counties/${code}/${countySlug(c.county)}`,
+                changefreq: "weekly",
+                priority: "0.7",
+              });
+            }
+          }
+          for (const g of await listGuides()) {
+            entries.push({
+              path: `/distress-feed/guides/${g.state.toLowerCase()}/${countySlug(g.county)}/${
+                recordTypeById(g.record_type)?.slug ?? g.record_type
+              }`,
+              changefreq: "monthly",
+              priority: "0.7",
+            });
+          }
+        } catch (err) {
+          console.error("sitemap: distress feed pages skipped:", err);
+        }
+
         const urls = entries
           .map((e) =>
             [

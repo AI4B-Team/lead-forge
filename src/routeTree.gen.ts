@@ -91,6 +91,7 @@ import { Route as ApiPublicHubCallbackRouteImport } from './routes/api/public/hu
 import { Route as ApiPublicHooksTickTemplateHealthRouteImport } from './routes/api/public/hooks/tick-template-health'
 import { Route as ApiPublicHooksTickRecordsRequestsRouteImport } from './routes/api/public/hooks/tick-records-requests'
 import { Route as ApiPublicHooksTickJobsRouteImport } from './routes/api/public/hooks/tick-jobs'
+import { Route as ApiPublicHooksTickDistressFeedRouteImport } from './routes/api/public/hooks/tick-distress-feed'
 import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
 import { Route as ApiPublicHooksTelnyxInboundRouteImport } from './routes/api/public/hooks/telnyx-inbound'
 import { Route as ApiPublicHooksTelnyxDlrRouteImport } from './routes/api/public/hooks/telnyx-dlr'
@@ -539,6 +540,12 @@ const ApiPublicHooksTickJobsRoute = ApiPublicHooksTickJobsRouteImport.update({
   path: '/api/public/hooks/tick-jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksTickDistressFeedRoute =
+  ApiPublicHooksTickDistressFeedRouteImport.update({
+    id: '/api/public/hooks/tick-distress-feed',
+    path: '/api/public/hooks/tick-distress-feed',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksTickCampaignsRoute =
   ApiPublicHooksTickCampaignsRouteImport.update({
     id: '/api/public/hooks/tick-campaigns',
@@ -694,6 +701,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
@@ -788,6 +796,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
@@ -886,6 +895,7 @@ export interface FileRoutesById {
   '/api/public/hooks/telnyx-dlr': typeof ApiPublicHooksTelnyxDlrRoute
   '/api/public/hooks/telnyx-inbound': typeof ApiPublicHooksTelnyxInboundRoute
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
+  '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hooks/tick-template-health': typeof ApiPublicHooksTickTemplateHealthRoute
@@ -984,6 +994,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
     | '/api/public/hooks/tick-template-health'
@@ -1078,6 +1089,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
     | '/api/public/hooks/tick-template-health'
@@ -1175,6 +1187,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/telnyx-dlr'
     | '/api/public/hooks/telnyx-inbound'
     | '/api/public/hooks/tick-campaigns'
+    | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
     | '/api/public/hooks/tick-records-requests'
     | '/api/public/hooks/tick-template-health'
@@ -1239,6 +1252,7 @@ export interface RootRouteChildren {
   ApiPublicHooksTelnyxDlrRoute: typeof ApiPublicHooksTelnyxDlrRoute
   ApiPublicHooksTelnyxInboundRoute: typeof ApiPublicHooksTelnyxInboundRoute
   ApiPublicHooksTickCampaignsRoute: typeof ApiPublicHooksTickCampaignsRoute
+  ApiPublicHooksTickDistressFeedRoute: typeof ApiPublicHooksTickDistressFeedRoute
   ApiPublicHooksTickJobsRoute: typeof ApiPublicHooksTickJobsRoute
   ApiPublicHooksTickRecordsRequestsRoute: typeof ApiPublicHooksTickRecordsRequestsRoute
   ApiPublicHooksTickTemplateHealthRoute: typeof ApiPublicHooksTickTemplateHealthRoute
@@ -1828,6 +1842,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksTickJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/tick-distress-feed': {
+      id: '/api/public/hooks/tick-distress-feed'
+      path: '/api/public/hooks/tick-distress-feed'
+      fullPath: '/api/public/hooks/tick-distress-feed'
+      preLoaderRoute: typeof ApiPublicHooksTickDistressFeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/tick-campaigns': {
       id: '/api/public/hooks/tick-campaigns'
       path: '/api/public/hooks/tick-campaigns'
@@ -2095,6 +2116,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksTelnyxDlrRoute: ApiPublicHooksTelnyxDlrRoute,
   ApiPublicHooksTelnyxInboundRoute: ApiPublicHooksTelnyxInboundRoute,
   ApiPublicHooksTickCampaignsRoute: ApiPublicHooksTickCampaignsRoute,
+  ApiPublicHooksTickDistressFeedRoute: ApiPublicHooksTickDistressFeedRoute,
   ApiPublicHooksTickJobsRoute: ApiPublicHooksTickJobsRoute,
   ApiPublicHooksTickRecordsRequestsRoute:
     ApiPublicHooksTickRecordsRequestsRoute,
