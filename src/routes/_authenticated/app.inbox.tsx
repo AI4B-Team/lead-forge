@@ -552,7 +552,7 @@ function ConversationsPage() {
 
                 {/* Where this contact stands. Set here, mirrored onto the lead
                     record so the Leads library and reporting agree. */}
-                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5 border-b px-3 py-2">
                   <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                     Status
                   </span>
