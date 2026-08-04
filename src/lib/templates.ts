@@ -29,12 +29,20 @@ export type Template = {
   id: string;
   title: string;
   subtitle: string;
-  category: TemplateCategory;
+  /**
+   * Every category this source legitimately belongs to. County-records sources
+   * are both Public Records and Real Estate, so a Real Estate filter finds them.
+   * The first entry is the primary category used for labels and related lists.
+   */
+  categories: TemplateCategory[];
   prompt: string;
   icon: LucideIcon;
   tint: string;
   /** Marks the template as Beta in the UI. */
   beta?: boolean;
+  /** Shown in the assistant's starter grid. Lower `featuredOrder` sorts first. */
+  featured?: boolean;
+  featuredOrder?: number;
   /**
    * Overrides for the List Builder. `adapterStatus` says whether the pipeline
    * can actually run this source today; `fieldSchema` names the builder fields
@@ -63,6 +71,16 @@ export type Template = {
 
 /** Metered default for any source that hits a paid provider per record. */
 export const DEFAULT_CREDIT_COST_PER_LEAD = 1;
+
+/** Primary category — labels, related lists, and field schemas key off this. */
+export function primaryCategory(t: Template): TemplateCategory {
+  return t.categories[0] ?? "business";
+}
+
+/** Does this template belong to `category` at all (not just primarily)? */
+export function hasCategory(t: Template, category: TemplateCategory): boolean {
+  return t.categories.includes(category);
+}
 
 /** Single source of truth for what a template draws from the plan's credits. */
 export function creditCostPerLead(t: Template): number {
