@@ -87,7 +87,7 @@ export function buildFunnel(input: FunnelInput, opts?: { variant?: FunnelVariant
       removed,
       delta:
         removed > 0 && !opts?.alwaysAnnotate
-          ? `−${removed.toLocaleString()}${opts?.removalNoun ? ` ${opts.removalNoun}` : ""}`
+          ? `${removed.toLocaleString()} ${opts?.removalNoun ?? "Removed"}`
           : null,
       annotation:
         removed > 0 && !opts?.alwaysAnnotate ? null : (opts?.annotation ?? null),
