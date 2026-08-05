@@ -12,7 +12,7 @@ describe("funnel arithmetic", () => {
   it("shows remaining counts, not removals", () => {
     const stages = buildFunnel(ROOFER_RUN);
     expect(stages.map((s) => s.remaining)).toEqual([168, 12, 12, 12, 12, 8]);
-    expect(stages[1]!.delta).toBe("−156 Removed");
+    expect(stages[1]!.delta).toBe("156 Removed");
     expect(stages[5]!.remaining).toBe(8);
     expect(stages[5]!.delta).toBeNull();
     expect(stages[5]!.annotation).toBe("Launch Ready");

@@ -658,7 +658,9 @@ async function runPipelineBody(
       .update({ rows_enriched: verified.length, rows_skiptraced: 0 })
       .eq("id", jobId);
   } else {
-    const { verifyPending, verifyLineTypes, classifyLineType } = await import("./line-type");
+    const { verifyPending, verifyLineTypes, verifyNewlyTraced, classifyLineType } = await import(
+      "./line-type"
+    );
     const shouldSkiptrace =
       job.source_type === "records" ||
       ((job.source_type === "upload" || job.source_type === "business") &&
@@ -668,11 +670,14 @@ async function runPipelineBody(
       ? verifyPending(deduped, mobileOnly)
       : verifyLineTypes(deduped, mobileOnly);
     verified = verify.kept;
+    const pendingPhone = verified.filter((r) => !(r.phone ?? "").replace(/\D/g, "")).length;
     await supabase.from("jobs").update({ rows_enriched: verified.length }).eq("id", jobId);
     await say(
       "enriching",
       mobileOnly
-        ? verify.removed > 0
+        ? pendingPhone > 0
+          ? `Carrier check: ${(verified.length - pendingPhone).toLocaleString()} mobile, ${verify.removed.toLocaleString()} landline or VoIP removed, ${pendingPhone.toLocaleString()} still awaiting a number from skip trace.`
+          : verify.removed > 0
           ? `Carrier check removed ${verify.removed.toLocaleString()} landline and VoIP numbers — ${verified.length.toLocaleString()} records remain.`
           : `Carrier check confirmed every number is mobile — ${verified.length.toLocaleString()} records remain.`
         : `Carrier check complete — ${verify.counts.mobile.toLocaleString()} mobile, ${(verify.counts.landline + verify.counts.voip).toLocaleString()} landline or VoIP.`,
@@ -762,12 +767,37 @@ async function runPipelineBody(
     );
 
     if (mobileOnly) {
-      const finalGate = verifyLineTypes(verified, true);
-      if (finalGate.removed > 0) {
-        verified = finalGate.kept;
+      // Rows that already passed as mobile are never re-checked here — skip
+      // trace only appends numbers to rows that had none, so the second pass
+      // evaluates ONLY those rows.
+      const finalGate = verifyNewlyTraced(verified, true);
+      const removedTotal = finalGate.removedNotMobile + finalGate.removedNoPhone;
+      verified = finalGate.kept;
+      if (finalGate.evaluated > 0) {
+        const parts: string[] = [];
+        if (finalGate.removedNotMobile > 0) {
+          parts.push(
+            `removed ${finalGate.removedNotMobile.toLocaleString()} ${
+              finalGate.removedNotMobile === 1 ? "number" : "numbers"
+            } that came back landline or VoIP`,
+          );
+        }
+        if (finalGate.removedNoPhone > 0) {
+          parts.push(
+            `${finalGate.removedNoPhone.toLocaleString()} ${
+              finalGate.removedNoPhone === 1 ? "record" : "records"
+            } still had no phone number after skip trace and were dropped`,
+          );
+        }
         await say(
           "enriching",
-          `Carrier check removed ${finalGate.removed.toLocaleString()} newly traced numbers that were not mobile — ${verified.length.toLocaleString()} mobile records remain.`,
+          removedTotal > 0
+            ? `Final carrier check on ${finalGate.evaluated.toLocaleString()} pending ${
+                finalGate.evaluated === 1 ? "record" : "records"
+              }: ${parts.join("; ")} — ${verified.length.toLocaleString()} mobile records remain.`
+            : `Carrier check confirmed the ${finalGate.evaluated.toLocaleString()} newly traced ${
+                finalGate.evaluated === 1 ? "number is" : "numbers are"
+              } mobile — ${verified.length.toLocaleString()} records remain.`,
           verified.length,
         );
       }
@@ -826,6 +856,10 @@ async function runPipelineBody(
 
   if (phonePipeline) {
     await supabase.from("jobs").update({ status: "scrubbing" }).eq("id", jobId);
+    if ((inserted?.length ?? 0) === 0) {
+      // Never imply a compliance check ran on nothing.
+      await say("scrubbing", "Skipped — no records reached this stage.", 0);
+    } else {
     await say("scrubbing", "Scrubbing against the National DNC Registry and known litigators…");
     const { getDncScrubber } = await import("./data-providers");
     const scrubber = getDncScrubber();
@@ -860,6 +894,7 @@ async function runPipelineBody(
           : ""),
       dnc + litigator + unknownScrub,
     );
+    }
   } else {
     clean = inserted?.length ?? 0;
     for (let i = 0; i < (inserted ?? []).length; i += 500) {

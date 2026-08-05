@@ -300,7 +300,7 @@ function JobDetail() {
         ) : (
           <Stat
             label="Traced"
-            value={traced > 0 ? traced.toLocaleString() : "None Needed"}
+            value={traced > 0 ? traced.toLocaleString() : "Not Needed"}
             muted={traced === 0}
           />
         )}
