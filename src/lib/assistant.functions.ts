@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { jobSpecSchema, specStates } from "@/lib/assistant.shared";
+import { jobParamsFromSpec, jobSpecSchema, specStates } from "@/lib/assistant.shared";
 import { screenSourceRequest, TIER_STATUS } from "@/lib/source-request.shared";
 
 const messageSchema = z.object({
@@ -289,43 +289,14 @@ export const createJobFromSpec = createServerFn({ method: "POST" })
       createdBy: context.userId,
       sourceType: spec.sourceType,
       channel,
-      params: {
+      // The coverage gate inside queueJob reads `recordType` — omitting it made
+      // a fully specified records run fail as "no record type".
+      recordType: spec.recordType,
+      params: jobParamsFromSpec(spec, {
         name,
-        // The source template drives creator vs phone funnel wording and the
-        // clean-file column layout on the results page.
-        templateId: spec.templateId,
-        niches: spec.niches,
-        record_type: spec.recordType,
-        state: specStates(spec)[0] ?? null,
-        states: specStates(spec),
         counties: runCounties,
-        county: runCounties[0] ?? null,
-        city: spec.city,
-        zips: spec.zips,
-        recency_days: spec.recencyDays,
-        // Per-search row cap — reaches the Apify actor input, not a post-fetch slice.
-        max_results: spec.maxResults,
-        remove_franchises: spec.removeFranchises,
-        // Parameter file: fan the scrape out across each uploaded value.
-        scrape_targets: spec.scrapeTargets,
-        scrape_target_kind: spec.scrapeTargetKind,
-        upload_intent: spec.uploadIntent,
-        suppression_file: spec.suppressionFile,
-        // Street Scan: the buy box runs before imagery, and the visual
-        // criteria are what the imagery model scores against.
-        visual_criteria: spec.visualCriteria,
-        buy_box: spec.buyBox,
-        match_threshold: spec.matchThreshold,
-        images_per: spec.imagesPer,
-        dedupe: spec.dedupe,
-        mobile_only: spec.mobileOnly,
-        skip_trace: spec.skipTrace,
-        email_required: spec.emailRequired,
-        industry: spec.industry,
-        message_angle: spec.messageAngle,
-        assembled_by: "ai_assistant",
-        assistant_transcript: data.transcript,
-      },
+        transcript: data.transcript,
+      }),
     });
     return { jobId: queued.id, duplicate: queued.duplicate };
   });
