@@ -520,7 +520,7 @@ export const TEMPLATES: Template[] = [
     shortSubtitle: "Pulled Nightly",
     title: "Distress Feed",
     // Honest scope: only the record types with a verified adapter get named.
-    subtitle: "Code Violations · Tax Delinquency · Select Counties",
+    subtitle: "Pre-Foreclosures, Tax Defaults & More",
     categories: ["records", "realestate"],
     prompt:
       "Show me new code violation and tax delinquency filings in Cook County IL from the Distress Feed",
