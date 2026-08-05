@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { createWorkspace } from "@/lib/workspace-create.functions";
 
 export type WorkspaceOption = { id: string; name: string };
 
@@ -134,22 +135,10 @@ export function useCreateWorkspace() {
   const create = useCallback(async (name: string) => {
     setCreating(true);
     try {
-      const { data: userRes } = await supabase.auth.getUser();
-      const userId = userRes.user?.id;
-      if (!userId) throw new Error("Not signed in");
-      const { data: ws, error } = await supabase
-        .from("workspaces")
-        .insert({ name })
-        .select("id")
-        .single();
-      if (error) throw error;
-      const { error: memberError } = await supabase
-        .from("workspace_members")
-        .insert({ workspace_id: ws.id, user_id: userId, role: "owner" });
-      if (memberError) throw memberError;
+      const { workspaceId } = await createWorkspace({ data: { name } });
       await refreshWorkspaces();
-      switchWorkspace(ws.id);
-      return ws.id;
+      switchWorkspace(workspaceId);
+      return workspaceId;
     } finally {
       setCreating(false);
     }

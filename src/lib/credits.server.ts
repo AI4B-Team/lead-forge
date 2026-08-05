@@ -3,13 +3,12 @@
 // balance, both pass the check, and overdraft the workspace. public.apply_credit_delta
 // row-locks the balance, rejects an overdraft, and writes the ledger row.
 
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
-
 export type CreditKind = string;
 
 export async function applyCreditDelta(
-  supabase: SupabaseClient<Database>,
+  // Kept for call-site compatibility; the RPC always runs with the service
+  // role so EXECUTE can stay revoked from anon/authenticated.
+  _supabase: unknown,
   args: {
     workspaceId: string;
     kind: CreditKind;
@@ -19,7 +18,8 @@ export async function applyCreditDelta(
     actorUserId?: string | null;
   },
 ): Promise<number> {
-  const { data, error } = await supabase.rpc("apply_credit_delta", {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.rpc("apply_credit_delta", {
     _workspace_id: args.workspaceId,
     _kind: args.kind,
     _delta: args.delta,

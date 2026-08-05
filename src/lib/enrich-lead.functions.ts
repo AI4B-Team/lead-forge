@@ -109,23 +109,13 @@ export const enrichLeadRecord = createServerFn({ method: "POST" })
     }
 
     // 1 successful trace = 1 skip-trace credit.
-    await supabase.from("credit_ledger").insert({
-      workspace_id: data.workspaceId,
+    const { applyCreditDelta } = await import("./credits.server");
+    await applyCreditDelta(null, {
+      workspaceId: data.workspaceId,
       kind: "skip_trace",
       delta: -1,
       reason: "skiptrace:on_demand",
-      actor_user_id: userId,
-    });
-    const { data: bal } = await supabase
-      .from("credit_balances")
-      .select("balance")
-      .eq("workspace_id", data.workspaceId)
-      .eq("kind", "skip_trace")
-      .maybeSingle();
-    await supabase.from("credit_balances").upsert({
-      workspace_id: data.workspaceId,
-      kind: "skip_trace",
-      balance: Math.max(0, (bal?.balance ?? 0) - 1),
+      actorUserId: userId,
     });
 
     return {
