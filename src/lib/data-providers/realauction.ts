@@ -187,7 +187,7 @@ export function parseRealauctionPage(
       parcelApn: raw["parcelApn"] ?? null,
       propertyAddress: raw["propertyAddress"] ?? null,
       propertyCity: cityZip?.[1]?.trim() ?? null,
-      propertyZip: cityZip?.[2] ?? null,
+      propertyZip: cityZip?.[3] ?? null,
       openingBid: money(raw["openingBid"]),
       finalJudgmentAmount: money(raw["finalJudgmentAmount"]),
       sourceUrl,
