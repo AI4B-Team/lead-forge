@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyLineType, verifyLineTypes } from "./line-type";
+import { classifyLineType, verifyLineTypes, verifyNewlyTraced } from "./line-type";
 
 describe("line type verification", () => {
   it("classifies by carrier exchange", () => {
