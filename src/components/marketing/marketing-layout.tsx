@@ -83,7 +83,7 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           </span>
           {BRAND_NAME}
         </Link>
-        <nav className="hidden md:flex items-center gap-5 text-sm font-medium justify-self-center">
+        <nav className="hidden md:flex items-center gap-6 text-base font-medium justify-self-center">
           {NAV_LINKS.map((l) => (
             <Link
               key={l.to}
