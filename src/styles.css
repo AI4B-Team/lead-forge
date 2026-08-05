@@ -328,6 +328,11 @@
   .site-density {
     zoom: 0.8;
   }
+  /* 100vh inside a zoomed subtree resolves to 125% of the viewport; convert
+     full-height marketing shells back into the zoomed layout space. */
+  .site-density :is(.min-h-screen) {
+    min-height: calc(100vh / 0.8);
+  }
 }
 
 /* Full-height Conversations/inbox panel area — scoped to the inbox only. It
