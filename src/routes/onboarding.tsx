@@ -72,37 +72,11 @@ function Onboarding() {
     setBusy(true);
     try {
       const { data: userRes } = await supabase.auth.getUser();
-      const user = userRes.user;
-      if (!user) throw new Error("Not Signed In");
+      if (!userRes.user) throw new Error("Not Signed In");
 
-      const wsId = crypto.randomUUID();
-      const { error: wsErr } = await supabase
-        .from("workspaces")
-        .insert({ id: wsId, name: name.trim() || "My Workspace", industry, plan: "starter" });
-      if (wsErr) throw wsErr;
-
-      const { error: memErr } = await supabase
-        .from("workspace_members")
-        .insert({ workspace_id: wsId, user_id: user.id, role: "owner" });
-      if (memErr) throw memErr;
-
-      const { error: credErr } = await supabase.from("credit_balances").insert(
-        Object.entries(TRIAL_CREDITS).map(([kind, balance]) => ({
-          workspace_id: wsId,
-          kind,
-          balance,
-        })),
-      );
-      if (credErr) throw credErr;
-
-      await supabase.from("credit_ledger").insert(
-        Object.entries(TRIAL_CREDITS).map(([kind, delta]) => ({
-          workspace_id: wsId,
-          kind,
-          delta,
-          reason: "starter_trial",
-        })),
-      );
+      await createWorkspace({
+        data: { name: name.trim() || "My Workspace", industry, starterCredits: true },
+      });
 
       toast.success("Workspace Ready.");
       if (target) window.location.replace(target);
