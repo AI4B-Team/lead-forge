@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Shield, Home, Sun, Wrench, Briefcase, MoreHorizontal } from "lucide-react";
 import { safeRedirect } from "@/lib/prompt-handoff";
+import { createWorkspace } from "@/lib/workspace-create.functions";
 
 const INDUSTRIES = [
   { key: "insurance",     label: "Insurance",         icon: Shield },
@@ -18,8 +19,6 @@ const INDUSTRIES = [
   { key: "agency",        label: "Agencies",          icon: Briefcase },
   { key: "other",         label: "Other",             icon: MoreHorizontal },
 ] as const;
-
-const TRIAL_CREDITS = { scrape: 1000, skip_trace: 500, sms: 250 };
 
 export const Route = createFileRoute("/onboarding")({
   validateSearch: z.object({ redirect: z.string().optional() }),
