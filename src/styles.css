@@ -323,16 +323,20 @@
   }
 }
 
-/* Public marketing site renders at the same 80% density as the internal app. */
-@supports (zoom: 0.8) {
-  .site-density {
-    zoom: 0.8;
-  }
-  /* 100vh inside a zoomed subtree resolves to 125% of the viewport; convert
-     full-height marketing shells back into the zoomed layout space. */
-  .site-density :is(.min-h-screen) {
-    min-height: calc(100vh / 0.8);
-  }
+/* Public marketing site renders at ~80% density. Implemented by scaling the
+   root font size (not zoom/transform, which break sticky positioning, viewport
+   units and scroll math) so every rem-based Tailwind utility — type, padding,
+   margin, gap, width — scales together. The class is toggled on <html> for
+   public routes only; /app and /platform keep their own density. Media-query
+   breakpoints use px, so responsive behaviour is unchanged. */
+html.site-density {
+  font-size: 80%;
+}
+
+/* Legibility floor: 80% of 16px is 12.8px, too small for running copy. Keep
+   paragraph-level text at 14px minimum while leaving larger sizes scaled. */
+html.site-density :is(p, li, blockquote, dd, dt, label, textarea, input) {
+  font-size: max(1em, 14px);
 }
 
 /* Full-height Conversations/inbox panel area — scoped to the inbox only. It
