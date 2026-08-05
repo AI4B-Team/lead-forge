@@ -58,8 +58,12 @@ function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <MarketingNav />
-      <PromptHero selectedTemplate={selectedTemplate} />
-      <TemplateTeaser selectedId={selectedTemplate?.id ?? null} onSelect={toggleTemplate} />
+      {/* Hero + template grid are one continuous white band that fills the
+          viewport, so the dark section below only appears on scroll. */}
+      <div className="flex min-h-screen flex-col bg-background">
+        <PromptHero selectedTemplate={selectedTemplate} />
+        <TemplateTeaser selectedId={selectedTemplate?.id ?? null} onSelect={toggleTemplate} />
+      </div>
       <ConsolidationBand />
       <HowItWorksSection />
       <FeaturesSection />
@@ -101,7 +105,7 @@ function TemplateTeaser({
   };
 
   return (
-    <section className="bg-background pb-20">
+    <section className="bg-background pt-10 pb-16 md:pt-16">
       <div className="mx-auto max-w-[77.5rem] px-6">
         <div className="flex items-end justify-between gap-4 mb-6">
           <div className="flex flex-col items-start gap-1">
@@ -139,12 +143,13 @@ function TemplateTeaser({
             </button>
           </div>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {visible.map((t, i) => (
             <TemplateCard
               key={`${t.id}-${i}`}
               template={t}
               variant="prompt"
+              large
               selected={selectedId === t.id}
               onSelect={onSelect}
             />
