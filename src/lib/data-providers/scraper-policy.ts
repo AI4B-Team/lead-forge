@@ -11,9 +11,13 @@
 export const BOT_CONTACT_URL = "https://leadtrace.app/compliance";
 export const BOT_USER_AGENT = `LeadTraceBot/1.0 (+${BOT_CONTACT_URL})`;
 
-/** One request every 2–3 seconds per host, jittered. */
-const MIN_DELAY_MS = 2_000;
-const MAX_DELAY_MS = 3_000;
+/**
+ * One request every 3–4 seconds per host, jittered. County government systems
+ * get the slower of our two budgets; this floor is deliberate, not tunable
+ * per-caller.
+ */
+const MIN_DELAY_MS = 3_000;
+const MAX_DELAY_MS = 4_000;
 const lastHit = new Map<string, number>();
 
 export function politeDelayMs(): number {
@@ -93,4 +97,45 @@ export async function politeFetch(url: string, init: RequestInit = {}, attempt =
 export async function politeJson<T = unknown>(url: string, init?: RequestInit): Promise<T> {
   const res = await politeFetch(url, init);
   return (await res.json()) as T;
+}
+
+export async function politeHtml(url: string, init: RequestInit = {}): Promise<{ html: string; status: number }> {
+  const res = await politeFetch(url, {
+    ...init,
+    headers: { Accept: "text/html,application/xhtml+xml", ...(init.headers ?? {}) },
+  });
+  return { html: await res.text(), status: res.status };
+}
+
+// ---------------------------------------------------------------------------
+// Live auction windows.
+//
+// Florida clerk auctions run weekday mornings. We never crawl while bidding is
+// live: it adds load exactly when the county needs the box responsive, and the
+// page is mid-state anyway.
+// ---------------------------------------------------------------------------
+
+/** Hours (in the source's local time) we refuse to crawl, Mon–Fri. */
+export const AUCTION_BLACKOUT = { startHour: 8, endHour: 14 } as const;
+
+export function auctionWindowBlock(
+  now: Date = new Date(),
+  timeZone = "America/New_York",
+): { blocked: boolean; reason?: string } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+    hour: "numeric",
+    hour12: false,
+  }).formatToParts(now);
+  const weekday = parts.find((p) => p.type === "weekday")?.value ?? "";
+  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+  const isWeekday = ["Mon", "Tue", "Wed", "Thu", "Fri"].includes(weekday);
+  if (isWeekday && hour >= AUCTION_BLACKOUT.startHour && hour < AUCTION_BLACKOUT.endHour) {
+    return {
+      blocked: true,
+      reason: `Live auction window (${weekday} ${hour}:00 ${timeZone}) — crawl deferred`,
+    };
+  }
+  return { blocked: false };
 }
