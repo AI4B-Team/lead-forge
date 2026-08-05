@@ -853,6 +853,10 @@ async function runPipelineBody(
 
   if (phonePipeline) {
     await supabase.from("jobs").update({ status: "scrubbing" }).eq("id", jobId);
+    if ((inserted?.length ?? 0) === 0) {
+      // Never imply a compliance check ran on nothing.
+      await say("scrubbing", "Skipped — no records reached this stage.", 0);
+    } else {
     await say("scrubbing", "Scrubbing against the National DNC Registry and known litigators…");
     const { getDncScrubber } = await import("./data-providers");
     const scrubber = getDncScrubber();
@@ -887,6 +891,7 @@ async function runPipelineBody(
           : ""),
       dnc + litigator + unknownScrub,
     );
+    }
   } else {
     clean = inserted?.length ?? 0;
     for (let i = 0; i < (inserted ?? []).length; i += 500) {
