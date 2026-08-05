@@ -166,7 +166,7 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
             }
             onBlur={() => setFocused(false)}
             onFocusCapture={() => setFocused(true)}
-            rows={5}
+            rows={3}
             className="w-full resize-none rounded-t-[1.25rem] bg-transparent px-6 pt-5 pb-2 text-lg leading-relaxed text-foreground placeholder:text-muted-foreground/70 outline-none"
           />
           {files.length > 0 && (
