@@ -658,7 +658,9 @@ async function runPipelineBody(
       .update({ rows_enriched: verified.length, rows_skiptraced: 0 })
       .eq("id", jobId);
   } else {
-    const { verifyPending, verifyLineTypes, classifyLineType } = await import("./line-type");
+    const { verifyPending, verifyLineTypes, verifyNewlyTraced, classifyLineType } = await import(
+      "./line-type"
+    );
     const shouldSkiptrace =
       job.source_type === "records" ||
       ((job.source_type === "upload" || job.source_type === "business") &&
@@ -762,12 +764,37 @@ async function runPipelineBody(
     );
 
     if (mobileOnly) {
-      const finalGate = verifyLineTypes(verified, true);
-      if (finalGate.removed > 0) {
-        verified = finalGate.kept;
+      // Rows that already passed as mobile are never re-checked here — skip
+      // trace only appends numbers to rows that had none, so the second pass
+      // evaluates ONLY those rows.
+      const finalGate = verifyNewlyTraced(verified, true);
+      const removedTotal = finalGate.removedNotMobile + finalGate.removedNoPhone;
+      verified = finalGate.kept;
+      if (finalGate.evaluated > 0) {
+        const parts: string[] = [];
+        if (finalGate.removedNotMobile > 0) {
+          parts.push(
+            `removed ${finalGate.removedNotMobile.toLocaleString()} ${
+              finalGate.removedNotMobile === 1 ? "number" : "numbers"
+            } that came back landline or VoIP`,
+          );
+        }
+        if (finalGate.removedNoPhone > 0) {
+          parts.push(
+            `dropped ${finalGate.removedNoPhone.toLocaleString()} ${
+              finalGate.removedNoPhone === 1 ? "record" : "records"
+            } with no phone number found`,
+          );
+        }
         await say(
           "enriching",
-          `Carrier check removed ${finalGate.removed.toLocaleString()} newly traced numbers that were not mobile — ${verified.length.toLocaleString()} mobile records remain.`,
+          removedTotal > 0
+            ? `Carrier check on ${finalGate.evaluated.toLocaleString()} ${
+                finalGate.evaluated === 1 ? "record" : "records"
+              } added by skip trace ${parts.join(" and ")} — ${verified.length.toLocaleString()} mobile records remain.`
+            : `Carrier check confirmed the ${finalGate.evaluated.toLocaleString()} newly traced ${
+                finalGate.evaluated === 1 ? "number is" : "numbers are"
+              } mobile — ${verified.length.toLocaleString()} records remain.`,
           verified.length,
         );
       }
