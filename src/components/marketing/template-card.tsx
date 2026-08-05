@@ -108,9 +108,6 @@ export function TemplateCard({
           >
             {title}
           </span>
-          {template.beta ? (
-            null
-          ) : null}
           {comingSoon ? (
             <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">
               Coming Soon
