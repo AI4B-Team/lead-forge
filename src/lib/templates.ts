@@ -146,6 +146,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "gserp",
+    featured: true,
+    featuredOrder: 17,
     shortTitle: "Google Search",
     shortSubtitle: "Sites + Emails",
     title: "Google Search Scraper",
@@ -202,6 +204,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "yelp",
+    featured: true,
+    featuredOrder: 12,
     shortTitle: "Yelp",
     shortSubtitle: "Local Businesses",
     title: "Yelp Businesses",
@@ -217,6 +221,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "yellowpages",
+    featured: true,
+    featuredOrder: 18,
     title: "Yellow Pages",
     subtitle: "Business Name, Address, Phone, Website, And Email By Keyword.",
     categories: ["directories"],
@@ -264,6 +270,8 @@ export const TEMPLATES: Template[] = [
   // ---------- Social & Creators ----------
   {
     id: "linkedin",
+    featured: true,
+    featuredOrder: 11,
     title: "LinkedIn Company / People",
     subtitle: "Company And Decision-Maker Profiles By Industry.",
     categories: ["directories"],
@@ -276,6 +284,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "instagram",
+    featured: true,
+    featuredOrder: 13,
     title: "Instagram Creators",
     subtitle: "Influencers By Niche + Follower Range.",
     categories: ["social"],
@@ -345,6 +355,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "shopify",
+    featured: true,
+    featuredOrder: 15,
     title: "Shopify Stores",
     subtitle: "DTC Brands By Niche + Traffic.",
     categories: ["ecommerce"],
@@ -391,6 +403,8 @@ export const TEMPLATES: Template[] = [
   // ---------- Jobs & Hiring ----------
   {
     id: "indeed",
+    featured: true,
+    featuredOrder: 14,
     title: "Indeed Job Postings",
     subtitle: "Companies Hiring By Role + Region.",
     categories: ["jobs"],
@@ -498,6 +512,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "realtor",
+    featured: true,
+    featuredOrder: 16,
     title: "Realtor.com",
     subtitle: "Agents + Listings By ZIP.",
     categories: ["realestate"],
@@ -531,6 +547,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "probate",
+    featured: true,
+    featuredOrder: 7,
     shortTitle: "Probate",
     shortSubtitle: "New Filings",
     title: "Probate Records",
@@ -557,6 +575,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "prefc",
+    featured: true,
+    featuredOrder: 9,
     title: "Pre-Foreclosures",
     subtitle: "Lis Pendens + Notice Of Default Filings.",
     categories: ["records", "realestate"],
@@ -568,6 +588,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "tax",
+    featured: true,
+    featuredOrder: 8,
     title: "Tax Defaults",
     subtitle: "Tax Delinquent Property Owners.",
     categories: ["records", "realestate"],
@@ -723,6 +745,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "absentee",
+    featured: true,
+    featuredOrder: 10,
     title: "Absentee Owners",
     subtitle: "Find Absentee And Out-Of-State Owners.",
     categories: ["records", "realestate"],
