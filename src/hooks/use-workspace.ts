@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { createWorkspace } from "@/lib/workspace-create.functions";
 
 export type WorkspaceOption = { id: string; name: string };
 
