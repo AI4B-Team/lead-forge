@@ -105,7 +105,7 @@ function TemplateTeaser({
   };
 
   return (
-    <section className="bg-background pt-10 pb-16 md:pt-16">
+    <section className="bg-background pt-5 pb-16 md:pt-8">
       <div className="mx-auto max-w-[77.5rem] px-6">
         <div className="flex items-end justify-between gap-4 mb-6">
           <div className="flex flex-col items-start gap-1">
