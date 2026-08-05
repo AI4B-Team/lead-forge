@@ -103,11 +103,11 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
                   await supabase.auth.signOut();
                   window.location.assign("/");
                 }}
-                className={`text-sm font-medium px-2 ${dark ? "text-ink-foreground" : "text-foreground"}`}
+                className={`text-base font-medium px-2 ${dark ? "text-ink-foreground" : "text-foreground"}`}
               >
                 Sign Out
               </button>
-              <Button asChild className="rounded-full">
+              <Button asChild size="lg" className="rounded-full">
                 <Link to="/app/dashboard">Dashboard</Link>
               </Button>
             </>
@@ -115,11 +115,11 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
             <>
               <Link
                 to="/auth"
-                className={`text-sm font-medium px-2 ${dark ? "text-ink-foreground" : "text-foreground"}`}
+                className={`text-base font-medium px-2 ${dark ? "text-ink-foreground" : "text-foreground"}`}
               >
                 Log In
               </Link>
-              <Button asChild className="rounded-full">
+              <Button asChild size="lg" className="rounded-full">
                 <Link to="/auth" search={{ mode: "signup" }}>Start Free</Link>
               </Button>
             </>
