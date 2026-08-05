@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ChevronDown, Check, SlidersHorizontal } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { TemplateCard } from "@/components/marketing/template-card";
+import { useTemplateCoverage } from "@/hooks/use-template-coverage";
 import { TEMPLATES, hasCategory, type Template, type TemplateCategory } from "@/lib/templates";
 import { touchRecentTemplate } from "@/lib/recent-templates";
 import { useWorkspaceId } from "@/hooks/use-workspace";
@@ -159,6 +160,7 @@ function AppTemplates() {
             variant="insert"
             health={health[t.id]?.status ?? null}
             healthEta={health[t.id]?.eta ?? null}
+            comingSoon={isComingSoon(t)}
             onSelect={handleSelect}
           />
         ))}

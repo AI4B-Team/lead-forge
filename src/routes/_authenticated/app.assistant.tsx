@@ -50,6 +50,7 @@ import { TEMPLATES, creditCostPerLead, featuredTemplates, getTemplate, hasCatego
 import { FreeTierNotice } from "@/components/app/free-tier-notice";
 import { usePlanContext } from "@/hooks/use-plan-context";
 import { TemplateCard } from "@/components/marketing/template-card";
+import { useTemplateCoverage } from "@/hooks/use-template-coverage";
 import { TemplatePickerDialog } from "@/components/app/template-picker-dialog";
 import { templateAdapterStatus } from "@/lib/template-schema";
 import { useOverflow } from "@/hooks/use-overflow";
@@ -1511,6 +1512,7 @@ function Assistant() {
               variant="insert"
               compact
               selected={selectedTemplate?.id === t.id}
+              comingSoon={isComingSoon(t)}
               onSelect={selectTemplate}
             />
           ))}
