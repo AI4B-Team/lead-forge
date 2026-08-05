@@ -185,21 +185,25 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <TranslationProvider>
+        <SiteDensity />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <SiteDensity>
-          <Outlet />
-        </SiteDensity>
+        <Outlet />
         <Toaster />
       </TranslationProvider>
     </QueryClientProvider>
   );
 }
 
-/* Public/marketing routes render at 80% density, matching the internal app.
-   /app and /platform manage their own density (sidebar + top bar stay 100%). */
-function SiteDensity({ children }: { children: ReactNode }) {
+/* Public/marketing routes render at ~80% density by scaling the root font size
+   (see §21 in styles.css). Scoped off /app and /platform, which keep full-size
+   data tables and form controls. */
+function SiteDensity() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const internal = pathname.startsWith("/app") || pathname.startsWith("/platform");
-  if (internal) return <>{children}</>;
-  return <div className="site-density">{children}</div>;
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("site-density", !internal);
+    return () => root.classList.remove("site-density");
+  }, [internal]);
+  return null;
 }

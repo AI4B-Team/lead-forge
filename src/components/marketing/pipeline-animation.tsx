@@ -23,7 +23,7 @@ export function PipelineAnimation() {
         <SourceChip icon={<Upload className="h-4 w-4" />} label="Upload" />
       </div>
       <div className="rounded-2xl bg-surface p-6 shadow-2xl rotate-[-1.5deg] border border-border">
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">
+        <div className="text-[0.6875rem] uppercase tracking-widest text-muted-foreground mb-2">
           Pipeline Status
         </div>
         <div className="min-h-16 flex items-center">
@@ -43,7 +43,7 @@ export function PipelineAnimation() {
         </div>
       </div>
       <div className="absolute -bottom-6 -right-6 rounded-2xl bg-ink text-ink-foreground p-4 rotate-[3deg] shadow-xl border border-white/10 hidden md:block">
-        <div className="text-[10px] uppercase tracking-widest text-ink-muted">Reply Rate</div>
+        <div className="text-[0.625rem] uppercase tracking-widest text-ink-muted">Reply Rate</div>
         <div className="text-xl font-semibold">12.4%</div>
       </div>
     </div>

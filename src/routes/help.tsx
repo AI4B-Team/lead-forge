@@ -277,7 +277,7 @@ function Help() {
                 <span className="grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground transition-transform group-hover:scale-105">
                   <Play className="h-6 w-6" />
                 </span>
-                <span className="absolute bottom-3 right-3 rounded-full bg-background/90 px-2.5 py-1 text-[11px] font-semibold text-foreground">
+                <span className="absolute bottom-3 right-3 rounded-full bg-background/90 px-2.5 py-1 text-[0.6875rem] font-semibold text-foreground">
                   {t.length}
                 </span>
               </div>

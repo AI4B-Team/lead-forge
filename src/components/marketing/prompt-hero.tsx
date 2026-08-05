@@ -121,7 +121,7 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
           maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
         }}
       />
-      <div className="relative mx-auto max-w-[1240px] px-6 pt-10 pb-4 md:pt-14 md:pb-6 text-center">
+      <div className="relative mx-auto max-w-[77.5rem] px-6 pt-10 pb-4 md:pt-14 md:pb-6 text-center">
         <div className="inline-flex items-center text-primary text-xs font-semibold uppercase tracking-[0.18em]">
           Leads To Deals — On Autopilot
         </div>
@@ -147,7 +147,7 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
           }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
-          className="mx-auto mt-8 w-full max-w-[820px] rounded-[22px] bg-card text-card-foreground text-left transition"
+          className="mx-auto mt-8 w-full max-w-[51.25rem] rounded-[1.375rem] bg-card text-card-foreground text-left transition"
           style={{
             border: `2px solid ${dragOver ? "#16A34A" : "#CC0000"}`,
           }}
@@ -169,7 +169,7 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
             onBlur={() => setFocused(false)}
             onFocusCapture={() => setFocused(true)}
             rows={4}
-            className="w-full resize-none rounded-t-[20px] bg-transparent px-5 pt-4 pb-2 text-base text-foreground placeholder:text-muted-foreground/70 outline-none"
+            className="w-full resize-none rounded-t-[1.25rem] bg-transparent px-5 pt-4 pb-2 text-base text-foreground placeholder:text-muted-foreground/70 outline-none"
           />
           {files.length > 0 && (
             <div className="flex flex-wrap gap-2 px-5 pb-2">

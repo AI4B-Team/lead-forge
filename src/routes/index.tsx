@@ -102,7 +102,7 @@ function TemplateTeaser({
 
   return (
     <section className="bg-background pb-20">
-      <div className="mx-auto max-w-[1240px] px-6">
+      <div className="mx-auto max-w-[77.5rem] px-6">
         <div className="flex items-end justify-between gap-4 mb-6">
           <div className="flex flex-col items-start gap-1">
             <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">

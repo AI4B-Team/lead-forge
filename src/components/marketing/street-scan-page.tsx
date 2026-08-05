@@ -197,16 +197,16 @@ export function StreetScanPage() {
                       <p className="mt-0.5 text-xs text-muted-foreground">{r.why}</p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                         {r.tags.map((t) => (
-                          <span key={t} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-primary">
+                          <span key={t} className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.625rem] font-semibold tracking-wide text-primary">
                             {t}
                           </span>
                         ))}
-                        <span className="text-[11px] text-muted-foreground">{r.note}</span>
+                        <span className="text-[0.6875rem] text-muted-foreground">{r.note}</span>
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
                       <div className="font-display text-lg font-bold text-foreground">{r.score}</div>
-                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Score</div>
+                      <div className="text-[0.625rem] uppercase tracking-wide text-muted-foreground">Score</div>
                     </div>
                   </div>
                 ))}
@@ -244,7 +244,7 @@ export function StreetScanPage() {
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {STEPS.map((s) => (
               <div key={s.idx} className="rounded-2xl border border-border bg-surface p-5">
-                <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-primary">{s.idx}</span>
+                <span className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-primary">{s.idx}</span>
                 <h3 className="mt-2 font-display text-base font-bold text-foreground">{s.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{s.body}</p>
               </div>
@@ -288,7 +288,7 @@ export function StreetScanPage() {
             someone else's deal.
           </p>
           <div className="mt-8 overflow-x-auto rounded-2xl border border-border">
-            <table className="w-full min-w-[720px] text-sm">
+            <table className="w-full min-w-[45rem] text-sm">
               <thead className="bg-surface-muted/60 text-left">
                 <tr>
                   <th className="px-4 py-3 font-display font-bold text-foreground">What You've Run Into</th>
@@ -349,7 +349,7 @@ export function StreetScanPage() {
             {SCAN_VERTICALS.map((v) => (
               <div key={v.id} className="rounded-2xl border border-border bg-surface p-5">
                 <div className="font-display text-sm font-bold text-foreground">{v.label}</div>
-                <div className="mt-1 font-mono text-[11px] text-primary">{v.signal}</div>
+                <div className="mt-1 font-mono text-[0.6875rem] text-primary">{v.signal}</div>
                 <p className="mt-2 text-sm text-muted-foreground">{v.note}</p>
               </div>
             ))}
@@ -379,7 +379,7 @@ export function StreetScanPage() {
                   }`}
                 >
                   {i === 1 ? (
-                    <span className="absolute -top-2.5 left-6 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
+                    <span className="absolute -top-2.5 left-6 rounded-full bg-primary px-2.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-primary-foreground">
                       Most Popular
                     </span>
                   ) : null}

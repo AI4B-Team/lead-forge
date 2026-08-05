@@ -161,7 +161,7 @@ function DistressFeedLanding() {
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="font-display font-bold text-foreground">{t.label}</h3>
                   {t.requestOnly ? (
-                    <span className="shrink-0 rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                    <span className="shrink-0 rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[0.625rem] font-semibold text-primary">
                       Records Request
                     </span>
                   ) : null}
@@ -213,7 +213,7 @@ function DistressFeedLanding() {
                 className={`rounded-2xl border p-6 ${p.popular ? "border-primary bg-primary/5" : "border-border bg-surface"}`}
               >
                 {p.popular ? (
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">Most Popular</span>
+                  <span className="text-[0.625rem] font-semibold uppercase tracking-wide text-primary">Most Popular</span>
                 ) : null}
                 <h3 className="mt-1 font-display text-xl font-bold text-foreground">{p.name}</h3>
                 <div className="mt-2 font-mono text-3xl font-bold text-foreground">{p.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></div>

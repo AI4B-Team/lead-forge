@@ -58,7 +58,7 @@ function TemplateDetailPage() {
     <div className="min-h-screen flex flex-col bg-background">
       <MarketingNav />
       <main className="flex-1">
-        <div className="mx-auto max-w-[1100px] px-6 py-14">
+        <div className="mx-auto max-w-[68.75rem] px-6 py-14">
           <Link
             to="/templates"
             className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -75,11 +75,11 @@ function TemplateDetailPage() {
             />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
                   {CATEGORY_LABELS[primaryCategory(template)]}
                 </span>
                 {template.beta ? (
-                  <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
                     Beta
                   </span>
                 ) : null}
@@ -181,7 +181,7 @@ function TemplateNotFound() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <MarketingNav />
-      <main className="flex-1 mx-auto max-w-[700px] px-6 py-24 text-center">
+      <main className="flex-1 mx-auto max-w-[43.75rem] px-6 py-24 text-center">
         <h1 className="font-display text-4xl font-black text-foreground">Template Not Found</h1>
         <p className="mt-3 text-muted-foreground">
           That template no longer exists. Browse the full library instead.
