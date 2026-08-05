@@ -37,6 +37,35 @@ export function specSlotsComplete(spec: JobSpec, uploadReady = false, template?:
   return Boolean(spec.sourceType || template) && openSlots(spec, uploadReady, template).length === 0;
 }
 
+/**
+ * Everything that genuinely blocks Generate List, in the operator's words.
+ * The CTA reads from this list, so a disabled button always NAMES what is
+ * missing instead of saying "Add The Missing Details" — and when this list is
+ * empty the button is never in a disabled state at all.
+ */
+export function ctaBlockers(spec: JobSpec, uploadReady = false, template?: Template | null): string[] {
+  const out = openSlots(spec, uploadReady, template).map((slot) => BLOCKER_VERB[slot] ?? `Add ${slot}`);
+  // Max Leads isn't a template schema field, but a null cap can't be run.
+  const capped = spec.sourceType && spec.sourceType !== "upload";
+  if (capped && !(spec.maxResults && spec.maxResults > 0)) out.push("Set Max Leads");
+  return out;
+}
+
+/** Slot label → the action the operator has to take. */
+const BLOCKER_VERB: Record<string, string> = {
+  Source: "Pick a Source",
+  Location: "Select Counties",
+  City: "Select a City",
+  Country: "Select a Country",
+  File: "Attach a File",
+  URL: "Add a URL",
+  Niche: "Add an Industry",
+  Keyword: "Add a Keyword",
+  "Record Type": "Add Record Type",
+  "Contact Target": "Choose Agents or FSBO",
+  "Visual Criteria": "Add Visual Criteria",
+};
+
 const SOURCE_LABEL: Record<string, string> = {
   business: "Business Search",
   records: "Public Records",
