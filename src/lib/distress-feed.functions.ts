@@ -107,7 +107,12 @@ export const queryFeed = createServerFn({ method: "POST" })
       watermark = (view as { last_viewed_at: string } | null)?.last_viewed_at ?? null;
     }
 
-    let q = context.supabase
+    // The feed holds nationwide public-records PII, so it is not exposed on the
+    // Data API at all. Reads happen server-side after the auth middleware has
+    // verified the caller.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    let q = supabaseAdmin
       .from("distress_records")
       .select(
         "id, state, county, record_type, doc_number, filed_date, pulled_date, owner_first, owner_last, company_entity, property_address, property_city, property_state, property_zip, amount, auction_date, status, parcel_apn, source_url, created_at",
