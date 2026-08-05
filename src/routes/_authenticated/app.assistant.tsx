@@ -655,8 +655,12 @@ function Assistant() {
   // Two-way sync: a manual panel edit is announced in the thread so the next
   // assistant turn (and the operator) both know it happened.
   const editSpec = (next: JobSpec) => {
-    const changed = diffSpec(spec, next);
-    setSpec(next);
+    // Patch, never rebuild: whatever the panel hands back is merged onto the
+    // spec on screen so untouched fields survive and the CTA, the estimate and
+    // the server validator all read one object.
+    const merged: JobSpec = { ...spec, ...next };
+    const changed = diffSpec(spec, merged);
+    setSpec((prev) => ({ ...prev, ...next }));
     setConfirmed(false);
     if (changed.length) {
       // A hand edit un-confirms the spoken spec: the assistant must read the new
