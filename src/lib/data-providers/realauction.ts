@@ -208,11 +208,20 @@ export function isUsableRow(row: RealauctionRow): boolean {
   return Boolean(row.caseNumber && row.auctionDate);
 }
 
+/**
+ * The vendor runs one property per record type: foreclosure sales live on
+ * <county>.realforeclose.com and tax deed sales on <county>.realtaxdeed.com.
+ * Markup is identical across both, so the domain is the only thing that moves.
+ */
+export type RealauctionDomain = "realforeclose.com" | "realtaxdeed.com";
+
 export const realauctionUrls = {
-  home: (sub: string) => `https://${sub}.realforeclose.com/index.cfm`,
-  calendar: (sub: string) => `https://${sub}.realforeclose.com/index.cfm?zaction=USER&ZMETHOD=CALENDAR`,
-  auctionDay: (sub: string, mmddyyyy: string) =>
-    `https://${sub}.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=${mmddyyyy}`,
+  home: (sub: string, domain: RealauctionDomain = "realforeclose.com") =>
+    `https://${sub}.${domain}/index.cfm`,
+  calendar: (sub: string, domain: RealauctionDomain = "realforeclose.com") =>
+    `https://${sub}.${domain}/index.cfm?zaction=USER&ZMETHOD=CALENDAR`,
+  auctionDay: (sub: string, mmddyyyy: string, domain: RealauctionDomain = "realforeclose.com") =>
+    `https://${sub}.${domain}/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=${mmddyyyy}`,
 };
 
 /** Auction dates the calendar page advertises, as MM/DD/YYYY. */
@@ -231,10 +240,11 @@ export async function fetchRealauctionDay(
   sub: string,
   mmddyyyy: string,
   config?: RealauctionFetchConfig,
+  domain: RealauctionDomain = "realforeclose.com",
 ): Promise<RealauctionRow[]> {
   const block = auctionWindowBlock();
   if (block.blocked) throw new Error(block.reason);
-  const url = realauctionUrls.auctionDay(sub, mmddyyyy);
+  const url = realauctionUrls.auctionDay(sub, mmddyyyy, domain);
   const { html } = await politeHtml(url);
   return parseRealauctionPage(html, url, config);
 }

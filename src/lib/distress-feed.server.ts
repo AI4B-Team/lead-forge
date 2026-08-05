@@ -241,6 +241,104 @@ async function pullHillsboroughTaxDeed(): Promise<RawFiling[]> {
   return filings;
 }
 
+/**
+ * Generic RealTaxDeed pull for any county the discovery script verified.
+ * Walks the county's auction calendar and ingests every future sale day.
+ * Uses the shared adapter, so a markup change degrades to a logged error.
+ */
+async function pullRealtaxdeedCounty(sub: string, county: string): Promise<RawFiling[]> {
+  const { fetchRealauctionDay, parseCalendarDates, realauctionUrls, isUsableRow } = await import(
+    "./data-providers/realauction"
+  );
+  const { politeHtml, auctionWindowBlock } = await import("./data-providers/scraper-policy");
+  const block = auctionWindowBlock();
+  if (block.blocked) throw new Error(block.reason);
+
+  const calUrl = realauctionUrls.calendar(sub, "realtaxdeed.com");
+  const { html } = await politeHtml(calUrl);
+  const future = parseCalendarDates(html)
+    .filter((d) => +new Date(d) >= Date.now() - 86_400_000)
+    .sort((a, b) => +new Date(a) - +new Date(b))
+    .slice(0, 5);
+
+  const filings: RawFiling[] = [];
+  let structureFailures = 0;
+  let lastStructureError: Error | null = null;
+  for (const date of future) {
+    try {
+      const rows = await fetchRealauctionDay(sub, date, undefined, "realtaxdeed.com");
+      for (const row of rows.filter(isUsableRow)) {
+        // "Property Owner" is not in the adapter's labelMap, so it lands in
+        // raw under its lowercased label.
+        const owner = row.raw["property owner"] ?? row.raw["propertyOwner"] ?? "";
+        const { first, last, entity } = splitOwner(owner);
+        filings.push({
+          doc_number: row.caseNumber ?? row.auctionItemId ?? "",
+          filed_date: null,
+          owner_first: first,
+          owner_last: last,
+          company_entity: entity,
+          property_address: row.propertyAddress,
+          property_city: row.propertyCity,
+          property_state: "FL",
+          property_zip: row.propertyZip,
+          amount: row.openingBid ?? row.finalJudgmentAmount,
+          auction_date: row.auctionDate,
+          status: "scheduled",
+          parcel_apn: row.parcelApn,
+          source_url: row.sourceUrl,
+          raw: { source: "realtaxdeed", county, ...row.raw },
+        });
+      }
+    } catch (err) {
+      // An empty or cancelled day is normal. A single day's structural failure
+      // is tolerated (cancelled days often render oddly), but if EVERY probed
+      // day fails structurally the source has changed and we must fail loudly
+      // rather than record a silent zero-row night.
+      const name = err instanceof Error ? err.name : "";
+      if (name === "AdapterEmptyDayError") continue;
+      if (name === "AdapterStructureError") {
+        structureFailures += 1;
+        lastStructureError = err instanceof Error ? err : new Error(String(err));
+        continue;
+      }
+      throw err;
+    }
+  }
+  if (filings.length === 0 && structureFailures > 0 && structureFailures === future.length) {
+    throw lastStructureError ?? new Error(`${county}: every auction day failed to parse`);
+  }
+  return filings.filter((f) => f.doc_number);
+}
+
+/**
+ * Pull targets sourced from verified coverage rows the discovery scripts
+ * wrote. One row per county on <county>.realtaxdeed.com; anything not
+ * verified never runs (coverage gate holds here too).
+ */
+async function dynamicRealtaxdeedTargets(): Promise<PullTarget[]> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("data_sources")
+    .select("domain, county_name, state")
+    .eq("dataset_id", "realtaxdeed_auction_calendar")
+    .eq("status", "verified");
+  return (data ?? [])
+    .filter((r) => r.county_name && r.domain)
+    .map((r) => {
+      const sub = String(r.domain).split(".")[0]!;
+      const county = String(r.county_name);
+      return {
+        state: String(r.state ?? "FL"),
+        county,
+        recordType: "tax_deed" as DistressRecordType,
+        path: "portal" as const,
+        portalUrl: `https://${r.domain}`,
+        pull: () => pullRealtaxdeedCounty(sub, county),
+      };
+    });
+}
+
 export const PULL_TARGETS: PullTarget[] = [
   {
     state: "FL",
@@ -312,7 +410,22 @@ export async function runNightlyPulls(): Promise<{
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const results: Array<{ county: string; recordType: string; found: number; added: number; error?: string }> = [];
 
-  for (const target of PULL_TARGETS) {
+  // Static targets win over dynamic ones for the same county + record type, so
+  // a hand-tuned pull (e.g. Hillsborough) is never run twice in one sweep.
+  const staticKeys = new Set(
+    PULL_TARGETS.map((t) => `${t.state}|${t.county}|${t.recordType}`.toLowerCase()),
+  );
+  let dynamicTargets: PullTarget[] = [];
+  try {
+    dynamicTargets = (await dynamicRealtaxdeedTargets()).filter(
+      (t) => !staticKeys.has(`${t.state}|${t.county}|${t.recordType}`.toLowerCase()),
+    );
+  } catch (err) {
+    console.error("dynamic realtaxdeed targets unavailable:", err instanceof Error ? err.message : err);
+  }
+  const allTargets = [...PULL_TARGETS, ...dynamicTargets];
+
+  for (const target of allTargets) {
     if (target.path === "records_request" || !target.pull) {
       // Nothing to fetch: this county/type is supplied by the records-request agent.
       continue;
