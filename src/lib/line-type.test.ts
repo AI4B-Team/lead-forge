@@ -32,3 +32,25 @@ describe("line type verification", () => {
     expect(res.kept.map((r) => r.line_type)).toEqual(["landline", "mobile"]);
   });
 });
+
+describe("verifyNewlyTraced (final carrier gate)", () => {
+  it("never re-evaluates a row that already passed as mobile", () => {
+    const rows = [
+      { phone: "312-555-0100", line_type: "mobile" as const }, // already verified
+      { phone: "312-555-0110" }, // newly traced, voip bucket
+    ];
+    const gate = verifyNewlyTraced(rows, true);
+    expect(gate.alreadyMobile).toBe(1);
+    expect(gate.evaluated).toBe(1);
+    expect(gate.removedNotMobile + gate.removedNoPhone).toBe(1);
+    expect(gate.kept).toHaveLength(1);
+    expect(gate.kept[0]!.phone).toBe("312-555-0100");
+  });
+
+  it("separates no-phone drops from not-mobile drops", () => {
+    const gate = verifyNewlyTraced([{ phone: null }, { phone: "312-555-0100" }], true);
+    expect(gate.removedNoPhone).toBe(1);
+    expect(gate.removedNotMobile).toBe(0);
+    expect(gate.kept).toHaveLength(1);
+  });
+});
