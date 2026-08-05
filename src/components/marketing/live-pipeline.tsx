@@ -165,7 +165,7 @@ export function LivePipeline({ className }: { className?: string }) {
       {/* Legend: input → processing → output */}
       <div className="grid gap-3 rounded-2xl border border-border bg-surface-muted p-4 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center">
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             Input
           </div>
           <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -175,14 +175,14 @@ export function LivePipeline({ className }: { className?: string }) {
         </div>
         <Connector />
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             LeadTrace Processing
           </div>
           <div className="mt-1 text-sm font-semibold text-foreground">{scenario.request}</div>
         </div>
         <Connector />
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">Output</div>
+          <div className="text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-primary">Output</div>
           <div className="mt-1 text-sm font-semibold text-foreground">Ready To Contact</div>
         </div>
       </div>
@@ -230,7 +230,7 @@ export function LivePipeline({ className }: { className?: string }) {
 
       {/* Optional modules */}
       <div className="mt-7 rounded-2xl border border-border bg-surface-muted p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <div className="text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Modules In This Run
         </div>
         <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">

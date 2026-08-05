@@ -86,7 +86,7 @@ function ToolCard({ tool }: { tool: (typeof TOOLS)[number] }) {
         </div>
 
         <div className="mt-5 rounded-xl border border-border bg-surface-muted p-4">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Sample Result
           </div>
           <div className="mt-2 font-display text-base font-bold text-foreground">(813) 555-0142</div>

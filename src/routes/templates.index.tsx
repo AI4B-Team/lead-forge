@@ -93,7 +93,7 @@ function TemplatesPage() {
     <div className="min-h-screen flex flex-col bg-background">
       <MarketingNav />
       <main className="flex-1">
-        <div className="mx-auto max-w-[1240px] px-6 py-14">
+        <div className="mx-auto max-w-[77.5rem] px-6 py-14">
           <Link to="/" className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Back To Home
           </Link>

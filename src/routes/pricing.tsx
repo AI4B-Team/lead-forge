@@ -265,7 +265,7 @@ function Pricing() {
               </Button>
 
               <div className="mt-8">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   Included
                 </div>
                 <ul className="mt-3 space-y-3">
@@ -281,7 +281,7 @@ function Pricing() {
               </div>
 
               <div className="mt-6 border-t border-border pt-5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   Usage-Based
                 </div>
                 <ul className="mt-3 space-y-3">
@@ -329,7 +329,7 @@ function Pricing() {
           </h2>
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             <div className="rounded-xl border border-border bg-surface p-6">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Typical Stack · Four Logins
               </div>
               <ul className="mt-4 space-y-2">
@@ -346,7 +346,7 @@ function Pricing() {
               </div>
             </div>
             <div className="rounded-xl border border-primary bg-surface p-6">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+              <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-primary">
                 LeadTrace Growth · One Login
               </div>
               <ul className="mt-4 space-y-2">

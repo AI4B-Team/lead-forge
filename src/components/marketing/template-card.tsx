@@ -32,7 +32,7 @@ export function TemplateCostBadge({ template }: { template: Template }) {
   const { free, label } = templateCostBadge(template);
   return (
     <span
-      className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold ${
+      className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[0.625rem] font-semibold ${
         free
           ? "border-success/30 bg-success/10 text-success"
           : "border-border bg-surface-muted text-muted-foreground"
@@ -91,7 +91,7 @@ export function TemplateCard({
           <TemplateHealthDot status={health} />
           <span className={`font-display font-bold text-foreground truncate ${compact ? "text-sm" : ""}`}>{title}</span>
           {template.beta ? (
-            <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">
               Beta
             </span>
           ) : null}

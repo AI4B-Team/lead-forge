@@ -201,7 +201,7 @@ function LeadsIndexBody() {
 
           {/* Hero proof: the whole value prop in one card */}
           <div className="rounded-3xl border border-border bg-surface p-6 md:p-8">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <div className="text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               A Real Reference Search
             </div>
             <div className="mt-5 flex items-center gap-5">
@@ -262,7 +262,7 @@ function LeadsIndexBody() {
           </p>
           <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-surface">
             <TooltipProvider>
-              <table className="w-full min-w-[720px] table-fixed text-sm">
+              <table className="w-full min-w-[45rem] table-fixed text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <th className="w-[20%] px-4 py-3">Business</th>
@@ -446,7 +446,7 @@ function LeadsIndexBody() {
               <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-muted-foreground">
                 {NICHE_CATEGORIES.map((c, i) => (
                   <span key={c} className="inline-flex items-center gap-2">
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.625rem] uppercase tracking-wide text-primary">
                       {c}
                     </span>
                     {i < NICHE_CATEGORIES.length - 1 && (
@@ -482,7 +482,7 @@ function LeadsIndexBody() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="inline-flex items-center gap-2">
-                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-primary">
+                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[0.5625rem] font-bold tracking-wide text-primary">
                         {n.category.charAt(0).toUpperCase() + n.category.slice(1)}
                       </span>
                     </span>

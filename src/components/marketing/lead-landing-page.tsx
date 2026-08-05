@@ -76,7 +76,7 @@ export function LeadLandingPage({ page }: { page: LeadPage }) {
             Here's Exactly What A Clean List Looks Like
           </h2>
           <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-background">
-            <table className="w-full min-w-[860px] text-sm">
+            <table className="w-full min-w-[53.75rem] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <th className="px-4 py-3">Business</th>
