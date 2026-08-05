@@ -323,6 +323,18 @@
   }
 }
 
+/* Public marketing site renders at the same 80% density as the internal app. */
+@supports (zoom: 0.8) {
+  .site-density {
+    zoom: 0.8;
+  }
+  /* 100vh inside a zoomed subtree resolves to 125% of the viewport; convert
+     full-height marketing shells back into the zoomed layout space. */
+  .site-density :is(.min-h-screen) {
+    min-height: calc(100vh / 0.8);
+  }
+}
+
 /* Full-height Conversations/inbox panel area — scoped to the inbox only. It
    mirrors the working assistant-shell math: remove the unscaled top bar first,
    convert the remaining viewport into the 0.8-zoomed layout space, then remove

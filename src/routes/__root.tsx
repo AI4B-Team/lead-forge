@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -185,9 +186,20 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <TranslationProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
+        <SiteDensity>
+          <Outlet />
+        </SiteDensity>
         <Toaster />
       </TranslationProvider>
     </QueryClientProvider>
   );
+}
+
+/* Public/marketing routes render at 80% density, matching the internal app.
+   /app and /platform manage their own density (sidebar + top bar stay 100%). */
+function SiteDensity({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const internal = pathname.startsWith("/app") || pathname.startsWith("/platform");
+  if (internal) return <>{children}</>;
+  return <div className="site-density">{children}</div>;
 }
