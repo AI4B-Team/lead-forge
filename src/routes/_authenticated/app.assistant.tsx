@@ -654,13 +654,13 @@ function Assistant() {
 
   // Two-way sync: a manual panel edit is announced in the thread so the next
   // assistant turn (and the operator) both know it happened.
-  const editSpec = (next: JobSpec) => {
+  const editSpec = (patch: Partial<JobSpec>) => {
     // Patch, never rebuild: whatever the panel hands back is merged onto the
     // spec on screen so untouched fields survive and the CTA, the estimate and
     // the server validator all read one object.
-    const merged: JobSpec = { ...spec, ...next };
+    const merged: JobSpec = { ...spec, ...patch };
     const changed = diffSpec(spec, merged);
-    setSpec((prev) => ({ ...prev, ...next }));
+    setSpec((prev) => ({ ...prev, ...patch }));
     setConfirmed(false);
     if (changed.length) {
       // A hand edit un-confirms the spoken spec: the assistant must read the new
@@ -673,7 +673,7 @@ function Assistant() {
       setInferred((prev) => {
         const out = new Set(prev);
         (Object.keys(FIELD_LABELS) as Array<keyof JobSpec>).forEach((k) => {
-          if (JSON.stringify(spec[k]) !== JSON.stringify(next[k])) out.delete(k);
+          if (JSON.stringify(spec[k]) !== JSON.stringify(merged[k])) out.delete(k);
         });
         return out;
       });
@@ -686,25 +686,25 @@ function Assistant() {
         // stacking duplicate consecutive chips.
         if (last && last.role === "system" && last.content.startsWith("You Edited: ")) {
           const prevFields = last.content.slice("You Edited: ".length).split(" · ");
-          const merged = Array.from(new Set([...prevFields, ...changed]));
-          return [...m.slice(0, -1), { role: "system", content: `You Edited: ${merged.join(" · ")}` }];
+          const mergedFields = Array.from(new Set([...prevFields, ...changed]));
+          return [...m.slice(0, -1), { role: "system", content: `You Edited: ${mergedFields.join(" · ")}` }];
         }
         return [...m, { role: "system", content }];
       });
       // A widened county list multiplies the credit cost, so the assistant says
       // it out loud immediately instead of leaving it to a silent chip.
       const wasNarrow = spec.counties.length > 0;
-      const nowStatewide = next.counties.length === 0 && specStates(next).length > 0;
+      const nowStatewide = merged.counties.length === 0 && specStates(merged).length > 0;
       if (wasNarrow && nowStatewide) {
         const dropped = spec.counties.join(", ");
-        const states = specStates(next);
+        const states = specStates(merged);
         const total = states.reduce((n, s) => n + countiesForState(s).length, 0);
         setThread((m) => [
           ...m,
           {
             role: "assistant",
             content: `I see you switched to all of ${states.join(", ")} — that's ${total} counties, which multiplies your credit cost by roughly ${total}×. Want me to keep it to ${dropped}?`,
-            spec: next,
+            spec: merged,
           },
         ]);
       }
