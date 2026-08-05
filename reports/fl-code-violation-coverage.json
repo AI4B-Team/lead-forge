@@ -1,0 +1,120 @@
+{
+  "generatedAt": "2026-08-05T19:49:16.462Z",
+  "recordType": "code_violation",
+  "totals": {
+    "portalsProbed": 3,
+    "datasetsVerified": 2,
+    "countiesCovered": 2
+  },
+  "probes": [
+    {
+      "domain": "data.cityoforlando.net",
+      "city": "Orlando",
+      "county": "Orange",
+      "fips": "12095",
+      "datasetId": "k6e8-nw6w",
+      "datasetTitle": "Code Enforcement Cases",
+      "resourceUrl": "https://data.cityoforlando.net/resource/k6e8-nw6w.json",
+      "catalogStatus": 200,
+      "candidates": 1,
+      "fieldMap": {
+        "address": "derived_address",
+        "state": "commissioner_district",
+        "case_id": "parcel_id",
+        "status": "caseinfostatus",
+        "description": "case_type"
+      },
+      "rowsFetched": 25,
+      "usableRows": 15,
+      "lastUpdated": null,
+      "sample": [
+        {
+          "address": "485 S KIRKMAN RD  ORLANDO FL",
+          "city": "Orlando",
+          "case_id": "SOC-292231247401000",
+          "case_date": null,
+          "violation": "Ticket"
+        },
+        {
+          "address": "No Address   ORLANDO FL",
+          "city": "Orlando",
+          "case_id": null,
+          "case_date": null,
+          "violation": "Ticket"
+        },
+        {
+          "address": "2506  LAKE DEBRA DR  ORLANDO FL",
+          "city": "Orlando",
+          "case_id": "SOC-282302007400010",
+          "case_date": null,
+          "violation": "Housing"
+        }
+      ],
+      "status": "verified",
+      "reason": null
+    },
+    {
+      "domain": "data.cityofgainesville.org",
+      "city": "Gainesville",
+      "county": "Alachua",
+      "fips": "12001",
+      "datasetId": "vu9p-a5f7",
+      "datasetTitle": "Code Complaints, Violations & Permits",
+      "resourceUrl": "https://data.cityofgainesville.org/resource/vu9p-a5f7.json",
+      "catalogStatus": 200,
+      "candidates": 6,
+      "fieldMap": {
+        "address": "address",
+        "state": "status",
+        "status": "status",
+        "description": "case_type"
+      },
+      "rowsFetched": 25,
+      "usableRows": 24,
+      "lastUpdated": null,
+      "sample": [
+        {
+          "address": "0 W 1ST ST",
+          "city": "Gainesville",
+          "case_id": null,
+          "case_date": null,
+          "violation": "Property Maintenance"
+        },
+        {
+          "address": "6139 NW 23RD TER",
+          "city": "Gainesville",
+          "case_id": null,
+          "case_date": null,
+          "violation": "Other"
+        },
+        {
+          "address": "6502 NW 26TH TER",
+          "city": "Gainesville",
+          "case_id": null,
+          "case_date": null,
+          "violation": "Rental Inspections"
+        }
+      ],
+      "status": "verified",
+      "reason": null
+    },
+    {
+      "domain": "data.miamigov.com",
+      "city": "Miami",
+      "county": "Miami-Dade",
+      "fips": "12086",
+      "datasetId": null,
+      "datasetTitle": null,
+      "resourceUrl": null,
+      "catalogStatus": 200,
+      "candidates": 2,
+      "fieldMap": {},
+      "rowsFetched": 0,
+      "usableRows": 0,
+      "lastUpdated": null,
+      "sample": [],
+      "status": "unverified",
+      "reason": "candidates found but none had a usable field map"
+    }
+  ]
+}
