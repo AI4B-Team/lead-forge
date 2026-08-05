@@ -29,10 +29,10 @@ import { IndustryPreview } from "@/components/marketing/industry-preview";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "LeadTrace — Leads To Deals, On Autopilot" },
-      { name: "description", content: "Scrape, skip trace, DNC scrub, and text your leads from one compliant platform. Built for insurance, real estate, solar, and home services." },
-      { property: "og:title", content: "LeadTrace — Leads To Deals, On Autopilot" },
-      { property: "og:description", content: "One platform replaces your scraper, skip tracer, DNC service, and texting tool." },
+      { title: "LeadTrace — Stop Buying Lists. Start Closing Deals." },
+      { name: "description", content: "Find them, trace them, scrub them, text them — automatically. Describe who you want to reach; LeadTrace builds the campaign." },
+      { property: "og:title", content: "LeadTrace — Stop Buying Lists. Start Closing Deals." },
+      { property: "og:description", content: "Find them, trace them, scrub them, text them — automatically. Describe who you want to reach; LeadTrace builds the campaign." },
     ],
   }),
   validateSearch: (search: Record<string, unknown>): { prompt?: string; template?: string } => ({
