@@ -95,7 +95,15 @@ export const EMPTY_SPEC: JobSpec = jobSpecSchema.parse({});
  * validator reading two different objects.
  */
 export function patchSpec(spec: JobSpec, patch: Partial<JobSpec>): JobSpec {
-  return { ...spec, ...patch };
+  // An explicit `undefined` in a patch must NOT clobber a real value: a spread
+  // copies undefined keys over, which is how booleans like mobileOnly/dedupe/
+  // skipTrace silently became undefined after a panel edit and dropped out of
+  // both the checklist and the completeness check.
+  const clean: Partial<JobSpec> = {};
+  for (const [key, value] of Object.entries(patch)) {
+    if (value !== undefined) (clean as Record<string, unknown>)[key] = value;
+  }
+  return { ...spec, ...clean };
 }
 
 /**

@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { JobSpecCard } from "@/components/app/job-spec-card";
-import { AssistantTrace, buildTraceSteps, openSlots } from "@/components/app/assistant-trace";
+import { AssistantTrace, buildTraceSteps, ctaBlockers, openSlots } from "@/components/app/assistant-trace";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,7 +39,7 @@ import type { ColumnMap } from "@/lib/csv";
 import { assistantChat, createJobFromSpec, requestCoverage, listAdapterRequests } from "@/lib/assistant.functions";
 import { SourceRequestDialog, type SourceRequestType } from "@/components/app/source-request-dialog";
 import { runJob } from "@/lib/pipeline.functions";
-import { EMPTY_SPEC, describeSpec, specStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
+import { EMPTY_SPEC, describeSpec, patchSpec, specStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { PIPELINE_OPTION_LABELS, withEnrichmentDefaults } from "@/lib/pipeline-options";
 import { estimateSpec, MAX_ROWS_PRESETS } from "@/lib/estimate.shared";
 import { PipelineFunnel } from "@/components/app/pipeline-funnel";
@@ -238,6 +238,11 @@ function Assistant() {
   const traceSteps = useMemo(() => buildTraceSteps(spec), [spec]);
   const uploadReady = attachmentReady(upload);
   const missing = useMemo(() => openSlots(spec, uploadReady, selectedTemplate), [spec, uploadReady, selectedTemplate]);
+  /** What genuinely blocks the run, named. Empty = the CTA must be enabled. */
+  const blockers = useMemo(
+    () => ctaBlockers(spec, uploadReady, selectedTemplate),
+    [spec, uploadReady, selectedTemplate],
+  );
   /** Honest availability: a non-live adapter can never reach the pipeline. */
   const adapterStatus = selectedTemplate ? templateAdapterStatus(selectedTemplate) : "live";
   const adapterLive = adapterStatus === "live";
@@ -660,9 +665,9 @@ function Assistant() {
     // Patch, never rebuild: whatever the panel hands back is merged onto the
     // spec on screen so untouched fields survive and the CTA, the estimate and
     // the server validator all read one object.
-    const merged: JobSpec = { ...spec, ...patch };
+    const merged: JobSpec = patchSpec(spec, patch);
     const changed = diffSpec(spec, merged);
-    setSpec((prev) => ({ ...prev, ...patch }));
+    setSpec((prev) => patchSpec(prev, patch));
     setConfirmed(false);
     if (changed.length) {
       // A hand edit un-confirms the spoken spec: the assistant must read the new
@@ -1087,6 +1092,15 @@ function Assistant() {
    */
   const previewInFlight =
     busy || jobCoverageQ.isLoading || (traceSteps.length > 0 && revealed < traceSteps.length);
+  // Readiness is the blocker list, NOT whether the assistant has restated the
+  // spec: a hand edit un-confirms the spoken recap, and gating the CTA on that
+  // is what stranded a complete spec behind a disabled button.
+  const runnable = traceSteps.length > 0 && blockers.length === 0;
+  // `?debug=spec` prints the live spec plus what the completeness check reads.
+  const [specDebug, setSpecDebug] = useState(false);
+  useEffect(() => {
+    setSpecDebug(new URLSearchParams(window.location.search).get("debug") === "spec");
+  }, []);
   const creditsShort = overBudget || overScan || overScanSkip;
   const coveredCount = verdict?.coveredCounties.length ?? 0;
   const cta: { label: string; disabled: boolean; to?: string } = running
@@ -1095,8 +1109,8 @@ function Assistant() {
       ? { label: "Not Available — Request Coverage", disabled: true }
       : previewInFlight
         ? { label: "Building Preview…", disabled: true }
-        : !traceComplete
-          ? { label: "Add The Missing Details", disabled: true }
+        : !runnable
+          ? { label: blockers[0]!, disabled: true }
           : creditsShort
             ? { label: "Add Credits to Continue", disabled: false, to: "/app/billing" }
             : coveragePartial
@@ -1256,6 +1270,11 @@ function Assistant() {
           <div className="text-center text-[11px] text-muted-foreground pb-4">
             The Assistant Assembles. You Run. Nothing Sends Without You.
           </div>
+          {specDebug && (
+            <pre className="mb-4 max-h-72 overflow-auto rounded-lg border border-border bg-muted p-2 text-[10px] leading-tight text-muted-foreground">
+{JSON.stringify({ blockers, openSlots: missing, specStated, revealed, traceSteps: traceSteps.length, spec }, null, 1)}
+            </pre>
+          )}
         </>
       ) : (
         <div className="space-y-2 px-1">
