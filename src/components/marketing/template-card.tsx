@@ -54,6 +54,7 @@ export function TemplateCard({
   onSelect,
   selected = false,
   compact = false,
+  large = false,
   health,
   healthEta,
 }: {
@@ -64,6 +65,8 @@ export function TemplateCard({
   selected?: boolean;
   /** Uses the template's short two-line labels for dense grids. */
   compact?: boolean;
+  /** Roomier hero-grid presentation: bigger logo, title and padding. */
+  large?: boolean;
   /** Live source health. `broken` disables selection with an honest message. */
   health?: HealthStatus | null;
   /** Operator-supplied "expected back" note shown on broken sources. */
@@ -71,7 +74,7 @@ export function TemplateCard({
 }) {
   const broken = health === "broken";
   const className =
-    `group relative flex items-center gap-3 rounded-2xl border ${compact ? "p-3" : "p-4"} transition text-left w-full ${
+    `group relative flex items-center ${large ? "gap-4" : "gap-3"} rounded-2xl border ${compact ? "p-3" : large ? "p-5" : "p-4"} transition text-left w-full ${
       broken ? "cursor-not-allowed opacity-60" : "hover:border-primary hover:shadow-sm"
     } ${
       selected ? "border-primary bg-primary/5" : "border-border bg-surface"
@@ -85,18 +88,31 @@ export function TemplateCard({
           <Check className="h-3 w-3" />
         </span>
       ) : null}
-      <TemplateLogo template={template} />
+      <TemplateLogo
+        template={template}
+        className={large ? "h-14 w-14" : undefined}
+        iconClassName={large ? "h-6 w-6" : undefined}
+        imgClassName={large ? "h-8 w-8" : undefined}
+      />
       <span className="min-w-0">
         <span className="flex items-center gap-2">
           <TemplateHealthDot status={health} />
-          <span className={`font-display font-bold text-foreground truncate ${compact ? "text-sm" : ""}`}>{title}</span>
+          <span
+            className={`font-display font-bold text-foreground truncate ${compact ? "text-sm" : large ? "text-lg" : ""}`}
+          >
+            {title}
+          </span>
           {template.beta ? (
             <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">
               Beta
             </span>
           ) : null}
         </span>
-        <span className="block text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</span>
+        <span
+          className={`block text-muted-foreground mt-0.5 truncate ${large ? "text-sm" : "text-xs"}`}
+        >
+          {subtitle}
+        </span>
         {health && health !== "healthy" ? (
           <span
             className={`mt-1 block text-xs ${broken ? "text-destructive" : "text-warning"}`}

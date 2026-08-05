@@ -108,9 +108,7 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
   };
 
   return (
-    <section
-      className="relative overflow-hidden bg-background"
-    >
+    <section className="relative overflow-hidden bg-background">
       {/* Dot grid texture */}
       <div
         aria-hidden
@@ -121,7 +119,7 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
           maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
         }}
       />
-      <div className="relative mx-auto max-w-[77.5rem] px-6 pt-10 pb-4 md:pt-14 md:pb-6 text-center">
+      <div className="relative mx-auto max-w-[77.5rem] px-6 pt-8 pb-4 md:pt-10 md:pb-6 text-center">
         <div className="inline-flex items-center text-primary text-xs font-semibold uppercase tracking-[0.18em]">
           Leads To Deals — On Autopilot
         </div>
@@ -168,8 +166,8 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
             }
             onBlur={() => setFocused(false)}
             onFocusCapture={() => setFocused(true)}
-            rows={4}
-            className="w-full resize-none rounded-t-[1.25rem] bg-transparent px-5 pt-4 pb-2 text-base text-foreground placeholder:text-muted-foreground/70 outline-none"
+            rows={5}
+            className="w-full resize-none rounded-t-[1.25rem] bg-transparent px-6 pt-5 pb-2 text-lg leading-relaxed text-foreground placeholder:text-muted-foreground/70 outline-none"
           />
           {files.length > 0 && (
             <div className="flex flex-wrap gap-2 px-5 pb-2">
@@ -192,13 +190,13 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
               ))}
             </div>
           )}
-          <div className="flex items-center justify-between px-3 pb-3 pt-1">
+          <div className="flex items-center justify-between px-4 pb-4 pt-1">
             <DropdownMenu>
               <DropdownMenuTrigger
-                className="grid place-items-center h-10 w-10 rounded-full border border-border bg-surface hover:bg-surface-muted text-foreground"
+                className="grid place-items-center h-12 w-12 rounded-full border border-border bg-surface hover:bg-surface-muted text-foreground"
                 aria-label="Add Attachment"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>
@@ -224,9 +222,9 @@ export function PromptHero({ selectedTemplate }: { selectedTemplate?: Template |
             <button
               type="button"
               onClick={submit}
-              className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground font-semibold px-5 h-10 text-sm shadow-sm"
+              className="inline-flex items-center gap-2 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground font-semibold px-6 h-12 text-base shadow-sm"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-[1.125rem] w-[1.125rem]" />
               Build My List Free
             </button>
           </div>
