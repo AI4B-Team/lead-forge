@@ -134,7 +134,6 @@ export function useCreateWorkspace() {
   const create = useCallback(async (name: string) => {
     setCreating(true);
     try {
-      const { createWorkspace } = await import("@/lib/workspace-create.functions");
       const { workspaceId } = await createWorkspace({ data: { name } });
       await refreshWorkspaces();
       switchWorkspace(workspaceId);
