@@ -30,23 +30,24 @@ export const topUpCredits = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const { data: existing } = await supabase
-      .from("credit_balances")
-      .select("balance")
+    // Membership check runs as the caller (RLS); the balance write itself is
+    // atomic and service-role only, so clients can never set a balance directly.
+    const { data: member, error: memErr } = await supabase
+      .from("workspace_members")
+      .select("role")
       .eq("workspace_id", data.workspaceId)
-      .eq("kind", data.kind)
+      .eq("user_id", context.userId)
       .maybeSingle();
-    const next = (existing?.balance ?? 0) + data.amount;
-    const { error: upErr } = await supabase
-      .from("credit_balances")
-      .upsert({ workspace_id: data.workspaceId, kind: data.kind, balance: next }, { onConflict: "workspace_id,kind" });
-    if (upErr) throw upErr;
-    await supabase.from("credit_ledger").insert({
-      workspace_id: data.workspaceId,
+    if (memErr) throw new Error(memErr.message);
+    if (!member || !["owner", "admin"].includes(member.role)) throw new Error("Forbidden");
+
+    const { applyCreditDelta } = await import("./credits.server");
+    const next = await applyCreditDelta(null, {
+      workspaceId: data.workspaceId,
       kind: data.kind,
       delta: data.amount,
       reason: "top_up",
-      actor_user_id: context.userId,
+      actorUserId: context.userId,
     });
     const { logActivity } = await import("./activity.server");
     const KIND_LABEL: Record<string, string> = {
