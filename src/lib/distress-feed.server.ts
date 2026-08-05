@@ -398,7 +398,72 @@ export async function ingestDistressRecords(
     .from("distress_records")
     .upsert(rows as never, { onConflict: "fips,record_type,doc_number", count: "exact" });
   if (error) throw new Error(error.message);
+
+  // The feed table is a flat per-pull log; the case spine is the deduplicated
+  // truth an operator works from. Every adapter row goes through the
+  // reconciler rather than writing foreclosure_cases directly, so matching and
+  // provenance rules live in exactly one place.
+  await reconcileFilings(target, fips, filings);
+
   return count ?? rows.length;
+}
+
+/** Record types that belong on the case spine (a legal case, not a snapshot). */
+const CASE_RECORD_TYPES = new Set([
+  "foreclosure",
+  "foreclosure_auction",
+  "tax_deed",
+  "tax_lien",
+  "lis_pendens",
+]);
+
+async function reconcileFilings(
+  target: { state: string; county: string; recordType: string },
+  fips: string,
+  filings: RawFiling[],
+): Promise<void> {
+  if (!CASE_RECORD_TYPES.has(target.recordType)) return;
+  try {
+    const { reconcileObservations } = await import("./distress/reconcile.server");
+    // A vendor auction site is a republished county calendar: authoritative on
+    // sale date and opening bid, but outranked by the clerk on anything else.
+    const summary = await reconcileObservations(
+      filings.map((f) => ({
+        fips,
+        state: target.state,
+        county: target.county,
+        recordType: target.recordType,
+        sourceClass:
+          String((f.raw as Record<string, unknown> | undefined)?.["source"] ?? "").startsWith("real")
+            ? ("vendor_auction" as const)
+            : ("clerk_records" as const),
+        sourceUrl: f.source_url ?? null,
+        caseNumber: f.doc_number || null,
+        parcelApn: f.parcel_apn ?? null,
+        propertyAddress: f.property_address ?? null,
+        propertyCity: f.property_city ?? null,
+        propertyState: f.property_state ?? target.state.toUpperCase(),
+        propertyZip: f.property_zip ?? null,
+        ownerFirst: f.owner_first ?? null,
+        ownerLast: f.owner_last ?? null,
+        companyEntity: f.company_entity ?? null,
+        caseStatus: f.status ?? null,
+        filedDate: f.filed_date ?? null,
+        auctionDate: f.auction_date ?? null,
+        openingBid: f.amount ?? null,
+        raw: (f.raw ?? {}) as Record<string, unknown>,
+      })),
+    );
+    if (summary.failed) {
+      console.error(
+        `[reconcile] ${target.county} ${target.recordType}: ${summary.failed} observations failed`,
+      );
+    }
+  } catch (err) {
+    // Reconciliation is downstream of the feed. A failure here must not lose
+    // the night's pull, but it must be loud.
+    console.error("[reconcile] batch failed:", err instanceof Error ? err.message : err);
+  }
 }
 
 /** One nightly sweep across every configured county + record type. */
