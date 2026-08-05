@@ -52,9 +52,17 @@ export const connectHub = createServerFn({ method: "POST" })
       .eq("id", data.workspaceId);
     if (error) throw new Error(error.message);
 
-    await context.supabase
+    // real_elite_user_id is an identity field the hub SSO callback trusts, so a
+    // database trigger blocks self-serve writes. Stamp it from trusted server
+    // code only, after the signed hub token has been verified above.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: linkError } = await supabaseAdmin
       .from("user_prefs")
-      .upsert({ user_id: context.userId, real_elite_user_id: claims.reo_user_id }, { onConflict: "user_id" });
+      .upsert(
+        { user_id: context.userId, real_elite_user_id: claims.reo_user_id },
+        { onConflict: "user_id" },
+      );
+    if (linkError) throw new Error("That Real Elite account is already linked to another user");
 
     return { linked: true, realEliteOrgId: claims.reo_org_id, linkedAt };
   });
