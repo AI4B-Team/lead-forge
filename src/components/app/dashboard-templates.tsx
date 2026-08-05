@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TEMPLATES, hasCategory, primaryCategory, type Template, type TemplateCategory } from "@/lib/templates";
 import { TemplateLogo } from "@/components/marketing/template-logo";
 import { TemplateCostBadge } from "@/components/marketing/template-card";
+import { getVerifiedCoverage } from "@/lib/coverage.functions";
+import { recordTypeCovered } from "@/lib/coverage.shared";
+import { recordTypeForTemplate } from "@/lib/record-types";
 import { cn } from "@/lib/utils";
 
 type TabKey = "all" | "records" | "business" | "social";
@@ -48,6 +52,20 @@ export function DashboardTemplates() {
   // 9 keeps the grid a full 3×3 at xl.
   const items = (tab === "all" ? TEMPLATES : TEMPLATES.filter((t) => t.categories.some((c) => active.match.includes(c)))).slice(0, 9);
 
+  // Card state comes from source_coverage, never from the template config: a
+  // public-records template with no verified county anywhere is not runnable.
+  const coverageQ = useQuery({
+    queryKey: ["verified-coverage"],
+    queryFn: () => getVerifiedCoverage(),
+    staleTime: 5 * 60_000,
+  });
+  const verified = coverageQ.data?.coverage ?? [];
+  const runnable = (t: Template) => {
+    const recordType = recordTypeForTemplate(t.id);
+    if (!recordType || coverageQ.isPending) return true;
+    return recordTypeCovered(verified, recordType);
+  };
+
   return (
     <Card className="mt-6">
       <CardHeader className="flex flex-row items-center justify-between gap-4">
@@ -77,39 +95,66 @@ export function DashboardTemplates() {
           ))}
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {items.map((t, i) => (
-              <Link
-                key={t.id}
-                {...templateLink(t)}
-                className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 transition hover:border-primary hover:shadow-sm"
-              >
+          {items.map((t, i) => {
+            const available = runnable(t);
+            const body = (
+              <>
                 <TemplateLogo template={t} className="h-12 w-12" imgClassName="h-7 w-7" />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2">
                     <span className="truncate font-display text-sm font-bold leading-snug text-foreground">
                       {t.title}
                     </span>
-                    {t.beta ? (
+                    {!available ? (
+                      <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Coming Soon
+                      </span>
+                    ) : t.beta ? (
                       <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                         Beta
                       </span>
                     ) : null}
                   </span>
-                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">{t.subtitle}</span>
+                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                    {available ? t.subtitle : "No verified county yet — request it and we'll add it."}
+                  </span>
                   <span className="mt-2 flex items-center gap-2">
                     <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                       {CATEGORY_LABEL[primaryCategory(t)] ?? "Template"}
                     </span>
-                    <TemplateCostBadge template={t} />
-                    {i < 3 && (
+                    {available && <TemplateCostBadge template={t} />}
+                    {available && i < 3 && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary">
                         <Star className="h-3 w-3 fill-current" /> Popular
                       </span>
                     )}
+                    {!available && (
+                      <span className="text-[10px] font-semibold text-primary">Request It</span>
+                    )}
                   </span>
                 </span>
+              </>
+            );
+            return available ? (
+              <Link
+                key={t.id}
+                {...templateLink(t)}
+                className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 transition hover:border-primary hover:shadow-sm"
+              >
+                {body}
               </Link>
-          ))}
+            ) : (
+              <Link
+                key={t.id}
+                to="/app/assistant"
+                search={{ source: "records" }}
+                title="We don't have a verified source for this filing yet — open the builder to request it."
+                className="group flex items-center gap-4 rounded-2xl border border-dashed border-border bg-surface-muted/40 p-4 opacity-80 transition hover:border-primary"
+              >
+                {body}
+              </Link>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 import { TemplateCard } from "@/components/marketing/template-card";
+import { useTemplateCoverage } from "@/hooks/use-template-coverage";
 import { TEMPLATES, CATEGORY_LABELS, creditCostPerLead, hasCategory, primaryCategory, type Template, type TemplateCategory } from "@/lib/templates";
 /** Included (0-credit) sources first, then ascending by credit draw. */
 function byCost(list: Template[]) {
@@ -37,6 +38,7 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
   const searchRef = useRef<HTMLInputElement | null>(null);
   const scroll = useOverflow<HTMLDivElement>();
   const { health } = useTemplateHealth();
+  const { isComingSoon } = useTemplateCoverage();
 
   useEffect(() => {
     if (!open) return;
@@ -84,6 +86,7 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
           selected={selectedId === t.id}
           health={health[t.id]?.status ?? null}
           healthEta={health[t.id]?.eta ?? null}
+          comingSoon={isComingSoon(t)}
           onSelect={onSelect}
         />
       ))}

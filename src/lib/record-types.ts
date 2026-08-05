@@ -42,3 +42,13 @@ const TEMPLATE_BY_RECORD_TYPE: Record<string, string> = {
 export function templateForRecordType(label: string | null | undefined): string | null {
   return (label && TEMPLATE_BY_RECORD_TYPE[label]) || null;
 }
+/**
+ * The record type a public-records template pulls. Template cards are gated on
+ * verified coverage for this label, so a filing with no verified county
+ * anywhere renders as "Coming Soon" instead of a runnable free template.
+ */
+export function recordTypeForTemplate(templateId: string | null | undefined): string | null {
+  if (!templateId) return null;
+  const hit = Object.entries(TEMPLATE_BY_RECORD_TYPE).find(([, id]) => id === templateId);
+  return hit ? hit[0] : null;
+}

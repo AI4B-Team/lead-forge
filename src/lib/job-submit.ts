@@ -64,7 +64,9 @@ export async function queueJob(
   const { assertJobCoverage } = await import("./distress/coverage.server");
   const coverage = await assertJobCoverage({
     sourceType: input.sourceType,
-    recordType: input.recordType ?? null,
+    // Belt and braces: a caller that only fills `params.record_type` must still
+    // be gated on the right record type, never treated as "unspecified".
+    recordType: input.recordType ?? (input.params["record_type"] as string | undefined) ?? null,
     recordTypes: (input.params["record_types"] as string[] | undefined) ?? null,
     counties: (input.params["counties"] as string[] | undefined) ?? null,
     states: (input.params["states"] as string[] | undefined) ?? null,

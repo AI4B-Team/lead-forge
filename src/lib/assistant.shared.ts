@@ -88,6 +88,59 @@ export function withStates(spec: JobSpec, states: string[]): JobSpec {
 
 export const EMPTY_SPEC: JobSpec = jobSpecSchema.parse({});
 
+/**
+ * The ONLY way a spec changes. A panel edit patches the spec that is already
+ * on screen — it never rebuilds it — so a field the edit didn't touch (record
+ * type, mobile-only, dedupe) can never be dropped and leave the CTA and the
+ * validator reading two different objects.
+ */
+export function patchSpec(spec: JobSpec, patch: Partial<JobSpec>): JobSpec {
+  return { ...spec, ...patch };
+}
+
+/**
+ * The `jobs.params` payload for a spec. Shared so the assistant, the recurring
+ * engine and the tests all map a spec to a run the same way — the record type
+ * in particular must reach BOTH `params.record_type` and the `recordType`
+ * argument the coverage gate reads.
+ */
+export function jobParamsFromSpec(
+  spec: JobSpec,
+  extra: { name: string; counties: string[]; transcript?: unknown },
+): Record<string, unknown> {
+  return {
+    name: extra.name,
+    templateId: spec.templateId,
+    niches: spec.niches,
+    record_type: spec.recordType,
+    state: specStates(spec)[0] ?? null,
+    states: specStates(spec),
+    counties: extra.counties,
+    county: extra.counties[0] ?? null,
+    city: spec.city,
+    zips: spec.zips,
+    recency_days: spec.recencyDays,
+    max_results: spec.maxResults,
+    remove_franchises: spec.removeFranchises,
+    scrape_targets: spec.scrapeTargets,
+    scrape_target_kind: spec.scrapeTargetKind,
+    upload_intent: spec.uploadIntent,
+    suppression_file: spec.suppressionFile,
+    visual_criteria: spec.visualCriteria,
+    buy_box: spec.buyBox,
+    match_threshold: spec.matchThreshold,
+    images_per: spec.imagesPer,
+    dedupe: spec.dedupe,
+    mobile_only: spec.mobileOnly,
+    skip_trace: spec.skipTrace,
+    email_required: spec.emailRequired,
+    industry: spec.industry,
+    message_angle: spec.messageAngle,
+    assembled_by: "ai_assistant",
+    assistant_transcript: extra.transcript ?? [],
+  };
+}
+
 export type Coverage = "live" | "beta" | "requested" | "unknown";
 
 export type AssistantMessage = { role: "user" | "assistant"; content: string };

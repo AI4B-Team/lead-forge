@@ -57,6 +57,7 @@ export function TemplateCard({
   large = false,
   health,
   healthEta,
+  comingSoon = false,
 }: {
   template: Template;
   variant?: "detail" | "prompt" | "insert";
@@ -71,8 +72,13 @@ export function TemplateCard({
   health?: HealthStatus | null;
   /** Operator-supplied "expected back" note shown on broken sources. */
   healthEta?: string | null;
+  /**
+   * No verified county/record-type pair exists for this template yet. Coverage
+   * is the source of truth, so the card can't be run — it invites a request.
+   */
+  comingSoon?: boolean;
 }) {
-  const broken = health === "broken";
+  const broken = health === "broken" || comingSoon;
   const className =
     `group relative flex items-center ${large ? "gap-4" : "gap-3"} rounded-2xl border ${compact ? "p-3" : large ? "p-5" : "p-4"} transition text-left w-full ${
       broken ? "cursor-not-allowed opacity-60" : "hover:border-primary hover:shadow-sm"
@@ -102,7 +108,11 @@ export function TemplateCard({
           >
             {title}
           </span>
-          {template.beta ? (
+          {comingSoon ? (
+            <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">
+              Coming Soon
+            </span>
+          ) : template.beta ? (
             <span className="shrink-0 rounded-full border border-border bg-surface-muted px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">
               Beta
             </span>
@@ -113,7 +123,11 @@ export function TemplateCard({
         >
           {subtitle}
         </span>
-        {health && health !== "healthy" ? (
+        {comingSoon ? (
+          <span className="mt-1 block text-xs text-muted-foreground">
+            No verified county yet — request it and we'll add it.
+          </span>
+        ) : health && health !== "healthy" ? (
           <span
             className={`mt-1 block text-xs ${broken ? "text-destructive" : "text-warning"}`}
           >
@@ -121,7 +135,7 @@ export function TemplateCard({
           </span>
         ) : null}
         <span className="mt-1.5 flex items-center gap-2">
-          <TemplateCostBadge template={template} />
+          {!comingSoon && <TemplateCostBadge template={template} />}
         </span>
       </span>
     </>

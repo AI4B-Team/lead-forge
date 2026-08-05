@@ -14,6 +14,8 @@ Platform-wide metrics and admin tools live only in Platform Admin (/platform), n
 
 Compliance fails closed: unconfigured/failing DNC provider hard-fails a run; unscrubbed or unknown numbers never enter cold outbound.
 
+One spec object per builder flow: panel edits patch it, never rebuild it, and the CTA + server validator read the same object.
+
 ## Memories
 - [Public records sourcing](mem://product/public-records-sourcing.md) — Access-path order, no-CAPTCHA rule, one-request-per-agency throttle, free credit cost
 - [Product positioning](mem://product/positioning.md) — Copy rules: multi-source data, uploaded lists, optional skip trace, outcome-first messaging
