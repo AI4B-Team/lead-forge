@@ -70,3 +70,52 @@ function verifyBatch<T extends VerifyInput>(
   }
   return { kept, removed: rows.length - kept.length, counts };
 }
+
+export type FinalGateResult<T> = {
+  kept: Array<T & { line_type: LineType }>;
+  /** Rows that already carried a mobile verdict and were NOT re-evaluated. */
+  alreadyMobile: number;
+  /** Rows this pass actually classified (skip-trace additions + still-missing). */
+  evaluated: number;
+  /** Evaluated rows dropped because the number is landline/VoIP. */
+  removedNotMobile: number;
+  /** Evaluated rows dropped because there is still no phone number at all. */
+  removedNoPhone: number;
+};
+
+/**
+ * Final carrier gate after skip trace.
+ *
+ * A row that already passed the carrier check as mobile is NEVER re-evaluated —
+ * skip trace only ever appends to rows that had no number, so re-classifying an
+ * already-verified row can only produce a false removal. Only rows without a
+ * mobile verdict are checked here.
+ */
+export function verifyNewlyTraced<T extends VerifyInput & { line_type?: LineType }>(
+  rows: T[],
+  mobileOnly: boolean,
+): FinalGateResult<T> {
+  const kept: Array<T & { line_type: LineType }> = [];
+  let alreadyMobile = 0;
+  let evaluated = 0;
+  let removedNotMobile = 0;
+  let removedNoPhone = 0;
+
+  for (const row of rows) {
+    if (row.line_type === "mobile") {
+      alreadyMobile++;
+      kept.push(row as T & { line_type: LineType });
+      continue;
+    }
+    evaluated++;
+    const line_type = classifyLineType(row.phone);
+    const missing = !(row.phone ?? "").replace(/\D/g, "");
+    if (mobileOnly && !isTextable(line_type)) {
+      if (missing) removedNoPhone++;
+      else removedNotMobile++;
+      continue;
+    }
+    kept.push({ ...row, line_type });
+  }
+  return { kept, alreadyMobile, evaluated, removedNotMobile, removedNoPhone };
+}
