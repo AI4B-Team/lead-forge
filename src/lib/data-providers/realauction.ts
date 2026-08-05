@@ -172,7 +172,11 @@ export function parseRealauctionPage(
     const { date, time } = isoDate(dateBlock ? stripTags(dateBlock[1] ?? "") : null);
 
     const line2 = raw["propertyAddressLine2"] ?? "";
-    const cityZip = /^(.*?),\s*(\d{5})/.exec(line2);
+    // Live FL pages write line 2 as "GAINESVILLE, FL- 32641" — a state
+    // abbreviation and a stray hyphen sit between the comma and the ZIP. The
+    // older comma-then-ZIP pattern silently dropped city and ZIP on every
+    // county, so both parts stay optional but the state segment is tolerated.
+    const cityZip = /^(.*?),\s*(?:([A-Z]{2})\s*-?\s*)?(\d{5})/.exec(line2);
 
     rows.push({
       auctionItemId: attr(block, "aid"),
