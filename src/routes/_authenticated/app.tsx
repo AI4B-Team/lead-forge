@@ -33,12 +33,14 @@ function AppLayoutInner() {
   const { setOpen } = useSidebar();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isInbox = pathname === "/app/inbox";
+  const isListsOrLeads = pathname === "/app/lists" || pathname === "/app/leads";
 
   // On the Conversations page every pixel counts for the three-panel layout,
   // so we collapse the sidebar automatically when the user lands there.
+  // Same for Lists and Leads, which are high-density table views.
   useEffect(() => {
-    if (isInbox) setOpen(false);
-  }, [isInbox, setOpen]);
+    if (isInbox || isListsOrLeads) setOpen(false);
+  }, [isInbox, isListsOrLeads, setOpen]);
 
   return (
     <div className="min-h-screen flex w-full bg-surface-muted">
