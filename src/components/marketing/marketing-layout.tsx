@@ -76,14 +76,14 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           : "border-b border-border bg-background"
       }
     >
-      <div className="w-full px-6 h-16 grid grid-cols-[1fr_auto_1fr] items-center">
-        <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg">
-          <span className="grid place-items-center h-8 w-8 rounded-lg bg-primary text-primary-foreground">
-            <Radar className="h-5 w-5" />
+      <div className="w-full px-6 h-20 grid grid-cols-[1fr_auto_1fr] items-center">
+        <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-2xl">
+          <span className="grid place-items-center h-10 w-10 rounded-xl bg-primary text-primary-foreground">
+            <Radar className="h-6 w-6" />
           </span>
           {BRAND_NAME}
         </Link>
-        <nav className="hidden md:flex items-center gap-5 text-sm font-medium justify-self-center">
+        <nav className="hidden md:flex items-center gap-6 text-base font-medium justify-self-center">
           {NAV_LINKS.map((l) => (
             <Link
               key={l.to}
@@ -103,11 +103,11 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
                   await supabase.auth.signOut();
                   window.location.assign("/");
                 }}
-                className={`text-sm font-medium px-2 ${dark ? "text-ink-foreground" : "text-foreground"}`}
+                className={`text-base font-medium px-2 ${dark ? "text-ink-foreground" : "text-foreground"}`}
               >
                 Sign Out
               </button>
-              <Button asChild className="rounded-full">
+              <Button asChild size="lg" className="rounded-full">
                 <Link to="/app/dashboard">Dashboard</Link>
               </Button>
             </>
@@ -115,11 +115,11 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
             <>
               <Link
                 to="/auth"
-                className={`text-sm font-medium px-2 ${dark ? "text-ink-foreground" : "text-foreground"}`}
+                className={`text-base font-medium px-2 ${dark ? "text-ink-foreground" : "text-foreground"}`}
               >
                 Log In
               </Link>
-              <Button asChild className="rounded-full">
+              <Button asChild size="lg" className="rounded-full">
                 <Link to="/auth" search={{ mode: "signup" }}>Start Free</Link>
               </Button>
             </>
@@ -128,18 +128,18 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
             <DropdownMenuTrigger
               aria-label="Select language"
               data-no-translate
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-base font-medium cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 dark
                   ? "border-white/20 text-ink-foreground hover:bg-white/10"
                   : "border-border text-foreground hover:bg-surface-muted"
               }`}
             >
-              <span className="text-base leading-none">{current.flag}</span>
+              <span className="text-lg leading-none">{current.flag}</span>
               <span>{current.code}</span>
               {translating ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin opacity-70" />
+                <Loader2 className="h-4 w-4 animate-spin opacity-70" />
               ) : (
-                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+                <ChevronDown className="h-4 w-4 opacity-70" />
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" data-no-translate className="max-h-80 overflow-y-auto w-56">
