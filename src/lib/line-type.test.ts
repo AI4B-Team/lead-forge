@@ -37,7 +37,7 @@ describe("verifyNewlyTraced (final carrier gate)", () => {
   it("never re-evaluates a row that already passed as mobile", () => {
     const rows = [
       { phone: "312-555-0100", line_type: "mobile" as const }, // already verified
-      { phone: "312-555-0110" }, // newly traced, voip bucket
+      { phone: "312-201-0110" }, // newly traced, voip bucket
     ];
     const gate = verifyNewlyTraced(rows, true);
     expect(gate.alreadyMobile).toBe(1);
