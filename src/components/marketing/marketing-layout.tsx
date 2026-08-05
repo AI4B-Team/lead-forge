@@ -128,18 +128,18 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
             <DropdownMenuTrigger
               aria-label="Select language"
               data-no-translate
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-base font-medium cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 dark
                   ? "border-white/20 text-ink-foreground hover:bg-white/10"
                   : "border-border text-foreground hover:bg-surface-muted"
               }`}
             >
-              <span className="text-base leading-none">{current.flag}</span>
+              <span className="text-lg leading-none">{current.flag}</span>
               <span>{current.code}</span>
               {translating ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin opacity-70" />
+                <Loader2 className="h-4 w-4 animate-spin opacity-70" />
               ) : (
-                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+                <ChevronDown className="h-4 w-4 opacity-70" />
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" data-no-translate className="max-h-80 overflow-y-auto w-56">
