@@ -38,6 +38,7 @@ export function TemplatePickerDialog({ open, onOpenChange, selectedId, onSelect 
   const searchRef = useRef<HTMLInputElement | null>(null);
   const scroll = useOverflow<HTMLDivElement>();
   const { health } = useTemplateHealth();
+  const { isComingSoon } = useTemplateCoverage();
 
   useEffect(() => {
     if (!open) return;

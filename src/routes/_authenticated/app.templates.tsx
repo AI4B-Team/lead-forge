@@ -69,6 +69,7 @@ function AppTemplates() {
   const navigate = useNavigate();
   const { workspaceId } = useWorkspaceId();
   const { health } = useTemplateHealth();
+  const { isComingSoon } = useTemplateCoverage();
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("relevance");
   const [betaOnly, setBetaOnly] = useState(false);

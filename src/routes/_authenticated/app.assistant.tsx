@@ -183,6 +183,7 @@ function Assistant() {
   /** Panel edits waiting to be acknowledged by the next assistant turn. */
   const [panelEdits, setPanelEdits] = useState<string[]>([]);
   const [recents, setRecents] = useState<RecentTemplate[]>([]);
+  const { isComingSoon } = useTemplateCoverage();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [convId, setConvId] = useState<string>(() => `c${Date.now()}`);
   /** Keys the assistant inferred this conversation (drives the % badges). */
