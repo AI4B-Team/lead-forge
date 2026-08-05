@@ -26,13 +26,13 @@ export function threadStatusLabel(value: string | null | undefined): string | nu
   return THREAD_STATUSES.find((s) => s.value === value)?.label ?? null;
 }
 
-/** Tab order is deliberate: Unread · Needs Reply · Starred · Archived · All. */
+/** Tab order: All first, then action-oriented buckets. */
 export const INBOX_TABS = [
+  { value: "all", label: "All" },
   { value: "unread", label: "Unread" },
   { value: "needs_reply", label: "Needs Reply" },
   { value: "starred", label: "Starred" },
   { value: "archived", label: "Archived" },
-  { value: "all", label: "All" },
 ] as const;
 
 /** Reasons the system archives a thread on its own, in plain language. */

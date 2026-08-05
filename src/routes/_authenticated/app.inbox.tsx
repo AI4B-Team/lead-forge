@@ -81,15 +81,15 @@ type Filter =
   | "archived";
 
 /**
- * Tab order is deliberate — it walks from "what needs me right now" to
- * "everything": Unread · Needs Reply · Starred · Archived · All.
+ * Tab order puts the broadest view first, then narrows to action-oriented
+ * buckets: All · Unread · Needs Reply · Starred · Archived.
  */
 const PRIMARY_FILTERS: Array<{ key: Filter; label: string; short: string }> = [
+  { key: "all", label: "All", short: "All" },
   { key: "unread", label: "Unread", short: "Unread" },
   { key: "needs_reply", label: "Needs Reply", short: "Replies" },
   { key: "starred", label: "Starred", short: "Starred" },
   { key: "archived", label: "Archived", short: "Archive" },
-  { key: "all", label: "All", short: "All" },
 ];
 
 const OVERFLOW_FILTERS: Array<{ key: Filter; label: string }> = [
