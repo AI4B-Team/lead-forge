@@ -270,23 +270,29 @@ async function persist(probes: Probe[]) {
     )) as Array<{ id: string }>;
     const sourceId = sourceRows?.[0]?.id ?? null;
 
-    await sb(`source_coverage?on_conflict=source_id,fips,record_type`, {
-      method: "POST",
-      headers: { Prefer: "resolution=merge-duplicates" },
-      body: JSON.stringify([
-        {
-          source_id: sourceId,
-          fips: p.fips,
-          state: "FL",
-          county_name: p.county,
-          record_type: RECORD_TYPE,
-          status: p.status,
-          sample_row_count: p.usableRows,
-          verified_at: p.status === "verified" ? new Date().toISOString() : null,
-          last_success_at: p.usableRows > 0 ? new Date().toISOString() : null,
-        },
-      ]),
-    });
+    // source_coverage's uniqueness is an expression index, which PostgREST
+    // cannot target with on_conflict — read then write.
+    const coverage = {
+      source_id: sourceId,
+      fips: p.fips,
+      state: "FL",
+      county_name: p.county,
+      record_type: RECORD_TYPE,
+      status: p.status,
+      sample_row_count: p.usableRows,
+      verified_at: p.status === "verified" ? new Date().toISOString() : null,
+      last_success_at: p.usableRows > 0 ? new Date().toISOString() : null,
+    };
+    const existing = (await sb(
+      `source_coverage?select=id&fips=eq.${p.fips}&record_type=eq.${RECORD_TYPE}` +
+        (sourceId ? `&source_id=eq.${sourceId}` : `&source_id=is.null`),
+      { method: "GET" },
+    )) as Array<{ id: string }>;
+    if (existing?.[0]?.id) {
+      await sb(`source_coverage?id=eq.${existing[0].id}`, { method: "PATCH", body: JSON.stringify(coverage) });
+    } else {
+      await sb(`source_coverage`, { method: "POST", body: JSON.stringify([coverage]) });
+    }
   }
 }
 
