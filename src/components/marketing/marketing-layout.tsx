@@ -76,10 +76,10 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           : "border-b border-border bg-background"
       }
     >
-      <div className="w-full px-6 h-16 grid grid-cols-[1fr_auto_1fr] items-center">
-        <Link to="/" className="flex items-center gap-2 font-display font-bold text-lg">
-          <span className="grid place-items-center h-8 w-8 rounded-lg bg-primary text-primary-foreground">
-            <Radar className="h-5 w-5" />
+      <div className="w-full px-6 h-20 grid grid-cols-[1fr_auto_1fr] items-center">
+        <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-2xl">
+          <span className="grid place-items-center h-10 w-10 rounded-xl bg-primary text-primary-foreground">
+            <Radar className="h-6 w-6" />
           </span>
           {BRAND_NAME}
         </Link>
