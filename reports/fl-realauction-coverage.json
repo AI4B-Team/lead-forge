@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T09:39:18.570Z",
+  "generatedAt": "2026-08-05T09:46:10.595Z",
   "recordType": "foreclosure_auction",
   "transport": "relay",
   "totals": {
@@ -16,42 +16,17 @@
       "homeUrl": "https://alachua.realforeclose.com/index.cfm",
       "homeStatus": 200,
       "robotsAllowed": true,
-      "calendarStatus": 200,
-      "calendarFound": true,
-      "auctionDatesFound": 4,
-      "probedDate": "08/11/2026",
-      "probedUrl": "https://alachua.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=08/11/2026",
-      "rowsParsed": 2,
-      "usableRows": 1,
-      "rendering": "server_html",
-      "sample": [
-        {
-          "auctionItemId": "1496999",
-          "caseNumber": "01 2025 CA 001895",
-          "auctionDate": "2026-08-11",
-          "auctionTime": "11:00 AM ET",
-          "auctionType": "FORECLOSURE",
-          "parcelApn": "16259-028-000",
-          "propertyAddress": "4001 SE 14TH TER",
-          "propertyCity": null,
-          "propertyZip": null,
-          "openingBid": null,
-          "finalJudgmentAmount": 81804.7,
-          "sourceUrl": "https://alachua.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=08/11/2026",
-          "raw": {
-            "auctionType": "FORECLOSURE",
-            "caseNumber": "01 2025 CA 001895",
-            "finalJudgmentAmount": "$81,804.70",
-            "parcelApn": "16259-028-000",
-            "propertyAddress": "4001 SE 14TH TER",
-            "propertyAddressLine2": "GAINESVILLE, FL- 32641",
-            "assessedValue": "$215,552.00",
-            "plaintiffMaxBid": "Hidden"
-          }
-        }
-      ],
-      "status": "verified",
-      "reason": null
+      "calendarStatus": null,
+      "calendarFound": false,
+      "auctionDatesFound": 0,
+      "probedDate": null,
+      "probedUrl": null,
+      "rowsParsed": 0,
+      "usableRows": 0,
+      "rendering": "unknown",
+      "sample": [],
+      "status": "unverified",
+      "reason": "Failed to parse JSON"
     },
     {
       "county": "Baker",
@@ -2069,12 +2044,37 @@
       "auctionDatesFound": 10,
       "probedDate": "08/06/2026",
       "probedUrl": "https://walton.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=08/06/2026",
-      "rowsParsed": 0,
-      "usableRows": 0,
-      "rendering": "unknown",
-      "sample": [],
-      "status": "unverified",
-      "reason": "Failed to parse JSON"
+      "rowsParsed": 1,
+      "usableRows": 1,
+      "rendering": "server_html",
+      "sample": [
+        {
+          "auctionItemId": "1511036",
+          "caseNumber": "26CA000125",
+          "auctionDate": "2026-08-06",
+          "auctionTime": "11:00 AM CT",
+          "auctionType": "FORECLOSURE",
+          "parcelApn": "24-2S-21-42274-000-0300",
+          "propertyAddress": "27 COSMOS CT",
+          "propertyCity": null,
+          "propertyZip": null,
+          "openingBid": null,
+          "finalJudgmentAmount": 300394.75,
+          "sourceUrl": "https://walton.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=08/06/2026",
+          "raw": {
+            "auctionType": "FORECLOSURE",
+            "caseNumber": "26CA000125",
+            "finalJudgmentAmount": "$300,394.75",
+            "parcelApn": "24-2S-21-42274-000-0300",
+            "propertyAddress": "27 COSMOS CT",
+            "propertyAddressLine2": "SANTA ROSA BEACH, FL- 32459",
+            "assessedValue": "$289,153.00",
+            "plaintiffMaxBid": "Hidden"
+          }
+        }
+      ],
+      "status": "verified",
+      "reason": null
     },
     {
       "county": "Washington",
