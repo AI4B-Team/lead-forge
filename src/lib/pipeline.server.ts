@@ -670,11 +670,14 @@ async function runPipelineBody(
       ? verifyPending(deduped, mobileOnly)
       : verifyLineTypes(deduped, mobileOnly);
     verified = verify.kept;
+    const pendingPhone = verified.filter((r) => !(r.phone ?? "").replace(/\D/g, "")).length;
     await supabase.from("jobs").update({ rows_enriched: verified.length }).eq("id", jobId);
     await say(
       "enriching",
       mobileOnly
-        ? verify.removed > 0
+        ? pendingPhone > 0
+          ? `Carrier check: ${(verified.length - pendingPhone).toLocaleString()} mobile, ${verify.removed.toLocaleString()} landline or VoIP removed, ${pendingPhone.toLocaleString()} still awaiting a number from skip trace.`
+          : verify.removed > 0
           ? `Carrier check removed ${verify.removed.toLocaleString()} landline and VoIP numbers — ${verified.length.toLocaleString()} records remain.`
           : `Carrier check confirmed every number is mobile — ${verified.length.toLocaleString()} records remain.`
         : `Carrier check complete — ${verify.counts.mobile.toLocaleString()} mobile, ${(verify.counts.landline + verify.counts.voip).toLocaleString()} landline or VoIP.`,
@@ -781,17 +784,17 @@ async function runPipelineBody(
         }
         if (finalGate.removedNoPhone > 0) {
           parts.push(
-            `dropped ${finalGate.removedNoPhone.toLocaleString()} ${
+            `${finalGate.removedNoPhone.toLocaleString()} ${
               finalGate.removedNoPhone === 1 ? "record" : "records"
-            } with no phone number found`,
+            } still had no phone number after skip trace and were dropped`,
           );
         }
         await say(
           "enriching",
           removedTotal > 0
-            ? `Carrier check on ${finalGate.evaluated.toLocaleString()} ${
+            ? `Final carrier check on ${finalGate.evaluated.toLocaleString()} pending ${
                 finalGate.evaluated === 1 ? "record" : "records"
-              } added by skip trace ${parts.join(" and ")} — ${verified.length.toLocaleString()} mobile records remain.`
+              }: ${parts.join("; ")} — ${verified.length.toLocaleString()} mobile records remain.`
             : `Carrier check confirmed the ${finalGate.evaluated.toLocaleString()} newly traced ${
                 finalGate.evaluated === 1 ? "number is" : "numbers are"
               } mobile — ${verified.length.toLocaleString()} records remain.`,
