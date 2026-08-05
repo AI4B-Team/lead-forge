@@ -17,6 +17,20 @@ export const Route = createFileRoute("/api/public/hooks/telnyx-inbound")({
           return new Response("Invalid signature", { status: 403 });
         }
 
+        // Telnyx delivers ALL messaging events to the profile's single
+        // webhook_url, so non-inbound events (delivery receipts) are dispatched
+        // to the DLR handler instead of being recorded as replies.
+        let eventType = "";
+        try {
+          eventType = (JSON.parse(raw) as { data?: { event_type?: string } }).data?.event_type ?? "";
+        } catch {
+          eventType = "";
+        }
+        if (eventType && eventType !== "message.received") {
+          const { handleTelnyxDlr } = await import("@/lib/sms/dlr-handler.server");
+          return handleTelnyxDlr(request, raw);
+        }
+
         // Rebuild a Request so parseInbound can read the body again.
         const req2 = new Request(request.url, {
           method: "POST",
