@@ -246,7 +246,9 @@ async function persist(probes: Probe[]) {
           county_name: p.county,
           state: "FL",
           fips: p.fips,
-          field_map: p.fieldMap,
+          field_map: p.attributionWhere
+            ? { ...p.fieldMap, _where: p.attributionWhere }
+            : p.fieldMap,
           precedence: 20, // Socrata wins when both exist (see PLATFORM_ORDER)
           crawl_interval_minutes: 1440,
           status: p.status === "verified" ? "verified" : "discovered",
