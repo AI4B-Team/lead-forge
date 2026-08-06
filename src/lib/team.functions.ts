@@ -42,12 +42,20 @@ export const listTeam = createServerFn({ method: "GET" })
         is_me: m.user_id === context.userId,
       });
     }
-    const { data: invites } = await supabaseAdmin
-      .from("workspace_invites")
-      .select("id, email, role, created_at, expires_at, accepted_at, token")
-      .eq("workspace_id", data.workspaceId)
-      .is("accepted_at", null)
-      .order("created_at", { ascending: false });
+    // Invite rows carry the join token, so only owners/admins receive them.
+    const { data: isAdmin } = await context.supabase.rpc("is_workspace_admin", {
+      _workspace_id: data.workspaceId,
+    });
+    const invites = isAdmin
+      ? (
+          await supabaseAdmin
+            .from("workspace_invites")
+            .select("id, email, role, created_at, expires_at, accepted_at, token")
+            .eq("workspace_id", data.workspaceId)
+            .is("accepted_at", null)
+            .order("created_at", { ascending: false })
+        ).data
+      : [];
     return { members: enriched, invites: invites ?? [] };
   });
 
