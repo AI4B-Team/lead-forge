@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-05T20:36:53.016Z",
+  "generatedAt": "2026-08-06T02:02:41.757Z",
   "recordType": "code_violation",
   "platform": "arcgis",
   "totals": {
     "countiesProbed": 65,
-    "verified": 2
+    "verified": 3
   },
   "probes": [
     {
@@ -105,8 +105,9 @@
           "violation": null
         }
       ],
-      "status": "unverified",
-      "reason": "layer matched 2 counties (Broward, Palm Beach) — shared regional dataset, needs manual county attribution: https://services.arcgis.com/JMAJrTsHNLrSsWf5/arcgis/rest/services/MunicipalCodeAppPts/FeatureServer/0"
+      "status": "verified",
+      "reason": "shared regional layer attributed to Broward — Broward County GIS publishes MunicipalCodeAppPts; attributed manually",
+      "attributionWhere": "1=1"
     },
     {
       "county": "Calhoun",
@@ -799,7 +800,7 @@
       "candidates": 1,
       "layersProbed": 1,
       "serviceTitle": "Municipal Code Enforcement Addresses",
-      "layerUrl": "https://services.arcgis.com/JMAJrTsHNLrSsWf5/arcgis/rest/services/MunicipalCodeAppPts/FeatureServer/0",
+      "layerUrl": null,
       "layerName": "MunicipalCodeAppPts",
       "fieldMap": {
         "address": "PTS_SITUSFULLADDRESS",
@@ -832,7 +833,7 @@
         }
       ],
       "status": "unverified",
-      "reason": "layer matched 2 counties (Broward, Palm Beach) — shared regional dataset, needs manual county attribution: https://services.arcgis.com/JMAJrTsHNLrSsWf5/arcgis/rest/services/MunicipalCodeAppPts/FeatureServer/0"
+      "reason": "layer belongs to Broward County (manual attribution) — not Palm Beach: https://services.arcgis.com/JMAJrTsHNLrSsWf5/arcgis/rest/services/MunicipalCodeAppPts/FeatureServer/0"
     },
     {
       "county": "Pasco",
