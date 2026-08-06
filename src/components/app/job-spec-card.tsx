@@ -478,7 +478,10 @@ export function JobSpecCard({
             </FieldLabel>
             <Popover open={requestOpen} onOpenChange={setRequestOpen}>
               <Select
-                value={spec.recordType ?? ""}
+                // Render from the SAME spec value the List Assembled card reads,
+                // canonicalised so an id-shaped value ("code_violation") still
+                // selects its option instead of leaving the control blank.
+                value={canonicalRecordType(spec.recordType) ?? ""}
                 onValueChange={(v) => {
                   // The last item is an affordance, not a fulfillable record type.
                   if (v === REQUEST_RECORD_TYPE) {
