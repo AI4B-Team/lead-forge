@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-06T02:06:12.740Z",
+  "generatedAt": "2026-08-06T15:08:58.395Z",
   "recordType": "code_violation",
   "platform": "arcgis",
   "totals": {
     "countiesProbed": 65,
-    "verified": 3
+    "verified": 2
   },
   "probes": [
     {
@@ -72,42 +72,15 @@
       "fips": "12011",
       "candidates": 2,
       "layersProbed": 2,
-      "serviceTitle": "Municipal Code Enforcement Addresses",
-      "layerUrl": "https://services.arcgis.com/JMAJrTsHNLrSsWf5/arcgis/rest/services/MunicipalCodeAppPts/FeatureServer/0",
-      "layerName": "MunicipalCodeAppPts",
-      "fieldMap": {
-        "address": "PTS_SITUSFULLADDRESS",
-        "house_number": "HOUSENUMBER",
-        "city": "PTS_CITYNAME_MAILING",
-        "state": "STATE",
-        "zip": "PTS_ZIPCODE",
-        "case_id": "OBJECTID"
-      },
-      "rowsFetched": 25,
-      "usableRows": 25,
-      "sample": [
-        {
-          "address": "6419 NW 78 DR",
-          "city": "PARKLAND",
-          "case_id": "GIS-1",
-          "violation": null
-        },
-        {
-          "address": "3384 DEER CREEK ALBA CIR",
-          "city": "DEERFIELD BEACH",
-          "case_id": "GIS-2",
-          "violation": null
-        },
-        {
-          "address": "6431 NW 78 DR",
-          "city": "PARKLAND",
-          "case_id": "GIS-3",
-          "violation": null
-        }
-      ],
-      "status": "verified",
-      "reason": "shared regional layer attributed to Broward — Broward County GIS publishes MunicipalCodeAppPts; attributed manually",
-      "attributionWhere": "1=1"
+      "serviceTitle": null,
+      "layerUrl": null,
+      "layerName": null,
+      "fieldMap": {},
+      "rowsFetched": 0,
+      "usableRows": 0,
+      "sample": [],
+      "status": "unverified",
+      "reason": "no layer had an address-bearing schema (zones/boundaries only)"
     },
     {
       "county": "Calhoun",
@@ -698,19 +671,19 @@
       "usableRows": 25,
       "sample": [
         {
-          "address": "24450 SW 164 AVE",
+          "address": "20901 - 20999 SW 117TH AVE",
           "city": "Miami-Dade",
           "case_id": "GIS-1",
           "violation": null
         },
         {
-          "address": "1301 NE 111 ST",
+          "address": "14300 - 14348 SW 136TH ST",
           "city": "Miami-Dade",
           "case_id": "GIS-2",
           "violation": null
         },
         {
-          "address": "4351 NW 25 AVE",
+          "address": "5546 NW 200 TER",
           "city": "Miami-Dade",
           "case_id": "GIS-3",
           "violation": null
@@ -799,42 +772,15 @@
       "fips": "12099",
       "candidates": 1,
       "layersProbed": 1,
-      "serviceTitle": "Municipal Code Enforcement Addresses",
+      "serviceTitle": null,
       "layerUrl": null,
-      "layerName": "MunicipalCodeAppPts",
-      "fieldMap": {
-        "address": "PTS_SITUSFULLADDRESS",
-        "house_number": "HOUSENUMBER",
-        "city": "PTS_CITYNAME_MAILING",
-        "state": "STATE",
-        "zip": "PTS_ZIPCODE",
-        "case_id": "OBJECTID"
-      },
-      "rowsFetched": 25,
-      "usableRows": 25,
-      "sample": [
-        {
-          "address": "6419 NW 78 DR",
-          "city": "PARKLAND",
-          "case_id": "GIS-1",
-          "violation": null
-        },
-        {
-          "address": "3384 DEER CREEK ALBA CIR",
-          "city": "DEERFIELD BEACH",
-          "case_id": "GIS-2",
-          "violation": null
-        },
-        {
-          "address": "6431 NW 78 DR",
-          "city": "PARKLAND",
-          "case_id": "GIS-3",
-          "violation": null
-        }
-      ],
+      "layerName": null,
+      "fieldMap": {},
+      "rowsFetched": 0,
+      "usableRows": 0,
+      "sample": [],
       "status": "unverified",
-      "reason": "layer belongs to Broward County (manual attribution) — not Palm Beach: https://services.arcgis.com/JMAJrTsHNLrSsWf5/arcgis/rest/services/MunicipalCodeAppPts/FeatureServer/0",
-      "rejectedLayerUrl": "https://services.arcgis.com/JMAJrTsHNLrSsWf5/arcgis/rest/services/MunicipalCodeAppPts/FeatureServer/0"
+      "reason": "no layer had an address-bearing schema (zones/boundaries only)"
     },
     {
       "county": "Pasco",

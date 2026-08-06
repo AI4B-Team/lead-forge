@@ -167,6 +167,14 @@ async function probeCounty(county: string): Promise<Probe> {
       const columns = meta.fields.map((f) => f.name ?? "").filter(Boolean);
       const map = inferFieldMap(columns);
       if (!isUsableMap(map)) continue;
+      // Case-signal guard. An address column alone is not evidence of case
+      // data: Broward's "Municipal Code Enforcement Addresses" is 724k parcel
+      // addresses mapped to the code office that SERVES them — a directory,
+      // not violations. Real case layers carry a case number, a status, or a
+      // filing date; OBJECTID does not count as a case number.
+      const hasCaseSignal =
+        (map.case_id && !/^objectid$/i.test(map.case_id)) || map.status || map.case_date;
+      if (!hasCaseSignal) continue;
 
       const params = new URLSearchParams({
         where: "1=1",
