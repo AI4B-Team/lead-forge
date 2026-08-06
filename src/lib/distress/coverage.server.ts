@@ -6,6 +6,7 @@
 
 import type { CoverageRow } from "../coverage.shared";
 import { splitCountyLabel } from "../coverage.shared";
+import { recordTypeId } from "../record-types";
 
 /** Thrown when a run has no verified coverage at all. */
 export class NoCoverageError extends Error {
@@ -32,13 +33,14 @@ async function admin() {
 
 /** Primary gate: is this FIPS + record type verified? */
 export async function hasCoverage(fips: string, recordType: string): Promise<boolean> {
+  const typeKey = recordTypeId(recordType) ?? recordType;
   const supabase = await admin();
   const { data } = await supabase
     .from("source_coverage")
     .select("id")
     .eq("status", "verified")
     .eq("fips", fips)
-    .eq("record_type", recordType)
+    .eq("record_type", typeKey)
     .limit(1);
   return (data ?? []).length > 0;
 }
@@ -62,12 +64,13 @@ export async function coveredFipsForCounty(
   recordType: string,
 ): Promise<string[]> {
   const { county, state } = splitCountyLabel(countyLabel);
+  const typeKey = recordTypeId(recordType) ?? recordType;
   const supabase = await admin();
   let q = supabase
     .from("source_coverage")
     .select("fips")
     .eq("status", "verified")
-    .eq("record_type", recordType)
+    .eq("record_type", typeKey)
     .ilike("county_name", county);
   if (state) q = q.eq("state", state);
   const { data } = await q;

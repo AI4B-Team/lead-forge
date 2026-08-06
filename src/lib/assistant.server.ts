@@ -18,9 +18,15 @@ function normalizeCounties(counties: string[], state: string | null): string[] {
   const all = countiesForState(state);
   const out: string[] = [];
   for (const raw of counties) {
-    const bare = parseCounty(raw).county.replace(/\b(county|parish|borough)\b/gi, "").trim();
+    const parsed = parseCounty(raw);
+    // Never relabel a county from another state as though it belonged to this
+    // one. Stale/model-provided cross-state values are discarded at the spec
+    // boundary before they can reach coverage or pricing.
+    if (parsed.state && parsed.state.toUpperCase() !== state.toUpperCase()) continue;
+    const bare = parsed.county.replace(/\b(county|parish|borough)\b/gi, "").trim();
     const hit = all.find((c) => c.toLowerCase() === bare.toLowerCase());
-    const label = formatCounty(hit ?? bare, state);
+    if (!hit) continue;
+    const label = formatCounty(hit, state);
     if (!out.some((v) => v.toLowerCase() === label.toLowerCase())) out.push(label);
   }
   return out;

@@ -1,6 +1,8 @@
 // Shared coverage vocabulary. Kept client-safe so selectors, result screens and
 // the admin matrix all describe coverage with the same words.
 
+import { recordTypeId } from "./record-types";
+
 export type CoverageStatus = "unverified" | "verified" | "degraded" | "retired";
 
 export type CoverageRow = {
@@ -47,8 +49,10 @@ export function fipsForCountyLabels(verified: CoverageRow[], labels: string[]): 
  * off this so it can never offer a filing with no adapter behind it.
  */
 export function recordTypeCovered(verified: CoverageRow[], recordType: string): boolean {
-  const t = recordType.trim().toLowerCase();
-  return verified.some((r) => r.status === "verified" && r.record_type.toLowerCase() === t);
+  const t = recordTypeId(recordType) ?? recordType.trim().toLowerCase();
+  return verified.some(
+    (r) => r.status === "verified" && (recordTypeId(r.record_type) ?? r.record_type.toLowerCase()) === t,
+  );
 }
 
 /** Does this (county label, record type) pair appear in the verified set? */
@@ -59,10 +63,11 @@ export function isCovered(
 ): boolean {
   const { county, state } = splitCountyLabel(countyLabel);
   const c = county.toLowerCase();
+  const t = recordTypeId(recordType) ?? recordType.trim().toLowerCase();
   return verified.some(
     (r) =>
       r.status === "verified" &&
-      r.record_type.toLowerCase() === recordType.trim().toLowerCase() &&
+      (recordTypeId(r.record_type) ?? r.record_type.toLowerCase()) === t &&
       (!state || r.state.toUpperCase() === state) &&
       (r.county_name ?? "").toLowerCase() === c,
   );
@@ -76,10 +81,11 @@ export function lastSuccessFor(
 ): string | null {
   const { county, state } = splitCountyLabel(countyLabel);
   const c = county.toLowerCase();
+  const t = recordTypeId(recordType) ?? recordType.trim().toLowerCase();
   const times = verified
     .filter(
       (r) =>
-        r.record_type.toLowerCase() === recordType.trim().toLowerCase() &&
+        (recordTypeId(r.record_type) ?? r.record_type.toLowerCase()) === t &&
         (!state || r.state.toUpperCase() === state) &&
         (r.county_name ?? "").toLowerCase() === c,
     )

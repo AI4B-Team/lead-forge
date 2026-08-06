@@ -34,6 +34,12 @@ describe("parseGeoIntent", () => {
     expect(g.ambiguous).toEqual([]);
   });
 
+  it("treats the spec state as a hard boundary before matching", () => {
+    const g = parseGeoIntent("code violations in Miami-Dade, GA and Miami, IN", { stateHint: "FL" });
+    expect(g.counties).toEqual(["Miami-Dade, FL"]);
+    expect(g.states).toEqual(["FL"]);
+  });
+
   it("never crosses a state boundary the operator did not name", () => {
     const g = parseGeoIntent("Miami-Dade county florida code violations");
     expect(g.counties).toEqual(["Miami-Dade, FL"]);
