@@ -8,6 +8,14 @@ async function assertMember(supabase: any, workspaceId: string) {
   if (!data) throw new Error("Forbidden");
 }
 
+/** Invite management is owner/admin only — a member must not mint admin seats. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function assertAdmin(supabase: any, workspaceId: string) {
+  const { data, error } = await supabase.rpc("is_workspace_admin", { _workspace_id: workspaceId });
+  if (error) throw error;
+  if (!data) throw new Error("Only workspace owners and admins can manage invites.");
+}
+
 export const listTeam = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
@@ -53,7 +61,7 @@ export const inviteTeamMember = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertMember(context.supabase, data.workspaceId);
+    await assertAdmin(context.supabase, data.workspaceId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("workspace_invites")
@@ -80,7 +88,7 @@ export const revokeInvite = createServerFn({ method: "POST" })
       .eq("id", data.inviteId)
       .maybeSingle();
     if (!inv) throw new Error("Not found");
-    await assertMember(context.supabase, inv.workspace_id);
+    await assertAdmin(context.supabase, inv.workspace_id);
     const { error } = await supabaseAdmin.from("workspace_invites").delete().eq("id", data.inviteId);
     if (error) throw error;
     return { ok: true };
