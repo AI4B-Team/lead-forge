@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { buyBoxSchema, DEFAULT_MATCH_THRESHOLD } from "./property-scan.shared";
+import { canonicalRecordType } from "./record-types";
 
 /**
  * The Job Spec the assistant assembles. It maps 1:1 onto the existing
@@ -9,7 +10,16 @@ export const jobSpecSchema = z.object({
   sourceType: z.enum(["business", "records", "upload", "street_scan"]).nullable().default(null),
   name: z.string().max(120).nullable().default(null),
   niches: z.array(z.string().max(60)).max(20).default([]),
-  recordType: z.string().max(80).nullable().default(null),
+  /**
+   * Always stored as the canonical option LABEL. Every writer (model patch,
+   * panel edit, saved list) goes through the same normalisation so the panel
+   * dropdown and the List Assembled card can never render different values for
+   * one spec.
+   */
+  recordType: z.preprocess(
+    (v) => (typeof v === "string" && v ? canonicalRecordType(v) ?? v : v),
+    z.string().max(80).nullable().default(null),
+  ),
   state: z.string().max(2).nullable().default(null),
   /** Multiple states can be worked at once; `state` mirrors the first one. */
   states: z.array(z.string().length(2)).max(10).default([]),
@@ -102,6 +112,9 @@ export function patchSpec(spec: JobSpec, patch: Partial<JobSpec>): JobSpec {
   const clean: Partial<JobSpec> = {};
   for (const [key, value] of Object.entries(patch)) {
     if (value !== undefined) (clean as Record<string, unknown>)[key] = value;
+  }
+  if (typeof clean.recordType === "string" && clean.recordType) {
+    clean.recordType = canonicalRecordType(clean.recordType) ?? clean.recordType;
   }
   return { ...spec, ...clean };
 }
