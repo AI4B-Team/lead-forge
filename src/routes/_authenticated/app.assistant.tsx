@@ -171,8 +171,6 @@ function Assistant() {
   const [spec, setSpec] = useState<JobSpec>(EMPTY_SPEC);
   const [firstPrompt, setFirstPrompt] = useState("");
   const [coverage, setCoverage] = useState<Array<{ county: string; coverage: Coverage }>>([]);
-  /** Quoted live from the spec, so changing the row cap requotes immediately. */
-  const estimate = useMemo(() => estimateSpec(spec), [spec]);
   const [suggested, setSuggested] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [running, setRunning] = useState(false);
@@ -944,6 +942,15 @@ function Assistant() {
   const priceable = geoResolved && !coverageBlocked;
 
   const coveragePartial = verdict?.status === "partial";
+  /** Public-record estimates include only counties the coverage gate will run. */
+  const pricedSpec = useMemo(
+    () =>
+      verdict?.gated && verdict.coveredCounties.length > 0
+        ? { ...spec, counties: verdict.coveredCounties }
+        : spec,
+    [spec, verdict],
+  );
+  const estimate = useMemo(() => estimateSpec(pricedSpec), [pricedSpec]);
   const traceCoverage = verdict?.gated
     ? {
         status: verdict.status,
@@ -970,8 +977,10 @@ function Assistant() {
   const activeTemplate = spec.templateId ? getTemplate(spec.templateId) : undefined;
 
   const countyCount = Math.max(1, spec.counties.length || 1);
+  const pricedCountyCount =
+    verdict?.gated && verdict.coveredCounties.length > 0 ? verdict.coveredCounties.length : countyCount;
   const tradeCount = spec.sourceType === "business" ? Math.max(1, spec.niches.length) : 1;
-  const searchCount = countyCount * tradeCount;
+  const searchCount = pricedCountyCount * tradeCount;
 
   const isScan = spec.sourceType === "street_scan";
   /**
@@ -1153,7 +1162,7 @@ function Assistant() {
         Caps how many leads this job can pull. Because we run one search per trade per county, your
         total is this number × trades × counties.
         {spec.maxResults
-          ? ` Right now: ${tradeCount.toLocaleString()} ${tradeCount === 1 ? "trade" : "trades"} × ${countyCount.toLocaleString()} ${countyCount === 1 ? "county" : "counties"} × ${spec.maxResults.toLocaleString()} = up to ${(searchCount * spec.maxResults).toLocaleString()} leads.`
+          ? ` Right now: ${tradeCount.toLocaleString()} ${tradeCount === 1 ? "trade" : "trades"} × ${pricedCountyCount.toLocaleString()} covered ${pricedCountyCount === 1 ? "county" : "counties"} × ${spec.maxResults.toLocaleString()} = up to ${(searchCount * spec.maxResults).toLocaleString()} leads.`
           : " Leave it empty to use the source default of 500."}
       </p>
     </div>
