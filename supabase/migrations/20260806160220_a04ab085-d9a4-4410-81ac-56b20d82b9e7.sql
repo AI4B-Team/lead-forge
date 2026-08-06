@@ -1,0 +1,2 @@
+ALTER TABLE public.data_sources DROP CONSTRAINT data_sources_status_check;
+ALTER TABLE public.data_sources ADD CONSTRAINT data_sources_status_check CHECK (status = ANY (ARRAY['discovered'::text, 'pending_verification'::text, 'verified'::text, 'enabled'::text, 'disabled'::text, 'failed'::text, 'rejected'::text]));
