@@ -1,0 +1,768 @@
+URL: https://documentation.realeflow.com/property-data-api/reference/property-object
+TITLE: Property Object | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Property Object
+Enums
+Errors
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Property Data APIReferenceProperty Object
+Property Object
+
+The property object is the unit of return across the Property Data API. It appears:
+
+In data[] of /search.
+As subject.data and inside each comps[].property of /comps. For comp records that are listings rather than assessor records, the object uses a listing shape; see Comp record-type variations.
+At the top level of /details/{identifier}, with optional with= include sections appended.
+
+This page documents every field that may appear on the object, the includes available on details, and the listing-shape variants used in comps responses.
+
+Field availability. The object is sparse — fields that have no value on a given record are omitted or null. AI scores and lien-related Leadpipes flags are populated only when the account's territory and entitlements allow.
+
+Identifiers​
+Field	Type	Description
+address_hash	string	Stable address hash, format HA[0-9]+\-\w+. Pass to {identifier} routes.
+address_hash_no_suffix	string	Address hash without street suffix.
+Address​
+Field	Type	Description
+address_number	string | integer	Street number.
+address_direction_pre	string | null	Pre-direction (N, S, E, W).
+address_street	string	Street name.
+address_suffix	string	Street suffix (ST, AVE, RD, …).
+address_direction_post	string | null	Post-direction.
+address_unit_type	string | null	Unit type (APT, STE, LOT, …).
+address_unit	string | null	Unit number.
+address_city	string	City.
+address_county	string | null	County name.
+address_state	string	Two-letter state code.
+address_zip	string	ZIP.
+address_zip_plus4	string | null	ZIP+4 code.
+address_country	string	Country code (typically "US").
+address_fips	string | null	County FIPS.
+CountyName	string	County name (lookup-decoded variant).
+fips	string | null	County FIPS (alternate field).
+cbsa	string | null	Core-Based Statistical Area code (metro / micropolitan area).
+situs_census_tract	string | null	Census tract, block, and block-suffix designators.
+situs_geo_status_code	string | null	Geocoding accuracy code. See Enums → Geo status.
+Standardized property address (situs_std_*)​
+
+Standardized parsing of the property address. The components below are the same address represented in address_* above, but parsed by the upstream standardizer. Use whichever shape suits your integration; partners can recompose the full address from the parts or use situs_std_full_street_address directly.
+
+Field	Type	Description
+situs_std_full_street_address	string | null	Full street address (number + direction + street + suffix + unit).
+situs_std_house_nbr	string | null	House number.
+situs_std_house_nbr_suffix	string | null	Alpha digits to the right of the house number.
+situs_std_direction_left	string | null	Pre-direction (N, S, E, W).
+situs_std_street	string | null	Street name.
+situs_std_mode	string | null	Street suffix / type (ST, AVE, RD, …).
+situs_std_direction_right	string | null	Post-direction.
+situs_std_unit_type	string | null	Unit type (APT, STE, LOT, …).
+situs_std_unit_nbr	string | null	Unit / suite number.
+situs_std_city	string | null	City.
+situs_std_state	string | null	Two-letter state code.
+situs_std_zip5	string | null	5-digit ZIP code.
+situs_std_zip4	string | null	ZIP+4 4-digit suffix.
+situs_std_carrier_code	string | null	USPS carrier-route code.
+Geolocation​
+Field	Type	Description
+situs_latitude	decimal	Property latitude.
+situs_longitude	decimal	Property longitude.
+location	object	Convenience field: { lat, lon }.
+location_shape	object	GeoJSON Point: { type, coordinates: [lon, lat] }.
+location_override	boolean	Indicates that the location was manually overridden.
+location_extra	object	Additional location metadata when override is applied.
+Owner and mailing​
+Composite name fields​
+Field	Type	Description
+owner_std_name1_full	string	First owner's full name.
+owner_std_name2_full	string | null	Second owner's full name.
+owner_occupied	string | null	Owner-occupancy flag ("O", "A", etc.).
+absentee_owner	boolean	Mailing address differs from property address.
+owner_seller_same_last_name	boolean	Buyer last name on the most recent sale matches the seller's.
+owner_type	string	Owner entity type (e.g. BUSI, INDV).
+Standardized name parts (first owner)​
+Field	Type	Description
+owner_std1_first_name	string | null	First name.
+owner_std1_middle_name	string | null	Middle name.
+owner_std1_last_name	string | null	Last name.
+owner_std1_suffix	string | null	Generation identifier.
+owner_std1_corp_ind	string | null	Corporate indicator (set when the owner is a corporation).
+owner_std1_ownership_rights	string | null	Ownership rights code. See Enums → Ownership rights.
+Standardized name parts (second owner)​
+
+Same shape under the owner_std2_ prefix: first_name, middle_name, last_name, suffix, corp_ind.
+
+Mailing​
+
+The mailing address recorded against the owner of record. Components below are the standardized parsing — partners can recompose the full address from the parts or use mailing_std_full_street_address directly.
+
+Field	Type	Description
+mailing_address_hash	string | null	Stable hash of the mailing address. Use to group co-owned properties without comparing the address itself.
+mail_same_as_site_flag	string | null	"Y" when the mailing address matches the property address.
+mailing_std_full_street_address	string | null	Full street address (number + direction + street + suffix + unit).
+mailing_std_house_nbr	string | null	House number.
+mailing_std_house_nbr_suffix	string | null	Alpha digits to the right of the house number.
+mailing_std_direction_left	string | null	Pre-direction (N, S, E, W).
+mailing_std_street	string | null	Street name.
+mailing_std_mode	string | null	Street suffix / type (ST, AVE, RD, …).
+mailing_std_direction_right	string | null	Post-direction.
+mailing_std_unit_type	string | null	Unit type (APT, STE, LOT, …).
+mailing_std_unit_nbr	string | null	Unit / suite number.
+mailing_std_city	string | null	City.
+mailing_std_state	string | null	Two-letter state code.
+mailing_std_zip5	string | null	5-digit ZIP code.
+mailing_std_zip4	string | null	ZIP+4 4-digit suffix.
+mailing_std_carrier_code	string | null	USPS carrier-route code (4-digit local delivery-path identifier).
+mailing_opt_out	string | null	Set when the property owner has registered to be excluded from direct-mail marketing.
+Property characteristics​
+Field	Type	Description
+year_built	integer	Year the structure was built.
+effective_year_built	string | null	Year the latest significant construction occurred on the building.
+bedrooms	integer	Bedroom count. Falls back to estimated_bedrooms when missing.
+bath_total_calc	decimal	Total bathrooms (full + half). Falls back to estimated_baths when missing.
+bath_full	integer | null	Number of full bathrooms.
+baths_partial_nbr	integer | null	Number of partial bathrooms.
+bath_fixtures_nbr	integer | null	Total number of bathroom plumbing fixtures.
+total_rooms	integer	Total rooms.
+building_area	integer	Gross building square footage.
+sum_living_area_sq_ft	integer	Total living area square footage.
+sum_building_sq_ft	integer	Building size in square feet (commonly the cumulative measurement of all structures).
+sum_gross_area_sq_ft	integer	Gross area for the entire building (typically all square footage including basement, attic, garage).
+sum_adj_area_sq_ft	integer	Adjusted area used by the county or local taxing / assessment authority.
+sum_basement_sq_ft	integer	Basement square footage.
+sum_garage_sq_ft	integer	Garage square footage.
+sum_buildings_nbr	integer | null	Number of buildings on the parcel.
+sum_residential_units	integer	Residential unit count.
+sum_commercial_units	integer	Commercial unit count.
+sum_units	integer	Total units (residential + commercial).
+garage	integer | null	Garage type. See Enums → Garage.
+garage_parking_nbr	integer | null	Number of parking spaces available on the property.
+lot_size_sq_ft	integer	Lot size in square feet.
+lot_size_acres	string | null	Lot size in acres.
+lot_size_frontage_feet	string | null	Linear feet across the front of the lot.
+lot_size_depth_feet	string | null	Linear feet between the front and back of the lot.
+stories_nbr_code	decimal	Number of stories (decoded from raw value).
+mobile_home_ind	string | null	"Y" or "T" if a mobile home is present on the parcel.
+timeshare_code	string | null	"Y" or "T" if the property is a timeshare.
+zoning	string	Zoning classification.
+municipality	string	Municipality name.
+subdivision_name	string	Subdivision / neighborhood.
+subdivision_phase_nbr	string | null	Phase of the subdivision / tract development.
+subdivision_tract_nbr	string | null	Tract number.
+MLS-supplemental fields (extra_*)​
+
+Fields populated from the active or most-recent MLS listing. They will be sparse on properties without recent MLS coverage and richer on properties with current listings. The bedroom and bath counts here are the listing-reported numbers; for the resolved canonical counts use bedrooms and bath_total_calc higher up.
+
+HOA / association​
+Field	Type	Description
+extra_association_yn	boolean | null	Property is governed by a homeowners' / community association.
+extra_association1_name	string | null	Name of the association.
+extra_association1_fee	integer | null	Periodic association fee amount.
+extra_association1_fee_frequency	string | null	Fee billing frequency — typically Monthly, Quarterly, Semi-Annually, or Annually.
+
+Multiple associations. When a property is in more than one association (e.g. a master + sub-association), additional slots are available under the extra_association2_* prefix using the same _name / _fee / _fee_frequency shape.
+
+Listing-reported characteristics​
+Field	Type	Description
+extra_bedrooms	integer | null	Bedroom count as reported on the listing.
+extra_baths	integer | null	Bath count as reported on the listing.
+extra_property_features	string | null	Public-facing listing description / features blurb.
+extra_school_elementary	string | null	Elementary school.
+extra_school_middle	string | null	Middle school.
+extra_school_high	string | null	High school.
+extra_senior_community_yn	boolean | null	55+ / age-restricted community.
+extra_waterfront_yn	boolean | null	Property is waterfront.
+extra_home_warranty_yn	boolean | null	Listing includes a home warranty.
+Land and parcel​
+Field	Type	Description
+block	string | null	Block of the subdivision or city in which the property is located.
+lot_number	string | null	Individual lot(s) which comprise the property.
+legal_unit	string | null	Subdivision unit number — common for condominiums and townhomes.
+lot_code	string | null	Multi-lot indicator. See Enums → Lot code.
+district	string | null	District in which the property is located.
+section	string | null	Section of the city in which the property is located.
+land_lot	string | null	Large portion or tract of land that may encompass many individual blocks or lots.
+meridian	string | null	Section / Township / Range / Meridian descriptor (SEC 99 TWN 99A RNG 99A).
+assessors_map_ref1	string | null	Assessor's map reference, used to identify each portion of a parcel.
+tax_account_number	string | null	Arbitrary parcel identifier used by the assessor when provided.
+school_district	string | null	Primary school district name.
+school_tax_district1_code	string | null	Additional school or tax district code.
+school_tax_district2_code	string | null	Additional school or tax district code.
+school_tax_district3_code	string | null	Additional school or tax district code.
+tax_rate_code_area	string | null	Identifier for the tax jurisdiction within the county.
+county_land_use_code	string | null	Land use established by the county.
+state_land_use_code	string | null	Land use established by the state.
+property_class_id	string | null	High-level property classification. See Enums → Property class.
+LookupCodes​
+
+LookupCodes is a nested object of decoded labels for lookup-coded fields on the record. Treat it as presentational — do not filter on these labels.
+
+Key	Source field	Description / Enum
+LookupCodes.PropertyType	std_land_use_code	Primary property type label (e.g. "Single Family Residential").
+LookupCodes.PropertyMainType	–	"Residential", "Commercial", or "Other".
+LookupCodes.Condition	building_condition_code	Building condition. See Enums → Condition.
+LookupCodes.RoofType	roof_type_code	Roof shape. See Enums → Roof type.
+LookupCodes.Roof	roof_cover_code	Roof-cover material. See Enums → Roof cover.
+LookupCodes.HouseStyle	style_code	Building style. See Enums → Style.
+LookupCodes.Heating	heat_code	Heating system. See Enums → Heat.
+LookupCodes.HeatingFuel	heating_fuel_type_code	Heating fuel. See Enums → Heat fuel.
+LookupCodes.AirConditioning	air_conditioning_code	A/C type. See Enums → AC.
+LookupCodes.Basement	basement_code	Basement type. See Enums → Basement.
+LookupCodes.ConstructionType	construction_type_code	Construction material. See Enums → Construction type.
+LookupCodes.Exterior	exterior_walls_code	Exterior wall material. See Enums → Exterior wall.
+LookupCodes.InteriorWalls	interior_walls_code	Interior wall finish. See Enums → Interior wall.
+LookupCodes.Flooring	floor_cover_code	Floor covering. See Enums → Floor cover.
+LookupCodes.Garage	garage	Garage type / capacity. See Enums → Garage.
+LookupCodes.Patio	patio_code	Patio features. See Enums → Patio.
+LookupCodes.Porch	porch_code	Porch type. See Enums → Porch.
+LookupCodes.Pool	pool_code	Pool presence / type. See Enums → Pool.
+LookupCodes.Fireplace	fireplace_code	Fireplace features.
+LookupCodes.Sewer	sewer_code	Sewer type. See Enums → Sewer.
+LookupCodes.Water	water_code	Water source. See Enums → Water.
+LookupCodes.LocationInfluence	site_influence_code	Location influence / view quality.
+LookupCodes.Financing	–	Financing type from first mortgage. See Enums → Finance type.
+LookupCodes.LotCode	lot_code	Lot classification code. See Enums → Lot code.
+Raw lookup-code fields​
+
+Each LookupCodes.<X> label is derived from a raw integer or alphanumeric code on the property. The raw codes are also returned at the top level of the property object (air_conditioning_code, basement_code, building_class_code, building_condition_code, building_quality_code, construction_type_code, driveway_code, exterior_walls_code, fireplace_code, floor_cover_code, garage, heat_code, heating_fuel_type_code, interior_walls_code, patio_code, pool_code, porch_code, roof_cover_code, roof_type_code, sewer_code, site_influence_code, style_code, water_code, building_area_ind).
+
+Use the raw codes as opaque keys when building filters or pivots; use the LookupCodes.<X> strings for human-readable display. The code → label mapping for each is on the Enums page.
+
+SimplifiedAttributes​
+
+Boolean flags for human-friendly property feature presence.
+
+Key	Description
+SimplifiedAttributes.HasPool	Boolean.
+SimplifiedAttributes.HasGarage	Boolean.
+SimplifiedAttributes.HasBasement	Boolean.
+
+Additional flags may appear; their keys correspond to the Simplified Attributes enum.
+
+Tax and assessment​
+Field	Type	Description
+tax_amount	integer | null	Annual property tax amount due.
+tax_year	string | null	Tax year (YYYY).
+tax_deliquent_year1	string | null	Initial tax year of delinquency.
+assd_total_value	integer	Total assessed value of land + improvements (before exemptions).
+assd_land_value	integer	Assessed value of the land only.
+assd_improvement_value	integer	Assessed value of the improvements only.
+assd_year	string | null	Year of the assessed values.
+market_total_value	integer	Total market value of land + improvements.
+market_value_land	integer	Market value of the land.
+market_value_improvement	integer	Market value of the improvements.
+avm	integer | null	Automated valuation model estimate, when available.
+property_value	integer	Resolved property value used internally for derived flags (high_equity, loan_to_value, etc.).
+Valuation and equity​
+Field	Type	Description
+loan_to_value	decimal	LTV ratio (0.0 – 1.0+).
+estimated_equity	decimal	Estimated equity.
+estimated_mortgage_balance	integer	Sum of all estimated mortgage balances.
+total_open_lien_amt	integer	Total amount of open mortgage liens.
+free_and_clear	boolean	No mortgages on file.
+upside_down	boolean	LTV > 100%.
+high_equity	boolean	High-equity flag.
+low_equity	boolean	Low-equity flag.
+Mortgages​
+
+A property exposes up to four mortgages across three views:
+
+Concurrent (con_curr_mtg{1,2}_*) — mortgages from the most recent recorded sale.
+Open (o_mtg{1..4}_*) — currently outstanding mortgages on the property.
+Estimated (mtg{1..4}_estimated_*) — derived balance / rate / payment estimates per slot.
+Concurrent mortgages — con_curr_mtg1_*​
+
+The first concurrent mortgage. The same field set repeats under con_curr_mtg2_* for the second.
+
+Field	Type	Description
+con_curr_mtg1_loan_amt	integer	Loan amount.
+con_curr_mtg1_lender	string | null	Name of the lender.
+con_curr_mtg1_term	string | null	Mortgage term (months or years).
+con_curr_mtg1_recording_dt	string YYYYMMDD	Recording date.
+con_curr_mtg1_loan_due_dt	string YYYYMMDD	Maturity / final due date.
+con_curr_mtg1_loan_type	string | null	Document type used to issue the mortgage. See Enums → Loan type.
+con_curr_mtg1_typefinancing	string | null	Financing type. See Enums → Finance type.
+con_curr_mtg1_adj_or_fix	string | null	Interest-rate type as defined on the mortgage document.
+con_curr_mtg1_input_book	string | null	Recorder's book number.
+con_curr_mtg1_input_doc_nbr	string | null	Recorder's document number.
+con_curr_mtg1_input_page	string | null	Recorder's page number.
+Open mortgages — o_mtg1_*​
+
+Currently outstanding mortgages on the property. The same field set repeats under o_mtg2_*, o_mtg3_*, and o_mtg4_*.
+
+Field	Type	Description
+o_mtg1_loan_amt	integer	Loan amount.
+o_mtg1_lender	string | null	Lender name.
+o_mtg1_lien_position	integer | null	Lien priority position (1, 2, 3, …).
+o_mtg1_term	string | null	Mortgage term.
+o_mtg1_recording_date	string YYYYMMDD	Recording date.
+o_mtg1_loan_due_dt	string YYYYMMDD	Maturity / final due date.
+o_mtg1_loan_type	string | null	Loan type. See Enums → Loan type.
+o_mtg1_typefinancing	string | null	Financing type. See Enums → Finance type.
+o_mtg1_adj_rider	string | null	Adjustable-rate rider flag.
+o_mtg1_private_lender	string | null	Private-lender flag.
+Previous mortgage — prev_mtg_*​
+
+The mortgage from the prior sale, if known.
+
+Field	Type	Description
+prev_mtg_loan_amt	integer	Loan amount.
+prev_mtg_lender	string | null	Lender name.
+prev_mtg_term	string | null	Mortgage term.
+prev_mtg_recording_dt	string YYYYMMDD	Recording date.
+prev_mtg_loan_due_dt	string YYYYMMDD	Maturity / final due date.
+prev_mtg_loan_type	string | null	Loan type.
+prev_mtg_typefinancing	string | null	Financing type.
+prev_mtg_adj_rider	string | null	Adjustable-rate rider flag.
+prev_mtg_input_book	string | null	Recorder's book number.
+prev_mtg_input_doc_nbr	string | null	Recorder's document number.
+prev_mtg_input_page	string | null	Recorder's page number.
+Estimated mortgage values — mtg{1..4}_estimated_*​
+
+Derived per‑mortgage estimates. Slots map 1:1 to the open mortgages.
+
+Field	Type	Description
+mtg1_estimated_loan_balance	integer	Estimated balance on first mortgage.
+mtg1_estimated_interest_rate	decimal	Estimated interest rate on first mortgage.
+mtg1_estimated_payment_amount	integer | null	Estimated periodic payment on first mortgage.
+mtg2_estimated_loan_balance	integer	Estimated balance on second mortgage.
+mtg2_estimated_interest_rate	decimal	Estimated interest rate on second mortgage.
+mtg2_estimated_payment_amount	integer | null	Estimated periodic payment on second mortgage.
+mtg3_estimated_loan_balance	integer	Estimated balance on third mortgage.
+mtg3_estimated_interest_rate	decimal	Estimated interest rate on third mortgage.
+mtg3_estimated_payment_amount	integer | null	Estimated periodic payment on third mortgage.
+mtg4_estimated_loan_balance	integer	Estimated balance on fourth mortgage.
+mtg4_estimated_interest_rate	decimal	Estimated interest rate on fourth mortgage.
+mtg4_estimated_payment_amount	integer | null	Estimated periodic payment on fourth mortgage.
+AI scores​
+
+Three AI-derived scores are surfaced on each property. They are populated only inside the account's purchased territories — outside those, the fields are null. They are also nulled to 0 for properties that have sold within the last 60 days, since the underlying model lags the market by ~60 days.
+
+Field	Type	Description
+index_90d	integer	AI Retail Score. Predicted likelihood the property is well-suited to a retail (owner-occupant) sale in the near term.
+index_wls	integer	AI Wholesale Score. Predicted likelihood the property is well-suited to a wholesale / investor-to-investor transaction.
+index_inv	integer	AI Rental Score. Predicted likelihood the property is well-suited to a buy-and-hold rental strategy.
+Last sale (rolled up)​
+
+last_sale is populated either by rolling up the most recent transaction from history.data[0] or directly from assessor sale fields. Date fields are YYYYMMDD strings.
+
+Field	Type	Description
+last_sale.sale_date	string YYYYMMDD	Sale date.
+last_sale.recording_date	string YYYYMMDD	Recording date.
+last_sale.sale_amount	integer	Sale price.
+last_sale.document_type	string	Document type code.
+last_sale.sale_price_code	string	Sale price validity code.
+last_sale.event_type	string	mls_transaction, mls_supplemented, or deed_record.
+last_sale.first_mortgage_lender_name	string	Lender.
+last_sale.first_mortgage_mortgage_amount	integer	Mortgage amount.
+last_sale.first_mortgage_due_date	string	Mortgage due date.
+last_sale.first_mortgage_detailed_loan_type	string	Loan type code (decoded in LookupCodes).
+last_sale.first_mortgage_interest_rate	decimal	Interest rate.
+last_sale.first_mortgage_interest_rate_type	string	Rate type code (decoded in LookupCodes).
+last_sale.second_mortgage_interest_rate	decimal	Second mortgage interest rate.
+last_sale.seller_name	string	First seller.
+last_sale.seller_name_2	string	Second seller.
+last_sale.buyer_name_borrower_name	string	First buyer / borrower.
+last_sale.buyer_name_borrower_name_2	string	Second buyer / borrower.
+last_sale.buyer_1_first_name	string	Buyer 1 first name.
+last_sale.buyer_1_middle_name	string	Buyer 1 middle name.
+last_sale.buyer_1_last_name	string	Buyer 1 last name.
+last_sale.buyer_2_first_name	string	Buyer 2 first name.
+last_sale.buyer_2_middle_name	string	Buyer 2 middle name.
+last_sale.buyer_2_last_name	string	Buyer 2 last name.
+last_sale.LookupCodes.DocumentType	string	Decoded document type.
+last_sale.LookupCodes.LoanType	string	Decoded loan type.
+last_sale.LookupCodes.RateType	string	Decoded rate type.
+Current assessor sale​
+Field	Type	Description
+curr_sale_recording_date	string YYYYMMDD	Recording date.
+curr_sale_contract_date	string YYYYMMDD	Date of execution of the document.
+curr_sales_price	integer	Sale price.
+curr_sales_price_code	string | null	Sale-price classification. See Enums → Sale price.
+curr_sale_document_type	string	Document type code.
+curr_sale_seller1_full_name	string	Seller 1 name.
+curr_sale_seller2_full_name	string	Seller 2 name.
+curr_sale_buyer1_full_name	string	Buyer 1 name.
+curr_sale_buyer2_full_name	string	Buyer 2 name.
+curr_sale_input_book	string | null	Recorder's book number.
+curr_sale_input_doc_nbr	string | null	Recorder's document number.
+curr_sale_input_page	string | null	Recorder's page number.
+Previous assessor sale​
+Field	Type	Description
+prev_sale_recording_date	string YYYYMMDD	Recording date.
+prev_sale_contract_date	string YYYYMMDD	Date of execution of the document.
+prev_sales_price	integer	Sale price.
+prev_sales_price_code	string | null	Sale-price classification.
+prev_sale_document_type	string | null	Document type used to record the transfer.
+prev_sale_seller1_full_name	string | null	Seller 1 name.
+prev_sale_seller2_full_name	string | null	Seller 2 name.
+prev_sale_buyer1_full_name	string | null	Buyer 1 name.
+prev_sale_buyer2_full_name	string | null	Buyer 2 name.
+prev_sale_input_book	string | null	Recorder's book number.
+prev_sale_input_doc_nbr	string | null	Recorder's document number.
+prev_sale_input_page	string | null	Recorder's page number.
+Transaction flags​
+Field	Type	Description
+arms_length	boolean	Most recent transaction was arm's-length.
+refinance_flag	boolean	Most recent transaction was a refinance.
+days_between_sales	integer | null	Days elapsed between the previous sale and the current sale.
+Counts and metrics​
+Field	Type	Description
+total_loans	integer | null	Count of all loans across the property's history.
+total_loans_pref	integer | null	Count of currently active loans.
+total_open_lien_nbr	integer | null	Total number of open liens on the property.
+preforeclosure_notices_served_total	integer | null	Number of preforeclosure notices served on the property.
+has_liens	boolean	Whether the property currently has any liens.
+shared_mailing_addresses_count	integer | null	Count of other properties sharing the same mailing address (groups co-owned portfolios).
+Foreclosure and auction​
+Field	Type	Description
+auction_date	string YYYYMMDD | null	Most recent foreclosure-auction date on file.
+Leadpipes object​
+
+Comprehensive boolean indicator block. Each flag is independently meaningful — multiple may be set on the same property.
+
+Field	Description
+Leadpipes.AbsenteeOwner	Mailing differs from property address.
+Leadpipes.ActiveInvestorOwned	Active investor owner.
+Leadpipes.ActiveListing	Currently listed.
+Leadpipes.AssumabilityRider	Assumable loan.
+Leadpipes.BoredInvestor	Investor owner held for 10+ years.
+Leadpipes.CashBuyer	Last purchase was cash.
+Leadpipes.Flipped	Flipped within ~540 days.
+Leadpipes.Foreclosure	Currently in foreclosure.
+Leadpipes.ForeclosureActivity	Past or current foreclosure activity.
+Leadpipes.FreeAndClear	No mortgages.
+Leadpipes.HighEquity	High equity.
+Leadpipes.LongTermOwner	Owner held 25+ years.
+Leadpipes.LowEquity	Low equity.
+Leadpipes.PotentiallyInherited	Likely inherited.
+Leadpipes.PreForeclosure	Preforeclosure notice issued.
+Leadpipes.PrivateLender	Private-lender transaction.
+Leadpipes.RecentlyDelinquent	Recently delinquent on taxes.
+Leadpipes.UpsideDown	Underwater.
+Leadpipes.Vacancy	Appears vacant.
+Leadpipes.Zombie	Vacant + preforeclosure.
+Leadpipes.LienHistory	Has any significant lien.
+Leadpipes.AssignmentOfRents	Has assignment-of-rents lien.
+Leadpipes.Judgment	Has judgment lien.
+Leadpipes.GeneralLien	Has general lien.
+Leadpipes.HOALien	Has HOA lien.
+Leadpipes.MechanicsLien	Has mechanics lien.
+Leadpipes.TaxGovernmentLien	Has tax / government lien.
+Leadpipes.UtilityLien	Has utility lien.
+Leadpipes.DeceasedProbate	Has probate / deceased lien.
+Leadpipes.Divorce	Has divorce lien.
+Leadpipes.LisPendens	Has lis pendens.
+Listing status (status_info)​
+
+Consolidated listing snapshot, regardless of the underlying source.
+
+Field	Type	Description
+status_info.status	string	A (Active), P (Pending), S (Sold), CS (Coming Soon), E (Expired), W (Withdrawn), C (Cancelled), O (Off Market).
+status_info.statusLabel	string	Human-readable status label.
+status_info.price_list	integer	Listed price.
+status_info.date_list	string	List date.
+status_info.date_modify	string	Last modification date.
+status_info.price_sold	integer	Sale price.
+status_info.price_sold_estimated	integer	Estimated sale price (non-disclosure states).
+status_info.date_sold	string	Sale date.
+status_info.dom	integer	Days on market.
+status_info.source	string	MLS, PUBLIC_RECORD, or ALT.
+status_info.sourceSold	string	Sale data source.
+status_info.mls_listing_source	string	MLS association name.
+status_info.mls_listing_id	string	MLS listing ID.
+status_info.mls_disclaimer	string	MLS copyright notice.
+status_info.list_agent_name	string	Listing agent.
+status_info.list_agent_actives_count	integer	Listing agent's active listing count.
+status_info.list_agent_license	string	License.
+status_info.list_agent_phone	string	Phone.
+status_info.list_agent_email	string	Email.
+status_info.list_agent_office	string	Office.
+status_info.sell_agent_name	string	Selling agent.
+status_info.sell_agent_license	string	License.
+status_info.sell_agent_phone	string	Phone.
+status_info.sell_agent_email	string	Email.
+status_info.sell_agent_office	string	Office.
+status_info.sold_interval_mls_vs_assessor	integer	Days between MLS sold date and assessor sold date.
+Rental information (rental_info)​
+Field	Type	Description
+rental_info.status	string	Rental status code.
+rental_info.statusLabel	string	Rental status label.
+rental_info.price_list	integer	Listed rental price.
+rental_info.date_list	string	Rental list date.
+rental_info.date_modify	string	Rental modify date.
+rental_info.list_agent_name	string	Listing agent.
+rental_info.list_agent_license	string	License.
+rental_info.list_agent_phone	string	Phone.
+rental_info.list_agent_email	string	Email.
+rental_info.list_agent_office	string	Office.
+rental_info.mls_listing_source	string	MLS source.
+rental_info.mls_listing_id	string	Rental listing ID.
+rental_info.source	string	Always "ALT".
+model_prediction	integer	Predicted rental price.
+lower_display_prediction	integer	Lower bound of prediction.
+upper_display_prediction	integer	Upper bound of prediction.
+model_ranking	string	Confidence label.
+Ownership duration​
+Field	Type	Description
+length_of_ownership	integer | null	Years, months, or days held — uses years when ≥ 1 year.
+length_of_ownership_full	string | null	Full duration, e.g. "5 year(s), 3 month(s), 15 day(s)".
+Details-only sections (with= includes)​
+
+The following sections are appended on /details/{identifier} responses when the corresponding with= include is requested and the account is entitled to it.
+
+history​
+"history": {
+  "data": [
+    {
+      "sale_date": "20231101",
+      "recording_date": "20231115",
+      "sale_amount": 875000,
+      "document_type": "1",
+      "event_type": "deed_record",
+      "first_mortgage_lender_name": "BANK OF EXAMPLE",
+      "first_mortgage_mortgage_amount": 700000,
+      "first_mortgage_due_date": "20531101",
+      "first_mortgage_detailed_loan_type": "1",
+      "first_mortgage_interest_rate": 6.25,
+      "first_mortgage_interest_rate_type": "FIX",
+      "second_mortgage_interest_rate": null,
+      "seller_name": "JONES JOHN",
+      "seller_name_2": null,
+      "buyer_name_borrower_name": "SMITH MARY",
+      "buyer_name_borrower_name_2": null,
+      "buyer_1_first_name": "MARY",
+      "buyer_1_middle_name": null,
+      "buyer_1_last_name": "SMITH",
+      "LookupCodes": {
+        "DocumentType": "Warranty Deed",
+        "LoanType": "Conventional",
+        "RateType": "Fixed"
+      }
+    }
+  ]
+}
+
+
+Up to 15 records. Sorted most-recent first. Each record's fields mirror the last_sale field set above, plus the buyer-2 name fields and a LookupCodes block.
+
+parcel​
+"parcel": {
+  "data": [
+    {
+      "parcel": {
+        "type": "Polygon",
+        "coordinates": [[[/* lon,lat ring */]]]
+      }
+    }
+  ]
+}
+
+Field	Type	Description
+parcel.data[].parcel.type	string	"Polygon" or "MultiPolygon".
+parcel.data[].parcel.coordinates	array	GeoJSON polygon coordinates.
+liens​
+"liens": {
+  "data": [
+    {
+      "doc_type_id": 7,
+      "doc_category": "TAX",
+      "document_title": "TAX LIEN",
+      "doc_number_source": "DOC123456",
+      "doc_filing_date": "20240101",
+      "recording_date": "20240105",
+      "lien_date": "20240101",
+      "amount_due": 12500,
+      "requested_prepared_by_attorney_last_company_name": "STATE OF EXAMPLE",
+      "party1_name1_full_name": "DOE JOHN",
+      "party1_name1_roll_type": "DEBTOR",
+      "party1_name1_address": "123 MAIN ST",
+      "party1_name1_city": "AUSTIN",
+      "party1_name1_state": "TX",
+      "party1_name1_zip": "78701",
+      "party2_name1_full_name": "STATE OF EXAMPLE",
+      "party2_name1_roll_type": "CREDITOR",
+      "party2_name1_address": null,
+      "party2_name1_city": null,
+      "party2_name1_state": "TX",
+      "party2_name1_zip": null,
+      "LookupCodes": {
+        "lien_category": "TAX_GOVERNMENT_LIEN",
+        "lien_description": "State Tax Lien"
+      }
+    }
+  ]
+}
+
+Field	Type	Description
+liens.data[].doc_type_id	integer	Document type ID.
+liens.data[].doc_category	string	Document category.
+liens.data[].document_title	string	Document title.
+liens.data[].doc_number_source	string	Document number / source.
+liens.data[].doc_filing_date	string YYYYMMDD	Filing date.
+liens.data[].recording_date	string YYYYMMDD	Recording date.
+liens.data[].lien_date	string YYYYMMDD	Consolidated date (filing date when present, else recording date).
+liens.data[].amount_due	integer	Amount owed.
+liens.data[].requested_prepared_by_attorney_last_company_name	string	Attorney / company name.
+liens.data[].party1_*	various	First party (debtor) details: full_name, roll_type, address, city, state, zip.
+liens.data[].party2_*	various	Second party (creditor) details: full_name, roll_type, address, city, state, zip.
+liens.data[].LookupCodes.lien_category	string	Lien category (matches a Lien Type).
+liens.data[].LookupCodes.lien_description	string	Human-readable lien description.
+preforeclosures​
+"preforeclosures": {
+  "data": [
+    {
+      "document_type_code": "NOD",
+      "filing_date": "20231215",
+      "amount_due": 580000,
+      "party1_name": "SMITH MARY",
+      "party1_address": "789 BROADWAY BLVD HOUSTON TX 77001",
+      "party2_name": "BANK OF EXAMPLE",
+      "party2_address": "100 BANK ST NEW YORK NY 10001",
+      "LookupCodes": { "DocumentType": "Notice of Default" }
+    }
+  ]
+}
+
+
+Up to 15 records. Sorted most-recent first.
+
+Field	Type	Description
+preforeclosures.data[].document_type_code	string	Document type code.
+preforeclosures.data[].filing_date	string YYYYMMDD	Filing date.
+preforeclosures.data[].amount_due	integer	Amount due.
+preforeclosures.data[].party1_name	string	First party name.
+preforeclosures.data[].party1_address	string	First party address.
+preforeclosures.data[].party2_name	string	Second party name.
+preforeclosures.data[].party2_address	string	Second party address.
+preforeclosures.data[].LookupCodes.DocumentType	string	Decoded document type.
+Comp record-type variations​
+
+The comps[].property object on a comps response uses a different field set depending on comps[].record_type.
+
+Comps come from multiple data sources. Comp records may originate from public records (assessor / county data) or MLS listings. Because these sources collect different information, the fields available on each comp vary by record_type — listing-sourced comps generally carry fewer fields than assessor-sourced comps. If your integration requires a consistent field set, use the source filter on /comps to restrict results to a single source type. See Enums → Comp Sources for the full source-to-record_type mapping.
+
+record_type: "ASSESSOR"​
+
+The full property object documented above (assessor / public-record shape).
+
+record_type: "MLS_LISTING"​
+Field	Type	Description
+_id	string	Composite ID: <mls_id>-<listing_id>.
+mls_id	string	MLS source ID.
+listing_id	string	Listing ID.
+address	string	Full address.
+bedrooms	integer	Bedroom count.
+baths	integer	Bath count.
+lot_size	integer	Lot size.
+square_feet	integer	Living area square feet.
+year_built	integer	Year built.
+price_per_square_foot	decimal	$/sqft.
+public_remarks	string	Public listing remarks.
+ListingData	object	MLS-specific listing fields (status, dates, agents, prices).
+LookupCodes	object	Decoded property attributes.
+data_source_display_name	string	MLS source name.
+mls_listing_source	string	MLS association name.
+mls_disclaimer	string	MLS copyright disclaimer.
+record_type: "LISTING_ALT"​
+
+An auxiliary listing-source variant used as a fallback when an MLS record isn't available for a property.
+
+Field	Type	Description
+_id	string	mls_listing_id.
+mls_listing_id	string	Listing ID.
+mls_source	string	Market / region.
+bedrooms_total	integer	Bedroom count.
+bathrooms_total	integer	Bath count.
+living_area	integer	Living area square feet.
+lot_size	integer	Lot size square feet.
+ListingData	object	Listing metadata: status, prices, dates, agents.
+LookupCodes	object	Decoded property attributes.
+public_listing_remarks	string	Listing remarks.
+record_type: "RENTAL_ALT"​
+
+Same shape as LISTING_ALT, populated with rental-specific listing fields.
+
+Forward compatibility. Additional listing-source variants may appear in record_type over time. Treat any unrecognized value as a listing record using the LISTING_ALT shape above.
+
+Date formats​
+YYYYMMDD (8-digit string with no separators) — used by deed-record and assessor date fields (recording dates, sale dates, filing dates).
+YYYY-MM-DD — used by status / listing date fields.
+ISO 8601 with time component — used by some MLS-sourced date fields.
+Integer epoch — not used in published responses.
+Previous
+Autocomplete
+Next
+Enums
+Identifiers
+Address
+Standardized property address (situs_std_*)
+Geolocation
+Owner and mailing
+Composite name fields
+Standardized name parts (first owner)
+Standardized name parts (second owner)
+Mailing
+Property characteristics
+MLS-supplemental fields (extra_*)
+HOA / association
+Listing-reported characteristics
+Land and parcel
+LookupCodes
+Raw lookup-code fields
+SimplifiedAttributes
+Tax and assessment
+Valuation and equity
+Mortgages
+Concurrent mortgages — con_curr_mtg1_*
+Open mortgages — o_mtg1_*
+Previous mortgage — prev_mtg_*
+Estimated mortgage values — mtg{1..4}_estimated_*
+AI scores
+Last sale (rolled up)
+Current assessor sale
+Previous assessor sale
+Transaction flags
+Counts and metrics
+Foreclosure and auction
+Leadpipes object
+Listing status (status_info)
+Rental information (rental_info)
+Ownership duration
+Details-only sections (with= includes)
+history
+parcel
+liens
+preforeclosures
+Comp record-type variations
+record_type: "ASSESSOR"
+record_type: "MLS_LISTING"
+record_type: "LISTING_ALT"
+record_type: "RENTAL_ALT"
+Date formats
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

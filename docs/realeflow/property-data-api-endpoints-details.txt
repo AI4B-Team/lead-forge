@@ -1,0 +1,157 @@
+URL: https://documentation.realeflow.com/property-data-api/endpoints/details
+TITLE: Details | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Property Data APIEndpointsDetails
+Details
+
+Single-property details by address hash, with optional with= includes for transaction history, parcel polygon, lien records, and preforeclosure notices.
+
+GET /api/2.0/leadpipes/details/{identifier}
+POST /api/2.0/leadpipes/details/{identifier}
+
+Alias. The same endpoint is exposed at /api/2.0/leadpipes/assessor/{identifier}. details is the preferred name; assessor is provided for naming-consistency convenience. Use either.
+
+GET is recommended when no body overrides are needed. POST is for cases where you want to send territory or filter overrides on the body — note that those overrides are still subject to the Scope and Restrictions adjustments.
+
+Authentication​
+
+Standard partner auth headers. See Authentication.
+
+Path parameter​
+Parameter	Format	Description
+identifier	HA[0-9]+\-\w+	Property address hash.
+
+If the path does not match the expected format, the route returns 404.
+
+Query parameters​
+Parameter	Type	Default	Description
+with	comma-separated string	history,parcel,preforeclosures,liens (when omitted via the auth-aware default)	Includes to attach to the response. See below.
+with= includes​
+
+Each include adds a section to the response. Restricted includes are silently dropped if the account is not entitled to them.
+
+Include	Adds	Cap	Notes
+history	history.data[] — deed and mortgage transaction history.	15 records	Always available.
+parcel	parcel.data[] — parcel polygon and metadata.	1 record	Always available.
+preforeclosures	preforeclosures.data[] — preforeclosure notice records.	15 records	Suppressed if the account does not have preforeclosure access.
+liens	liens.data[] — involuntary lien records.	unlimited	Suppressed if the account does not have lien data access.
+
+Other include keys may be accepted by the underlying service but are not formally supported on the partner surface. Use only the four above.
+
+If with= is omitted entirely on a GET, the default include set (after entitlement filtering) is history,parcel,preforeclosures,liens. Pass with=history (for example) to limit to a single section.
+
+Request body (POST only)​
+
+The body is optional. When supplied, it must be a JSON object. An empty object ({}) is acceptable.
+
+Field	Description
+territories	{ fips: [...], zip: [...], state: [...] }. Server-managed; see Scope and Restrictions.
+regionsRestriction	{ state: [...] }. Server-managed.
+Response​
+
+A single property object — the same base shape returned in /search data[], with extra fields populated for full-detail responses, plus the requested include sections.
+
+{
+  "address_hash": "HA7-abc123",
+  "address_number": "789",
+  "address_street": "BROADWAY",
+  "address_city": "HOUSTON",
+  "address_state": "TX",
+  "address_zip": "77001",
+  "bedrooms": 5,
+  "bath_total_calc": 3,
+  "building_area": 4500,
+  "year_built": 2010,
+  "property_value": 850000,
+  "owner_std_name1_full": "SMITH FAMILY TRUST",
+  "length_of_ownership": 13,
+  "estimated_equity": 0.68,
+  "estimated_mortgage_balance": 272000,
+  "history":         { "data": [ /* up to 15 transactions */ ] },
+  "parcel":          { "data": [ /* parcel record */ ] },
+  "liens":           { "data": [ /* lien records */ ] },
+  "preforeclosures": { "data": [ /* up to 15 notices */ ] }
+}
+
+
+The full property object field list is in Property Object. Details-only fields (length_of_ownership, estimated_equity, estimated_mortgage_balance) and the include sections are documented there as well.
+
+Examples​
+GET, all default includes​
+curl -X GET 'https://api.your-white-label.com/api/2.0/leadpipes/details/HA7-abc123def456' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345'
+
+GET with limited includes​
+curl -X GET 'https://api.your-white-label.com/api/2.0/leadpipes/details/HA7-abc123def456?with=history,parcel' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345'
+
+POST with body and explicit includes​
+curl -X POST 'https://api.your-white-label.com/api/2.0/leadpipes/details/HA7-abc123def456?with=history,liens' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345' \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+
+Using the assessor alias​
+
+The same call as above using the alias:
+
+curl -X GET 'https://api.your-white-label.com/api/2.0/leadpipes/assessor/HA7-abc123def456?with=history' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345'
+
+Errors​
+Status	When
+400	Identifier is malformed or body is not valid JSON.
+403 | 404	Auth failure, identifier not found, or property is suppressed for this account.
+422	Upstream validation failure.
+500	Unexpected error.
+
+See Errors.
+
+Previous
+Comps
+Next
+Autocomplete
+Authentication
+Path parameter
+Query parameters
+with= includes
+Request body (POST only)
+Response
+Examples
+GET, all default includes
+GET with limited includes
+POST with body and explicit includes
+Using the assessor alias
+Errors
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

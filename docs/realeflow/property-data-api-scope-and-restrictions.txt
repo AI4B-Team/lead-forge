@@ -1,0 +1,127 @@
+URL: https://documentation.realeflow.com/property-data-api/scope-and-restrictions
+TITLE: Scope and Restrictions | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Property Data APIScope and Restrictions
+Scope and Restrictions
+
+Every request to the Property Data API is processed in the context of the partner account named in X-RF-Partner-Account-Id. Before the request is executed, the API normalizes the request body to fit within that account's entitlements. You cannot bypass these adjustments by setting fields in the request — server-side values overwrite or narrow caller-supplied values.
+
+This page is not a list of error conditions. The adjustments below produce silent narrowing, not errors. A request whose filters exceed the account's entitlements runs cleanly and returns the entitled subset. A search covering ZIPs outside the account's territory returns results everywhere, but with AI scores populated only in-territory. Add an AI score filter and the search narrows to the territory outright. Inspect the response, not the echo of your request.
+
+Adjustments applied​
+Territory restrictions​
+
+If the account has any purchased territories, the request body's territories field is replaced with the account's territories.
+
+Territories do not restrict general residential geography — but they do restrict AI and property-condition filtering. A residential search that does not filter on those signals can cover anywhere. What territories govern is:
+
+AI scores (index_90d, index_wls, index_inv) are populated only inside the account's territories. See AI scores below.
+Filtering on those scores narrows the result set to those territories. See Filtering on AI scores below.
+
+For commercial searches (propertyMainCategory: "COMMERCIAL"), territories additionally narrow geography and asset class:
+
+regionsRestriction is replaced with the account's commercial states.
+propertyTypes is intersected with the account's allowed commercial asset classes.
+
+Neither of those commercial adjustments applies to residential searches.
+
+Filtering on AI scores​
+
+Having AI scores populated and being allowed to filter on them are governed separately.
+
+Without an AI filter, out-of-territory properties are returned normally, with the score fields null. Apply a range filter on index90d, indexWls, or indexInv, and the account's territories become a hard restriction on the result set — out-of-territory properties are dropped. Properties carrying no AI values are exempt: a missing score is not a failing score.
+
+Expect result counts to fall when you add one of these filters. The drop is territorial, not a market signal.
+
+Commercial state and asset-class restrictions​
+
+If the account has any of the following commercial restrictions, commercial property type filters in the request are narrowed accordingly:
+
+Commercial Apartments Only
+Commercial Starter Types Only
+Commercial Multifamily AI
+Commercial Multifamily Only
+Lead-type availability​
+
+For residential searches, if the account is configured to restrict to available lead types, the request's leadTypes is filtered:
+
+leadTypes.include (or a flat leadTypes array) is intersected with the account's available lead types. If the request omits leadTypes or supplies an empty array, the API substitutes the account's full available list.
+leadTypes.exclude is intersected with the same allowed list.
+
+This adjustment does not apply to commercial searches.
+
+Lien filters​
+If the account has no lien data access, all lien-related filter fields (liens, lienTypes, lastLienDate) are stripped from the request before execution.
+If the account has lien data access but only certain lien types, lienTypes is intersected with the accessible set.
+Details with= includes​
+
+Two of the four standard includes on /details/{identifier} are entitlement-gated:
+
+Include	Suppressed when
+preforeclosures	Account does not have preforeclosure access.
+liens	Account does not have lien data access.
+
+If suppressed, the include key is removed from with= before the request runs. The response simply omits that section.
+
+history and parcel are not suppressed.
+
+AI scores​
+
+AI score fields (index_90d, index_wls, index_inv) on returned property objects are populated only inside the account's purchased territories. Outside those territories, those fields are null. The corresponding range filters (index90d, indexWls, indexInv) are not ignored out of territory — applying one restricts the search itself to the account's territories. See Filtering on AI scores.
+
+What this means in practice​
+Always re-read the request from the response. If the response sidebar of filters in histograms or filters doesn't include something you sent, your filter was narrowed.
+Don't re-request to "force" out-of-territory AI scores or commercial geography. It will not work. Send a support request to expand the account's territory if the access is needed.
+Empty results are not always an error. A commercial search restricted to a partner's states, or any search with a narrow filter set, may legitimately return zero matches.
+A result count that drops when you add an AI score filter is expected. That filter also applies your territory.
+What is not adjusted​
+
+The following request fields pass through unchanged:
+
+All non-territory geographic filters: state, places, geolocation, location, distance, bounds, polygons.
+All ID and hash selectors: includeIds, excludeIds, searchIds, includeHashes, excludeHashes, ownedBy.
+All property characteristic, value, finance, and date range filters.
+All boolean ownership and listing flags.
+Pagination, sort, and clustering controls.
+Previous
+Overview
+Next
+Search
+Adjustments applied
+Territory restrictions
+Filtering on AI scores
+Commercial state and asset-class restrictions
+Lead-type availability
+Lien filters
+Details with= includes
+AI scores
+What this means in practice
+What is not adjusted
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

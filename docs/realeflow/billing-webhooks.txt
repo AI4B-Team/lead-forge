@@ -1,0 +1,75 @@
+URL: https://documentation.realeflow.com/billing-webhooks
+TITLE: Overview | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Billing WebhooksOverview
+Billing Webhooks
+
+Realeflow keeps your users' platform accounts in sync with their billing state automatically. You point your billing platform's webhooks at our webhook service and tag your products with a small amount of metadata — from then on, accounts provision, upgrade, suspend, and deactivate themselves in lockstep with billing. No manual account management and no custom integration code on your side.
+
+Your billing platform ──▶ Realeflow webhook service ──▶ your white-label platform
+
+What stays in sync​
+
+Regardless of billing platform, the same lifecycle is handled:
+
+Billing event	What happens on your platform
+New subscription	The user's account is created on the plan mapped to what they bought.
+Plan change (upgrade / downgrade)	The account's plan changes to match.
+Payment failure	The account is suspended.
+Payment recovered	The account is reactivated.
+Cancellation	The account is deactivated. This is permanent — deactivation removes the user's data.
+One-time addon purchase	The addon (feature access or credits) is granted to the user's account.
+
+Only products tagged with our metadata are acted on. Anything untagged is silently ignored, so you can safely route your entire billing account at our endpoint — unrelated products and subscriptions are skipped.
+
+What you provide​
+
+The specifics vary by platform (see the platform guides below), but onboarding always comes down to three things:
+
+Webhook endpoints — point your billing platform's webhooks at our service, for both your live and test environments.
+Product mapping — metadata on your prices/products that tells us which Realeflow plan or addon each one corresponds to. We supply the plan IDs and addon codes for your product lineup during onboarding.
+Credentials — a webhook signing secret (so we can verify events really came from your account) and a minimal read-only API key (so we can look up customer details like email and name when creating accounts).
+
+Alternatively, most platforms let you grant Realeflow limited access to your billing account (e.g. a developer-role team member), in which case we handle all of the above for you — usually the fastest path. Each platform guide covers both options.
+
+Platform guides​
+Platform	Status	Guide
+Stripe	✅ Supported	Stripe integration
+
+Using a different billing platform? Contact your Realeflow representative — the service is built to support additional providers, and partner demand drives what we add next.
+
+Previous
+Errors
+Next
+Stripe
+What stays in sync
+What you provide
+Platform guides
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

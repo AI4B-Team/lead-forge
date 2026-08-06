@@ -1,0 +1,118 @@
+URL: https://documentation.realeflow.com/property-data-api/reference/errors
+TITLE: Errors | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Property Object
+Enums
+Errors
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Property Data APIReferenceErrors
+Errors
+
+The Property Data API uses standard HTTP status codes. The body shape depends on the stage of the request lifecycle that failed.
+
+Status code matrix​
+Status	When	Body shape
+400 Bad Request	Request body is missing or not valid JSON; a path or query parameter is missing or invalid; the body is missing where required (e.g. POST search with no body).	Plain-text or JSON envelope.
+403 Forbidden	Auth-stage failure — domain cannot be resolved, an auth header is missing or empty, the API key is not a valid GUID, the API key is unknown, the API key is not authorized for the request domain, or the API key lacks a required permission.	Plain text.
+404 Not Found	Auth-stage account resolution failed (the account header does not resolve to a Full-Access, non-deleted account under the authorized domain), or the requested property / comps subject was not found.	Plain text (auth) or JSON envelope (data).
+422 Unprocessable Entity	Upstream validation failure. Examples: search resolved to a nationwide query with no geographic anchor; page × page_size exceeds 10,000; polygons[].coordinates outside the 3–100 vertex range; date format is not YYYY-MM-DD.	JSON — usually the upstream validator's response. Falls back to { "error": "<message>" } when the upstream message is not valid JSON.
+500 Internal Server Error	Unexpected error. Safe to retry with backoff.	JSON: { "Message": "<message>" }.
+Auth-stage failures​
+
+Authentication and account resolution run before the endpoint handler. Failures at this stage carry plain-text bodies — not JSON — so error parsers should be tolerant of Content-Type: text/plain on 403 and 404 responses.
+
+Body	Status	Cause
+Domain not found	403	The request host is not a registered partner domain.
+X-RF-Partner-Api-Key and X-RF-Partner-Account-Id headers must be set	403	One or both auth headers were absent or blank.
+X-RF-Partner-Api-Key is in invalid format	403	The key is not a parseable GUID.
+API key could not be found	403	The key is well-formed but unknown.
+Not authorized to use this domain	403	The key exists but is not authorized for the request domain.
+Not authorized to use this endpoint	403	The key lacks a permission required by this route.
+No account found - check X-RF-Partner-Account-Id header	404	The account header does not match any active, Full-Access account under the authorized domain.
+Endpoint-stage failures​
+
+Once auth has succeeded, the endpoint runs. Most failures translate as follows:
+
+A malformed JSON body (or missing body when one is required) → 400.
+An invalid path or argument (e.g. an {identifier} that does not match the address hash regex) → 404 from the route layer, before the handler runs.
+Subject-not-found (an address hash that does not resolve to a property) → 404.
+Upstream validator rejection → 422 with the upstream JSON envelope, when the upstream returns one. When the upstream message is not parseable JSON, the response is { "error": "<the original message>" }.
+Anything unexpected → 500 with { "Message": "<message>" }.
+Example — 400​
+HTTP/1.1 400 Bad Request
+Content-Type: text/plain
+
+Request body must be a JSON object.
+
+Example — 422 (with upstream JSON)​
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/json
+
+{
+  "errors": {
+    "page_size": ["The page size may not be greater than 10000."]
+  }
+}
+
+Example — 422 (with non-JSON upstream)​
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/json
+
+{ "error": "Nationwide search not allowed" }
+
+Example — 500​
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json
+
+{ "Message": "An unexpected error occurred" }
+
+Retry guidance​
+Status	Retry?
+400, 422	No — fix the request and resend.
+403, 404 (auth-stage)	No — fix auth, then resend.
+404 (data — property not found)	No — the identifier does not exist.
+500	Yes, with exponential backoff. Idempotent endpoints (GET) are safe to retry; POST endpoints are also safe (search, comps, details are read-only).
+Rate limiting​
+
+Today the Property Data API does not enforce a synchronous rate limit. Excessive sustained traffic is handled out-of-band — partners that need elevated throughput should coordinate with their account manager. Subject to change.
+
+Previous
+Enums
+Next
+Overview
+Status code matrix
+Auth-stage failures
+Endpoint-stage failures
+Example — 400
+Example — 422 (with upstream JSON)
+Example — 422 (with non-JSON upstream)
+Example — 500
+Retry guidance
+Rate limiting
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

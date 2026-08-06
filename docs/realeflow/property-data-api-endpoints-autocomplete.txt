@@ -1,0 +1,257 @@
+URL: https://documentation.realeflow.com/property-data-api/endpoints/autocomplete
+TITLE: Autocomplete | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Property Data APIEndpointsAutocomplete
+Autocomplete
+GET /api/2.0/leadpipes/autocomplete
+
+Address, city, county, state, ZIP, and parcel suggestions for a free-text query. Designed for type-ahead UIs.
+
+Alias. The same endpoint is exposed at /api/2.0/leadpipes/locations. Use either.
+
+Authentication​
+
+Standard partner auth headers. See Authentication.
+
+Query parameters​
+Parameter	Type	Required	Description
+q	string	one of q | query	Search text. Spaces and special characters are URL-encoded by the caller.
+query	string	one of q | query	Synonym for q. If both are supplied, q wins.
+
+If neither parameter is supplied (or both are blank), the response is 400 Bad Request with body q or query is required.
+
+Behavior​
+Input is normalized server-side: uppercased, whitespace-collapsed, trimmed; ordinal numbers (1ST, 2ND, 3RD, 4TH) are converted to digits.
+Result types are auto-detected from the query shape:
+All-digit queries are routed as ZIP code lookups.
+Queries starting with a digit pattern are routed as address lookups.
+8+ digit or 8–30 character alphanumeric (with at least one letter and one digit) queries can match parcels.
+Everything else is routed as place (state / city / county) lookup.
+Queries with 30+ whitespace-separated tokens silently return [] (empty array). They are not an error.
+The address data source is fixed to the assessor index. Result-type filtering is not exposed through this endpoint — the response can include any of address, city, county, state, zip, or parcel.
+Response​
+
+A JSON array. Each element has a type discriminator and a payload object whose key matches the type (with state payload for state results).
+
+All result types include text (a display string) and location (a GeoJSON Point: { type: "Point", coordinates: [lng, lat] }).
+
+Coordinate order. location.coordinates is GeoJSON: [longitude, latitude], not [lat, lng].
+
+address​
+{
+  "type": "address",
+  "text": "23530 LUPINE PL, SAN DIEGO, CA 92562",
+  "address": {
+    "hash": "v1-9f6a0829fa0e73ede757285ba085a11d12f879e1",
+    "unitGroupHash": null,
+    "address": "23530 LUPINE PL, SAN DIEGO, CA 92562",
+    "streetAndNumber": "23530 LUPINE PL",
+    "addressWithoutState": "23530 LUPINE PL, SAN DIEGO 92562",
+    "number": "23530",
+    "streetDirection": null,
+    "street": "LUPINE",
+    "streetDesignator": "PL",
+    "streetDirectionPost": null,
+    "unit": null,
+    "unitType": null,
+    "city": "SAN DIEGO",
+    "county": null,
+    "fips": null,
+    "state": "CA",
+    "zip": "92562",
+    "country": "US",
+    "latitude": 33.570172,
+    "longitude": -117.252448
+  },
+  "location": { "type": "Point", "coordinates": [-117.252448, 33.570172] },
+  "parcel": { "type": "Polygon", "coordinates": [[[/* lon,lat ring */]]] }
+}
+
+Field	Type	Description
+type	string	"address".
+text	string	Display string.
+address.hash	string	Stable address hash. Pass directly to /details/{identifier} and /comps/{identifier}.
+address.unitGroupHash	string | null	Unit-group hash for multi-unit properties.
+address.address	string	Full normalized address.
+address.streetAndNumber	string	Street number plus street name.
+address.addressWithoutState	string	Address minus state.
+address.number	string	House number.
+address.streetDirection	string | null	Pre-direction (N, S, E, W).
+address.street	string	Street name.
+address.streetDesignator	string	Street type (PL, ST, AVE, …).
+address.streetDirectionPost	string | null	Post-direction.
+address.unit	string | null	Unit / apartment number.
+address.unitType	string | null	Unit type (APT, STE, …).
+address.city	string	City.
+address.county	string | null	County name.
+address.fips	string | null	County FIPS code.
+address.state	string	Two-letter state code.
+address.zip	string	ZIP.
+address.country	string	Country code (always "US").
+address.latitude	decimal	Latitude (when geolocated).
+address.longitude	decimal	Longitude (when geolocated).
+location.type	string	"Point".
+location.coordinates	[lng, lat]	GeoJSON coordinates.
+parcel.type	string	"Polygon". Present only when a parcel polygon is on file.
+parcel.coordinates	array	GeoJSON polygon ring of [lon, lat] pairs.
+city​
+{
+  "type": "city",
+  "text": "SAN DIEGO, CA",
+  "city": {
+    "city": "SAN DIEGO",
+    "county": "SAN DIEGO CTY",
+    "state": "CA",
+    "fips": 40910,
+    "latitude": 30.3194,
+    "longitude": -96.3466
+  },
+  "location": { "type": "Point", "coordinates": [-96.3466, 30.3194] }
+}
+
+Field	Type	Description
+city.city	string	City name.
+city.county	string	County the city sits in.
+city.state	string	Two-letter state code.
+city.fips	integer	FIPS code.
+city.latitude	decimal	City centroid latitude.
+city.longitude	decimal	City centroid longitude.
+county​
+{
+  "type": "county",
+  "text": "SAN DIEGO CTY, CA",
+  "county": {
+    "county": "SAN DIEGO CTY",
+    "city": "SAN DIEGO",
+    "state": "CA",
+    "fips": 50910,
+    "latitude": 30.3194,
+    "longitude": -96.3466
+  },
+  "location": { "type": "Point", "coordinates": [-96.3466, 30.3194] }
+}
+
+
+Field shape mirrors city — county.county (county name), county.city, county.state, county.fips, county.latitude, county.longitude.
+
+zip​
+{
+  "type": "zip",
+  "text": "90210",
+  "zip": {
+    "zip": ["90210", "90211"],
+    "city": "BEVERLY HILLS",
+    "county": "LOS ANGELES CTY",
+    "state": "CA",
+    "latitude": 34.103,
+    "longitude": -118.41
+  },
+  "location": { "type": "Point", "coordinates": [-118.41, 34.103] }
+}
+
+Field	Type	Description
+zip.zip	array of strings	One or more ZIP codes. A single result can cover multiple variants.
+zip.city	string	Primary city.
+zip.county	string	County.
+zip.state	string	Two-letter state code.
+zip.latitude	decimal	ZIP centroid latitude.
+zip.longitude	decimal	ZIP centroid longitude.
+state​
+{
+  "type": "state",
+  "text": "CA",
+  "state": { "state": "CA", "latitude": 37.0, "longitude": -119.0 },
+  "location": { "type": "Point", "coordinates": [-119.0, 37.0] }
+}
+
+Field	Type	Description
+state.state	string	Two-letter state code.
+state.latitude	decimal	State centroid latitude.
+state.longitude	decimal	State centroid longitude.
+parcel​
+{ "type": "parcel", "text": "0161403009005000" }
+
+
+Triggered when the query is 8+ digits or alphanumeric (8–30 chars) with at least one letter and one digit. Only type and text are returned — full parcel data ships via address-typed results.
+
+Result ranking​
+
+When at least three address matches exist for a query, the response caps city, county, and state suggestions at three each. Address results appear first, followed by city, county, state, ZIP, and parcel suggestions in that order.
+
+Examples​
+Address lookup​
+curl -G 'https://api.your-white-label.com/api/2.0/leadpipes/autocomplete' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345' \
+  --data-urlencode 'q=23530 Lupine Pl'
+
+City / county lookup​
+curl -G 'https://api.your-white-label.com/api/2.0/leadpipes/locations' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345' \
+  --data-urlencode 'query=San Diego'
+
+ZIP lookup​
+curl -G 'https://api.your-white-label.com/api/2.0/leadpipes/autocomplete' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345' \
+  --data-urlencode 'q=90210'
+
+Empty results​
+
+A query that matches nothing returns 200 OK with []. Treat empty-array responses as the no-match signal — there is no 404 for an empty autocomplete result.
+
+Errors​
+Status	When
+400	Neither q nor query was supplied (or both were blank).
+403 | 404	Auth failure.
+500	Unexpected error.
+Previous
+Details
+Next
+Property Object
+Authentication
+Query parameters
+Behavior
+Response
+address
+city
+county
+zip
+state
+parcel
+Result ranking
+Examples
+Address lookup
+City / county lookup
+ZIP lookup
+Empty results
+Errors
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

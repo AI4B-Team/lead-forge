@@ -1,0 +1,71 @@
+URL: https://documentation.realeflow.com/getting-started/overview
+TITLE: Overview | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Getting StartedOverview
+Overview
+
+The Partner API is a server-to-server HTTP API that lets a white-label partner make property and address requests on behalf of a registered end-user account. It is not an end-user API: every request is authenticated as a partner and scoped to a specific partner account whose entitlements gate the response.
+
+Concepts​
+Partner — the integrating company. Identified by the white-label domain the API is called against, plus an API key.
+Partner account — a registered end user inside a partner's tenancy. Identified by the partner's own external ID or the internal numeric account ID. Every request must name an account.
+Entitlements — the set of features, territories, and data permissions associated with the named account. Server-side enforcement guarantees a request cannot return data the account does not have rights to.
+Lifecycle of a request​
+The request is sent to the partner's white-label domain (e.g. https://api.your-white-label.com/api/2.0/leadpipes/search).
+Two headers identify who is calling:
+X-RF-Partner-Api-Key — the partner's API key (a GUID).
+X-RF-Partner-Account-Id — the partner account on whose behalf the call is made.
+The API key is validated against the resolved partner domain. The account header is resolved to a Full-Access, non-deleted account.
+The request is normalized: territory, lead-type, and premium-data restrictions are applied based on the account's entitlements. See Scope and Restrictions.
+The API processes the request, records usage, and returns a JSON response.
+What partners can and can't do​
+Can	Can't
+Call any endpoint listed under Property Data API on behalf of a registered account.	Make anonymous calls. Every request names an account.
+Pass any documented filter or include.	Bypass an account's territory, lead-type, lien, or preforeclosure restrictions. The API silently narrows requests to the account's entitled scope.
+Page deeply, sort, cluster, and request histograms.	Request more than 10,000 total records (page × page_size).
+Use either an external account ID (ExternalAccountId) or the numeric account ID.	Mix account scoping across requests on a single call.
+Versioning​
+
+Routes are versioned in the URL: /api/2.0/.... We will:
+
+Add new optional fields to requests and new fields to responses without bumping the version.
+Bump the version for any change that removes a field, renames a field, or alters the meaning of an existing field.
+
+Subscribe to the Changelog for visibility into all field-level changes.
+
+Previous
+Welcome
+Next
+Authentication
+Concepts
+Lifecycle of a request
+What partners can and can't do
+Versioning
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

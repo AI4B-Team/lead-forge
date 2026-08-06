@@ -1,0 +1,288 @@
+URL: https://documentation.realeflow.com/property-data-api/endpoints/search
+TITLE: Search | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Property Data APIEndpointsSearch
+Search
+POST /api/2.0/leadpipes/search
+
+Multi-filter property search. Returns a paginated list of property objects matching the supplied filters, optionally with map clusters and aggregation histograms.
+
+Authentication​
+
+Standard partner auth headers. See Authentication.
+
+X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000
+X-RF-Partner-Account-Id: 12345
+Content-Type: application/json
+
+Request body​
+
+application/json object. All filter fields are optional unless flagged otherwise. At least one geographic anchor must be supplied (state, places, geolocation, location, bounds, polygons, includeIds, includeHashes, or ownedBy); requests that resolve to a nationwide search are rejected.
+
+Server-side adjustments. territories, regionsRestriction, leadTypes, and lien filter fields may be replaced or narrowed before the search runs. See Scope and Restrictions.
+
+Pagination and response shape​
+Field	Type	Default	Description
+page	integer	1	Page number, 1-based. page × page_size cannot exceed 10,000.
+page_size	integer	20 (500 when returnIdsOnly is true)	Results per page. Max 10000.
+cursor	object	–	Cursor pagination state for stable deep paging. Echo back the cursor from a prior response.
+cursor.element	string	required when cursor is set	Opaque cursor token echoed from the previous response.
+cursor.sort	array	required when cursor is set	The sort tuple from the previous response.
+cursor.search	integer	required when cursor is set	The search index inside a multi-search request (use 1 for a single search).
+returnIdsOnly	boolean	false	Return only property IDs in data[] instead of full property objects.
+simplifiedResponse	boolean	false	Return a slimmer property object.
+cluster	object	–	Geohash cluster aggregation for map display.
+cluster.precision	integer	required with cluster	Geohash precision (typically 4–7 for map tiles).
+cluster.size	integer	required with cluster	Maximum number of clusters returned.
+Geographic filters​
+Field	Type	Description
+state	string	Two-letter US state code.
+places	array	Up to 100 { state, city, fips, zip } objects. Each field on a place is optional, but each place must contain at least one.
+places[].state	string	Two-letter state code.
+places[].city	string	City name.
+places[].fips	integer	County FIPS code.
+places[].zip	string	ZIP code.
+geolocation	object	Anchor for radius-style searches; combine with distance or searchWithinBounds.
+geolocation.lat	number, –90 to 90	Latitude. Required if geolocation.lng is set.
+geolocation.lng	number, –180 to 180	Longitude. Required if geolocation.lat is set.
+location	object	Alternative near-distance anchor. Combine with distance.
+location.lat	number, –90 to 90	Latitude. Required if location.lng is set.
+location.lng	number, –180 to 180	Longitude. Required if location.lat is set.
+distance	number	Radius in miles, used with location or geolocation. Required if location is set.
+bounds	object	Map viewport bounding box { topLeft: {lat,lng}, bottomRight: {lat,lng} }. Combine with searchWithinBounds.
+polygons	array	Geographic polygons. Each entry is { coordinates: [{lat,lng}, ...] } with 3–100 vertices.
+expandingRadius	boolean	If true and the initial radius search returns fewer than 10 properties, the radius expands in stages (10 → 50 → 75 → 100 miles).
+totalCount	integer	Target result count for expandingRadius. Max 1000.
+searchWithinBounds	boolean	When bounds is supplied, restrict results to the viewport.
+Property characteristics​
+
+All range filters use { min, max }; both bounds are individually optional unless noted.
+
+Field	Type	Description
+bedrooms	range, integer ≥ 0	Bedroom count.
+bathrooms	range, decimal ≥ 0	Total bathrooms (includes half baths).
+livingArea	range, integer ≥ 0	Building / living area (square feet).
+lotArea	range, decimal ≥ 0	Lot size (square feet).
+yearBuilt	range, integer ≥ 0	Year built.
+stories	range, decimal ≥ 0	Number of stories.
+units	range, decimal ≥ 0	Total unit count.
+buildings	range, decimal ≥ 0	Number of buildings.
+sumBuildingArea	range, integer ≥ 0	Sum of building areas across parcels.
+sumLivingArea	range, integer ≥ 0	Sum of living areas across parcels.
+sumGrossArea	range, integer ≥ 0	Sum of gross areas across parcels.
+sumAdjacentArea	range, integer ≥ 0	Sum of adjacent areas.
+sumBasementArea	range, integer ≥ 0	Sum of basement areas.
+sumGarageArea	range, integer ≥ 0	Sum of garage areas.
+propertyMainCategory	string	RESIDENTIAL, COMMERCIAL, or ALL.
+propertyTypes	object	Subtype filter, scoped by propertyMainCategory. Object form: { "<MainCategory>": ["<Subtype>", ...] }. See Enums → Property Types and the example below.
+zoning	array of strings	Zoning codes.
+simplifiedAttributes	array of strings	Property feature flags. See Enums → Simplified Attributes.
+keywords	array of strings	Free-text keywords matched against address and owner.
+
+propertyTypes shape. propertyTypes must be supplied as an object keyed by main category. A flat array of subtype strings is rejected by the upstream service.
+
+"propertyTypes": {
+  "SINGLE_FAMILY_RESIDENTIAL": ["GENERAL"]
+}
+
+
+An empty subtype array matches all subtypes of that main category:
+
+"propertyTypes": {
+  "SINGLE_FAMILY_RESIDENTIAL": []
+}
+
+Value and finance​
+Field	Type	Description
+value	range, integer ≥ 0	Property value (assessed for residential, market for commercial).
+lastSalePrice	range, integer ≥ 0	Most recent recorded sale price.
+listingPrice	range, integer ≥ 0	Current MLS listing price.
+loanToValue	range, decimal ≥ 0	Loan-to-value as a decimal (0.65 = 65%).
+mortgageInterestRate	range, decimal ≥ 0	Primary mortgage interest rate (decimal).
+mortgagePaymentAmount	range, integer ≥ 0	Estimated monthly mortgage payment.
+rentalValue	range, integer ≥ 0	Estimated monthly rental value.
+mortgageFinanceType	array of strings	See Enums → Mortgage Finance Type.
+loanType	array of strings	See Enums → Loan Type.
+saleType	array of strings	See Enums → Sale Type.
+Dates​
+
+All date ranges are { min, max } with values formatted YYYY-MM-DD. Both bounds are individually optional.
+
+Field	Description
+lastSaleDate	Most recent recorded sale date.
+lastNoticeDate	Most recent preforeclosure notice date.
+lastAuctionDate	Most recent foreclosure auction date.
+lastModifiedDate	Most recent update to the property record.
+doubleClose	Double-close (wholesale flip within ~7 days) detection date.
+AI scores​
+
+Range filters on the three AI-derived scores. Each filter accepts { min, max } with both bounds individually optional. Filters require territory access on the account — outside the account's purchased territory, scores are null on returned properties and these filters have no effect.
+
+Field	Range	Description
+index90d	integer	AI Retail Score. Filter on retail-sale fit.
+indexWls	integer	AI Wholesale Score. Filter on wholesale / investor-to-investor fit.
+indexInv	integer	AI Rental Score. Filter on buy-and-hold rental fit.
+Lead-type and lien filters​
+Field	Type	Description
+leadTypes	array of strings, or { include: [...], exclude: [...] }	Lead-type filter. See Enums → Lead Types. The object form lets you exclude specific types while including others.
+lienTypes	array of strings	Lien-type filter (residential or commercial). See Enums → Lien Types. Requires lien data access.
+preforeclosureNoticesServed	range, integer ≥ 0	Count of preforeclosure notices on the property.
+emptyOrFutureAuctionDates	boolean	Include properties with no auction date or a future auction date.
+Owner filters​
+Field	Type	Description
+ownerName	array of strings	Owner names to match.
+ownerTypes	array of strings	Owner entity types: NONE, BUSINESS, FINANCIAL, GOVERNMENT, TRUST.
+ownerOccupied	boolean	Owner is the occupant.
+absenteeOwnerInState	boolean	Mailing address differs from property but is in-state.
+absenteeOwnerOutOfState	boolean	Mailing address is out-of-state.
+ownerHasOtherProperties	boolean	Owner holds other properties.
+ownedBy	string, format HA[0-9]+\-\w+	All properties owned by the same party as the supplied owner hash.
+ID and hash selectors​
+Field	Type	Description
+includeIds	array of integers	Numeric property IDs to include.
+excludeIds	array of integers	Numeric property IDs to exclude.
+searchIds	array of integers	Restrict the search to these IDs.
+includeHashes	array of strings, each HA[0-9]+\-\w+	Address hashes to include.
+excludeHashes	array of strings, each HA[0-9]+\-\w+	Address hashes to exclude.
+Listing and photo filters​
+Field	Type	Description
+hasPhotos	boolean	At least one property photo is on file.
+hasBeforeAndAfter	boolean	Before/after renovation photos are on file.
+hasHOA	boolean	Property is in an HOA.
+Sort​
+Field	Type	Description
+sort	string	Field to sort by. See Enums → Sort fields.
+direction	string	asc or desc.
+randomDistribution	boolean	Randomize result ordering.
+includeAllFilters	boolean	Apply filters as AND across all dimensions (default behavior).
+Territory and region (server-managed)​
+
+These fields are server-managed when the account has territories. See Scope and Restrictions.
+
+Field	Description
+territories	{ fips: [...], zip: [...], state: [...] }. Replaced by the account's territories when applicable.
+regionsRestriction	{ state: [...] }. Commercial-content state restriction. Replaced by the account's restriction when applicable.
+Response​
+{
+  "data": [ /* property objects — see Property Object reference */ ],
+  "count": 245,
+  "cluster": { "u4m1": 12, "u4m2": 18 },
+  "histograms": {
+    "bedrooms": [{ "key": 3, "count": 89 }],
+    "property_value": [{ "key": "350000-450000", "count": 98 }]
+  },
+  "allowAiFilters": true,
+  "cursor": { "element": "HA7-abc123def456", "sort": [32.7780], "search": 1 }
+}
+
+Field	Type	Description
+data	array of property objects	Matching properties on this page. See Property Object. When returnIdsOnly is true, this is an array of integers instead.
+count	integer	Total number of matching properties (across all pages).
+cluster	object	Geohash bucket counts. Only present when cluster was requested.
+histograms	object	Aggregations by field (e.g. bedrooms, property_value). Population depends on territory access.
+allowAiFilters	boolean	Whether the caller can apply AI range filters in this context.
+cursor	object	Cursor for the next page. Echo into the next request's cursor field.
+Examples​
+Minimal request​
+{
+  "propertyMainCategory": "RESIDENTIAL",
+  "geolocation": { "lat": 32.7767, "lng": -96.7970 },
+  "distance": 5,
+  "page": 1,
+  "page_size": 25
+}
+
+Filtering by lead type​
+{
+  "propertyMainCategory": "RESIDENTIAL",
+  "state": "TX",
+  "leadTypes": ["ABSENTEE_OWNER", "HIGH_EQUITY", "FREE_AND_CLEAR"],
+  "lastSalePrice": { "min": 250000, "max": 600000 },
+  "page_size": 50,
+  "sort": "lastSaleDate",
+  "direction": "desc"
+}
+
+Cursor pagination​
+
+First page:
+
+{
+  "state": "CA",
+  "page_size": 100,
+  "sort": "value",
+  "direction": "desc"
+}
+
+
+Use the cursor from the response unchanged in the next call:
+
+{
+  "state": "CA",
+  "page_size": 100,
+  "sort": "value",
+  "direction": "desc",
+  "cursor": { "element": "HA7-xyz789abc456", "sort": [1450000], "search": 1 }
+}
+
+Errors​
+Status	When
+400	Body is missing or not valid JSON; a required field is missing or invalid.
+403 | 404	Auth failure. See Authentication.
+422	Search resolved to a nationwide query (no geographic anchor); page × page_size exceeds 10,000; other upstream validation.
+500	Unexpected error. Safe to retry.
+
+See Errors for the full envelope.
+
+Previous
+Scope and Restrictions
+Next
+Comps
+Authentication
+Request body
+Pagination and response shape
+Geographic filters
+Property characteristics
+Value and finance
+Dates
+AI scores
+Lead-type and lien filters
+Owner filters
+ID and hash selectors
+Listing and photo filters
+Sort
+Territory and region (server-managed)
+Response
+Examples
+Minimal request
+Filtering by lead type
+Cursor pagination
+Errors
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

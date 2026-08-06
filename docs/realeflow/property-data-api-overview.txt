@@ -1,0 +1,64 @@
+URL: https://documentation.realeflow.com/property-data-api/overview
+TITLE: Overview | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Property Data APIOverview
+Property Data API
+
+Property search, comparable sales, single-property details, and address autocomplete.
+
+Endpoints​
+Method	Route	Purpose
+POST	/api/2.0/leadpipes/search	Search properties by filter — geography, characteristics, value, lead types, dates, AI scores.
+POST	/api/2.0/leadpipes/comps	Comps by subject address in the request body.
+POST	/api/2.0/leadpipes/comps/{identifier}	Comps by subject identifier in the path.
+GET	/api/2.0/leadpipes/details/{identifier}	Single-property details. Aliased at /api/2.0/leadpipes/assessor/{identifier}.
+POST	/api/2.0/leadpipes/details/{identifier}	Single-property details with optional override body. Same alias as above.
+GET	/api/2.0/leadpipes/autocomplete	Address autocomplete. Aliased at /api/2.0/leadpipes/locations.
+Identifiers​
+
+Wherever an {identifier} appears in a route, it is the property address hash — a string matching HA[0-9]+\-\w+, e.g. HA7-abc123def456. Address hashes are returned by autocomplete (in the address.hash field) and inside property responses (address_hash). They are stable across time.
+
+Response envelope​
+
+All endpoints return JSON with Content-Type: application/json. Success responses use endpoint-specific shapes documented on each endpoint page. Errors follow the model in Errors.
+
+Read this next​
+Scope and Restrictions — the most-overlooked aspect of integration. Many request fields are silently narrowed server-side based on the account's entitlements.
+Property Object — the canonical field reference for the property record returned across /search, /comps, and /details.
+Enums — every accepted enum value (lead types, property types, sort fields, etc.).
+Previous
+Quick Start
+Next
+Scope and Restrictions
+Endpoints
+Identifiers
+Response envelope
+Read this next
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

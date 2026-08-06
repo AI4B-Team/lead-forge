@@ -1,0 +1,56 @@
+URL: https://documentation.realeflow.com
+TITLE: Welcome | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Welcome
+Partner API
+
+Welcome to the Partner API. This site is the canonical reference for the public APIs we expose to white‑label partners.
+
+What's here today​
+Property Data API — property search, comps, single‑property details, and address autocomplete. Account‑scoped on behalf of a registered partner end user.
+Billing Webhooks — point your billing platform's webhooks at us and platform accounts provision, suspend, and upgrade themselves in sync with billing. Stripe is supported today.
+
+More partner API surfaces will be ported in over time.
+
+Where to start​
+Read Getting Started → Authentication to provision and use API credentials.
+Try the Quick Start — three cURL calls that exercise the core endpoints end to end.
+Drill into the Property Data API endpoint reference for full parameter and response field lists.
+Conventions​
+All endpoints accept and return application/json.
+Routes are versioned: /api/2.0/.... We will not break field shapes inside an existing route version.
+Every endpoint requires the two auth headers described in Authentication.
+Examples in this documentation use placeholder values (00000000-0000-0000-0000-000000000000 for keys, 12345 for account IDs, https://your-white-label.com for the base URL). Substitute your provisioned values.
+Next
+Overview
+What's here today
+Where to start
+Conventions
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

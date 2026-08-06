@@ -1,0 +1,149 @@
+URL: https://documentation.realeflow.com/billing-webhooks/stripe
+TITLE: Stripe | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Billing WebhooksStripe
+Stripe integration
+
+How the billing sync works when your billing platform is Stripe: you point your Stripe account's webhooks at our webhook service and tag your Stripe prices with a small amount of metadata; we take care of the rest.
+
+How it works​
+
+We listen to four Stripe events from your account and translate them into account operations on your white-label platform:
+
+Stripe event	What we do
+customer.subscription.created	Create the user's platform account (if it doesn't already exist).
+customer.subscription.updated	Reconcile: activate, change plan, suspend (on past_due/unpaid), or reactivate to match the subscription.
+customer.subscription.deleted	Deactivate the platform account. This is permanent — deactivation removes the user's data.
+checkout.session.completed	If the purchased price is tagged as an addon, grant the addon (feature access or credits) to the user's account.
+
+Only prices tagged with our metadata are acted on. Anything untagged is silently ignored, so you can safely route your entire Stripe account at our endpoint — unrelated products and subscriptions are skipped.
+
+Two ways to onboard​
+Option A — invite us to your Stripe account (recommended)​
+
+Invite Realeflow to your Stripe account as a team member with the Developer role (Stripe Dashboard → Settings → Team → + New member). Ask your Realeflow contact for the email address to invite.
+
+With Developer access we set everything up for you: the webhook endpoints, the price metadata (matched to your plan configuration on our side), and the restricted API key. You review, we test together in test mode, done.
+
+Option B — self-service setup​
+
+If you'd rather not grant access, follow the checklist below and send us the resulting secrets through a secure channel (not plain email — use your Realeflow contact's preferred secret-sharing method).
+
+Self-service setup checklist​
+1. Create two webhook endpoints​
+
+In Stripe Dashboard → Developers → Webhooks, create one endpoint per Stripe mode:
+
+Stripe mode	Endpoint URL
+Live	https://partner-api-webhooks.realeflow.com/stripe/<your-partner-slug>
+Test	https://partner-api-webhooks-test.realeflow.com/stripe/<your-partner-slug>
+
+Your Realeflow contact will give you your partner slug.
+
+Subscribe each endpoint to exactly these four events:
+
+customer.subscription.created
+customer.subscription.updated
+customer.subscription.deleted
+checkout.session.completed
+
+Careful: customer.subscription.paused sits right next to customer.subscription.updated in Stripe's event picker. Selecting paused by mistake makes account creation appear stuck, because we never see the updated event that activates the account.
+
+2. Tag your subscription prices​
+
+On every Stripe price that represents a platform subscription, add metadata:
+
+Key	Required	Value
+RFPlanId	yes	The Realeflow plan ID this price maps to. We provide these during onboarding.
+RFTrialPlanId	optional	Plan ID to use while the subscription is trialing. Falls back to RFPlanId.
+3. Tag your addon prices​
+
+On every price sold through a one-time checkout / Payment Link that should grant something on the platform:
+
+Key	Required	Value
+RFAddOnProduct	yes	The addon code — we provide the exact values for your product lineup during onboarding (e.g. ai_county, pca_nationwide, liens).
+RFAddOnQuantity	for credit-based addons	Integer credit count. Not needed for nationwide/unlimited or feature-toggle addons.
+4. Send us the secrets​
+
+For each mode (live and test), send your Realeflow contact:
+
+The webhook signing secret (whsec_…) — shown on the endpoint's detail page in the Stripe dashboard.
+A restricted API key with only Customers: Read permission (Developers → API keys → Create restricted key). We use it to read the customer's email and name when creating their platform account, and to match one-time addon purchases back to the right user.
+
+We'll confirm once both environments are configured on our side.
+
+5. (Recommended) Pass a durable ID on addon Payment Links​
+
+Stripe Payment Links create a new Stripe customer on every checkout, so a one-time addon purchase doesn't automatically identify which of your users bought it. When your app links a logged-in user to an addon Payment Link, append two parameters:
+
+https://buy.stripe.com/<id>?client_reference_id={their_stripe_customer_id}&prefilled_email={their_email}
+
+client_reference_id — the user's Stripe customer ID from their subscription (or whatever identifier was used when their account was created). This lets us match the purchase to the account directly.
+prefilled_email — pre-fills the checkout email field, cutting down typo mismatches.
+
+Without these, the addon flow still works — we fall back to matching by email — but it's slower and fails if the buyer types an email Stripe has never seen.
+
+Testing your integration​
+
+Before going live, run through this in test mode:
+
+Subscribe with test card 4242 4242 4242 4242 → the platform account should be created and active within a few seconds.
+Change the subscription to a different tagged price → the platform plan should change.
+Use a failing card or mark the subscription past_due → the account should suspend; fixing payment should reactivate it.
+Buy each addon through its test Payment Link → credits/features should appear on the account.
+Cancel the subscription → the account should deactivate.
+
+Your Realeflow contact can watch our side of each event live during the test run.
+
+Troubleshooting​
+Stripe shows the webhook returning 401 — the signing secret we have doesn't match your endpoint. Each Stripe endpoint has its own secret; re-send the one from the endpoint's detail page.
+Subscription created but no platform account — check the price has RFPlanId metadata, and that the endpoint is subscribed to all four events (see the paused vs updated pitfall above).
+Addon purchased but not granted — check RFAddOnProduct metadata on the price, and that the buyer used the email they subscribed with (or that the link included client_reference_id).
+Subscription stuck incomplete in test mode — declined or incomplete-3DS test cards never activate. Use 4242 4242 4242 4242.
+
+Anything else: contact your Realeflow representative — failures on our side alert us in real time, so we often see the issue before you do.
+
+Previous
+Overview
+Next
+Changelog
+How it works
+Two ways to onboard
+Option A — invite us to your Stripe account (recommended)
+Option B — self-service setup
+Self-service setup checklist
+1. Create two webhook endpoints
+2. Tag your subscription prices
+3. Tag your addon prices
+4. Send us the secrets
+5. (Recommended) Pass a durable ID on addon Payment Links
+Testing your integration
+Troubleshooting
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

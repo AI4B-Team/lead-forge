@@ -1,0 +1,87 @@
+URL: https://documentation.realeflow.com/getting-started/quickstart
+TITLE: Quick Start | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Getting StartedQuick Start
+Quick Start
+
+Three cURL calls that exercise the core surface end to end. Substitute the placeholder values before running.
+
+Placeholders. https://api.your-white-label.com is your provisioned domain. 00000000-0000-0000-0000-000000000000 is your API key. 12345 is the partner account ID you are calling on behalf of.
+
+1. Resolve an address​
+
+Turn a free-text query into a structured address with a stable hash you can pass to the other endpoints.
+
+curl -G 'https://api.your-white-label.com/api/2.0/leadpipes/autocomplete' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345' \
+  --data-urlencode 'q=23530 Lupine Pl San Diego'
+
+
+Pick the result with type: "address" and grab address.hash. That is the property identifier you will pass to subsequent endpoints.
+
+2. Get full property details​
+curl -X GET 'https://api.your-white-label.com/api/2.0/leadpipes/details/HA7-abc123def456?with=history,parcel,liens' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345'
+
+
+The response is a single property object with history, parcel, and liens sections appended. See Property Object for every field.
+
+3. Search for similar properties​
+curl -X POST 'https://api.your-white-label.com/api/2.0/leadpipes/search' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "propertyMainCategory": "RESIDENTIAL",
+    "geolocation": { "lat": 32.7767, "lng": -96.7970 },
+    "distance": 5,
+    "leadTypes": ["ABSENTEE_OWNER", "HIGH_EQUITY"],
+    "page": 1,
+    "page_size": 25
+  }'
+
+
+The response contains data[] (the property objects), count (total matching), and a cursor for stable deep paging.
+
+What's next​
+Browse all four endpoints under Property Data API → Endpoints.
+Skim Scope and Restrictions — many filters and includes are silently narrowed by the account's entitlements, and you should know where to look in the response when something seems missing.
+Use Errors to wire up error handling.
+Previous
+Authentication
+Next
+Overview
+1. Resolve an address
+2. Get full property details
+3. Search for similar properties
+What's next
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

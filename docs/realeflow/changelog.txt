@@ -1,0 +1,48 @@
+URL: https://documentation.realeflow.com/changelog
+TITLE: Changelog | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Changelog
+Changelog
+2026-04-30 — Property Data API V2 launched​
+
+Initial public release of the V2 Property Data API.
+
+New endpoints under /api/2.0/leadpipes/:
+POST /api/2.0/leadpipes/search
+POST /api/2.0/leadpipes/comps and POST /api/2.0/leadpipes/comps/{identifier}
+GET / POST /api/2.0/leadpipes/details/{identifier} (alias: /assessor/{identifier})
+GET /api/2.0/leadpipes/autocomplete (alias: /locations)
+Authentication via X-RF-Partner-Api-Key and X-RF-Partner-Account-Id headers.
+Account-scoped: every request runs in the context of a registered partner account whose entitlements gate territory, lead-type, lien, and preforeclosure data.
+Per-request usage is metered for reporting (PartnerLeadpipes.Search, .Comps, .Details, .Autocomplete). No synchronous rate limit at launch.
+Previous
+Stripe
+2026-04-30 — Property Data API V2 launched
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

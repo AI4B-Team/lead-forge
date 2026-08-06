@@ -1,0 +1,110 @@
+URL: https://documentation.realeflow.com/getting-started/authentication
+TITLE: Authentication | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Getting StartedAuthentication
+Authentication
+
+Every request requires two headers. There is no anonymous access mode.
+
+Headers​
+Header	Required	Format	Description
+X-RF-Partner-Api-Key	Yes	GUID	The API key issued to the partner.
+X-RF-Partner-Account-Id	Yes	string | integer	The partner account on whose behalf the call is made. Either the partner's own ExternalAccountId (string) or the internal numeric account ID.
+POST /api/2.0/leadpipes/search HTTP/1.1
+Host: api.your-white-label.com
+Content-Type: application/json
+X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000
+X-RF-Partner-Account-Id: 12345
+
+Base URL​
+
+The base URL is the white-label domain provisioned to the partner. There is no shared api.example.com-style host for partner traffic. The domain in the request determines which partner context the API key is validated under.
+
+https://api.your-white-label.com/api/2.0/leadpipes/...
+
+
+If you do not yet know your white-label domain, contact your account manager.
+
+Authentication flow​
+
+On every request:
+
+Domain resolution. The host of the request URL is resolved to a registered partner domain. If it cannot be resolved, the request is rejected with 403 Forbidden.
+
+API key validation. X-RF-Partner-Api-Key is parsed as a GUID and looked up. The key must either be marked as cross-domain (AllDomains) or be explicitly authorized for the resolved domain.
+
+Permission check. Endpoint-level permissions on the API key are checked, if any are required.
+
+Account resolution. X-RF-Partner-Account-Id is matched first against ExternalAccountId. If no match is found and the value is numeric, it is matched against the internal numeric account ID. The account must be:
+
+Under the authorized partner / domain context.
+Not deleted, not inactive.
+Marked as Full Access.
+
+If no matching account is found, the request is rejected with 404 Not Found.
+
+Scoping. The resolved account's entitlements are attached to the request and applied to filters as described in Scope and Restrictions.
+
+Auth-stage failures return a plain-text body, not a JSON envelope.
+
+Failure matrix​
+Status	When
+403 Forbidden	Domain cannot be resolved, either auth header is missing or empty, the API key is not a valid GUID, the API key is not found, the API key is not authorized for this domain, or the API key is missing a required permission.
+404 Not Found	The account header does not resolve to a Full-Access, non-deleted account under the authorized partner / domain.
+Caching​
+
+Account lookups are cached server-side for approximately two minutes per (api-key, account-id) pair. A newly created or newly enabled account may take up to two minutes to start succeeding on cached infrastructure.
+
+Key rotation​
+
+API keys are static GUIDs. To rotate:
+
+Request a new key. Both keys will be valid concurrently during the rotation window.
+Migrate your integration to the new key.
+Confirm there is no traffic on the old key, then request its revocation.
+
+There is no programmatic key rotation endpoint. Contact your account manager.
+
+Security guidance​
+Treat the API key as a secret. Do not embed it in client-side JavaScript, mobile apps, or any artifact a third party can decompile.
+Do not log full request bodies or headers in unrestricted storage. Account IDs and search filters often contain end-user PII.
+Use TLS for every call. Plain HTTP requests are not accepted.
+Previous
+Overview
+Next
+Quick Start
+Headers
+Base URL
+Authentication flow
+Failure matrix
+Caching
+Key rotation
+Security guidance
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

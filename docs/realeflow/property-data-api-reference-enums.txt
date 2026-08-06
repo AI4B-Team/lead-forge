@@ -1,0 +1,998 @@
+URL: https://documentation.realeflow.com/property-data-api/reference/enums
+TITLE: Enums | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Property Object
+Enums
+Errors
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Property Data APIReferenceEnums
+Enums
+
+Every accepted enumerated value referenced by the Property Data API. Use the canonical constant exactly as written — values are case-sensitive.
+
+Property Main Categories​
+
+Used in /search propertyMainCategory.
+
+Value	Description
+RESIDENTIAL	Residential properties only.
+COMMERCIAL	Commercial properties only.
+ALL	All property types.
+Property Types​
+
+Used in /search propertyTypes. Subtypes are scoped by propertyMainCategory.
+
+Residential subtypes​
+SINGLE_FAMILY_RESIDENTIAL (sub-classes: GENERAL, BARNDOMINIUM, TINY_HOUSE, ROWHOUSE, RURAL_HOME, PLANNED_UNIT_DEVELOPMENT, SEASONAL_CABIN_VACATION_BUNGALOW, ZERO_LOT_LINE, PREFABRICATED, HISTORICAL_RESIDENCE)
+CONDOMINIUM
+TOWNHOME
+MULTIFAMILY
+APARTMENT (sub-classes: MULTIFAMILY, NURSING_HOME)
+VACANT_LAND_RESIDENTIAL (sub-classes: RESIDENTIAL_VACANT_LAND, MULTIFAMILY_VACANT_LAND)
+MOBILE_HOME
+OTHER (sub-classes: COOPERATIVE, RESIDENTIAL_CONDOMINIUM_DEVELOPMENT, RESIDENTIAL_PARKING_GARAGE, RESIDENTIAL_STORAGE_SPACE)
+Commercial subtypes​
+AGRICULTURAL (sub-classes: LIVESTOCK, FARM_RANCH, VINEYARD_ORCHARD, TIMBERLAND_FOREST_TREES, HORTICULTURE_GROWING_HOUSES)
+APARTMENT_COMMERCIAL (sub-classes: MULTIFAMILY, APARTMENT_HOUSE, GARDEN_APARMENT, DORMITORY, NURSING_HOME)
+GENERAL
+HOSPITALITY (sub-classes: HOTEL_MOTEL, BOARDING_ROOMING_HOUSE)
+INDUSTRIAL (sub-classes: MIXED_USED, MANUFACTURING, WAREHOUSE, STORAGE)
+MOBILE_HOME_PARK
+OFFICE (sub-classes: GENERAL, OFFICE_PROFESSIONAL, FINANCIAL_BUILDING)
+RETAIL (sub-classes: RETAIL, GROCERY_SUPERMARKET, RESTAURANT_BAR, CONVENIENCE_STORE, GAS_SERVICE_STATION, CARWASH)
+SELF_STORAGE_FACILITY
+SPECIAL_PURPOSE (sub-classes: ANIMAL_HOSPITAL, DRYCLEANER_LAUNDROMAT, PRESCHOOL_DAYCARE, PARKING_LOT, FUNERAL_HOME, NIGHTCLUB, DENTIST, MEDICAL, GENERAL, MARINA_BOAT, BOWLING_ALLEY, CLUBS_LODGES, MUSEUM_GALLERY, COUNTRY_CLUB, GYM_HEALTHSPA, CAMPGROUND, THEATER, PARK_PLAYGROUND, GOLF_COURSE, MINING, RELIGIOUS, SCHOOL_PRIVATE, HOSPITAL_PRIVATE, MEDICAL_CLINIC, CEMETARY, CHARITY, RECREATION_CENTER, HOSPITAL_PUBLIC)
+VACANT_LAND_COMMERCIAL (sub-classes: GENERAL, INDUSTRIAL)
+MULTI_FAMILY_AI
+Lead Types​
+
+Used in /search leadTypes.
+
+ABSENTEE_OWNER, ACTIVE_INVESTOR_OWNED, ACTIVE_LISTING, ASSUMABILITY_RIDER, BORED_INVESTOR, CASH_BUYER, FLIPPED, FORECLOSURE, FORECLOSURE_ACTIVITY, FREE_AND_CLEAR, HIGH_EQUITY, LONG_TERM_OWNER, LOW_EQUITY, NEVER_SOLD, POTENTIALLY_INHERITED, PRE_FORECLOSURE, PRIVATE_LENDER, RECENTLY_DELINQUENT, UPSIDE_DOWN, VACANCY, ZOMBIE_PROPERTY
+
+The lien-related lead-type values listed below also work in leadTypes and require lien data access on the account.
+
+Lien Types​
+
+Used in /search lienTypes and surfaced on the property object inside the Leadpipes block. Requires lien data access.
+
+Constant	Leadpipes flag
+ASSIGNMENT_OF_RENTS	Leadpipes.AssignmentOfRents
+JUDGMENT	Leadpipes.Judgment
+GENERAL_LIEN	Leadpipes.GeneralLien
+HOA_LIEN	Leadpipes.HOALien
+MECHANICS_LIEN	Leadpipes.MechanicsLien
+TAX_GOVERNMENT_LIEN	Leadpipes.TaxGovernmentLien
+UTILITY_LIEN	Leadpipes.UtilityLien
+DECEASED_PROBATE	Leadpipes.DeceasedProbate
+DIVORCE	Leadpipes.Divorce
+LIS_PENDENS	Leadpipes.LisPendens
+Owner Types​
+
+Used in /search ownerTypes.
+
+NONE, BUSINESS, FINANCIAL, GOVERNMENT, TRUST
+
+Sort Fields​
+
+Used in /search sort and /comps sort.
+
+agentActiveListingsCount, auctionDate, bathrooms, bedrooms, dom, lastLienDate, mortgagePaymentAmount, mortgageInterestRate, distance, lastNoticeDate, lastSaleDate, lastModifiedDate, loanToValue, listingPrice, livingArea, lotArea, sumBuildingArea, sumLivingArea, sumGrossArea, sumAdjacentArea, sumBasementArea, sumGarageArea, taxDelinquency, loanMaturityDate, hasPhotos, hasBeforeAndAfter, value, units, ownerNameAndMailingAddress, index90d, indexInv, indexWls, rentalValue
+
+Sort Direction​
+
+asc, desc
+
+Mortgage Finance Type​
+
+Used in /search mortgageFinanceType.
+
+Constant	Code
+ADJUSTABLE_RATE	ADJ
+ALL_INCLUSIVE_TRUST_DEED	AITD
+BALLOON	BAL
+FIXED_RATE	FIX
+MULTIPLE_LOAN_AMOUNTS	MUL
+OTHER	OTH
+STEP_INTEREST_RATE	STP
+VARIABLE	VAR
+Loan Type​
+
+Used in /search loanType.
+
+ARM, BALLOON_LOAN, CONVENTIONAL_LOAN, CONSTRUCTION_LOAN, COMMERCIAL_LOAN, CREDIT_LINE, FHA, OPEN_END_MORTGAGE, OTHER, REVERSE_MORTGAGE, PURCHASE_MONEY_MORTGAGE, SELLER_TAKE_BACK_LOAN, SECOND_MORTGAGE_COVER_DOWN_PAYMENT, STAND_ALONE_MORTGAGE, STAND_ALONE_REFINANCE, UNKNOWN, USDA, VA
+
+Sale Type​
+
+Used in /search saleType.
+
+INTRA_FAMILY_TRANSFER
+
+Simplified Attributes​
+
+Used in /search simplifiedAttributes. Maps to property-feature flags exposed under SimplifiedAttributes on the property object.
+
+Constant	Description
+AC	Air Conditioning
+BASEMENT	Basement
+FIREPLACE	Fireplace
+GARAGE	Garage
+HEAT	Heating
+PATIO	Patio
+POOL	Pool
+PORCH	Porch
+SEWER	Sewer
+WATER	Water
+WATERFRONT	Waterfront
+Listing Status​
+
+Used in /comps status. Surfaced on the property object as status_info.status.
+
+Code	Label
+A	Active
+P	Pending
+S	Sold
+CS	Coming Soon
+E	Expired
+W	Withdrawn
+C	Cancelled
+O	Off Market
+Comp Sources​
+
+Used in /comps source. Each source value corresponds to a record_type on the response.
+
+Source value (request)	Response record_type
+PUBLIC_RECORD	ASSESSOR
+MLS_LISTINGS	MLS_LISTING
+MLS_RENTALS	RENTAL_ALT
+(default — single-source)	LISTING_ALT may also appear as an auxiliary listing-source variant.
+
+The full list of record_type values that may appear in responses: ASSESSOR, MLS_LISTING, LISTING_ALT, RENTAL_ALT. Additional listing-source variants may appear over time — treat any unrecognized value as a listing record using the LISTING_ALT shape documented in Property Object → Comp record-type variations.
+
+Comp Days Lookback​
+
+Convenient values accepted by /comps days: 30, 60, 90, 180, 365, 730, 1825. Use 0 for no time restriction. Other positive integers are accepted but may not align with reporting buckets.
+
+Geographic Anchors​
+
+US state codes accepted in state, places[].state, regionsRestriction.state, and similar fields:
+
+AL, AK, AZ, AR, CA, CO, CT, DE, DC, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD, MA, MI, MN, MS, MO, MT, NE, NV, NH, NJ, NM, NY, NC, ND, OH, OK, OR, PA, RI, SC, SD, TN, TX, UT, VT, VA, WA, WV, WI, WY
+
+regionsRestriction.state also accepts "*" as a single element to indicate "no state restriction" (the default when omitted).
+
+Property characteristic lookup codes​
+
+Each subsection below lists the code -> label mapping behind a LookupCodes.<X> field on the property object. Use these tables when you need to interpret the raw *_code fields directly (for example heat_code, pool_code) or pivot on the labeled values.
+
+AC (AC)​
+
+Source: AC lookup table.
+
+Code	Label
+1	Central
+2	Evaporative Cooler
+3	Office Only
+4	Packaged Unit
+5	Window\Unit
+6	None
+7	Other
+8	Partial
+9	Chilled Water
+10	Refrigeration
+11	Ventilation
+12	Wall
+13	Yes
+14	Geo-Thermal
+Basement (BASEMNT)​
+
+Source: BASEMNT lookup table.
+
+Code	Label
+1	Daylight, Full
+2	Full Basement
+3	Improved Basement (Finished)
+4	Daylight, Partial
+5	No Basement
+6	Partial Basement
+7	Unfinished Basement
+8	Unspecified Basement
+9	Unspecified Basement
+10	Daylight / Walkout
+Building class (BLDG_CODE)​
+
+Source: BLDG_CODE lookup table.
+
+Code	Label
+1	Buildings having fireproofed structural steel frames carrying all wall, floor and roof loads. Wall, floor and roof structures are built of non-combustible materials.
+2	Buildings having fireproofed reinforced concrete frames carrying all wall, floor and roof loads which are all non-combustible.
+3	Exterior walls non-combustible material. Interior partitions and roof structure combustible materials. Floor concrete or wood frame.
+4	Buildings having wood or wood and steel frames.
+5	Specialized buildings that do not fit in any of the above categories.
+Building area indicator (BLDG_SQFT_IND)​
+
+Source: BLDG_SQFT_IND lookup table.
+
+Code	Label
+A	Attic
+B	Base Area
+E	Heated Area
+G	Garage
+I	Effective Area
+J	Adjusted Area
+K	Finished Area
+L	Living Area
+M	Building Perimeter
+R	Gross Area
+T	Total Area
+1	1st Floor
+Condition (CONDITION)​
+
+Source: CONDITION lookup table.
+
+Code	Label
+1	Excellent
+2	Fair
+3	Good
+4	Poor
+5	Unsound
+6	Average
+7	Very Good
+Construction type (CONST_TYPE)​
+
+Source: CONST_TYPE lookup table.
+
+Code	Label
+1	Adobe
+2	Brick
+3	Concrete
+4	Concrete Block
+5	Dome
+6	Frame
+7	Heavy
+8	Light
+9	Log
+10	Manufactured
+11	Other
+12	Masonry
+13	Metal
+14	Steel
+15	Stone
+16	Tilt-up (pre-cast concrete)
+17	Wood
+18	Mixed
+Driveway (DRIVEWAY)​
+
+Source: DRIVEWAY lookup table.
+
+Code	Label
+1	Driveway
+2	Driveway asphalt
+3	Driveway bomanite
+4	Driveway chat
+5	Driveway brick
+6	Driveway concrete
+7	Driveway paver
+8	Driveway gravel
+9	Driveway tile
+Exterior wall (EXT_WALL)​
+
+Source: EXT_WALL lookup table.
+
+Code	Label
+1	Asbestos shingle
+2	Brick
+3	Brick veneer
+4	Block
+5	Composition/Composite
+6	Concrete
+7	Concrete Block
+8	Glass
+9	Log
+10	Metal
+11	Rock, Stone
+12	Stucco
+13	Tile
+14	Tilt-up (pre-cast concrete)
+15	Other
+16	Wood Shingle
+17	Wood
+18	Wood Siding
+19	Siding (Alum/Vinyl)
+20	Adobe
+21	Shingle (Not Wood)
+22	Marble
+23	Combination
+24	Masonry
+25	Siding Not (aluminum, vinyl, etc.)
+26	EIFS / Synthetic Stucco
+27	Fiber cement siding (Hardi-board/Hardi-plank)
+28	Aluminum siding
+29	Vinyl siding
+30	Concrete tile
+31	Clay tile
+32	Ceramic tile
+Interior wall (INT_WALL)​
+
+Source: INT_WALL lookup table.
+
+Code	Label
+1	Brick
+2	Concrete
+3	Gypsum Board/Drywall/Sheetrock/Wallboard
+4	Log
+5	Cement Board
+6	Plaster
+7	Stone
+8	Metal
+9	Unfinished
+10	Wood
+11	Block
+12	Glass
+13	Finished/Painted
+14	Decorative\Custom
+15	Masonry
+16	Composition
+17	Other
+18	Paneling
+19	Vinyl
+20	Plywood/Minimum
+Floor cover (FLOOR_COVER)​
+
+Source: FLOOR_COVER lookup table.
+
+Code	Label
+1	Brick
+2	Concrete
+3	Covered
+4	Floating Floor/laminate
+5	Granite
+6	Linoleum
+7	Marble
+8	Stone
+9	Carpet
+10	Parquet
+11	Ceramic
+12	Slate
+13	Tile
+14	Vinyl
+15	Wood
+16	Combination
+17	Terrazzo
+18	Asbestos
+19	Dirt/Earth/Soil
+20	Cork
+21	Plywood
+22	Faux Wood Tile
+23	Softwood
+24	Hardwood
+Garage (GARAGE)​
+
+Source: GARAGE lookup table.
+
+Code	Label
+1	Attached Garage
+2	Built-in
+3	Carport
+4	Detached Garage
+5	Pole
+6	Offsite
+7	Garage
+8	Unimproved
+9	Parking Lot
+10	Mixed
+11	None
+12	Open
+13	Paved/Surfaced
+14	Ramp
+15	Parking Structure
+16	Tuckunder
+17	Underground/Basement
+18	Covered
+19	Yes - Unspecified
+20	Heated
+21	Unfinished - Attached
+22	Unfinished - Detached
+23	Finished - Attached
+24	Finished - Detached
+25	Finished
+Patio (PATIO)​
+
+Source: PATIO lookup table.
+
+Code	Label
+14	Patio - Screened
+20	Patio
+Heat (HEAT)​
+
+Source: HEAT lookup table.
+
+Code	Label
+1	Baseboard
+2	Electric
+3	Central
+4	Forced air unit
+5	Oil
+6	Floor/Wall
+7	Gravity
+8	Heat Pump
+9	Geo-thermal
+10	Hot Water
+11	Gas
+12	Partial
+13	Radiant
+14	None
+15	Other
+16	Steam
+17	Coal
+18	Space/Suspended
+19	Convection
+20	Solar
+21	Vent
+22	Wood Burning
+23	Propane
+24	Yes
+25	Zone
+Heat fuel (HEAT_FUEL)​
+
+Source: HEAT_FUEL lookup table.
+
+Code	Label
+1	Coal
+2	Electric
+3	Gas
+4	Geo-Thermal
+5	None
+6	Oil
+7	Propane
+8	Solar
+9	Wood
+0	Butane
+Location influence (LOC_INFLNCE)​
+
+Source: LOC_INFLNCE lookup table.
+
+Code	Label
+A	Freeway proximity
+B	WATERFRONT-BEACH (Ocean, River or Lake)
+C	Contamination site
+D	Cul-de-sac
+E	CORNER
+F	NEGATIVE VIEW (POOR, BAD, ETC.)
+G	AVERAGE VIEW
+H	Historical
+I	SCHOOL PROXIMITY
+J	ADJACENT TO GOLF COURSE
+K	NO VIEW
+L	LAKE VIEW
+M	MOUNTAIN VIEW
+N	WATERFRONT - CANAL
+O	OCEAN VIEW
+P	Proximity to AIRPORT
+Q	GREEN BELT
+R	Proximity to RAILROAD
+S	Major street/thoroughfare
+T	High traffic area
+U	RIVER VIEW
+V	View not specified
+W	Waterfront-Not Specified
+Z	FLOOD PLAIN/FLOOD ZONE
+MultiCode	MultiCode field ex: DL = Cul-de-sac and Lake View
+Pool (POOL)​
+
+Source: POOL lookup table.
+
+Code	Label
+1	Above ground pool
+2	Pool & Spa (both)
+3	Community Pool or Spa
+4	Enclosed
+5	Heated Pool
+6	Indoor Swimming Pool
+7	Solar Heated
+8	Pool (yes)
+9	Spa or Hot Tub (only)
+10	Vinyl In-ground Pool
+11	Pool, historical value
+12	In-Ground Pool
+Porch (PORCH)​
+
+Source: PORCH lookup table.
+
+Code	Label
+4	Porch screened
+5	Portico (drive under)
+6	Porch covered
+7	Porch - Open
+8	Porch
+Quality (QUALITY)​
+
+Source: QUALITY lookup table.
+
+Code	Label
+1	A
+2	A-
+3	A+
+4	B
+5	B-
+6	B+
+7	C
+8	C-
+9	C+
+10	D
+11	D-
+12	D+
+13	E
+14	E-
+15	E+
+Roof cover (ROOF_COVER)​
+
+Source: ROOF_COVER lookup table.
+
+Code	Label
+1	Asbestos
+2	Built-up
+3	Composition Shingle
+4	Concrete
+5	Metal
+6	Slate
+7	Rock / Gravel
+8	Tar & Gravel
+9	Bermuda
+10	Masonite/ Cement Shake
+11	Fiberglass
+12	Aluminum
+13	Wood Shake/ Shingles
+14	Other
+15	Asphalt
+16	Roll Composition
+17	Steel
+18	Tile
+19	Urethane
+20	Shingle (Not Wood)
+21	Wood
+22	Gypsum
+23	Ceramic tile
+24	Clay tile
+25	Concrete tile
+26	Copper
+27	Tin
+28	Solar
+Roof type (ROOF_TYPE)​
+
+Source: ROOF_TYPE lookup table.
+
+Code	Label
+1	GABLE
+2	BOWSTRING TRUSS
+3	REINFORCED CONCRETE
+4	DOME
+5	STEEL FRM/TRUSS
+6	FLAT
+7	GABLE OR HIP
+8	HIP
+9	IRR/CATHEDRAL
+10	GAMBREL
+11	MANSARD
+12	PRESTRESS CONCRETE
+13	RIGID FRM BAR JT
+14	SHED
+15	SAWTOOTH
+16	WOOD TRUSS
+Sewer (SEWER)​
+
+Source: SEWER lookup table.
+
+Code	Label
+1	Municipal
+2	None
+3	Storm
+4	Septic
+5	Yes
+Style (STYLE)​
+
+Source: STYLE lookup table.
+
+Code	Label
+1	Traditional
+2	A-Frame
+3	Bungalow
+4	Cape Cod
+5	Colonial
+6	English
+7	French Provincial
+8	Georgian
+9	High-rise
+10	Modern
+11	Ranch\Rambler
+12	Spanish
+13	Tudor
+14	Mediterranean
+15	Conventional
+16	Other
+17	Prefab, Modular
+18	Mansion
+19	Raised Ranch
+20	Dome
+21	Contemporary
+22	Unfinished\Under Construction
+23	Victorian
+24	Cottage
+25	Custom
+26	Log Cabin/Rustic
+27	Historical
+28	unknown
+29	CONDO
+30	Cluster
+31	Duplex
+32	Quadplex
+33	Mobile Home
+34	MultiFamily
+35	TownHouse
+36	Triplex
+37	Patio Home
+38	Row Home
+39	Tri-Level
+40	Bi-Level
+41	Split Level
+42	Split Foyer
+43	Tiny House
+44	European
+45	Mobile/Manufactured
+Water (WATER)​
+
+Source: WATER lookup table.
+
+Code	Label
+1	Cistern
+2	Municipal
+3	None
+4	Spring
+5	Well
+6	Yes
+Lot code (LOT_CODE)​
+
+Source: LOT_CODE lookup table.
+
+Code	Label
+Code	Desc
+M	More than one lot
+MP	Multiple w/a portion of one or more lots
+P	Portion of a lot
+1-99	Single Lot number
+Vacant flag (VACANT)​
+
+Source: VACANT lookup table.
+
+Code	Label
+B	Bank Owned
+L	Listing Based
+M	Address Standardization Based
+V	ThirdParty-Vacancy
+W	ThirdParty-NoStat
+Owner-occupancy flag (OWNER_OCC)​
+
+Source: OWNER_OCC lookup table.
+
+Code	Label
+B	Probable owner-occupied property (Legacy Code)
+O	Owner-occupied property (Legacy Code)
+Y	Owner-occupied property
+Ownership rights (OWNER_VEST)​
+
+Source: OWNER_VEST lookup table.
+
+Code	Label
+99	Heirs
+AB	Alternate Beneficiary
+AC	Guardian/Custodian
+AD	Administrator
+AE	Assignee (Buyer/Borrower only)
+AF	Name derived from Affidavit
+AG	Agent or Guardian
+AK	Also known as (A/K/A)
+AL	All as/Undefined
+AO	Alter Ego
+AR	Assignor (Seller only)
+AS	Association
+BE	Beneficiary / Creditor - Doc Type BD, buyer ID identifies designated to acquire title upon death of Grantor.
+BS	Brother & Sister
+BU	Builder/Developer
+CE	Conservatee
+CF	Contract Purchasor
+CN	Corporation
+CO	Company or Corporation
+CP	Community Property (Marital Community)
+CR	Conservator
+CT	Corporate Trust
+DB	Doing business as (DBA)
+DC	Deceased
+DF	Defendant
+DP	Domestic Partner
+DR	Divorced not Remarried
+DS	Disabled
+DV	Divorced
+DW	Dower Clause
+EA	Et al (and others)
+ES	Estate
+EU	Et ux (and wife) - vendor data only
+EX	Executor / Administrator
+FK	Formerly known as (F/K/A)
+FL	Family Living Trust
+FM	Family Trust
+FR	Family Revocable Trust
+GD	Guardian
+GN	General Partnership
+GP	General Partner
+GV	Government
+HH	Her Husband
+HO	Homeowners Association
+HU	Husband and Husband
+HW	Husband and Wife
+IA	IRA (Individual Retirement Account)
+ID	Individual(s)
+IL	Irrevocable Living Trust
+IN	incompetent
+IR	Irrevocable Trust
+JS	Joint tenants with right of survivorship
+JT	Joint Tenants
+JV	Joint Venture
+L2	Seller is owner on current Assessment File
+LB	Life Benefit Estate
+LC	Limited Liability Company
+LE	Life Estate (phased out Spring, 2009, now Buyer/Borrow ID Code = "LT".)
+LF	Lease From
+LL	Limited Liability Partnership
+LP	Limited Partner
+LS	Limited Partnership
+LT	Life Tenant (holds a life estate interest only)
+LV	Living Trust
+LW	Last Will and Testament
+MA	Married
+MC	Married Couple
+ME	Member
+MI	Minor, Ward or Client (Represented by Trustee)
+MM	Married man as his sole and separate property
+MN	Managing Member
+MP	Married Person
+MW	Married women as her sole and separate property
+NK	Now Known as
+NM	Never Married Person
+NP	Not Provided (name blurred or missing from document)
+NT	Non Declared Trust
+NV	Non-Vested Spouse
+PA	Partnership
+PF	Plaintiff
+PR	Personal Representative (Attorney in Fact/Power of Attorney)
+PS	Partnership
+PT	Partner
+RC	Receiver
+RL	Revocable Living Trust
+RM	Remainderman
+RS	Right of Survivorship
+RT	Revocable Trust
+SE	surviving Tenant by the Entirety
+SG	Single
+SI	Successor in Interest
+SJ	Surviving Joint Tenant
+SL	Sole Proprietorship
+SM	Single man
+SO	Sole Member
+SP	Single Person or Individual
+SS	Surviving Spouse
+ST	Successor Trustee (LA County only)
+SU	Survivor
+SV	Tenants in Severalty
+SW	Single woman
+SX	Separated
+SY	Survivorship Martial Property -- This code will be used primarily in Wisconsin/Alaska who adopted a marital property system effective 01/01/1986.
+TC	Tenants in Common
+TD	Transfer of Death
+TE	Tenants by Entireties
+TN	Tenant
+TR	Trustee, or Conservator
+TS	Trustor/Debtor (Borrower in Default/Foreclosure on Trustee's Deed)
+TT	Trust
+TY	Tenants in Entirety
+UI	Unknown
+UM	Unmarried Man
+UN	Unmarried
+US	United States
+UW	Unmarried Woman
+WA	Who Acquired Title As
+WD	Widow or Widower
+WF	Wife
+WH	His Wife
+WR	Widower
+WW	Wife and Wife
+XX	Wholly Exempt
+Property class (PROP_CL_IND)​
+
+Source: PROP_CL_IND lookup table.
+
+Code	Label
+R	RESIDENTIAL
+C	COMMERCIAL
+O	OFFICE
+F	RECREATIONAL
+I	INDUSTRIAL
+T	TRANSPORTATION
+A	AGRICULTIRAL
+V	VACANT
+E	EXEMPT
+Geo status (GEO_STATUS)​
+
+Source: GEO_STATUS lookup table.
+
+Code	Label
+Code	Geo_Status Standard
+5	Record was coded to the 5-digit ZIP code centroid (U.S.) or the first 3-digit Postal Code Level (Canada)
+7	Record was coded to the ZIP + 2 centroid
+9	Record was coded to the ZIP + 4 centroid (U.S.) or the full 6-digit Postal Code Level (Canada)
+A	Record was coded to interpolated rooftop level
+B	Record was coded to the rooftop level
+X	Record was not coded
+Sale price code (SALE_PRICE)​
+
+Source: SALE_PRICE lookup table.
+
+Code	Label
+Code	Desc
+1	Qualifies as a comparable sale as defined by the county.
+2	Liens Exceed Value or Assumption of Loan exceed market value.
+3	Sales Price computed from the Transfer Tax, Transfer Tax not keyed.
+4	Sales Price amount or Transfer Tax unreadable.
+5	Unable to calculate Sales Price from given Transfer Tax.
+6	Non-arms length transaction.
+7	Sales Price or Transfer Tax rounded by county prior to computation.
+8	Sold for Taxes.
+9	Unable to calculate Sales Price from given Transfer Tax.
+10	Transfer Tax on document indicated as EXEMPT.
+11	Document states price as "0", "None", "No Consideration".
+12	Sales Price computed using current Excise Tax Rate based on city name (WA)
+13	Full amount computed from Transfer Tax or Excise Tax.
+14	Full amount stated on Document.
+15	Partial amount computed from Transfer Tax.
+16	Sales price from Transfer Tax.
+17	Comparable Market Value.
+18	Exchange (HI)
+19	Full amount from assessment file, when available.
+20	Document states that Price/Transfer Tax is not a matter of public record.
+21	From recorded Affidavit of Value or Verified.
+22	Full amount from assessment file, when available.
+23	Unable to compute
+24	Comparable Market Value.
+25	Full amount stated on Document.
+26	Exchange (HI)
+27	Full amount computed from Transfer Tax or Excise Tax.
+28	Amount of redemption. Only used for Redemption Deeds. (DocType = “RD”)
+29	Sales Price computed from transfer tax based on either full consideration or assessed value (NE and Kenosha WI only)
+30	Judgment Amount
+31	Liens Exceed Value or Assumption of Loan. Liens/Loans involved in the transaction exceed market value.
+32	Sales Price computed from Transfer Tax, Transfer Tax not keyed.
+33	Non-arms length transaction.
+34	Partial amount computed from Transfer Tax.
+35	Sales Price or Transfer Tax rounded by county prior to computation.
+36	Sold for Taxes.
+37	Transfer Tax on document indicated as EXEMPT.
+38	Sales price computed from Transfer Tax.
+39	From recorded Affidavit of Value or Verified.
+40	Sales Price from Excise Tax Rate (WA only )
+41	Price/Transfer Tax not public record.
+42	Document states price as "0", "None", "No Consideration".
+43	Estimated Sales Price
+44	Assessor Qualified Sale (Not used for comps)
+Finance type (FIN_TYPE)​
+
+Source: FIN_TYPE lookup table.
+
+Code	Label
+ADJ	Adjustable Rate
+FIX	Fixed Rate
+MUL	Multiple Loan Amounts
+OTH	Other
+STP	Step Interest Rate
+UNK	Unknown
+VAR	Variable
+AITD	All Inclusive DOT-Legacy
+Autocomplete result types​
+
+Returned in the type discriminator on each /autocomplete result.
+
+Type	Description
+address	Full address record.
+city	City suggestion.
+county	County suggestion.
+state	State suggestion.
+zip	ZIP code suggestion.
+parcel	Parcel identifier match.
+Autocomplete event types​
+
+Used in last_sale.event_type and history.data[].event_type.
+
+Value	Description
+mls_transaction	Transaction sourced from MLS data.
+mls_supplemented	Transaction sourced from MLS, supplemented from public records.
+deed_record	Transaction sourced from public deed records.
+Previous
+Property Object
+Next
+Errors
+Property Main Categories
+Property Types
+Residential subtypes
+Commercial subtypes
+Lead Types
+Lien Types
+Owner Types
+Sort Fields
+Sort Direction
+Mortgage Finance Type
+Loan Type
+Sale Type
+Simplified Attributes
+Listing Status
+Comp Sources
+Comp Days Lookback
+Geographic Anchors
+Property characteristic lookup codes
+AC (AC)
+Basement (BASEMNT)
+Building class (BLDG_CODE)
+Building area indicator (BLDG_SQFT_IND)
+Condition (CONDITION)
+Construction type (CONST_TYPE)
+Driveway (DRIVEWAY)
+Exterior wall (EXT_WALL)
+Interior wall (INT_WALL)
+Floor cover (FLOOR_COVER)
+Garage (GARAGE)
+Patio (PATIO)
+Heat (HEAT)
+Heat fuel (HEAT_FUEL)
+Location influence (LOC_INFLNCE)
+Pool (POOL)
+Porch (PORCH)
+Quality (QUALITY)
+Roof cover (ROOF_COVER)
+Roof type (ROOF_TYPE)
+Sewer (SEWER)
+Style (STYLE)
+Water (WATER)
+Lot code (LOT_CODE)
+Vacant flag (VACANT)
+Owner-occupancy flag (OWNER_OCC)
+Ownership rights (OWNER_VEST)
+Property class (PROP_CL_IND)
+Geo status (GEO_STATUS)
+Sale price code (SALE_PRICE)
+Finance type (FIN_TYPE)
+Autocomplete result types
+Autocomplete event types
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

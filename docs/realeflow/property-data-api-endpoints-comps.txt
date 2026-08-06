@@ -1,0 +1,196 @@
+URL: https://documentation.realeflow.com/property-data-api/endpoints/comps
+TITLE: Comps | Partner API
+
+Skip to main content
+Partner API
+Docs
+Status
+Welcome
+Getting Started
+Overview
+Authentication
+Quick Start
+Property Data API
+Overview
+Scope and Restrictions
+Endpoints
+Search
+Comps
+Details
+Autocomplete
+Reference
+Billing Webhooks
+Overview
+Stripe
+Changelog
+Property Data APIEndpointsComps
+Comps
+
+Two ways to request comps:
+
+POST /api/2.0/leadpipes/comps — subject described in the request body (typically by address).
+POST /api/2.0/leadpipes/comps/{identifier} — subject identified by address hash in the path.
+
+Both endpoints return the same response shape. They differ only in how the subject is supplied.
+
+Comps logic uses retry-with-relaxed-filters: if the initial set of comps is below threshold, the radius and characteristic ranges are progressively widened (up to four attempts) until enough comps are found.
+
+Authentication​
+
+Standard partner auth headers. See Authentication.
+
+Path parameter (identifier form)​
+Parameter	Format	Description
+identifier	HA[0-9]+\-\w+	Property address hash.
+
+If the path does not match the expected format, the route returns 404 before the body is parsed.
+
+Request body​
+Subject (body form only)​
+
+When using POST /api/2.0/leadpipes/comps, supply the subject in the body. When using the identifier form, these fields are ignored — the subject is resolved from the path.
+
+Field	Type	Description
+address	string	Street address (number + street).
+city	string	City name.
+state	string	Two-letter US state code.
+zip	string	ZIP code.
+location	object	Optional geocode override. { lat, lng }. Used when the address cannot be resolved or to override automatic geocoding.
+Filter overrides​
+
+These fields apply to both forms. They override the auto-derived filter window the comps service builds from the subject. Each range filter is { min, max } with both bounds individually optional.
+
+Field	Type	Default behavior	Description
+limit	integer	20	Maximum comparable properties to return. Internally floored at the comps service's minimum (currently 20).
+source	array of strings	single-source default	Comp data sources to include. Triggers multi-source mode when 2+ sources are supplied. See Enums → Comp sources.
+sameZip	boolean	false	Require comps to be in the same ZIP code as the subject.
+status	array of strings	["A", "P", "S"]	Listing status filter. See Enums → Listing status.
+days	integer	180 (365 for some white-label flavors)	Lookback window for sold comps in days. 0 means no time restriction.
+distance	number	derived from subject lot size (1–3 mi)	Search radius in miles.
+bedrooms	range	derived from subject	Override bedroom range.
+bathrooms	range	derived from subject	Override bathroom range.
+livingArea	range	derived from subject (0.80–1.60×)	Override living-area range.
+lotArea	range	derived from subject (0.35–3.7×)	Override lot-area range.
+yearBuilt	range	derived from subject	Override year-built range. Max is clamped to the current year.
+propertyTypes	object	derived from subject's property type	Override property type filter. Object form: { "<MainCategory>": ["<Subtype>", ...] }. See Enums → Property Types and the example below.
+polygons	array	–	Restrict comps to a polygon. First entry's coordinates array is used.
+include	array of { id }	–	Always include these property IDs in the comp set.
+exclude	array of { id }	–	Never include these property IDs.
+ownerOccupied	boolean	–	Owner-occupied filter.
+absenteeOwnerInState	boolean	–	In-state absentee filter.
+absenteeOwnerOutOfState	boolean	–	Out-of-state absentee filter.
+ownerTypes	array of strings	–	Owner entity-type filter.
+leadTypes	array of strings	–	Restrict to comps matching these lead types.
+simplifiedAttributes	array of strings	–	Restrict to comps with these features.
+index90d	range	–	AI Retail Score range filter.
+indexWls	range	–	AI Wholesale Score range filter.
+indexInv	range	–	AI Rental Score range filter.
+sort	string	distance	Sort field.
+order	string	asc	Sort order — asc or desc.
+
+propertyTypes shape. propertyTypes must be supplied as an object keyed by main category. A flat array of subtype strings is rejected by the upstream service.
+
+"propertyTypes": {
+  "SINGLE_FAMILY_RESIDENTIAL": ["GENERAL"]
+}
+
+
+An empty subtype array matches all subtypes of that main category:
+
+"propertyTypes": {
+  "SINGLE_FAMILY_RESIDENTIAL": []
+}
+
+Server-managed​
+Field	Description
+territories	{ fips: [...], zip: [...], state: [...] }. Replaced by the account's territories when applicable. The path-with-{identifier} form additionally requires that territories, when supplied directly, has at least one of zip or fips populated.
+regionsRestriction	{ state: [...] }. Commercial-content state restriction. Defaults to unrestricted ({ state: ["*"] }) when omitted.
+Response​
+{
+  "subject": { "data": { /* property object */ } },
+  "comps": [
+    {
+      "distance": 0.25,
+      "record_type": "ASSESSOR",
+      "property": { /* property object — assessor shape */ }
+    },
+    {
+      "distance": 0.45,
+      "record_type": "MLS_LISTING",
+      "property": { /* property object — listing shape */ }
+    }
+  ],
+  "count_comps": 2,
+  "comp_sources": ["PUBLIC_RECORD", "MLS_LISTING"],
+  "filters": { "bedrooms": { "min": 3, "max": 5 } },
+  "histograms": { "bedrooms": [{ "key": 4, "count": 12 }] },
+  "retries": 0
+}
+
+Field	Type	Description
+subject.data	property object	The subject property. Same shape as in /details. See Property Object.
+comps	array of comp envelopes	The comparable properties.
+comps[].distance	decimal	Distance in miles from the subject.
+comps[].record_type	string	Source classification: ASSESSOR, MLS_LISTING, LISTING_ALT, or RENTAL_ALT.
+comps[].property	object	The property object. The exact field set depends on record_type — see Property Object → Comp record-type variations.
+count_comps	integer	Number of comps in comps[].
+comp_sources	array of strings	Sources represented in comps[].
+filters	object	The final filter window applied (after retry-relaxation).
+histograms	object	Aggregations across the comp set.
+retries	integer	Number of retry attempts performed to reach the minimum comp threshold. 0 means the first attempt succeeded.
+Examples​
+Comps by address​
+curl -X POST 'https://api.your-white-label.com/api/2.0/leadpipes/comps' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "address": "456 Oak Avenue",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78701",
+    "limit": 25,
+    "source": ["PUBLIC_RECORD", "MLS_LISTINGS"]
+  }'
+
+Comps by hash​
+curl -X POST 'https://api.your-white-label.com/api/2.0/leadpipes/comps/HA7-abc123def456' \
+  -H 'X-RF-Partner-Api-Key: 00000000-0000-0000-0000-000000000000' \
+  -H 'X-RF-Partner-Account-Id: 12345' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "limit": 30,
+    "source": ["PUBLIC_RECORD", "MLS_LISTINGS"],
+    "distance": 2.0
+  }'
+
+Errors​
+Status	When
+400	Body is missing or not valid JSON; subject cannot be resolved; an invalid source value was supplied.
+403 | 404	Auth failure or subject not found.
+422	Upstream validation failure.
+500	Unexpected error.
+
+See Errors.
+
+Previous
+Search
+Next
+Details
+Authentication
+Path parameter (identifier form)
+Request body
+Subject (body form only)
+Filter overrides
+Server-managed
+Response
+Examples
+Comps by address
+Comps by hash
+Errors
+Docs
+Getting Started
+Property Data API
+Support
+Contact
+Copyright © 2026 REI Network. Built with Docusaurus.

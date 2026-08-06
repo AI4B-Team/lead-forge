@@ -1,0 +1,82 @@
+[
+  {
+    "url": "https://documentation.realeflow.com",
+    "title": "Welcome | Partner API",
+    "chars": 1688
+  },
+  {
+    "url": "https://documentation.realeflow.com/getting-started/overview",
+    "title": "Overview | Partner API",
+    "chars": 2974
+  },
+  {
+    "url": "https://documentation.realeflow.com/getting-started/authentication",
+    "title": "Authentication | Partner API",
+    "chars": 3833
+  },
+  {
+    "url": "https://documentation.realeflow.com/getting-started/quickstart",
+    "title": "Quick Start | Partner API",
+    "chars": 2614
+  },
+  {
+    "url": "https://documentation.realeflow.com/property-data-api/overview",
+    "title": "Overview | Partner API",
+    "chars": 2127
+  },
+  {
+    "url": "https://documentation.realeflow.com/property-data-api/scope-and-restrictions",
+    "title": "Scope and Restrictions | Partner API",
+    "chars": 6042
+  },
+  {
+    "url": "https://documentation.realeflow.com/property-data-api/endpoints/search",
+    "title": "Search | Partner API",
+    "chars": 12058
+  },
+  {
+    "url": "https://documentation.realeflow.com/property-data-api/endpoints/comps",
+    "title": "Comps | Partner API",
+    "chars": 7375
+  },
+  {
+    "url": "https://documentation.realeflow.com/property-data-api/endpoints/details",
+    "title": "Details | Partner API",
+    "chars": 5360
+  },
+  {
+    "url": "https://documentation.realeflow.com/property-data-api/endpoints/autocomplete",
+    "title": "Autocomplete | Partner API",
+    "chars": 8085
+  },
+  {
+    "url": "https://documentation.realeflow.com/property-data-api/reference/property-object",
+    "title": "Property Object | Partner API",
+    "chars": 37807
+  },
+  {
+    "url": "https://documentation.realeflow.com/billing-webhooks",
+    "title": "Overview | Partner API",
+    "chars": 2908
+  },
+  {
+    "url": "https://documentation.realeflow.com/billing-webhooks/stripe",
+    "title": "Stripe | Partner API",
+    "chars": 6999
+  },
+  {
+    "url": "https://documentation.realeflow.com/changelog",
+    "title": "Changelog | Partner API",
+    "chars": 1200
+  },
+  {
+    "url": "https://documentation.realeflow.com/property-data-api/reference/errors",
+    "title": "Errors | Partner API",
+    "chars": 4809
+  },
+  {
+    "url": "https://documentation.realeflow.com/property-data-api/reference/enums",
+    "title": "Enums | Partner API",
+    "chars": 22337
+  }
+]
