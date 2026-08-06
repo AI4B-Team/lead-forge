@@ -15,7 +15,7 @@ import { getVerifiedCoverage, requestCountyCoverage } from "@/lib/coverage.funct
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { isCovered, recordTypeCovered, splitCountyLabel } from "@/lib/coverage.shared";
 import { toast } from "sonner";
-import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE, templateForRecordType } from "@/lib/record-types";
+import { canonicalRecordType, RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE, templateForRecordType } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
 import { StateMultiSelect } from "@/components/app/state-multi-select";
@@ -478,7 +478,10 @@ export function JobSpecCard({
             </FieldLabel>
             <Popover open={requestOpen} onOpenChange={setRequestOpen}>
               <Select
-                value={spec.recordType ?? ""}
+                // Render from the SAME spec value the List Assembled card reads,
+                // canonicalised so an id-shaped value ("code_violation") still
+                // selects its option instead of leaving the control blank.
+                value={canonicalRecordType(spec.recordType) ?? ""}
                 onValueChange={(v) => {
                   // The last item is an affordance, not a fulfillable record type.
                   if (v === REQUEST_RECORD_TYPE) {

@@ -40,7 +40,51 @@ const TEMPLATE_BY_RECORD_TYPE: Record<string, string> = {
 };
 
 export function templateForRecordType(label: string | null | undefined): string | null {
-  return (label && TEMPLATE_BY_RECORD_TYPE[label]) || null;
+  const canonical = canonicalRecordType(label);
+  return (canonical && TEMPLATE_BY_RECORD_TYPE[canonical]) || null;
+}
+
+/**
+ * One canonical spelling for a record type: the option LABEL.
+ *
+ * The model, the seed data and older specs all write this field differently
+ * ("code_violation", "Code Violations", "lis pendens"). The panel's dropdown
+ * keys off the label, so an id-shaped value rendered as an EMPTY select while
+ * the List Assembled card happily displayed it — two controls reading the same
+ * spec and disagreeing. Canonicalising at the spec boundary removes the class
+ * of bug rather than patching one control.
+ */
+function key(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+const RECORD_TYPE_ALIASES: Record<string, string> = {
+  probates: "Probate",
+  probatelead: "Probate",
+  codeviolations: "Code Violation",
+  codeenforcement: "Code Violation",
+  codecase: "Code Violation",
+  preforeclosure: "Pre-Foreclosure / Lis Pendens",
+  preforeclosures: "Pre-Foreclosure / Lis Pendens",
+  lispendens: "Pre-Foreclosure / Lis Pendens",
+  foreclosure: "Pre-Foreclosure / Lis Pendens",
+  taxdelinquent: "Tax Default / Delinquency",
+  taxdelinquency: "Tax Default / Delinquency",
+  taxdefault: "Tax Default / Delinquency",
+  taxdeed: "Tax Default / Delinquency",
+  vacancy: "Vacancy / Demolition Notice",
+  vacant: "Vacancy / Demolition Notice",
+  demolition: "Vacancy / Demolition Notice",
+  evictions: "Eviction",
+};
+
+export function canonicalRecordType(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const k = key(raw);
+  if (!k) return null;
+  const hit = RECORD_TYPE_OPTIONS.find((r) => key(r.id) === k || key(r.label) === k);
+  if (hit) return hit.label;
+  return RECORD_TYPE_ALIASES[k] ?? null;
 }
 /**
  * The record type a public-records template pulls. Template cards are gated on

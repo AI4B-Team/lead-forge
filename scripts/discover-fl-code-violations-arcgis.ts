@@ -104,6 +104,10 @@ type Probe = {
   usableRows: number;
   status: "verified" | "unverified";
   reason: string | null;
+  /** Set only by a manual attribution override; scopes the pull to this county. */
+  attributionWhere?: string;
+  /** Layer this county was stripped of by a manual attribution override. */
+  rejectedLayerUrl?: string;
   sample: Array<{ address: string; city: string | null; case_id: string | null; violation: string | null }>;
 };
 
@@ -226,6 +230,30 @@ async function sb(path: string, init: RequestInit) {
 async function persist(probes: Probe[]) {
   if (!SUPABASE_URL || !SERVICE_KEY) throw new Error("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY required for --write");
   for (const p of probes) {
+    // A county stripped by an attribution override may still carry a coverage
+    // row from an earlier run. Retract it, or the app keeps claiming coverage
+    // it does not have.
+    if (p.rejectedLayerUrl) {
+      const owners = (await sb(
+        `data_sources?select=id&resource_url=eq.${encodeURIComponent(p.rejectedLayerUrl)}`,
+        { method: "GET" },
+      )) as Array<{ id: string }>;
+      for (const owner of owners ?? []) {
+        await sb(
+          `source_coverage?fips=eq.${p.fips}&record_type=eq.${RECORD_TYPE}&source_id=eq.${owner.id}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({
+              status: "unverified",
+              sample_row_count: 0,
+              verified_at: null,
+              last_success_at: null,
+            }),
+          },
+        );
+      }
+      continue;
+    }
     if (!p.layerUrl) continue;
     const domain = new URL(p.layerUrl).host;
     const sourceRows = (await sb(`data_sources?on_conflict=platform,domain,dataset_id,record_type`, {
@@ -244,7 +272,9 @@ async function persist(probes: Probe[]) {
           county_name: p.county,
           state: "FL",
           fips: p.fips,
-          field_map: p.fieldMap,
+          field_map: p.attributionWhere
+            ? { ...p.fieldMap, _where: p.attributionWhere }
+            : p.fieldMap,
           precedence: 20, // Socrata wins when both exist (see PLATFORM_ORDER)
           crawl_interval_minutes: 1440,
           status: p.status === "verified" ? "verified" : "discovered",
@@ -303,11 +333,26 @@ async function main() {
     );
   }
 
+  // Manual county attribution. A shared regional layer legitimately belongs to
+  // ONE jurisdiction; the ambiguity is in the catalog search, not the data.
+  // Each entry is a human decision recorded in code: the owning county, plus
+  // the WHERE clause that keeps the pull inside that county's rows.
+  const ATTRIBUTION_OVERRIDES: Array<{ layerMatch: RegExp; county: string; where: string; note: string }> = [
+    {
+      layerMatch: /MunicipalCodeAppPts/i,
+      county: "Broward",
+      // Broward County GIS publishes this layer; Palm Beach only matched it
+      // because the catalog search hits the description text.
+      where: "1=1",
+      note: "Broward County GIS publishes MunicipalCodeAppPts; attributed manually",
+    },
+  ];
+
   // Integrity guard: a shared regional layer can match several county
   // searches (Broward's "MunicipalCodeAppPts" also comes back for Palm
-  // Beach). Ingesting it under both counties would mislabel every row, so
-  // when one layer verifies for multiple counties we demote ALL of them to
-  // needs_review — a human assigns the true jurisdiction from the report.
+  // Beach). Ingesting it under both counties would mislabel every row. With an
+  // attribution override we keep the owning county verified and drop the
+  // others; without one, ALL of them are demoted for a human to assign.
   const byLayer = new Map<string, Probe[]>();
   for (const p of probes) {
     if (p.status === "verified" && p.layerUrl) {
@@ -315,11 +360,26 @@ async function main() {
     }
   }
   for (const [url, group] of byLayer) {
-    if (group.length > 1) {
+    if (group.length <= 1) continue;
+    const override = ATTRIBUTION_OVERRIDES.find((o) => o.layerMatch.test(url));
+    if (override && group.some((p) => p.county === override.county)) {
       for (const p of group) {
+        if (p.county === override.county) {
+          p.attributionWhere = override.where;
+          p.reason = `shared regional layer attributed to ${override.county} — ${override.note}`;
+          continue;
+        }
+        // Not this county's data: drop the layer so nothing is persisted under it.
         p.status = "unverified";
-        p.reason = `layer matched ${group.length} counties (${group.map((g) => g.county).join(", ")}) — shared regional dataset, needs manual county attribution: ${url}`;
+        p.layerUrl = null;
+        p.rejectedLayerUrl = url;
+        p.reason = `layer belongs to ${override.county} County (manual attribution) — not ${p.county}: ${url}`;
       }
+      continue;
+    }
+    for (const p of group) {
+      p.status = "unverified";
+      p.reason = `layer matched ${group.length} counties (${group.map((g) => g.county).join(", ")}) — shared regional dataset, needs manual county attribution: ${url}`;
     }
   }
 

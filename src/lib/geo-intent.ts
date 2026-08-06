@@ -20,6 +20,11 @@ export type GeoIntent = {
   namedCounty: boolean;
   /** True when only a state appeared: ask which counties, never assume all. */
   stateOnly: boolean;
+  /**
+   * Names that genuinely match more than one county inside the allowed scope.
+   * These are NEVER auto-selected — the caller must ask which one.
+   */
+  ambiguous: Array<{ name: string; options: string[] }>;
 };
 
 function normalize(text: string): string {
@@ -58,9 +63,19 @@ export function parseGeoIntent(
   const namedStates = statesIn(text, message);
   const hint = opts.stateHint?.toUpperCase() ?? null;
 
-  // Candidate (county, state) pairs whose county name appears in the text.
-  const hits: Array<{ county: string; state: string }> = [];
-  for (const [state, counties] of Object.entries(COUNTIES_BY_STATE)) {
+  // Scope FIRST. A state already in the spec (or named in this message) is a
+  // hard boundary: "Miami-Dade" with state=FL may never also produce Dade
+  // County GA and Miami County IN. Crossing a state the operator never named
+  // tripled a 500-lead run into 1,500 and blocked it on credits.
+  const scope =
+    namedStates.length > 0 ? namedStates : hint ? [hint] : Object.keys(COUNTIES_BY_STATE);
+
+  // Candidate (county, state) pairs whose county name appears in the text,
+  // with the span of text they matched so a shorter name swallowed by a longer
+  // one ("Dade" inside "Miami-Dade") can be discarded.
+  const hits: Array<{ county: string; state: string; start: number; end: number }> = [];
+  for (const state of scope) {
+    const counties = COUNTIES_BY_STATE[state] ?? [];
     for (const county of counties) {
       const bare = county.toLowerCase();
       if (bare.length < 4) continue;
@@ -71,22 +86,50 @@ export function parseGeoIntent(
       const re = STATE_NAMES.has(bare)
         ? new RegExp(`\\b${escaped}\\s+(county|parish|borough|municipio)\\b`)
         : new RegExp(`\\b${escaped}\\b`);
-      if (re.test(text)) hits.push({ county, state });
+      const m = re.exec(text);
+      if (m) hits.push({ county, state, start: m.index, end: m.index + bare.length });
     }
   }
 
+  // An exact/longer name wins outright: never keep a fuzzy fragment alongside
+  // the fuller name it sits inside.
+  const kept = hits.filter(
+    (h) => !hits.some((o) => o !== h && o.start <= h.start && o.end >= h.end && o.county.length > h.county.length),
+  );
+
   const byCounty = new Map<string, Array<{ county: string; state: string }>>();
-  for (const h of hits) {
+  for (const h of kept) {
     const key = h.county.toLowerCase();
     byCounty.set(key, [...(byCounty.get(key) ?? []), h]);
   }
 
   const counties: string[] = [];
+  const ambiguous: Array<{ name: string; options: string[] }> = [];
   for (const options of byCounty.values()) {
-    const pick =
-      options.find((o) => namedStates.includes(o.state)) ??
-      options.find((o) => o.state === hint) ??
-      [...options].sort((a, b) => a.state.localeCompare(b.state))[0]!;
+    const inScope = options.filter((o) => scope.includes(o.state));
+    const narrowed =
+      inScope.filter((o) => namedStates.includes(o.state)).length > 0
+        ? inScope.filter((o) => namedStates.includes(o.state))
+        : inScope.filter((o) => o.state === hint).length > 0
+          ? inScope.filter((o) => o.state === hint)
+          : inScope;
+    if (!narrowed.length) continue;
+    // More than one candidate: never select several.
+    if (narrowed.length > 1) {
+      ambiguous.push({
+        name: narrowed[0]!.county,
+        options: narrowed.map((o) => formatCounty(o.county, o.state)),
+      });
+      // Inside a state the operator named, the only safe move is to ask.
+      if (namedStates.length || hint) continue;
+      // With no state context at all, stay deterministic and narrow: one
+      // county, alphabetically first, and the caller still asks to confirm.
+      const guess = [...narrowed].sort((a, b) => a.state.localeCompare(b.state))[0]!;
+      const guessLabel = formatCounty(guess.county, guess.state);
+      if (!counties.some((c) => c.toLowerCase() === guessLabel.toLowerCase())) counties.push(guessLabel);
+      continue;
+    }
+    const pick = narrowed[0]!;
     const label = formatCounty(pick.county, pick.state);
     if (!counties.some((c) => c.toLowerCase() === label.toLowerCase())) counties.push(label);
   }
@@ -99,5 +142,6 @@ export function parseGeoIntent(
     states,
     namedCounty: counties.length > 0,
     stateOnly: counties.length === 0 && namedStates.length > 0,
+    ambiguous,
   };
 }
