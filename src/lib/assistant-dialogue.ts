@@ -30,13 +30,22 @@ export function wantsWholeState(text: string): boolean {
 export function stickyCounties(
   userTexts: string[],
   opts: { stateHint?: string | null; existing?: string[] } = {},
-): { counties: string[]; namedCounty: boolean; states: string[] } {
+): {
+  counties: string[];
+  namedCounty: boolean;
+  states: string[];
+  ambiguous: Array<{ name: string; options: string[] }>;
+} {
   const out: string[] = [...(opts.existing ?? [])];
   const states: string[] = [];
+  const ambiguous: Array<{ name: string; options: string[] }> = [];
   let named = false;
   for (const text of userTexts) {
     const intent = parseGeoIntent(text, { stateHint: opts.stateHint ?? null });
     for (const s of intent.states) if (!states.includes(s)) states.push(s);
+    for (const a of intent.ambiguous) {
+      if (!ambiguous.some((v) => v.name.toLowerCase() === a.name.toLowerCase())) ambiguous.push(a);
+    }
     if (!intent.counties.length) continue;
     named = true;
     // An explicit "all of Florida" replaces the narrow pick instead of adding.
@@ -45,7 +54,11 @@ export function stickyCounties(
       if (!out.some((v) => v.toLowerCase() === c.toLowerCase())) out.push(c);
     }
   }
-  return { counties: out, namedCounty: named, states };
+  // A name we already resolved is no longer ambiguous.
+  const unresolved = ambiguous.filter(
+    (a) => !out.some((c) => c.toLowerCase().startsWith(`${a.name.toLowerCase()},`)),
+  );
+  return { counties: out, namedCounty: named, states, ambiguous: unresolved };
 }
 
 const STATE_BY_CODE = new Map(US_STATES.map((s) => [s.code, s.name]));
@@ -225,6 +238,8 @@ export function speakTurn(opts: {
   panelEdits?: string[];
   /** "County, ST — Record Type" rows from source_coverage where verified. */
   coveredLabels?: string[];
+  /** County names that matched several counties — must be asked, not guessed. */
+  ambiguousCounties?: Array<{ name: string; options: string[] }>;
 }): { reply: string; complete: boolean; question: string | null } {
   const { captured, inferred, question } = turnFields({
     spec: opts.spec,
@@ -232,6 +247,11 @@ export function speakTurn(opts: {
     userTexts: opts.userTexts,
   });
   const lines: string[] = [];
+  // If we can NAME the mismatch we must stop and ask — never proceed with
+  // several counties across states the operator never mentioned.
+  const ambiguity = opts.ambiguousCounties?.length
+    ? `"${opts.ambiguousCounties[0]!.name}" matches ${opts.ambiguousCounties[0]!.options.join(" or ")}. Which one do you mean? I won't run both.`
+    : null;
 
   if (opts.panelEdits?.length) {
     lines.push(`I see you changed ${opts.panelEdits.join(", ")} in the List Builder — I'm working from that.`);
@@ -257,11 +277,16 @@ export function speakTurn(opts: {
       `You didn't specify ${inferred.join("; ")}, so that's my assumption — change it on the right if you want something different.`,
     );
   }
-  if (question) lines.push(question);
+  if (ambiguity) lines.push(ambiguity);
+  else if (question) lines.push(question);
   else if (captured.length) {
     lines.push("That's the full spec. Read it back on the right, correct anything, then Looks Good when it matches.");
   }
   if (!lines.length) lines.push("Say a little more about the leads you want.");
 
-  return { reply: lines.join("\n\n"), complete: !question && captured.length > 0, question };
+  return {
+    reply: lines.join("\n\n"),
+    complete: !question && !ambiguity && captured.length > 0,
+    question: ambiguity ?? question,
+  };
 }
