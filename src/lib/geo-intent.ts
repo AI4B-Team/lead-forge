@@ -114,12 +114,19 @@ export function parseGeoIntent(
           ? inScope.filter((o) => o.state === hint)
           : inScope;
     if (!narrowed.length) continue;
-    // More than one real candidate: ask, never pick several and never guess.
+    // More than one candidate: never select several.
     if (narrowed.length > 1) {
       ambiguous.push({
         name: narrowed[0]!.county,
         options: narrowed.map((o) => formatCounty(o.county, o.state)),
       });
+      // Inside a state the operator named, the only safe move is to ask.
+      if (namedStates.length || hint) continue;
+      // With no state context at all, stay deterministic and narrow: one
+      // county, alphabetically first, and the caller still asks to confirm.
+      const guess = [...narrowed].sort((a, b) => a.state.localeCompare(b.state))[0]!;
+      const guessLabel = formatCounty(guess.county, guess.state);
+      if (!counties.some((c) => c.toLowerCase() === guessLabel.toLowerCase())) counties.push(guessLabel);
       continue;
     }
     const pick = narrowed[0]!;
