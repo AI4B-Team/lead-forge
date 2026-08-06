@@ -67,8 +67,9 @@ export function parseGeoIntent(
   // hard boundary: "Miami-Dade" with state=FL may never also produce Dade
   // County GA and Miami County IN. Crossing a state the operator never named
   // tripled a 500-lead run into 1,500 and blocked it on credits.
-  const scope =
-    namedStates.length > 0 ? namedStates : hint ? [hint] : Object.keys(COUNTIES_BY_STATE);
+  // An existing spec state is the hard boundary. It is applied before county
+  // matching, so fragments cannot discover names in any other state.
+  const scope = hint ? [hint] : namedStates.length > 0 ? namedStates : Object.keys(COUNTIES_BY_STATE);
 
   // Candidate (county, state) pairs whose county name appears in the text,
   // with the span of text they matched so a shorter name swallowed by a longer
@@ -135,7 +136,7 @@ export function parseGeoIntent(
   }
 
   const countyStates = [...new Set(counties.map((c) => c.split(",")[1]!.trim().toUpperCase()))];
-  const states = [...new Set([...countyStates, ...namedStates])];
+  const states = hint ? [hint] : [...new Set([...countyStates, ...namedStates])];
 
   return {
     counties,

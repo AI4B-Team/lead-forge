@@ -86,6 +86,12 @@ export function canonicalRecordType(raw: string | null | undefined): string | nu
   if (hit) return hit.label;
   return RECORD_TYPE_ALIASES[k] ?? null;
 }
+
+/** Database/source_coverage key for any accepted record-type spelling. */
+export function recordTypeId(raw: string | null | undefined): string | null {
+  const canonical = canonicalRecordType(raw);
+  return canonical ? RECORD_TYPE_OPTIONS.find((r) => r.label === canonical)?.id ?? null : null;
+}
 /**
  * The record type a public-records template pulls. Template cards are gated on
  * verified coverage for this label, so a filing with no verified county
