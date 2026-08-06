@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-06T02:02:41.757Z",
+  "generatedAt": "2026-08-06T02:06:12.740Z",
   "recordType": "code_violation",
   "platform": "arcgis",
   "totals": {
@@ -833,7 +833,8 @@
         }
       ],
       "status": "unverified",
-      "reason": "layer belongs to Broward County (manual attribution) — not Palm Beach: https://services.arcgis.com/JMAJrTsHNLrSsWf5/arcgis/rest/services/MunicipalCodeAppPts/FeatureServer/0"
+      "reason": "layer belongs to Broward County (manual attribution) — not Palm Beach: https://services.arcgis.com/JMAJrTsHNLrSsWf5/arcgis/rest/services/MunicipalCodeAppPts/FeatureServer/0",
+      "rejectedLayerUrl": "https://services.arcgis.com/JMAJrTsHNLrSsWf5/arcgis/rest/services/MunicipalCodeAppPts/FeatureServer/0"
     },
     {
       "county": "Pasco",
