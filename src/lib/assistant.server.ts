@@ -180,6 +180,9 @@ export async function askAssistant(opts: {
   }
 
   const merged = jobSpecSchema.safeParse({ ...opts.spec, ...(out.specPatch ?? {}) });
+  // Named-but-unresolved counties. Declared here because the spec sync below
+  // is where scope is decided, and the spoken turn must be able to ask.
+  let ambiguousCounties: Array<{ name: string; options: string[] }> = [];
   // Scope is decided in code, never by the model. If the operator named a
   // county, that county is the run — the assistant may not quietly promote
   // "Hillsborough County" to all 67 counties in Florida.
