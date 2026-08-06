@@ -104,6 +104,8 @@ type Probe = {
   usableRows: number;
   status: "verified" | "unverified";
   reason: string | null;
+  /** Set only by a manual attribution override; scopes the pull to this county. */
+  attributionWhere?: string;
   sample: Array<{ address: string; city: string | null; case_id: string | null; violation: string | null }>;
 };
 
