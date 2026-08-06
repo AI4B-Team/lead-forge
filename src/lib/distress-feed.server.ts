@@ -178,6 +178,8 @@ export type PullTarget = {
    * records-request parser instead of being fetched here. */
   path: "portal" | "open_data" | "records_request";
   portalUrl?: string;
+  /** Minimum minutes between pulls for this source (data_sources.crawl_interval_minutes). */
+  intervalMinutes?: number;
   pull?: () => Promise<RawFiling[]>;
 };
 
@@ -323,7 +325,7 @@ async function dynamicRealtaxdeedTargets(): Promise<PullTarget[]> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
     .from("data_sources")
-    .select("domain, county_name, state")
+    .select("domain, county_name, state, crawl_interval_minutes")
     .eq("dataset_id", "realtaxdeed_auction_calendar")
     .eq("status", "verified");
   return (data ?? [])
@@ -337,9 +339,106 @@ async function dynamicRealtaxdeedTargets(): Promise<PullTarget[]> {
         recordType: "tax_deed" as DistressRecordType,
         path: "portal" as const,
         portalUrl: `https://${r.domain}`,
+        intervalMinutes: Number(r.crawl_interval_minutes ?? 1440),
         pull: () => pullRealtaxdeedCounty(sub, county),
       };
     });
+}
+
+/**
+ * Catalogued open-data sources (Socrata / ArcGIS) the discovery scripts
+ * verified. The stored field_map is what runs, and each row's own
+ * crawl_interval_minutes decides whether it is due tonight. Nothing that is
+ * not `verified` is ever fetched.
+ */
+async function dynamicCatalogTargets(): Promise<PullTarget[]> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("data_sources")
+    .select(
+      "id, platform, domain, dataset_id, resource_url, county_name, state, record_type, field_map, crawl_interval_minutes",
+    )
+    .eq("status", "verified")
+    .in("platform", ["socrata", "arcgis"]);
+
+  const targets: PullTarget[] = [];
+  for (const row of data ?? []) {
+    const county = String(row.county_name ?? "");
+    const state = String(row.state ?? "");
+    const recordType = String(row.record_type ?? "") as DistressRecordType;
+    if (!county || !state || !recordType) continue;
+    targets.push({
+      state,
+      county,
+      recordType,
+      path: "open_data",
+      portalUrl: row.resource_url ?? `https://${row.domain}`,
+      intervalMinutes: Number(row.crawl_interval_minutes ?? 1440),
+      pull: async () => {
+        const fieldMap = (row.field_map ?? {}) as import("./data-providers/source-mapping").FieldMap;
+        let rows: import("./data-providers").RawLead[] = [];
+        if (row.platform === "socrata" && row.dataset_id) {
+          const { fetchSocrataRows } = await import("./data-providers/socrata");
+          rows = await fetchSocrataRows({
+            domain: String(row.domain),
+            datasetId: String(row.dataset_id),
+            fieldMap,
+            recordType,
+            county,
+            state,
+            dateFrom: null,
+            dateTo: null,
+            limit: 200,
+            offset: 0,
+          });
+        } else if (row.platform === "arcgis") {
+          const layerUrl =
+            row.resource_url ?? `https://${row.domain}/arcgis/rest/services/${row.dataset_id}`;
+          const { fetchArcgisRows } = await import("./data-providers/arcgis");
+          rows = await fetchArcgisRows({
+            layerUrl: String(layerUrl),
+            fieldMap,
+            recordType,
+            county,
+            state,
+            dateFrom: null,
+            dateTo: null,
+            limit: 200,
+            offset: 0,
+          });
+        }
+        return rows.map(catalogRowToFiling(state, county));
+      },
+    });
+  }
+  return targets;
+}
+
+/** Map a normalized open-data row onto the feed's filing shape. */
+function catalogRowToFiling(state: string, county: string) {
+  return (lead: import("./data-providers").RawLead): RawFiling => {
+    const meta = (lead.source_meta ?? {}) as Record<string, unknown>;
+    const owner = lead.full_name ?? "";
+    const { first, last, entity } = splitOwner(owner);
+    const caseId = meta["case_id"] ? String(meta["case_id"]) : "";
+    return {
+      doc_number: caseId || `${(lead.address ?? "").toUpperCase()}|${String(meta["case_date"] ?? "")}`,
+      filed_date: meta["case_date"] ? String(meta["case_date"]) : null,
+      owner_first: first,
+      owner_last: last,
+      company_entity: entity,
+      property_address: lead.address ?? null,
+      property_city: lead.city ?? null,
+      property_state: lead.state ?? state.toUpperCase(),
+      property_zip: lead.zip ?? null,
+      amount: null,
+      auction_date: null,
+      status: meta["gov_status"] ? String(meta["gov_status"]) : null,
+      parcel_apn: null,
+      source_url: meta["source_url"] ? String(meta["source_url"]) : null,
+      raw: { ...meta, county },
+    };
+  };
 }
 
 export const PULL_TARGETS: PullTarget[] = [
@@ -473,10 +572,24 @@ async function reconcileFilings(
 export async function runNightlyPulls(): Promise<{
   ok: boolean;
   targets: number;
-  results: Array<{ county: string; recordType: string; found: number; added: number; error?: string }>;
+  results: Array<{
+    county: string;
+    recordType: string;
+    found: number;
+    added: number;
+    error?: string;
+    skipped?: string;
+  }>;
 }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const results: Array<{ county: string; recordType: string; found: number; added: number; error?: string }> = [];
+  const results: Array<{
+    county: string;
+    recordType: string;
+    found: number;
+    added: number;
+    error?: string;
+    skipped?: string;
+  }> = [];
 
   // Static targets win over dynamic ones for the same county + record type, so
   // a hand-tuned pull (e.g. Hillsborough) is never run twice in one sweep.
@@ -491,11 +604,46 @@ export async function runNightlyPulls(): Promise<{
   } catch (err) {
     console.error("dynamic realtaxdeed targets unavailable:", err instanceof Error ? err.message : err);
   }
-  const allTargets = [...PULL_TARGETS, ...dynamicTargets];
+  let catalogTargets: PullTarget[] = [];
+  try {
+    catalogTargets = (await dynamicCatalogTargets()).filter(
+      (t) => !staticKeys.has(`${t.state}|${t.county}|${t.recordType}`.toLowerCase()),
+    );
+  } catch (err) {
+    console.error("catalogued targets unavailable:", err instanceof Error ? err.message : err);
+  }
+  const allTargets = [...PULL_TARGETS, ...dynamicTargets, ...catalogTargets];
+
+  // Per-source crawl interval: the most recent successful pull for a
+  // county+record type gates the next one. Sequential, one host at a time —
+  // the adapters' own polite fetch keeps per-host throttling in place.
+  const { data: recentPulls } = await supabaseAdmin
+    .from("distress_pulls")
+    .select("fips, record_type, started_at, status")
+    .eq("status", "ok")
+    .order("started_at", { ascending: false })
+    .limit(1000);
+  const lastOk = new Map<string, string>();
+  for (const p of recentPulls ?? []) {
+    const key = `${p.fips}|${p.record_type}`;
+    if (!lastOk.has(key)) lastOk.set(key, String(p.started_at));
+  }
 
   for (const target of allTargets) {
     if (target.path === "records_request" || !target.pull) {
       // Nothing to fetch: this county/type is supplied by the records-request agent.
+      continue;
+    }
+    const interval = target.intervalMinutes ?? 1440;
+    const previous = lastOk.get(`${countyKey(target.state, target.county)}|${target.recordType}`);
+    if (previous && Date.now() - +new Date(previous) < interval * 60_000) {
+      results.push({
+        county: target.county,
+        recordType: target.recordType,
+        found: 0,
+        added: 0,
+        skipped: `crawl interval ${interval}m not elapsed`,
+      });
       continue;
     }
     const startedAt = new Date().toISOString();
