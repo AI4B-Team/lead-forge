@@ -348,6 +348,7 @@ async function main() {
         // Not this county's data: drop the layer so nothing is persisted under it.
         p.status = "unverified";
         p.layerUrl = null;
+        p.rejectedLayerUrl = url;
         p.reason = `layer belongs to ${override.county} County (manual attribution) — not ${p.county}: ${url}`;
       }
       continue;
