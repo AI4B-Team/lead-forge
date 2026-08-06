@@ -572,10 +572,24 @@ async function reconcileFilings(
 export async function runNightlyPulls(): Promise<{
   ok: boolean;
   targets: number;
-  results: Array<{ county: string; recordType: string; found: number; added: number; error?: string }>;
+  results: Array<{
+    county: string;
+    recordType: string;
+    found: number;
+    added: number;
+    error?: string;
+    skipped?: string;
+  }>;
 }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const results: Array<{ county: string; recordType: string; found: number; added: number; error?: string }> = [];
+  const results: Array<{
+    county: string;
+    recordType: string;
+    found: number;
+    added: number;
+    error?: string;
+    skipped?: string;
+  }> = [];
 
   // Static targets win over dynamic ones for the same county + record type, so
   // a hand-tuned pull (e.g. Hillsborough) is never run twice in one sweep.
@@ -590,11 +604,46 @@ export async function runNightlyPulls(): Promise<{
   } catch (err) {
     console.error("dynamic realtaxdeed targets unavailable:", err instanceof Error ? err.message : err);
   }
-  const allTargets = [...PULL_TARGETS, ...dynamicTargets];
+  let catalogTargets: PullTarget[] = [];
+  try {
+    catalogTargets = (await dynamicCatalogTargets()).filter(
+      (t) => !staticKeys.has(`${t.state}|${t.county}|${t.recordType}`.toLowerCase()),
+    );
+  } catch (err) {
+    console.error("catalogued targets unavailable:", err instanceof Error ? err.message : err);
+  }
+  const allTargets = [...PULL_TARGETS, ...dynamicTargets, ...catalogTargets];
+
+  // Per-source crawl interval: the most recent successful pull for a
+  // county+record type gates the next one. Sequential, one host at a time —
+  // the adapters' own polite fetch keeps per-host throttling in place.
+  const { data: recentPulls } = await supabaseAdmin
+    .from("distress_pulls")
+    .select("fips, record_type, started_at, status")
+    .eq("status", "ok")
+    .order("started_at", { ascending: false })
+    .limit(1000);
+  const lastOk = new Map<string, string>();
+  for (const p of recentPulls ?? []) {
+    const key = `${p.fips}|${p.record_type}`;
+    if (!lastOk.has(key)) lastOk.set(key, String(p.started_at));
+  }
 
   for (const target of allTargets) {
     if (target.path === "records_request" || !target.pull) {
       // Nothing to fetch: this county/type is supplied by the records-request agent.
+      continue;
+    }
+    const interval = target.intervalMinutes ?? 1440;
+    const previous = lastOk.get(`${countyKey(target.state, target.county)}|${target.recordType}`);
+    if (previous && Date.now() - +new Date(previous) < interval * 60_000) {
+      results.push({
+        county: target.county,
+        recordType: target.recordType,
+        found: 0,
+        added: 0,
+        skipped: `crawl interval ${interval}m not elapsed`,
+      });
       continue;
     }
     const startedAt = new Date().toISOString();
