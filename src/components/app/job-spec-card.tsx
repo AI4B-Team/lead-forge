@@ -15,7 +15,7 @@ import { getVerifiedCoverage, requestCountyCoverage } from "@/lib/coverage.funct
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { isCovered, recordTypeCovered, splitCountyLabel } from "@/lib/coverage.shared";
 import { toast } from "sonner";
-import { RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE, templateForRecordType } from "@/lib/record-types";
+import { canonicalRecordType, RECORD_TYPE_OPTIONS, REQUEST_RECORD_TYPE, templateForRecordType } from "@/lib/record-types";
 import { specStates, withStates, type Coverage, type JobSpec } from "@/lib/assistant.shared";
 import { CountyMultiSelect } from "@/components/app/county-multi-select";
 import { StateMultiSelect } from "@/components/app/state-multi-select";
