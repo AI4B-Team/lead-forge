@@ -303,11 +303,26 @@ async function main() {
     );
   }
 
+  // Manual county attribution. A shared regional layer legitimately belongs to
+  // ONE jurisdiction; the ambiguity is in the catalog search, not the data.
+  // Each entry is a human decision recorded in code: the owning county, plus
+  // the WHERE clause that keeps the pull inside that county's rows.
+  const ATTRIBUTION_OVERRIDES: Array<{ layerMatch: RegExp; county: string; where: string; note: string }> = [
+    {
+      layerMatch: /MunicipalCodeAppPts/i,
+      county: "Broward",
+      // Broward County GIS publishes this layer; Palm Beach only matched it
+      // because the catalog search hits the description text.
+      where: "1=1",
+      note: "Broward County GIS publishes MunicipalCodeAppPts; attributed manually",
+    },
+  ];
+
   // Integrity guard: a shared regional layer can match several county
   // searches (Broward's "MunicipalCodeAppPts" also comes back for Palm
-  // Beach). Ingesting it under both counties would mislabel every row, so
-  // when one layer verifies for multiple counties we demote ALL of them to
-  // needs_review — a human assigns the true jurisdiction from the report.
+  // Beach). Ingesting it under both counties would mislabel every row. With an
+  // attribution override we keep the owning county verified and drop the
+  // others; without one, ALL of them are demoted for a human to assign.
   const byLayer = new Map<string, Probe[]>();
   for (const p of probes) {
     if (p.status === "verified" && p.layerUrl) {
@@ -315,11 +330,25 @@ async function main() {
     }
   }
   for (const [url, group] of byLayer) {
-    if (group.length > 1) {
+    if (group.length <= 1) continue;
+    const override = ATTRIBUTION_OVERRIDES.find((o) => o.layerMatch.test(url));
+    if (override && group.some((p) => p.county === override.county)) {
       for (const p of group) {
+        if (p.county === override.county) {
+          p.attributionWhere = override.where;
+          p.reason = `shared regional layer attributed to ${override.county} — ${override.note}`;
+          continue;
+        }
+        // Not this county's data: drop the layer so nothing is persisted under it.
         p.status = "unverified";
-        p.reason = `layer matched ${group.length} counties (${group.map((g) => g.county).join(", ")}) — shared regional dataset, needs manual county attribution: ${url}`;
+        p.layerUrl = null;
+        p.reason = `layer belongs to ${override.county} County (manual attribution) — not ${p.county}: ${url}`;
       }
+      continue;
+    }
+    for (const p of group) {
+      p.status = "unverified";
+      p.reason = `layer matched ${group.length} counties (${group.map((g) => g.county).join(", ")}) — shared regional dataset, needs manual county attribution: ${url}`;
     }
   }
 
