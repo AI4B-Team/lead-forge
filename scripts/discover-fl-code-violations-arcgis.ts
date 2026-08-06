@@ -106,6 +106,8 @@ type Probe = {
   reason: string | null;
   /** Set only by a manual attribution override; scopes the pull to this county. */
   attributionWhere?: string;
+  /** Layer this county was stripped of by a manual attribution override. */
+  rejectedLayerUrl?: string;
   sample: Array<{ address: string; city: string | null; case_id: string | null; violation: string | null }>;
 };
 
