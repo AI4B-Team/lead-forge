@@ -230,6 +230,30 @@ async function sb(path: string, init: RequestInit) {
 async function persist(probes: Probe[]) {
   if (!SUPABASE_URL || !SERVICE_KEY) throw new Error("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY required for --write");
   for (const p of probes) {
+    // A county stripped by an attribution override may still carry a coverage
+    // row from an earlier run. Retract it, or the app keeps claiming coverage
+    // it does not have.
+    if (p.rejectedLayerUrl) {
+      const owners = (await sb(
+        `data_sources?select=id&resource_url=eq.${encodeURIComponent(p.rejectedLayerUrl)}`,
+        { method: "GET" },
+      )) as Array<{ id: string }>;
+      for (const owner of owners ?? []) {
+        await sb(
+          `source_coverage?fips=eq.${p.fips}&record_type=eq.${RECORD_TYPE}&source_id=eq.${owner.id}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({
+              status: "unverified",
+              sample_row_count: 0,
+              verified_at: null,
+              last_success_at: null,
+            }),
+          },
+        );
+      }
+      continue;
+    }
     if (!p.layerUrl) continue;
     const domain = new URL(p.layerUrl).host;
     const sourceRows = (await sb(`data_sources?on_conflict=platform,domain,dataset_id,record_type`, {
