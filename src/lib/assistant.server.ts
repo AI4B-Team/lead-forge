@@ -236,6 +236,7 @@ export async function askAssistant(opts: {
     userTexts,
     panelEdits: opts.panelEdits,
     coveredLabels: opts.coveredPairs,
+    ambiguousCounties,
   });
 
   return {
