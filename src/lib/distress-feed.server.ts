@@ -22,8 +22,11 @@ export function publicClient(): SupabaseClient<Database> {
 }
 
 async function rpc<T>(name: string, args: Record<string, unknown> = {}): Promise<T> {
-  const supabase = publicClient();
-  // The distress_* helpers are declared in SQL and callable by anon.
+  // The distress_* helpers are no longer callable by anon or authenticated:
+  // they run only from trusted server code so a visitor cannot invoke them
+  // directly against the Data API.
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const supabase = supabaseAdmin;
   const { data, error } = await (supabase.rpc as unknown as (
     fn: string,
     params: Record<string, unknown>,

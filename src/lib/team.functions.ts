@@ -8,6 +8,14 @@ async function assertMember(supabase: any, workspaceId: string) {
   if (!data) throw new Error("Forbidden");
 }
 
+/** Invite management is owner/admin only — a member must not mint admin seats. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function assertAdmin(supabase: any, workspaceId: string) {
+  const { data, error } = await supabase.rpc("is_workspace_admin", { _workspace_id: workspaceId });
+  if (error) throw error;
+  if (!data) throw new Error("Only workspace owners and admins can manage invites.");
+}
+
 export const listTeam = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
@@ -34,12 +42,20 @@ export const listTeam = createServerFn({ method: "GET" })
         is_me: m.user_id === context.userId,
       });
     }
-    const { data: invites } = await supabaseAdmin
-      .from("workspace_invites")
-      .select("id, email, role, created_at, expires_at, accepted_at, token")
-      .eq("workspace_id", data.workspaceId)
-      .is("accepted_at", null)
-      .order("created_at", { ascending: false });
+    // Invite rows carry the join token, so only owners/admins receive them.
+    const { data: isAdmin } = await context.supabase.rpc("is_workspace_admin", {
+      _workspace_id: data.workspaceId,
+    });
+    const invites = isAdmin
+      ? (
+          await supabaseAdmin
+            .from("workspace_invites")
+            .select("id, email, role, created_at, expires_at, accepted_at, token")
+            .eq("workspace_id", data.workspaceId)
+            .is("accepted_at", null)
+            .order("created_at", { ascending: false })
+        ).data
+      : [];
     return { members: enriched, invites: invites ?? [] };
   });
 
@@ -53,7 +69,7 @@ export const inviteTeamMember = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertMember(context.supabase, data.workspaceId);
+    await assertAdmin(context.supabase, data.workspaceId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("workspace_invites")
@@ -80,7 +96,7 @@ export const revokeInvite = createServerFn({ method: "POST" })
       .eq("id", data.inviteId)
       .maybeSingle();
     if (!inv) throw new Error("Not found");
-    await assertMember(context.supabase, inv.workspace_id);
+    await assertAdmin(context.supabase, inv.workspace_id);
     const { error } = await supabaseAdmin.from("workspace_invites").delete().eq("id", data.inviteId);
     if (error) throw error;
     return { ok: true };
