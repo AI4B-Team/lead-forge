@@ -193,6 +193,7 @@ export async function askAssistant(opts: {
           stateHint: synced.state,
           existing: wantsWholeState(opts.message) ? [] : normalizeCounties(opts.spec.counties, synced.state),
         });
+        ambiguousCounties = sticky.ambiguous;
         const counties = sticky.counties.length
           ? sticky.counties
           : normalizeCounties(synced.counties, synced.state);
