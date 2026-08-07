@@ -13,7 +13,10 @@
 export type DistressRecordType =
   | "probate"
   | "pre_foreclosure"
+  | "tax_delinquent"
   | "tax_deed"
+  | "tax_lien"
+  | "vacancy"
   | "lien"
   | "code_violation"
   | "eviction"
@@ -30,6 +33,9 @@ export const RECORD_TYPES: Array<{
   { id: "probate", label: "Probate", slug: "probate", blurb: "New estate filings. The heirs rarely want the house, and they are almost never marketed to first." },
   { id: "pre_foreclosure", label: "Pre-Foreclosure / Lis Pendens", slug: "pre-foreclosure", blurb: "The lender has filed. Months of runway before the auction date." },
   { id: "tax_deed", label: "Tax Deed / Delinquency", slug: "tax-deed", blurb: "Unpaid property tax, escalating toward a tax deed sale with a published auction date." },
+  { id: "tax_lien", label: "Tax Liens", slug: "tax-liens", blurb: "Government tax liens recorded against the parcel — the debt that precedes a tax deed sale." },
+  { id: "tax_delinquent", label: "Tax Delinquent", slug: "tax-delinquent", blurb: "Owners recently behind on property tax, before a lien or deed sale is filed." },
+  { id: "vacancy", label: "Vacant / Zombie Properties", slug: "vacant-properties", blurb: "Confirmed vacant and abandoned homes. Nobody is living there and nobody is maintaining it." },
   { id: "lien", label: "Recorder Liens", slug: "liens", blurb: "Judgment, mechanic's, HOA and municipal liens recorded against the parcel." },
   { id: "code_violation", label: "Code Violations", slug: "code-violations", blurb: "Open cases on the property. Deferred maintenance with a paper trail and a deadline." },
   { id: "eviction", label: "Evictions", slug: "evictions", blurb: "Landlords at the end of their patience. A tired-landlord signal you cannot buy anywhere else.", requestOnly: true },
