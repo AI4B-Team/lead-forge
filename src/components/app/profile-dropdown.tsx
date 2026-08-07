@@ -16,7 +16,7 @@ const AVATAR_TONES = [
   "bg-blue-600",
   "bg-emerald-600",
   "bg-violet-600",
-  "bg-amber-600",
+  "bg-slate-500",
   "bg-rose-600",
   "bg-teal-600",
 ];
