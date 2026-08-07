@@ -496,9 +496,23 @@ export async function ingestDistressRecords(
     raw: (f.raw ?? {}) as never,
   }));
 
+  // A single county pull can legitimately surface the same document twice
+  // (paginated overlap, or two parcels sharing a derived doc number). Postgres
+  // rejects an upsert that touches the same conflict target twice, which would
+  // throw away the whole batch, so collapse duplicates here and keep the last
+  // sighting of each key.
+  const deduped = Array.from(
+    rows
+      .reduce((map, row) => {
+        map.set(`${row.fips}|${row.record_type}|${row.doc_number}`, row);
+        return map;
+      }, new Map<string, (typeof rows)[number]>())
+      .values(),
+  );
+
   const { error, count } = await supabase
     .from("distress_records")
-    .upsert(rows as never, { onConflict: "fips,record_type,doc_number", count: "exact" });
+    .upsert(deduped as never, { onConflict: "fips,record_type,doc_number", count: "exact" });
   if (error) throw new Error(error.message);
 
   // The feed table is a flat per-pull log; the case spine is the deduplicated
@@ -507,7 +521,7 @@ export async function ingestDistressRecords(
   // provenance rules live in exactly one place.
   await reconcileFilings(target, fips, filings);
 
-  return count ?? rows.length;
+  return count ?? deduped.length;
 }
 
 /** Record types that belong on the case spine (a legal case, not a snapshot). */
