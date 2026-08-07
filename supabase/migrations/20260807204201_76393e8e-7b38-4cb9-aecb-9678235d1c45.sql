@@ -1,0 +1,4 @@
+ALTER TABLE public.data_sources DROP CONSTRAINT data_sources_platform_check;
+ALTER TABLE public.data_sources ADD CONSTRAINT data_sources_platform_check CHECK (platform = ANY (ARRAY['socrata','arcgis','bulk_file','html_table','html_search','pdf_list','json_api','realeflow']));
+ALTER TABLE public.data_sources DROP CONSTRAINT data_sources_source_class_check;
+ALTER TABLE public.data_sources ADD CONSTRAINT data_sources_source_class_check CHECK (source_class = ANY (ARRAY['trustee_firm','substitute_trustee','court','recorder','sheriff','public_notice','tax_office','auction_platform','bankruptcy','hoa_firm','open_data','licensed_api']));
