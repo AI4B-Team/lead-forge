@@ -91,6 +91,12 @@ const str = (v: unknown): string => (v == null ? "" : String(v).trim());
 function isoDate(v: unknown): string | null {
   const s = str(v);
   if (!s) return null;
+  // ArcGIS returns dates as epoch milliseconds; Socrata returns ISO strings.
+  if (/^-?\d{10,14}$/.test(s)) {
+    const ms = Number(s);
+    const epoch = new Date(ms);
+    return isNaN(epoch.getTime()) ? null : epoch.toISOString().slice(0, 10);
+  }
   const d = new Date(s);
   return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
 }
