@@ -94,6 +94,7 @@ import { Route as ApiPublicHooksTickTemplateHealthRouteImport } from './routes/a
 import { Route as ApiPublicHooksTickSequencesRouteImport } from './routes/api/public/hooks/tick-sequences'
 import { Route as ApiPublicHooksTickRegistrationsRouteImport } from './routes/api/public/hooks/tick-registrations'
 import { Route as ApiPublicHooksTickRecordsRequestsRouteImport } from './routes/api/public/hooks/tick-records-requests'
+import { Route as ApiPublicHooksTickRealeflowSourcingRouteImport } from './routes/api/public/hooks/tick-realeflow-sourcing'
 import { Route as ApiPublicHooksTickJobsRouteImport } from './routes/api/public/hooks/tick-jobs'
 import { Route as ApiPublicHooksTickDistressFeedRouteImport } from './routes/api/public/hooks/tick-distress-feed'
 import { Route as ApiPublicHooksTickCampaignsRouteImport } from './routes/api/public/hooks/tick-campaigns'
@@ -562,6 +563,12 @@ const ApiPublicHooksTickRecordsRequestsRoute =
     path: '/api/public/hooks/tick-records-requests',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksTickRealeflowSourcingRoute =
+  ApiPublicHooksTickRealeflowSourcingRouteImport.update({
+    id: '/api/public/hooks/tick-realeflow-sourcing',
+    path: '/api/public/hooks/tick-realeflow-sourcing',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksTickJobsRoute = ApiPublicHooksTickJobsRouteImport.update({
   id: '/api/public/hooks/tick-jobs',
   path: '/api/public/hooks/tick-jobs',
@@ -732,6 +739,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
+  '/api/public/hooks/tick-realeflow-sourcing': typeof ApiPublicHooksTickRealeflowSourcingRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hooks/tick-registrations': typeof ApiPublicHooksTickRegistrationsRoute
   '/api/public/hooks/tick-sequences': typeof ApiPublicHooksTickSequencesRoute
@@ -831,6 +839,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
+  '/api/public/hooks/tick-realeflow-sourcing': typeof ApiPublicHooksTickRealeflowSourcingRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hooks/tick-registrations': typeof ApiPublicHooksTickRegistrationsRoute
   '/api/public/hooks/tick-sequences': typeof ApiPublicHooksTickSequencesRoute
@@ -934,6 +943,7 @@ export interface FileRoutesById {
   '/api/public/hooks/tick-campaigns': typeof ApiPublicHooksTickCampaignsRoute
   '/api/public/hooks/tick-distress-feed': typeof ApiPublicHooksTickDistressFeedRoute
   '/api/public/hooks/tick-jobs': typeof ApiPublicHooksTickJobsRoute
+  '/api/public/hooks/tick-realeflow-sourcing': typeof ApiPublicHooksTickRealeflowSourcingRoute
   '/api/public/hooks/tick-records-requests': typeof ApiPublicHooksTickRecordsRequestsRoute
   '/api/public/hooks/tick-registrations': typeof ApiPublicHooksTickRegistrationsRoute
   '/api/public/hooks/tick-sequences': typeof ApiPublicHooksTickSequencesRoute
@@ -1037,6 +1047,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
+    | '/api/public/hooks/tick-realeflow-sourcing'
     | '/api/public/hooks/tick-records-requests'
     | '/api/public/hooks/tick-registrations'
     | '/api/public/hooks/tick-sequences'
@@ -1136,6 +1147,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
+    | '/api/public/hooks/tick-realeflow-sourcing'
     | '/api/public/hooks/tick-records-requests'
     | '/api/public/hooks/tick-registrations'
     | '/api/public/hooks/tick-sequences'
@@ -1238,6 +1250,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/tick-campaigns'
     | '/api/public/hooks/tick-distress-feed'
     | '/api/public/hooks/tick-jobs'
+    | '/api/public/hooks/tick-realeflow-sourcing'
     | '/api/public/hooks/tick-records-requests'
     | '/api/public/hooks/tick-registrations'
     | '/api/public/hooks/tick-sequences'
@@ -1306,6 +1319,7 @@ export interface RootRouteChildren {
   ApiPublicHooksTickCampaignsRoute: typeof ApiPublicHooksTickCampaignsRoute
   ApiPublicHooksTickDistressFeedRoute: typeof ApiPublicHooksTickDistressFeedRoute
   ApiPublicHooksTickJobsRoute: typeof ApiPublicHooksTickJobsRoute
+  ApiPublicHooksTickRealeflowSourcingRoute: typeof ApiPublicHooksTickRealeflowSourcingRoute
   ApiPublicHooksTickRecordsRequestsRoute: typeof ApiPublicHooksTickRecordsRequestsRoute
   ApiPublicHooksTickRegistrationsRoute: typeof ApiPublicHooksTickRegistrationsRoute
   ApiPublicHooksTickSequencesRoute: typeof ApiPublicHooksTickSequencesRoute
@@ -1917,6 +1931,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksTickRecordsRequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/tick-realeflow-sourcing': {
+      id: '/api/public/hooks/tick-realeflow-sourcing'
+      path: '/api/public/hooks/tick-realeflow-sourcing'
+      fullPath: '/api/public/hooks/tick-realeflow-sourcing'
+      preLoaderRoute: typeof ApiPublicHooksTickRealeflowSourcingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/tick-jobs': {
       id: '/api/public/hooks/tick-jobs'
       path: '/api/public/hooks/tick-jobs'
@@ -2203,6 +2224,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksTickCampaignsRoute: ApiPublicHooksTickCampaignsRoute,
   ApiPublicHooksTickDistressFeedRoute: ApiPublicHooksTickDistressFeedRoute,
   ApiPublicHooksTickJobsRoute: ApiPublicHooksTickJobsRoute,
+  ApiPublicHooksTickRealeflowSourcingRoute:
+    ApiPublicHooksTickRealeflowSourcingRoute,
   ApiPublicHooksTickRecordsRequestsRoute:
     ApiPublicHooksTickRecordsRequestsRoute,
   ApiPublicHooksTickRegistrationsRoute: ApiPublicHooksTickRegistrationsRoute,
@@ -2221,13 +2244,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
