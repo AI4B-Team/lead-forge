@@ -381,7 +381,8 @@ function TopUpDialog({
 }) {
   const [amount, setAmount] = useState<number>(1000);
   if (!kind) return null;
-  const meta = CREDIT_META[kind];
+  const meta = CREDIT_PACKS[kind];
+  const price = packPrice(kind, amount);
   return (
     <Dialog open={!!kind} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
@@ -390,7 +391,7 @@ function TopUpDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex gap-2">
-            {meta.presets.map((p) => (
+            {meta.presets.map((p: number) => (
               <Button
                 key={p}
                 type="button"
@@ -411,6 +412,12 @@ function TopUpDialog({
               value={amount}
               onChange={(e) => setAmount(Math.max(100, Number(e.target.value) || 0))}
             />
+          </div>
+          <div className="flex items-center justify-between rounded-xl border border-border px-3 py-2 text-sm">
+            <span className="text-muted-foreground">
+              {amount.toLocaleString()} {meta.unit} At {formatUsd(meta.pricePerThousand)} / 1,000
+            </span>
+            <span className="font-display text-lg font-bold">{formatUsd(price)}</span>
           </div>
           <div className="text-xs text-muted-foreground">
             Demo mode: credits are added instantly. Real billing wires to your payment provider.
