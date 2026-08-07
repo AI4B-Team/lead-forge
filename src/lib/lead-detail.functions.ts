@@ -40,10 +40,10 @@ export const getLeadDetail = createServerFn({ method: "GET" })
     const leads = leadRows ?? [];
 
     // Skip-trace / property intel, newest first.
-    let intel: Record<string, unknown> | null = null;
+    let intel: Record<string, string | number | boolean | null> | null = null;
     for (const l of leads) {
       const meta = (l.source_meta as Record<string, unknown> | null) ?? null;
-      const r = meta?.["realeflow"] as Record<string, unknown> | undefined;
+      const r = meta?.["realeflow"] as Record<string, string | number | boolean | null> | undefined;
       if (r) {
         intel = r;
         break;
