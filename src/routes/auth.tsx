@@ -49,6 +49,7 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [magicBusy, setMagicBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
 
   useEffect(() => {
     const hubError = new URLSearchParams(window.location.search).get("hub_error");
@@ -132,6 +133,25 @@ function AuthPage() {
     }
   };
 
+  const sendPasswordReset = async () => {
+    if (!email) {
+      toast.error("Enter Your Email First.");
+      return;
+    }
+    setResetBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Reset Link Sent. Check Your Email.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something Went Wrong");
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <MarketingNav />
@@ -212,7 +232,19 @@ function AuthPage() {
               />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {mode === "signin" && (
+                  <button
+                    type="button"
+                    onClick={sendPasswordReset}
+                    disabled={resetBusy}
+                    className="text-xs text-muted-foreground hover:text-foreground transition"
+                  >
+                    {resetBusy ? "Sending…" : "Forgot Password?"}
+                  </button>
+                )}
+              </div>
               <Input
                 id="password"
                 type="password"
