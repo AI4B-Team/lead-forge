@@ -319,9 +319,9 @@ function Billing() {
               <CardTitle className="text-base font-display">Usage This Month</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {(Object.keys(CREDIT_META) as CreditKind[]).map((k) => (
+              {CREDIT_KINDS.map((k) => (
                 <div key={k} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{CREDIT_META[k].label}</span>
+                  <span className="text-muted-foreground">{CREDIT_PACKS[k].label}</span>
                   <span className="font-display font-bold tabular-nums">
                     {(usageByKind[k] ?? 0).toLocaleString()}
                   </span>
