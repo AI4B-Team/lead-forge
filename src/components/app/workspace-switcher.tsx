@@ -99,22 +99,64 @@ export function WorkspaceSwitcher() {
           <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-muted-foreground">
             Workspaces
           </DropdownMenuLabel>
-          {workspaces.map((w) => (
-            <DropdownMenuItem
-              key={w.id}
-              onSelect={() => {
-                if (w.id === workspaceId) return;
-                switchWorkspace(w.id);
-                // Re-resolve the landing surface for the workspace we switch into:
-                // empty ones go to Build, established ones to the Dashboard.
-                navigate({ to: "/app" });
-              }}
-              className="gap-2"
-            >
-              <Check className={`h-3.5 w-3.5 ${w.id === workspaceId ? "opacity-100" : "opacity-0"}`} />
-              <span className="truncate">{w.name}</span>
-            </DropdownMenuItem>
-          ))}
+          {workspaces.map((w) => {
+            const isActive = w.id === workspaceId;
+            return (
+              <DropdownMenuItem
+                key={w.id}
+                onSelect={() => {
+                  if (isActive) return;
+                  switchWorkspace(w.id);
+                  // Re-resolve the landing surface for the workspace we switch into:
+                  // empty ones go to Build, established ones to the Dashboard.
+                  navigate({ to: "/app" });
+                }}
+                className="group gap-2 justify-between"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Check className={`h-3.5 w-3.5 shrink-0 ${isActive ? "opacity-100" : "opacity-0"}`} />
+                  <span className="truncate">{w.name}</span>
+                </div>
+                {isActive && (canRename || canDelete) && (
+                  <div
+                    className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                  >
+                    {canRename && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRenameValue(workspaceName ?? "");
+                          setRenameOpen(true);
+                        }}
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                        aria-label="Rename workspace"
+                        title="Rename workspace"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        type="button"
+                        disabled={isLastWorkspace}
+                        onClick={() => {
+                          setConfirmValue("");
+                          setDeleteOpen(true);
+                        }}
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-destructive disabled:pointer-events-none disabled:opacity-30"
+                        aria-label="Delete workspace"
+                        title="Delete workspace"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </DropdownMenuItem>
+            );
+          })}
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setOpen(true)} className="gap-2">
             <Plus className="h-3.5 w-3.5" /> New Workspace
