@@ -152,7 +152,9 @@ export const telnyxProvider: SmsProvider = {
   },
 
   async releaseNumber(providerSid: string): Promise<void> {
-    // (see fetchBrandStatus / fetchCampaignStatus above for 10DLC polling)
+    // 10DLC vetting is asynchronous: submission returns PENDING and the real
+    // verdict lands minutes-to-days later. These reads let the app poll it.
+    // Left as no-ops when Telnyx omits the field so callers keep prior status.
     // providerSid stores the phone_number id or E.164 — accept either.
     await tx(`/phone_numbers/${encodeURIComponent(providerSid)}`, { method: "DELETE" }).catch(
       () => undefined,
