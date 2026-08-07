@@ -151,6 +151,33 @@ export const telnyxProvider: SmsProvider = {
     };
   },
 
+  // 10DLC vetting is asynchronous: submission returns PENDING and the real
+  // verdict lands minutes-to-days later, with no webhook we can rely on. These
+  // reads let the app poll the current verdict.
+  async fetchBrandStatus(providerId: string): Promise<{ status: string; detail?: string | null }> {
+    const resp = (await tx(`/10dlc/brand/${encodeURIComponent(providerId)}`)) as {
+      identityStatus?: string;
+      status?: string;
+      failureReasons?: string;
+    };
+    return {
+      status: resp.identityStatus ?? resp.status ?? "pending",
+      detail: resp.failureReasons ?? null,
+    };
+  },
+
+  async fetchCampaignStatus(providerId: string): Promise<{ status: string; detail?: string | null }> {
+    const resp = (await tx(`/10dlc/campaign/${encodeURIComponent(providerId)}`)) as {
+      status?: string;
+      campaignStatus?: string;
+      failureReasons?: string;
+    };
+    return {
+      status: resp.campaignStatus ?? resp.status ?? "pending",
+      detail: resp.failureReasons ?? null,
+    };
+  },
+
   async releaseNumber(providerSid: string): Promise<void> {
     // providerSid stores the phone_number id or E.164 — accept either.
     await tx(`/phone_numbers/${encodeURIComponent(providerSid)}`, { method: "DELETE" }).catch(

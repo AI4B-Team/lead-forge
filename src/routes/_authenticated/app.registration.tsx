@@ -12,11 +12,12 @@ import {
   CheckCircle2, Loader2, ShieldCheck, Building2, BadgeCheck, MessageSquare,
   Phone, Flag, ArrowLeft, ArrowRight, Clock,
 } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import {
   getRegistration, advanceRegistration, submitBrandToProvider,
-  submitCampaignToProvider, listNumbers, buyNumbers,
+  submitCampaignToProvider, listNumbers, buyNumbers, refreshRegistrationStatus,
 } from "@/lib/numbers.functions";
 import { SettingsShell } from "@/components/app/settings-shell";
 import { StatTile } from "@/components/app/stat-tile";
@@ -68,6 +69,7 @@ function RegistrationPage() {
   const submitCampaignFn = useServerFn(submitCampaignToProvider);
   const fetchNumbers = useServerFn(listNumbers);
   const buyFn = useServerFn(buyNumbers);
+  const refreshStatusFn = useServerFn(refreshRegistrationStatus);
   const qc = useQueryClient();
 
   const { data } = useQuery({
@@ -101,7 +103,7 @@ function RegistrationPage() {
   const [optIn, setOptIn] = useState("");
   const [quantity, setQuantity] = useState<string>("5");
   const [areaCodes, setAreaCodes] = useState("");
-  const [busy, setBusy] = useState<null | "business" | "brand" | "campaign" | "numbers" | "approve" | "reset">(null);
+  const [busy, setBusy] = useState<null | "business" | "brand" | "campaign" | "numbers" | "approve" | "reset" | "status">(null);
 
   // Resume where the user left off; partial progress is saved per step.
   useEffect(() => {
@@ -218,6 +220,19 @@ function RegistrationPage() {
 
   const completed = STEPS.filter((s) => stepDone(s.id)).length;
 
+  const checkStatus = async () => {
+    setBusy("status");
+    try {
+      const r = await refreshStatusFn({ data: { workspaceId } });
+      await qc.invalidateQueries({ queryKey: ["registration", workspaceId] });
+      if (r.error === "provider_not_configured") toast.error("Texting provider is not configured yet.");
+      else if (r.changed) toast.success(`Updated — Brand ${titleize(r.brand_status)}, Campaign ${titleize(r.campaign_status)}.`);
+      else toast.info("No change yet — the carrier is still reviewing.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Status check failed.");
+    } finally { setBusy(null); }
+  };
+
   return (
     <div className="mx-auto max-w-[1400px]">
       <SettingsShell current="registration">
@@ -227,6 +242,14 @@ function RegistrationPage() {
           <div className="flex items-center gap-2 shrink-0">
             <StatusPill label="Brand" value={reg?.brand_status} />
             <StatusPill label="Campaign" value={reg?.campaign_status} />
+            {(brandSubmitted || campaignSubmitted) && (
+              <Button variant="outline" size="sm" onClick={checkStatus} disabled={busy === "status"}>
+                {busy === "status"
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <RefreshCw className="h-3.5 w-3.5" />}
+                <span className="ml-1.5">Check Status</span>
+              </Button>
+            )}
           </div>
         </div>
         <p className="text-sm text-muted-foreground">

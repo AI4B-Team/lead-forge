@@ -155,6 +155,17 @@ export const getRegistration = createServerFn({ method: "GET" })
     return { registration: reg };
   });
 
+// On-demand poll of the carrier's 10DLC verdict. Vetting is asynchronous with
+// no dependable callback, so users can pull the current status themselves and
+// the nightly tick sweeps everyone else.
+export const refreshRegistrationStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { syncRegistration } = await import("@/lib/registration-sync.server");
+    return syncRegistration(context.supabase, data.workspaceId);
+  });
+
 export const advanceRegistration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
