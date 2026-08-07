@@ -26,6 +26,7 @@ export function WorkspaceSwitcher() {
   const [name, setName] = useState("");
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState("");
+  const [target, setTarget] = useState<{ id: string; name: string } | null>(null);
   const [savingName, setSavingName] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [confirmValue, setConfirmValue] = useState("");
@@ -50,13 +51,14 @@ export function WorkspaceSwitcher() {
 
   const onRename = async () => {
     const trimmed = renameValue.trim();
-    if (!trimmed || !workspaceId || trimmed === workspaceName) {
+    const t = target;
+    if (!trimmed || !t || trimmed === t.name) {
       setRenameOpen(false);
       return;
     }
     setSavingName(true);
     try {
-      await renameWorkspace(workspaceId, trimmed);
+      await renameWorkspace(t.id, trimmed);
       toast.success("Workspace Renamed");
       setRenameOpen(false);
     } catch {
@@ -67,10 +69,10 @@ export function WorkspaceSwitcher() {
   };
 
   const onDelete = async () => {
-    if (!workspaceId) return;
+    if (!target) return;
     setDeleting(true);
     try {
-      const next = await deleteWorkspace(workspaceId);
+      const next = await deleteWorkspace(target.id);
       toast.success("Workspace Deleted");
       setDeleteOpen(false);
       setConfirmValue("");
@@ -117,7 +119,7 @@ export function WorkspaceSwitcher() {
                   <Check className={`h-3.5 w-3.5 shrink-0 ${isActive ? "opacity-100" : "opacity-0"}`} />
                   <span className="truncate">{w.name}</span>
                 </div>
-                {isActive && (canRename || canDelete) && (
+                {(canRename || canDelete) && (
                   <div
                     className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
                     onClick={(e) => e.stopPropagation()}
@@ -127,7 +129,8 @@ export function WorkspaceSwitcher() {
                       <button
                         type="button"
                         onClick={() => {
-                          setRenameValue(workspaceName ?? "");
+                          setTarget({ id: w.id, name: w.name });
+                          setRenameValue(w.name);
                           setRenameOpen(true);
                         }}
                         className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -142,6 +145,7 @@ export function WorkspaceSwitcher() {
                         type="button"
                         disabled={isLastWorkspace}
                         onClick={() => {
+                          setTarget({ id: w.id, name: w.name });
                           setConfirmValue("");
                           setDeleteOpen(true);
                         }}
@@ -248,20 +252,20 @@ export function WorkspaceSwitcher() {
           <DialogHeader>
             <DialogTitle className="font-display">Delete Workspace</DialogTitle>
             <DialogDescription>
-              This permanently deletes <span className="font-medium text-foreground">{workspaceName}</span> and
+              This permanently deletes <span className="font-medium text-foreground">{target?.name}</span> and
               everything in it — leads, lists, campaigns, conversations, phone numbers, and suppression records.
               This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <Label htmlFor="ws-confirm">
-              Type <span className="font-medium text-foreground">{workspaceName}</span> To Confirm
+              Type <span className="font-medium text-foreground">{target?.name}</span> To Confirm
             </Label>
             <Input
               id="ws-confirm"
               value={confirmValue}
               onChange={(e) => setConfirmValue(e.target.value)}
-              placeholder={workspaceName ?? ""}
+              placeholder={target?.name ?? ""}
             />
           </div>
           <DialogFooter>
@@ -269,7 +273,7 @@ export function WorkspaceSwitcher() {
             <Button
               variant="destructive"
               onClick={() => void onDelete()}
-              disabled={deleting || confirmValue.trim() !== (workspaceName ?? "")}
+              disabled={deleting || confirmValue.trim() !== (target?.name ?? "")}
             >
               {deleting && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
               Delete Workspace
