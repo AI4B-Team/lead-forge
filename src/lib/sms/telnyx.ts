@@ -152,7 +152,7 @@ export const telnyxProvider: SmsProvider = {
   },
 
   async releaseNumber(providerSid: string): Promise<void> {
-    // (see fetchBrandStatus / fetchCampaignStatus below for 10DLC polling)
+    // (see fetchBrandStatus / fetchCampaignStatus above for 10DLC polling)
     // providerSid stores the phone_number id or E.164 — accept either.
     await tx(`/phone_numbers/${encodeURIComponent(providerSid)}`, { method: "DELETE" }).catch(
       () => undefined,
