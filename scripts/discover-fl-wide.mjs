@@ -223,9 +223,46 @@ function usableRows(rows, map) {
   return { usable, sample };
 }
 
-// Items must actually be NAMED like code enforcement, or catalog description
-// matches verify algae-bloom layers as violations (lesson from the first sweep).
-const TITLE_RX = /code\s*(enforcement|violation|case|complaint)|violation|enforcement\s*case/i;
+// ---------------------------------------------------------------------------
+// Record-type configs. Items must actually be NAMED like the record type, or
+// catalog description matches verify algae-bloom layers as violations
+// (lesson from the first sweep). Select with RECORD_TYPE env var.
+//
+// countyLevel:true → these records live with the clerk of court / tax
+// collector, not with cities, so we only search "<X> County" + county seat
+// (halves the query volume and avoids city-parcel noise).
+// ---------------------------------------------------------------------------
+
+const RECORD_TYPES = {
+  code_violation: {
+    searchTerm: "code enforcement",
+    titleRx: /code\s*(enforcement|violation|case|complaint)|violation|enforcement\s*case/i,
+    countyLevel: false,
+  },
+  pre_foreclosure: {
+    searchTerm: "lis pendens foreclosure",
+    titleRx: /lis\s*pendens|foreclosure|pre.?foreclosure/i,
+    countyLevel: true,
+  },
+  tax_delinquent: {
+    searchTerm: "delinquent tax",
+    titleRx: /delinquent|tax\s*(deed|certificate|default|sale)/i,
+    countyLevel: true,
+  },
+  probate: {
+    searchTerm: "probate case",
+    titleRx: /probate|estate\s*case/i,
+    countyLevel: true,
+  },
+};
+
+const RECORD_TYPE = process.env.RECORD_TYPE ?? "code_violation";
+const CFG = RECORD_TYPES[RECORD_TYPE];
+if (!CFG) {
+  console.error(`Unknown RECORD_TYPE "${RECORD_TYPE}". Options: ${Object.keys(RECORD_TYPES).join(", ")}`);
+  process.exit(1);
+}
+const TITLE_RX = CFG.titleRx;
 
 // ---------------------------------------------------------------------------
 // Florida geo-guard. County names repeat across states (Jefferson KY, Union
@@ -272,7 +309,7 @@ async function searchArcgis(names) {
   const out = [];
   const seen = new Set();
   for (const name of names) {
-    const q = `code enforcement "${name}" type:"Feature Service"`;
+    const q = `${CFG.searchTerm} "${name}" type:"Feature Service"`;
     const params = new URLSearchParams({ q, num: "10", f: "json" });
     const { body } = await getJson(`https://www.arcgis.com/sharing/rest/search?${params}`);
     for (const r of body?.results ?? []) {
@@ -341,7 +378,7 @@ async function searchSocrata(names) {
   const seen = new Set();
   for (const name of names) {
     const params = new URLSearchParams({
-      q: `code enforcement ${name}`,
+      q: `${CFG.searchTerm} ${name}`,
       only: "datasets",
       limit: "10",
     });
@@ -419,7 +456,8 @@ async function detectAccela(names) {
 // ---------------------------------------------------------------------------
 
 async function probeCounty([county, fips, cities]) {
-  const names = [`${county} County`, ...cities];
+  // County-level record types (clerk/tax collector data) skip the city fan-out.
+  const names = CFG.countyLevel ? [`${county} County`, cities[0]] : [`${county} County`, ...cities];
   const probe = {
     county,
     fips,
@@ -448,8 +486,9 @@ async function probeCounty([county, fips, cities]) {
     if (v) probe.verified.push(v);
   }
 
-  // Accela detection (largest city + county seat only)
-  const accela = await detectAccela(cities);
+  // Accela detection (largest city + county seat only; code enforcement only —
+  // clerk-of-court records never live in Accela)
+  const accela = CFG.countyLevel ? null : await detectAccela(cities);
   if (accela) probe.platformsFound.push(accela);
 
   if (probe.verified.length > 0) {
@@ -472,11 +511,11 @@ async function probeCounty([county, fips, cities]) {
 // ---------------------------------------------------------------------------
 
 async function main() {
-  let list = FL.filter(([c]) => !ALREADY_LIVE.has(c));
+  let list = RECORD_TYPE === "code_violation" ? FL.filter(([c]) => !ALREADY_LIVE.has(c)) : FL;
   if (ONLY_COUNTY) list = FL.filter(([c]) => c.toLowerCase() === ONLY_COUNTY.toLowerCase());
   if (LIMIT > 0) list = list.slice(0, LIMIT);
 
-  console.log(`Wide FL code-violation discovery — ${list.length} counties (city-level search)\n`);
+  console.log(`Wide FL ${RECORD_TYPE} discovery — ${list.length} counties\n`);
 
   const probes = [];
   for (const entry of list) {
@@ -522,13 +561,16 @@ async function main() {
   console.log(`Unverified:         ${counts.unverified}`);
 
   mkdirSync(OUT_DIR, { recursive: true });
-  const path = `${OUT_DIR}/fl-wide-discovery.json`;
+  const path =
+    RECORD_TYPE === "code_violation"
+      ? `${OUT_DIR}/fl-wide-discovery.json`
+      : `${OUT_DIR}/fl-wide-discovery-${RECORD_TYPE}.json`;
   writeFileSync(
     path,
     JSON.stringify(
       {
         generatedAt: new Date().toISOString(),
-        recordType: "code_violation",
+        recordType: RECORD_TYPE,
         method: "city-level search: arcgis.com + Socrata Discovery API + Accela detection",
         alreadyLive: [...ALREADY_LIVE],
         totals: { countiesProbed: probes.length, ...counts },

@@ -1,0 +1,958 @@
+{
+  "generatedAt": "2026-08-07T20:08:05.323Z",
+  "recordType": "probate",
+  "method": "city-level search: arcgis.com + Socrata Discovery API + Accela detection",
+  "alreadyLive": [
+    "Miami-Dade",
+    "Alachua",
+    "Orange",
+    "Lee"
+  ],
+  "totals": {
+    "countiesProbed": 67,
+    "verified": 0,
+    "platform_found": 0,
+    "needs_attribution": 0,
+    "unverified": 67
+  },
+  "probes": [
+    {
+      "county": "Alachua",
+      "fips": "12001",
+      "cities": [
+        "Gainesville"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Baker",
+      "fips": "12003",
+      "cities": [
+        "Macclenny"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Bay",
+      "fips": "12005",
+      "cities": [
+        "Panama City",
+        "Panama City Beach",
+        "Lynn Haven"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Bradford",
+      "fips": "12007",
+      "cities": [
+        "Starke"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Brevard",
+      "fips": "12009",
+      "cities": [
+        "Melbourne",
+        "Palm Bay",
+        "Titusville",
+        "Cocoa"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Broward",
+      "fips": "12011",
+      "cities": [
+        "Fort Lauderdale",
+        "Hollywood",
+        "Pembroke Pines",
+        "Pompano Beach",
+        "Coral Springs"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Calhoun",
+      "fips": "12013",
+      "cities": [
+        "Blountstown"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Charlotte",
+      "fips": "12015",
+      "cities": [
+        "Punta Gorda",
+        "Port Charlotte"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Citrus",
+      "fips": "12017",
+      "cities": [
+        "Inverness",
+        "Crystal River"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Clay",
+      "fips": "12019",
+      "cities": [
+        "Green Cove Springs",
+        "Orange Park",
+        "Middleburg"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Collier",
+      "fips": "12021",
+      "cities": [
+        "Naples",
+        "Marco Island",
+        "Immokalee"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Columbia",
+      "fips": "12023",
+      "cities": [
+        "Lake City"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "DeSoto",
+      "fips": "12027",
+      "cities": [
+        "Arcadia"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Dixie",
+      "fips": "12029",
+      "cities": [
+        "Cross City"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Duval",
+      "fips": "12031",
+      "cities": [
+        "Jacksonville"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Escambia",
+      "fips": "12033",
+      "cities": [
+        "Pensacola"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Flagler",
+      "fips": "12035",
+      "cities": [
+        "Palm Coast",
+        "Bunnell"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Franklin",
+      "fips": "12037",
+      "cities": [
+        "Apalachicola"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Gadsden",
+      "fips": "12039",
+      "cities": [
+        "Quincy"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Gilchrist",
+      "fips": "12041",
+      "cities": [
+        "Trenton"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Glades",
+      "fips": "12043",
+      "cities": [
+        "Moore Haven"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Gulf",
+      "fips": "12045",
+      "cities": [
+        "Port St. Joe"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Hamilton",
+      "fips": "12047",
+      "cities": [
+        "Jasper"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Hardee",
+      "fips": "12049",
+      "cities": [
+        "Wauchula"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Hendry",
+      "fips": "12051",
+      "cities": [
+        "LaBelle",
+        "Clewiston"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Hernando",
+      "fips": "12053",
+      "cities": [
+        "Brooksville",
+        "Spring Hill"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Highlands",
+      "fips": "12055",
+      "cities": [
+        "Sebring",
+        "Avon Park"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Hillsborough",
+      "fips": "12057",
+      "cities": [
+        "Tampa",
+        "Plant City",
+        "Temple Terrace"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Holmes",
+      "fips": "12059",
+      "cities": [
+        "Bonifay"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Indian River",
+      "fips": "12061",
+      "cities": [
+        "Vero Beach",
+        "Sebastian"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Jackson",
+      "fips": "12063",
+      "cities": [
+        "Marianna"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Jefferson",
+      "fips": "12065",
+      "cities": [
+        "Monticello"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Lafayette",
+      "fips": "12067",
+      "cities": [
+        "Mayo"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Lake",
+      "fips": "12069",
+      "cities": [
+        "Tavares",
+        "Clermont",
+        "Leesburg",
+        "Eustis"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Lee",
+      "fips": "12071",
+      "cities": [
+        "Fort Myers",
+        "Cape Coral",
+        "Bonita Springs"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Leon",
+      "fips": "12073",
+      "cities": [
+        "Tallahassee"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Levy",
+      "fips": "12075",
+      "cities": [
+        "Bronson",
+        "Williston",
+        "Chiefland"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Liberty",
+      "fips": "12077",
+      "cities": [
+        "Bristol"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Madison",
+      "fips": "12079",
+      "cities": [
+        "Madison"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Manatee",
+      "fips": "12081",
+      "cities": [
+        "Bradenton",
+        "Palmetto"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Marion",
+      "fips": "12083",
+      "cities": [
+        "Ocala"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Martin",
+      "fips": "12085",
+      "cities": [
+        "Stuart"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Miami-Dade",
+      "fips": "12086",
+      "cities": [
+        "Miami",
+        "Hialeah",
+        "Miami Beach",
+        "Miami Gardens",
+        "Homestead"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Monroe",
+      "fips": "12087",
+      "cities": [
+        "Key West",
+        "Marathon"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Nassau",
+      "fips": "12089",
+      "cities": [
+        "Fernandina Beach",
+        "Yulee"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Okaloosa",
+      "fips": "12091",
+      "cities": [
+        "Fort Walton Beach",
+        "Crestview",
+        "Destin"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Okeechobee",
+      "fips": "12093",
+      "cities": [
+        "Okeechobee"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Orange",
+      "fips": "12095",
+      "cities": [
+        "Orlando",
+        "Winter Park",
+        "Apopka",
+        "Ocoee"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Osceola",
+      "fips": "12097",
+      "cities": [
+        "Kissimmee",
+        "St. Cloud"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Palm Beach",
+      "fips": "12099",
+      "cities": [
+        "West Palm Beach",
+        "Boca Raton",
+        "Boynton Beach",
+        "Delray Beach"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Pasco",
+      "fips": "12101",
+      "cities": [
+        "New Port Richey",
+        "Zephyrhills",
+        "Dade City",
+        "Wesley Chapel"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Pinellas",
+      "fips": "12103",
+      "cities": [
+        "St. Petersburg",
+        "Clearwater",
+        "Largo",
+        "Pinellas Park"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Polk",
+      "fips": "12105",
+      "cities": [
+        "Lakeland",
+        "Winter Haven",
+        "Bartow"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Putnam",
+      "fips": "12107",
+      "cities": [
+        "Palatka"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "St. Johns",
+      "fips": "12109",
+      "cities": [
+        "St. Augustine"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "St. Lucie",
+      "fips": "12111",
+      "cities": [
+        "Port St. Lucie",
+        "Fort Pierce"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Santa Rosa",
+      "fips": "12113",
+      "cities": [
+        "Milton",
+        "Navarre",
+        "Gulf Breeze"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Sarasota",
+      "fips": "12115",
+      "cities": [
+        "Sarasota",
+        "North Port",
+        "Venice"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Seminole",
+      "fips": "12117",
+      "cities": [
+        "Sanford",
+        "Altamonte Springs",
+        "Oviedo",
+        "Casselberry"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Sumter",
+      "fips": "12119",
+      "cities": [
+        "Bushnell",
+        "Wildwood",
+        "The Villages"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Suwannee",
+      "fips": "12121",
+      "cities": [
+        "Live Oak"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Taylor",
+      "fips": "12123",
+      "cities": [
+        "Perry"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Union",
+      "fips": "12125",
+      "cities": [
+        "Lake Butler"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Volusia",
+      "fips": "12127",
+      "cities": [
+        "Daytona Beach",
+        "Deltona",
+        "Port Orange",
+        "DeLand"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Wakulla",
+      "fips": "12129",
+      "cities": [
+        "Crawfordville"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Walton",
+      "fips": "12131",
+      "cities": [
+        "DeFuniak Springs",
+        "Santa Rosa Beach"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    },
+    {
+      "county": "Washington",
+      "fips": "12133",
+      "cities": [
+        "Chipley"
+      ],
+      "verified": [],
+      "platformsFound": [],
+      "arcgisCandidates": 0,
+      "socrataCandidates": 0,
+      "status": "unverified",
+      "reason": "no open-data source found on arcgis.com or Socrata"
+    }
+  ]
+}
