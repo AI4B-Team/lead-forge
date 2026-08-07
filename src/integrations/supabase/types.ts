@@ -1623,6 +1623,48 @@ export type Database = {
           },
         ]
       }
+      lead_notes: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          lead_record_id: string
+          workspace_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_record_id: string
+          workspace_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_record_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_notes_lead_record_id_fkey"
+            columns: ["lead_record_id"]
+            isOneToOne: false
+            referencedRelation: "lead_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_notes_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_outcomes: {
         Row: {
           id: string
