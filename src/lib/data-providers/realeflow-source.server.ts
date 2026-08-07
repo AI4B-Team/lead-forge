@@ -1,0 +1,292 @@
+// ---------------------------------------------------------------------------
+// Nightly RealeFlow sourcing for the Distress Feed.
+//
+// Probate / tax-lien / vacancy filings are not published as open data anywhere
+// in Florida, so they are licensed from the RealeFlow Partner API instead of
+// scraped. This runs one polite, sequential /search per county per record type
+// and lands the rows through the SAME upsert path as every other adapter, so
+// dedupe, reconciliation and the nightly report behave identically.
+// ---------------------------------------------------------------------------
+
+import { FL_COUNTY_FIPS } from "../fl-counties";
+import {
+  REALEFLOW_COUNTY_BUDGET,
+  REALEFLOW_LEAD_CONFIGS,
+  REALEFLOW_PAGE_SIZE,
+  buildSearchBody,
+  isEntitlementError,
+  isMailingOptedOut,
+  propertyToFiling,
+  type RealeflowLeadConfig,
+} from "./realeflow-source.shared";
+
+const DOMAIN = "api.realeflow.com";
+const PLATFORM = "realeflow";
+const SOURCE_CLASS = "licensed_api";
+const POLITE_DELAY_MS = 1_000;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function entitlementKey(recordType: string): string {
+  return `entitlement:${recordType}`;
+}
+
+/** Record types previously refused by the API — never retried automatically. */
+async function disabledByEntitlement(): Promise<Map<string, string>> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("data_sources")
+    .select("record_type, dataset_id, status, last_error")
+    .eq("platform", PLATFORM)
+    .eq("status", "disabled");
+  const out = new Map<string, string>();
+  for (const row of data ?? []) {
+    if (String(row.dataset_id ?? "").startsWith("entitlement:")) {
+      out.set(String(row.record_type), row.last_error ?? "awaiting entitlement");
+    }
+  }
+  return out;
+}
+
+async function markEntitlementDisabled(config: RealeflowLeadConfig, reason: string): Promise<void> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin.from("data_sources").upsert(
+    {
+      platform: PLATFORM,
+      source_class: SOURCE_CLASS,
+      domain: DOMAIN,
+      dataset_id: entitlementKey(config.recordType),
+      record_type: config.recordType,
+      title: `RealeFlow ${config.label} — entitlement`,
+      state: "FL",
+      status: "disabled",
+      last_error: reason,
+      field_map: {},
+      precedence: 10,
+    } as never,
+    { onConflict: "platform,domain,dataset_id,record_type" },
+  );
+}
+
+/** One catalog row per county × record type, verified after a clean pull. */
+async function recordCoverage(args: {
+  config: RealeflowLeadConfig;
+  county: string;
+  fips: string;
+  rows: number;
+  ok: boolean;
+  error?: string;
+}): Promise<void> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const now = new Date().toISOString();
+  const { data: source } = await supabaseAdmin
+    .from("data_sources")
+    .upsert(
+      {
+        platform: PLATFORM,
+        source_class: SOURCE_CLASS,
+        domain: DOMAIN,
+        dataset_id: `search:${args.config.recordType}:${args.fips}`,
+        record_type: args.config.recordType,
+        resource_url: "https://api.realeflow.com/api/2.0/leadpipes/search",
+        title: `RealeFlow ${args.config.label} — ${args.county} County, FL`,
+        jurisdiction: `${args.county} County, FL`,
+        county_name: args.county,
+        state: "FL",
+        fips: args.fips,
+        // No case/lien number in /search rows: the stable address hash is the
+        // dedupe key, namespaced by record type.
+        field_map: {
+          _doc_number: `${args.config.docPrefix}-<address_hash>`,
+          _filter: args.config.filter as never,
+        } as never,
+        precedence: 10, // licensed API outranks open data
+        crawl_interval_minutes: 1440,
+        status: args.ok ? "verified" : "failed",
+        row_estimate: args.rows || null,
+        last_error: args.error ?? null,
+        last_verified_at: args.ok ? now : null,
+        last_success_at: args.ok ? now : null,
+      } as never,
+      { onConflict: "platform,domain,dataset_id,record_type" },
+    )
+    .select("id")
+    .maybeSingle();
+
+  const sourceId = (source as { id?: string } | null)?.id ?? null;
+  // An empty county is not an error: coverage stays verified with 0 rows.
+  const coverage = {
+    source_id: sourceId,
+    fips: args.fips,
+    state: "FL",
+    county_name: args.county,
+    record_type: args.config.recordType,
+    status: args.ok ? "verified" : "failed",
+    verified_at: args.ok ? now : null,
+    last_success_at: args.ok ? now : null,
+    sample_row_count: args.rows,
+  };
+  let query = supabaseAdmin
+    .from("source_coverage")
+    .select("id")
+    .eq("fips", args.fips)
+    .eq("record_type", args.config.recordType);
+  query = sourceId ? query.eq("source_id", sourceId) : query.is("source_id", null);
+  const { data: existing } = await query.maybeSingle();
+  if (existing?.id) {
+    await supabaseAdmin.from("source_coverage").update(coverage as never).eq("id", existing.id);
+  } else {
+    await supabaseAdmin.from("source_coverage").insert(coverage as never);
+  }
+}
+
+export type RealeflowPullResult = {
+  recordType: string;
+  county: string;
+  fips: string;
+  found: number;
+  added: number;
+  error?: string;
+};
+
+export type RealeflowSourcingReport = {
+  ok: boolean;
+  requests: number;
+  results: RealeflowPullResult[];
+  awaitingEntitlement: Array<{ recordType: string; reason: string }>;
+  byRecordType: Array<{
+    recordType: string;
+    countiesPulled: number;
+    rowsUpserted: number;
+    dupesSkipped: number;
+    countiesWithZeroRows: number;
+    countiesFailed: number;
+  }>;
+};
+
+/**
+ * Sweep every FL county for every enabled lead-type config. Sequential with a
+ * ≥1s delay; a per-county page budget keeps the nightly request count bounded.
+ */
+export async function runRealeflowSourcing(options: {
+  counties?: string[];
+  recordTypes?: string[];
+  countyBudget?: number;
+} = {}): Promise<RealeflowSourcingReport> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { countyKey } = await import("../distress-feed.shared");
+  const { ingestDistressRecords, splitOwner } = await import("../distress-feed.server");
+  const { rfSearch, RealeflowError } = await import("../realeflow/client.server");
+
+  const disabled = await disabledByEntitlement();
+  const awaitingEntitlement: Array<{ recordType: string; reason: string }> = [];
+  const configs = REALEFLOW_LEAD_CONFIGS.filter((c) => {
+    if (options.recordTypes && !options.recordTypes.includes(c.recordType)) return false;
+    if (!c.enabled) {
+      awaitingEntitlement.push({
+        recordType: c.recordType,
+        reason: c.disabledReason ?? "config disabled",
+      });
+      return false;
+    }
+    const reason = disabled.get(c.recordType);
+    if (reason) {
+      awaitingEntitlement.push({ recordType: c.recordType, reason });
+      return false;
+    }
+    return true;
+  });
+
+  const counties = (options.counties ?? Object.keys(FL_COUNTY_FIPS)).filter((c) => FL_COUNTY_FIPS[c]);
+  const budget = Math.min(Math.max(options.countyBudget ?? REALEFLOW_COUNTY_BUDGET, 1), 500);
+  const results: RealeflowPullResult[] = [];
+  let requests = 0;
+
+  for (const config of configs) {
+    let entitlementStop = false;
+    for (const county of counties) {
+      if (entitlementStop) break;
+      const fips = FL_COUNTY_FIPS[county]!;
+      const feedKey = countyKey("FL", county);
+      const startedAt = new Date().toISOString();
+      let found = 0;
+      let added = 0;
+      let failure: string | undefined;
+
+      try {
+        const filings: Array<ReturnType<typeof propertyToFiling>> = [];
+        for (let page = 1; filings.length < budget; page += 1) {
+          const body = buildSearchBody({
+            fips,
+            config,
+            page,
+            pageSize: Math.min(REALEFLOW_PAGE_SIZE, budget - filings.length),
+          });
+          requests += 1;
+          const res = await rfSearch(body);
+          const rows = res.data ?? [];
+          for (const property of rows) {
+            if (isMailingOptedOut(property)) continue;
+            const filing = propertyToFiling(config, county, property, splitOwner);
+            if (filing) filings.push(filing);
+          }
+          if (rows.length < (body.page_size ?? REALEFLOW_PAGE_SIZE)) break;
+          await sleep(POLITE_DELAY_MS);
+        }
+
+        const usable = filings.filter((f): f is NonNullable<typeof f> => Boolean(f));
+        found = usable.length;
+        added = await ingestDistressRecords(
+          supabaseAdmin,
+          { state: "FL", county, recordType: config.recordType },
+          usable,
+        );
+        await recordCoverage({ config, county, fips, rows: found, ok: true });
+      } catch (err) {
+        const status = err instanceof RealeflowError ? err.status : 0;
+        const message = err instanceof Error ? err.message : String(err);
+        if (isEntitlementError(status, message)) {
+          // Licensing, not a fault: disable the config and stop hammering.
+          await markEntitlementDisabled(config, message);
+          awaitingEntitlement.push({ recordType: config.recordType, reason: message });
+          entitlementStop = true;
+          failure = `awaiting entitlement: ${message}`;
+        } else {
+          failure = message;
+          await recordCoverage({ config, county, fips, rows: 0, ok: false, error: message });
+        }
+      }
+
+      await supabaseAdmin.from("distress_pulls").insert({
+        fips: feedKey,
+        state: "FL",
+        county,
+        record_type: config.recordType,
+        status: failure ? "error" : "ok",
+        records_found: found,
+        records_added: added,
+        error: failure ?? null,
+        started_at: startedAt,
+        finished_at: new Date().toISOString(),
+      } as never);
+
+      results.push({ recordType: config.recordType, county, fips, found, added, error: failure });
+      await sleep(POLITE_DELAY_MS);
+    }
+  }
+
+  const byRecordType = [...new Set(results.map((r) => r.recordType))].map((recordType) => {
+    const rows = results.filter((r) => r.recordType === recordType);
+    const clean = rows.filter((r) => !r.error);
+    return {
+      recordType,
+      countiesPulled: clean.length,
+      rowsUpserted: clean.reduce((sum, r) => sum + r.added, 0),
+      dupesSkipped: clean.reduce((sum, r) => sum + Math.max(r.found - r.added, 0), 0),
+      countiesWithZeroRows: clean.filter((r) => r.found === 0).length,
+      countiesFailed: rows.length - clean.length,
+    };
+  });
+
+  return { ok: results.every((r) => !r.error), requests, results, awaitingEntitlement, byRecordType };
+}

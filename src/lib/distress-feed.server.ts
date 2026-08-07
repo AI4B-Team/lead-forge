@@ -535,10 +535,7 @@ async function reconcileFilings(
         state: target.state,
         county: target.county,
         recordType: target.recordType,
-        sourceClass:
-          String((f.raw as Record<string, unknown> | undefined)?.["source"] ?? "").startsWith("real")
-            ? ("vendor_auction" as const)
-            : ("clerk_records" as const),
+        sourceClass: observedSourceClass(f),
         sourceUrl: f.source_url ?? null,
         caseNumber: f.doc_number || null,
         parcelApn: f.parcel_apn ?? null,
@@ -566,6 +563,18 @@ async function reconcileFilings(
     // the night's pull, but it must be loud.
     console.error("[reconcile] batch failed:", err instanceof Error ? err.message : err);
   }
+}
+
+/**
+ * Trust level of the observation. An adapter may state its own class (a
+ * licensed vendor API does); otherwise a republished auction page is a vendor
+ * feed and everything else is treated as clerk records.
+ */
+function observedSourceClass(f: RawFiling): import("./distress/reconcile.shared").SourceClass {
+  const raw = (f.raw ?? {}) as Record<string, unknown>;
+  const declared = String(raw["source_class"] ?? "");
+  if (declared) return declared as import("./distress/reconcile.shared").SourceClass;
+  return String(raw["source"] ?? "").startsWith("real") ? "vendor_auction" : "clerk_records";
 }
 
 /** One nightly sweep across every configured county + record type. */

@@ -21,29 +21,13 @@
 // ---------------------------------------------------------------------------
 
 import { createHash } from "node:crypto";
+import { SOURCE_CLASS_RANK, type SourceClass } from "./reconcile.shared";
 
 /** Merges below this confidence are refused — we create a new case instead. */
 export const CONFIDENCE_FLOOR = 0.7;
 
 /** How much a source is trusted when two sources disagree on one field. */
-export type SourceClass =
-  | "court_docket"
-  | "clerk_records"
-  | "county_auction"
-  | "vendor_auction"
-  | "aggregator"
-  | "user_upload"
-  | "derived";
-
-export const SOURCE_CLASS_RANK: Record<SourceClass, number> = {
-  court_docket: 5,
-  clerk_records: 5,
-  county_auction: 4,
-  vendor_auction: 3,
-  user_upload: 2,
-  aggregator: 2,
-  derived: 1,
-};
+export { SOURCE_CLASS_RANK, type SourceClass };
 
 function rankOf(sourceClass: string): number {
   return SOURCE_CLASS_RANK[sourceClass as SourceClass] ?? 1;
