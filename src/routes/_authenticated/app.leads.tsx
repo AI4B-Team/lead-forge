@@ -418,7 +418,7 @@ function LeadsPageInner() {
                   {dynamicCols.map((f) => {
                     const k = f.key;
                     return (
-                    <td key={k} className="p-4">
+                    <td key={k} className="p-4" onClick={(e) => e.stopPropagation()}>
                       {k === "phone" ? (
                         <PhoneCell contact={contact} />
                       ) : k === "email" ? (
@@ -485,7 +485,7 @@ function LeadsPageInner() {
                       {r.disposition}
                     </span>
                   </td>
-                  <td className="p-4">
+                  <td className="p-4" onClick={(e) => e.stopPropagation()}>
                     <ListMembershipCell leadId={r.id} count={r.list_count} />
                   </td>
                   <td
