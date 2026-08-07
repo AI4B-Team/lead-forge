@@ -252,20 +252,20 @@ export function WorkspaceSwitcher() {
           <DialogHeader>
             <DialogTitle className="font-display">Delete Workspace</DialogTitle>
             <DialogDescription>
-              This permanently deletes <span className="font-medium text-foreground">{workspaceName}</span> and
+              This permanently deletes <span className="font-medium text-foreground">{target?.name}</span> and
               everything in it — leads, lists, campaigns, conversations, phone numbers, and suppression records.
               This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <Label htmlFor="ws-confirm">
-              Type <span className="font-medium text-foreground">{workspaceName}</span> To Confirm
+              Type <span className="font-medium text-foreground">{target?.name}</span> To Confirm
             </Label>
             <Input
               id="ws-confirm"
               value={confirmValue}
               onChange={(e) => setConfirmValue(e.target.value)}
-              placeholder={workspaceName ?? ""}
+              placeholder={target?.name ?? ""}
             />
           </div>
           <DialogFooter>
@@ -273,7 +273,7 @@ export function WorkspaceSwitcher() {
             <Button
               variant="destructive"
               onClick={() => void onDelete()}
-              disabled={deleting || confirmValue.trim() !== (workspaceName ?? "")}
+              disabled={deleting || confirmValue.trim() !== (target?.name ?? "")}
             >
               {deleting && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
               Delete Workspace
