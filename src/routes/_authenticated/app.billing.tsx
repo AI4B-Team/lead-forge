@@ -11,18 +11,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useWorkspaceId } from "@/hooks/use-workspace";
 import { getBilling, topUpCredits, setRefundEmailThreshold } from "@/lib/billing.functions";
+import {
+  annualMonthly,
+  annualTotal,
+  chargesPlatformFee,
+  CREDIT_PACKS,
+  extraNumbersCost,
+  formatUsd,
+  isPastDue,
+  overageCost,
+  packPrice,
+  planFor,
+  SELLABLE_PLANS,
+  type CreditKind,
+} from "@/lib/plans.shared";
 
-type CreditKind = "scrape" | "skip_trace" | "sms";
+const CREDIT_KINDS: CreditKind[] = ["scrape", "skip_trace", "sms"];
 
-const CREDIT_META: Record<CreditKind, { label: string; rate: string; presets: number[] }> = {
-  scrape: { label: "Lead Credits", rate: "$3 / 1,000 Records", presets: [1000, 5000, 25000] },
-  skip_trace: { label: "Skip Trace", rate: "$8 / 1,000 Traces", presets: [500, 2500, 10000] },
-  sms: { label: "SMS", rate: "$0.008 / Segment", presets: [1000, 10000, 50000] },
-};
+const PLAN_CHANGE_NOTE =
+  "Checkout Is Not Connected Yet — Plan Changes Are Handled By Support Until Payments Go Live.";
 
 export const Route = createFileRoute("/_authenticated/app/billing")({
   head: () => ({ meta: [{ title: "Billing — LeadTrace" }] }),
