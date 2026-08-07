@@ -7,14 +7,38 @@ export const getBilling = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ workspaceId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const [{ data: balances }, { data: ledger }, { data: workspace }] = await Promise.all([
+    const [
+      { data: balances },
+      { data: ledger },
+      { data: workspace },
+      { count: numberCount },
+      { count: seatCount },
+    ] = await Promise.all([
       supabase.from("credit_balances").select("*").eq("workspace_id", data.workspaceId),
       supabase.from("credit_ledger").select("*").eq("workspace_id", data.workspaceId).order("created_at", { ascending: false }).limit(50),
-      supabase.from("workspaces").select("id, name, industry, created_at, refund_email_threshold").eq("id", data.workspaceId).maybeSingle(),
+      supabase
+        .from("workspaces")
+        .select("id, name, industry, created_at, refund_email_threshold, billing_plan")
+        .eq("id", data.workspaceId)
+        .maybeSingle(),
+      supabase
+        .from("sending_numbers")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", data.workspaceId),
+      supabase
+        .from("workspace_members")
+        .select("user_id", { count: "exact", head: true })
+        .eq("workspace_id", data.workspaceId),
     ]);
     const map: Record<string, number> = { scrape: 0, skip_trace: 0, sms: 0 };
     for (const b of balances ?? []) map[b.kind] = b.balance;
-    return { balances: map, ledger: ledger ?? [], workspace };
+    return {
+      balances: map,
+      ledger: ledger ?? [],
+      workspace,
+      numbers: numberCount ?? 0,
+      seats: seatCount ?? 0,
+    };
   });
 
 // Demo top-up: adds credits + writes a ledger row. In prod this fires after
