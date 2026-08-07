@@ -87,19 +87,39 @@ function Billing() {
   renewDate.setMonth(renewDate.getMonth() + 1);
   const renewLabel = renewDate.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
+  const plan = planFor(data?.workspace?.billing_plan);
+  const pastDue = isPastDue(data?.workspace?.billing_plan);
+  const feeCharged = chargesPlatformFee(data?.workspace?.billing_plan);
+  const leadsUsed = usageByKind["scrape"] ?? 0;
+  const allowancePct = plan.leadCredits
+    ? Math.min(100, Math.round((leadsUsed / plan.leadCredits) * 100))
+    : 0;
+  const numbers = data?.numbers ?? 0;
+  const seats = data?.seats ?? 0;
+  const overage = overageCost(plan, leadsUsed);
+  const numbersFee = extraNumbersCost(plan, numbers);
+
   return (
     <div className="mx-auto max-w-[1400px]">
       <SettingsShell current="billing">
       <PageHeader title="Billing" description="Plan, Metered Credits, And Recent Activity." />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile label="Current Plan" value="Trial" hint="Pay-As-You-Go Credits" />
+        <StatTile
+          label="Current Plan"
+          value={plan.name}
+          hint={feeCharged ? `${formatUsd(plan.monthly)} / Mo Platform Fee` : "No Platform Fee"}
+        />
         <StatTile
           label="Total Credits"
           value={totalCredits.toLocaleString()}
           hint="Lead Credits + Skip Trace + SMS"
         />
-        <StatTile label="Renews" value={renewLabel} hint="Auto-Renew Enabled" />
+        <StatTile
+          label="Renews"
+          value={renewLabel}
+          hint={pastDue ? "Payment Past Due" : "Monthly Allowance Resets"}
+        />
         <StatTile
           label="Used This Month"
           value={usedThisMonth.toLocaleString()}
@@ -114,24 +134,65 @@ function Billing() {
           <div>
             <CardTitle className="text-base font-display">Current Plan</CardTitle>
             <div className="text-sm text-muted-foreground mt-1">
-              {data?.workspace?.name ?? "Workspace"} · Trial · Pay-As-You-Go Credits
+              {data?.workspace?.name ?? "Workspace"} · {plan.name} · {plan.blurb}
             </div>
           </div>
-          <Badge>Trial</Badge>
+          <Badge variant={pastDue ? "destructive" : "default"}>
+            {pastDue ? "Past Due" : plan.name}
+          </Badge>
         </CardHeader>
-        <CardContent className="flex gap-2">
-          <Button variant="outline" className="rounded-full" disabled>Upgrade Plan</Button>
-          <Button variant="ghost" className="rounded-full text-muted-foreground" disabled>Cancel</Button>
+        <CardContent className="space-y-4">
+          <div>
+            <div className="mb-1 flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Lead Credits Used This Month</span>
+              <span className="font-display font-bold tabular-nums">
+                {leadsUsed.toLocaleString()}
+                {plan.leadCredits > 0 ? ` / ${plan.leadCredits.toLocaleString()}` : ""}
+              </span>
+            </div>
+            <Progress value={allowancePct} />
+            <div className="mt-1 text-xs text-muted-foreground">
+              {plan.leadCredits === 0
+                ? "This Plan Has No Included Allowance — Every Record Draws From Credits."
+                : overage > 0
+                  ? `Overage This Month ${formatUsd(overage)} At ${formatUsd(plan.overagePer1k)} Per 1,000`
+                  : `Overage Beyond Your Allowance Is ${formatUsd(plan.overagePer1k)} Per 1,000`}
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <PlanFact
+              label="Sending Numbers"
+              value={`${numbers} / ${plan.numbersIncluded}`}
+              hint={
+                numbersFee > 0
+                  ? `${formatUsd(numbersFee)} / Mo For Extra Numbers`
+                  : "Included In Your Plan"
+              }
+            />
+            <PlanFact
+              label="Seats"
+              value={plan.seats === null ? `${seats} / Unlimited` : `${seats} / ${plan.seats}`}
+              hint="Team Members In This Workspace"
+            />
+            <PlanFact
+              label="SMS Rate"
+              value={`$${plan.smsPerSegment.toFixed(3)}`}
+              hint="Per Segment — Flat, Never Multiplied"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">{PLAN_CHANGE_NOTE}</p>
         </CardContent>
       </Card>
 
+      <PlanPicker currentPlanId={plan.id} />
+
       <div className="grid md:grid-cols-3 gap-4 mb-8">
-        {(Object.keys(CREDIT_META) as CreditKind[]).map((k) => (
+        {CREDIT_KINDS.map((k) => (
           <CreditCard
             key={k}
-            label={CREDIT_META[k].label}
+            label={CREDIT_PACKS[k].label}
             balance={data?.balances[k] ?? 0}
-            rate={CREDIT_META[k].rate}
+            rate={`${formatUsd(CREDIT_PACKS[k].pricePerThousand)} / 1,000 ${CREDIT_PACKS[k].unit}`}
             onTopUp={() => setTopUpKind(k)}
           />
         ))}
