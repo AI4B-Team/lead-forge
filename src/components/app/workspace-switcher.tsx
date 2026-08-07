@@ -161,37 +161,6 @@ export function WorkspaceSwitcher() {
           <DropdownMenuItem onSelect={() => setOpen(true)} className="gap-2">
             <Plus className="h-3.5 w-3.5" /> New Workspace
           </DropdownMenuItem>
-          {(canRename || canDelete) && workspaceId ? (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                This Workspace
-              </DropdownMenuLabel>
-              {canRename ? (
-                <DropdownMenuItem
-                  onSelect={() => {
-                    setRenameValue(workspaceName ?? "");
-                    setRenameOpen(true);
-                  }}
-                  className="gap-2"
-                >
-                  <Pencil className="h-3.5 w-3.5" /> Rename Workspace
-                </DropdownMenuItem>
-              ) : null}
-              {canDelete ? (
-                <DropdownMenuItem
-                  disabled={isLastWorkspace}
-                  onSelect={() => {
-                    setConfirmValue("");
-                    setDeleteOpen(true);
-                  }}
-                  className="gap-2 text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5" /> Delete Workspace
-                </DropdownMenuItem>
-              ) : null}
-            </>
-          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
 
