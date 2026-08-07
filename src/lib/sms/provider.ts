@@ -55,6 +55,10 @@ export interface SmsProvider {
   buySpecific?(phone: string): Promise<BoughtNumber>;
   submitBrand?(brand: BrandSubmission): Promise<{ providerId: string; status: string }>;
   submitCampaign?(campaign: CampaignSubmission): Promise<{ providerId: string; status: string }>;
+  /** Poll current 10DLC brand vetting status by provider brand id. */
+  fetchBrandStatus?(providerId: string): Promise<{ status: string; detail?: string | null }>;
+  /** Poll current 10DLC campaign status by provider campaign id. */
+  fetchCampaignStatus?(providerId: string): Promise<{ status: string; detail?: string | null }>;
   releaseNumber(providerSid: string): Promise<void>;
   send(from: string, to: string, body: string): Promise<SmsSendResult>;
   parseInbound(req: Request): Promise<InboundMessage>;
