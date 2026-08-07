@@ -19,6 +19,7 @@ import { listLeadRecords, getLeadListMemberships } from "@/lib/monitoring.functi
 import { enrichLeadRecord } from "@/lib/enrich-lead.functions";
 import { RECORD_TYPE_LABEL } from "@/lib/monitoring.shared";
 import { LeadTagChips } from "@/components/app/lead-tag-picker";
+import { LeadDetailDrawer } from "@/components/app/lead-detail-drawer";
 import { PhoneCell, EmailCell } from "@/components/app/channel-icons";
 import { mailingAddress } from "@/lib/contact-channels";
 import { aggregateFields, type LeadField } from "@/lib/lead-fields";
@@ -197,6 +198,7 @@ function LeadsPageInner() {
   const [lineType, setLineType] = useState<"all" | "mobile" | "landline" | "voip" | "unknown">("all");
   const [onlyNew, setOnlyNew] = useState<boolean>(onlyNewParam === true);
   const [multiList, setMultiList] = useState(false);
+  const [openLeadId, setOpenLeadId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["lead-records", workspaceId, q, disposition, sourceType, channel, lineType, onlyNew, multiList],
@@ -384,7 +386,11 @@ function LeadsPageInner() {
                   disposition: r.disposition,
                 };
                 return (
-                <tr key={r.id} className="border-b border-border last:border-0 hover:bg-surface-muted">
+                <tr
+                  key={r.id}
+                  onClick={() => setOpenLeadId(r.id)}
+                  className="cursor-pointer border-b border-border last:border-0 hover:bg-surface-muted"
+                >
                   <td className="p-4">
                     <div className="flex items-start gap-2">
                       <span className="w-9 shrink-0 pt-0.5">
@@ -488,7 +494,7 @@ function LeadsPageInner() {
                   >
                     {new Date(r.last_seen_at).toLocaleDateString()}
                   </td>
-                  <td className="p-4">
+                  <td className="p-4" onClick={(e) => e.stopPropagation()}>
                     <EnrichButton leadId={r.id} hasAddress={!!r.address} />
                   </td>
                 </tr>
@@ -498,6 +504,12 @@ function LeadsPageInner() {
           </table>
         </CardContent>
       </Card>
+
+      <LeadDetailDrawer
+        workspaceId={workspaceId}
+        leadRecordId={openLeadId}
+        onOpenChange={(o) => { if (!o) setOpenLeadId(null); }}
+      />
     </div>
     </TooltipProvider>
   );
