@@ -368,6 +368,84 @@ function CreditCard({
   );
 }
 
+function PlanFact({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="rounded-xl border border-border p-3">
+      <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-1 font-display text-xl font-bold tabular-nums">{value}</div>
+      <div className="mt-0.5 text-xs text-muted-foreground">{hint}</div>
+    </div>
+  );
+}
+
+/**
+ * Tier comparison in-app. Selection is intentionally inert until a payment
+ * provider is connected — a button that looks live but silently does nothing
+ * is worse than one that says why it is waiting.
+ */
+function PlanPicker({ currentPlanId }: { currentPlanId: string }) {
+  const [annual, setAnnual] = useState(false);
+  return (
+    <Card className="mb-8">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="text-base font-display">Plans</CardTitle>
+          <div className="mt-1 text-sm text-muted-foreground">
+            Platform Fee Only — Skip Trace And SMS Are Always Metered Separately.
+          </div>
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <span className={annual ? "text-muted-foreground" : "font-medium"}>Monthly</span>
+          <Switch checked={annual} onCheckedChange={setAnnual} aria-label="Annual Billing" />
+          <span className={annual ? "font-medium" : "text-muted-foreground"}>Annual −20%</span>
+        </label>
+      </CardHeader>
+      <CardContent className="grid gap-4 md:grid-cols-3">
+        {SELLABLE_PLANS.map((p) => {
+          const current = p.id === currentPlanId;
+          const monthly = annual ? annualMonthly(p.monthly) : p.monthly;
+          return (
+            <div
+              key={p.id}
+              className={`rounded-xl border p-4 ${current ? "border-primary bg-primary/5" : "border-border"}`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-display font-bold">{p.name}</span>
+                {current && <Badge variant="outline">Current</Badge>}
+              </div>
+              <div className="mt-2 font-display text-3xl font-black">
+                ${monthly}
+                <span className="text-sm font-medium text-muted-foreground"> / Mo</span>
+              </div>
+              {annual && (
+                <div className="text-xs text-muted-foreground">
+                  Billed Annually · ${annualTotal(p.monthly).toLocaleString()} / Yr
+                </div>
+              )}
+              <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+                <li>{p.leadCredits.toLocaleString()} Lead Credits / Mo</li>
+                <li>{p.numbersIncluded} Sending Numbers Included</li>
+                <li>{p.seats === null ? "Unlimited Seats" : `${p.seats} Seat${p.seats > 1 ? "s" : ""}`}</li>
+                <li>${p.smsPerSegment.toFixed(3)} Per SMS Segment</li>
+                <li>
+                  {p.skipTrace.includedPerMonth > 0
+                    ? `Skip Trace ${p.skipTrace.includedPerDay.toLocaleString()} / Day Included`
+                    : `Skip Trace Metered At $${p.skipTrace.meteredRate.toFixed(2)}`}
+                </li>
+              </ul>
+              <Button variant="outline" className="mt-4 w-full rounded-full" disabled>
+                {current ? "Current Plan" : "Contact Support"}
+              </Button>
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
+
 function TopUpDialog({
   kind,
   onClose,
